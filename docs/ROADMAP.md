@@ -125,6 +125,14 @@ Fark yaratacak 4 şey:
 - [ ] Immutable garanti: activity_logs'a update/delete endpoint'i yok; saklama süresi firma ayarı (varsayılan süresiz); aylık partisyon hazırlığı (büyüme için)
 - [ ] Audit Görüntüleyici v2: kayıt bazlı zaman çizelgesi (her detay sayfasında "Geçmiş" sekmesi) + global arama/filtre/export
 
+**⚠️ Teknik borç — PHPUnit suite (Faz 0'da CI non-blocking bırakıldı; burada kapatılacak)**
+- [ ] **PHPUnit test suite'ini yeşile çek:** eksik factory'ler (`CompanyFactory` vb.) + test veri şeması + enum/tip uyumu; CI'da PHPUnit `continue-on-error`'ı **KALDIR** (blocking yap).
+  - Teşhis (2026-07-10, sqlite `:memory:`, düzeltme yok): **41 failed / 2 passed**
+  - `Class "Database\Factories\CompanyFactory" not found` (~23 test) — `ExpenseTest`, `SurveyTest`, `TimesheetTest` setUp'ta `Company::factory()` kullanıyor; factory dosyası yok
+  - `CHECK constraint failed: type` (~18 test) — `RouteAuthorizationTest` / `RouteComprehensiveTest` `users.type = 'employee'` yazıyor; migration enum'u yalnızca `super_admin | company_admin | user`
+  - MySQL ortamında aynı tip uyumsuzluğu `Data truncated for column 'type'` olarak da görülür
+  - Mevcut factory'ler: `UserFactory`, `SurveyFactory`, `SurveyQuestionFactory`, `ExpenseClaimFactory`, `ExpenseCategoryFactory`, `AttendanceRecordFactory` — `CompanyFactory` eksik
+
 **Kimlik sertleştirme**
 - [ ] Gerçek TOTP 2FA (UserController:744 stub → doğrulama + recovery codes + login akışına entegrasyon)
 - [ ] Parola politikası (firma ayarı: uzunluk/karmaşıklık/geçerlilik), Sanctum token süresi netleştirilir (config), oturum listesi/sonlandırma UI polish
