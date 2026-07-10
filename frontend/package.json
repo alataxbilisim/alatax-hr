@@ -4,19 +4,25 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "pnpm -r --parallel dev",
+    "dev": "pnpm -r --parallel --filter \"./apps/**\" dev",
     "dev:superadmin": "pnpm --filter @alatax/superadmin dev",
     "dev:company": "pnpm --filter @alatax/company dev",
     "dev:portal": "pnpm --filter @alatax/portal dev",
-    "build": "pnpm -r build",
+    "build": "pnpm -r --filter \"./apps/**\" build",
     "build:superadmin": "pnpm --filter @alatax/superadmin build",
     "build:company": "pnpm --filter @alatax/company build",
     "build:portal": "pnpm --filter @alatax/portal build",
-    "lint": "pnpm -r lint"
+    "lint": "pnpm -r --filter \"./apps/**\" lint"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.1",
     "@types/node": "^24.10.1",
-    "typescript": "~5.9.3"
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "globals": "^16.5.0",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.46.4"
   },
   "dependencies": {
     "react-imask": "^7.6.1",

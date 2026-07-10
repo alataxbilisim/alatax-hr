@@ -193,11 +193,11 @@ class PortalTrainingController extends BaseController
                 });
         })
             ->with([
-            'participant.session.training' => function ($q) use ($user) {
-                $q->where('company_id', $user->company_id)
-                    ->select('id', 'title', 'category');
-            },
-        ]);
+                'participant.session.training' => function ($q) use ($user) {
+                    $q->where('company_id', $user->company_id)
+                        ->select('id', 'title', 'category');
+                },
+            ]);
 
         $certificates = $query->orderByDesc('issue_date')
             ->paginate($request->get('per_page', 15));
