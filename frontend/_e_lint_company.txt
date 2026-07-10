@@ -1,0 +1,271 @@
+﻿C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\components\EmployeeForm.tsx
+   61:34  error    Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+   93:6   warning  React Hook useEffect has missing dependencies: 'isEdit' and 'loadEmployee'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  135:14  error    'error' is defined but never used                                                                                               @typescript-eslint/no-unused-vars
+  135:21  error    Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+  143:47  error    Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+  147:56  error    Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+  172:21  error    Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\components\ErrorBoundary.tsx
+  249:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\components\UserImportForm.tsx
+  66:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\components\employees\EmployeeImportModal.tsx
+   19:43  error  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+   49:11  error  'validTypes' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   97:14  error  'error' is defined but never used                @typescript-eslint/no-unused-vars
+  116:21  error  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\components\employees\tabs\DocumentsTab.tsx
+   10:3   error  'BsEye' is defined but never used         @typescript-eslint/no-unused-vars
+   11:3   error  'BsCalendar' is defined but never used    @typescript-eslint/no-unused-vars
+  114:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  132:14  error  'error' is defined but never used         @typescript-eslint/no-unused-vars
+  146:14  error  'error' is defined but never used         @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\components\employees\tabs\GeneralTab.tsx
+  2:50  error  'BsTelephone' is defined but never used  @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\components\employees\tabs\HistoryTab.tsx
+  8:31  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  9:31  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\components\employees\tabs\LeavesTab.tsx
+  2:27  error  'BsCalendarX' is defined but never used  @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\components\employees\tabs\TrainingTab.tsx
+  2:27  error  'BsCalendar' is defined but never used  @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\components\layout\ModuleRail.tsx
+   46:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  373:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\components\leaves\HolidaysTab.tsx
+  38:6  warning  React Hook useEffect has a missing dependency: 'loadHolidays'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\components\leaves\LeaveBalancesTab.tsx
+  56:6  warning  React Hook useEffect has a missing dependency: 'loadBalances'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\components\leaves\LeaveCalendarTab.tsx
+  41:6  warning  React Hook useEffect has a missing dependency: 'loadCalendarData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\components\leaves\LeaveReportsTab.tsx
+  40:6  warning  React Hook useEffect has a missing dependency: 'loadReports'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\components\ui\AvatarUpload.tsx
+  17:3  error  'userId' is defined but never used  @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\layouts\AuthLayout.tsx
+  13:7  error  Error: This value cannot be modified
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\layouts\MainLayout.tsx
+   15:3  error  'BsPersonCircle' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    @typescript-eslint/no-unused-vars
+   47:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+  138:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\DashboardPage.tsx
+  85:9  error  'getIconComponent' is assigned a value but never used  @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\analytics\AnalyticsPage.tsx
+   1:38  error  'useMemo' is defined but never used  @typescript-eslint/no-unused-vars
+  78:14  error  'error' is defined but never used    @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\assets\AssetDetailPage.tsx
+  12:3  error    'BsTools' is defined but never used                                                                           @typescript-eslint/no-unused-vars
+  13:3  error    'BsCalendar' is defined but never used                                                                        @typescript-eslint/no-unused-vars
+  14:3  error    'BsTag' is defined but never used                                                                             @typescript-eslint/no-unused-vars
+  81:6  warning  React Hook useEffect has a missing dependency: 'loadAsset'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\assets\AssetsPage.tsx
+    4:48  error    'Modal' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+   18:3   error    'BsTools' is defined but never used                                                                            @typescript-eslint/no-unused-vars
+  111:6   warning  React Hook useEffect has a missing dependency: 'loadAssets'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  207:9   error    'formatCurrency' is assigned a value but never used                                                            @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\audit\ActivityLogsPage.tsx
+   10:3   error    'BsPerson' is defined but never used                                                                         @typescript-eslint/no-unused-vars
+   11:3   error    'BsCalendar' is defined but never used                                                                       @typescript-eslint/no-unused-vars
+   12:3   error    'BsFileText' is defined but never used                                                                       @typescript-eslint/no-unused-vars
+  112:6   warning  React Hook useEffect has a missing dependency: 'loadLogs'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  153:21  error    Unexpected any. Specify a different type                                                                     @typescript-eslint/no-explicit-any
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\auth\LoginPage.tsx
+  72:14  error  'error' is defined but never used  @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\branches\BranchDetailPage.tsx
+    3:23  error    'usersApi' is defined but never used                                                                                                                    @typescript-eslint/no-unused-vars
+    4:18  error    'User' is defined but never used                                                                                                                        @typescript-eslint/no-unused-vars
+   11:3   error    'BsCalendar' is defined but never used                                                                                                                  @typescript-eslint/no-unused-vars
+   12:3   error    'BsActivity' is defined but never used                                                                                                                  @typescript-eslint/no-unused-vars
+   50:46  error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+   63:6   warning  React Hook useEffect has missing dependencies: 'loadActivities', 'loadBranch', and 'loadEmployees'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+   77:52  error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  145:26  error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  157:26  error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  163:26  error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+  174:26  error    Unexpected any. Specify a different type                                                                                                                @typescript-eslint/no-explicit-any
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\branches\BranchesPage.tsx
+   59:46  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+   67:6   warning  React Hook useEffect has a missing dependency: 'loadBranches'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  466:41  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\documents\DocumentDetailPage.tsx
+  86:6  warning  React Hook useEffect has a missing dependency: 'loadDocument'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\documents\DocumentReportsPage.tsx
+   1:51  error  'useRef' is defined but never used                   @typescript-eslint/no-unused-vars
+   5:3   error  'FiPlus' is defined but never used                   @typescript-eslint/no-unused-vars
+  28:3   error  'Legend' is defined but never used                   @typescript-eslint/no-unused-vars
+  74:9   error  'formatFileSize' is assigned a value but never used  @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\documents\DocumentsPage.tsx
+  23:3  error  'BsCalendar3' is defined but never used  @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\employees\DepartmentsPage.tsx
+   51:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   83:14  error  'error' is defined but never used         @typescript-eslint/no-unused-vars
+  165:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  181:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\employees\EmployeeDetailPage.tsx
+   67:34  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+   83:18  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+   84:15  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+  112:46  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+  113:52  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+  114:46  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+  115:50  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+  131:6   warning  React Hook useEffect has a missing dependency: 'loadEmployee'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  144:14  error    'error' is defined but never used                                                                                @typescript-eslint/no-unused-vars
+  144:21  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+  157:21  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+  175:21  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+  188:21  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\employees\EmployeeReportsPage.tsx
+   10:3   error  'FiX' is defined but never used          @typescript-eslint/no-unused-vars
+   11:3   error  'FiRefreshCw' is defined but never used  @typescript-eslint/no-unused-vars
+  207:14  error  'error' is defined but never used        @typescript-eslint/no-unused-vars
+  221:14  error  'error' is defined but never used        @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\employees\EmployeesPage.tsx
+   17:3   error    'BsThreeDotsVertical' is defined but never used                                                                   @typescript-eslint/no-unused-vars
+   70:10  error    'showBulkMenu' is assigned a value but never used                                                                 @typescript-eslint/no-unused-vars
+   84:6   warning  React Hook useEffect has a missing dependency: 'loadEmployees'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  111:21  error    Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+  125:21  error    Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+  144:14  error    'error' is defined but never used                                                                                 @typescript-eslint/no-unused-vars
+  144:21  error    Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+  171:14  error    'error' is defined but never used                                                                                 @typescript-eslint/no-unused-vars
+  171:21  error    Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+  185:14  error    'error' is defined but never used                                                                                 @typescript-eslint/no-unused-vars
+  185:21  error    Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+  212:9   error    'getContractTypeBadge' is assigned a value but never used                                                         @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\employees\OrganizationChartPage.tsx
+    1:38  error    'useCallback' is defined but never used                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+    8:3   error    'BsDownload' is defined but never used                                                                                                                                                                                                  @typescript-eslint/no-unused-vars
+   55:14  error    'error' is defined but never used                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+  141:8   warning  React Hook useEffect has an unnecessary dependency: 'expandAll'. Either exclude it or remove the dependency array. Outer scope values like 'expandAll' aren't valid dependencies because mutating them doesn't re-render the component  react-hooks/exhaustive-deps
+  194:42  error    'index' is defined but never used                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\employees\reports\AddWidgetModal.tsx
+  3:71   error  'DEFAULT_WIDGET_LAYOUTS' is defined but never used  @typescript-eslint/no-unused-vars
+  3:95   error  'WIDGET_TYPE_LABELS' is defined but never used      @typescript-eslint/no-unused-vars
+  3:115  error  'CHART_TYPE_LABELS' is defined but never used       @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\employees\reports\ReportBuilder.tsx
+   9:3  error  'BsPlusCircle' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+  90:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\employees\reports\SaveDashboardModal.tsx
+  26:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\employees\reports\SavedReportsList.tsx
+  6:3  error  'BsPencil' is defined but never used             @typescript-eslint/no-unused-vars
+  8:3  error  'BsThreeDotsVertical' is defined but never used  @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\employees\reports\WidgetSettingsPanel.tsx
+  43:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\employees\reports\widgets\TreemapWidget.tsx
+  43:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\leaves\LeavesPage.tsx
+  102:6  warning  React Hook useEffect has a missing dependency: 'getTabFromPath'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  125:6  warning  React Hook useEffect has a missing dependency: 'loadRequests'. Either include it or remove the dependency array    react-hooks/exhaustive-deps
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\onboarding\OnboardingPage.tsx
+  16:3  error    'BsCheckCircle' is defined but never used                                                                                               @typescript-eslint/no-unused-vars
+  17:3  error    'BsClock' is defined but never used                                                                                                     @typescript-eslint/no-unused-vars
+  18:3  error    'BsXCircle' is defined but never used                                                                                                   @typescript-eslint/no-unused-vars
+  98:6  warning  React Hook useEffect has missing dependencies: 'loadProcesses' and 'loadTemplates'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\onboarding\ProcessDetailPage.tsx
+  66:6  warning  React Hook useEffect has a missing dependency: 'loadProcess'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\performance\PerformancePage.tsx
+   19:3  error    'BsCheckCircle' is defined but never used                                                                                           @typescript-eslint/no-unused-vars
+   20:3  error    'BsClock' is defined but never used                                                                                                 @typescript-eslint/no-unused-vars
+   21:3  error    'BsXCircle' is defined but never used                                                                                               @typescript-eslint/no-unused-vars
+   22:3  error    'BsSend' is defined but never used                                                                                                  @typescript-eslint/no-unused-vars
+  112:6  warning  React Hook useEffect has missing dependencies: 'loadPeriods' and 'loadReviews'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\performance\ReviewDetailPage.tsx
+   8:3  error    'BsCalendar' is defined but never used                                                                       @typescript-eslint/no-unused-vars
+  83:6  warning  React Hook useEffect has a missing dependency: 'loadData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\recruitment\ApplicationDetailModal.tsx
+  13:3  error    'BsBriefcase' is defined but never used                                                                             @typescript-eslint/no-unused-vars
+  82:6  warning  React Hook useEffect has a missing dependency: 'loadApplication'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\recruitment\ApplicationsPage.tsx
+   8:3  error  'BsPersonBadge' is defined but never used  @typescript-eslint/no-unused-vars
+   9:3  error  'BsCheck' is defined but never used        @typescript-eslint/no-unused-vars
+  10:3  error  'BsX' is defined but never used            @typescript-eslint/no-unused-vars
+  11:3  error  'BsEye' is defined but never used          @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\recruitment\CvPoolPage.tsx
+  62:6  warning  React Hook useEffect has a missing dependency: 'loadCandidates'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\recruitment\InterviewsPage.tsx
+  129:6  warning  React Hook useEffect has a missing dependency: 'loadInterviews'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\recruitment\JobPositionsPage.tsx
+  13:3  error    'BsGlobe' is defined but never used                                                                               @typescript-eslint/no-unused-vars
+  47:6  warning  React Hook useEffect has a missing dependency: 'loadPositions'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\recruitment\RecruitmentReportsPage.tsx
+   12:3   error    'BsXCircle' is defined but never used                                                                        @typescript-eslint/no-unused-vars
+  112:6   warning  React Hook useEffect has a missing dependency: 'loadData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  121:11  error    Unexpected lexical declaration in case block                                                                 no-case-declarations
+  125:11  error    Unexpected lexical declaration in case block                                                                 no-case-declarations
+  129:11  error    Unexpected lexical declaration in case block                                                                 no-case-declarations
+  133:11  error    Unexpected lexical declaration in case block                                                                 no-case-declarations
+  137:11  error    Unexpected lexical declaration in case block                                                                 no-case-declarations
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\settings\ApiKeyForm.tsx
+    8:12   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  134:127  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\settings\CustomFieldsPage.tsx
+    1:38  error    'useRef' is defined but never used                                                                             @typescript-eslint/no-unused-vars
+  108:6   warning  React Hook useEffect has a missing dependency: 'loadFields'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  115:14  error    'error' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+  198:21  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+  214:14  error    'error' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+  224:14  error    'error' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+  242:14  error    'error' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+  260:14  error    'error' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+  296:14  error    'error' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\settings\SettingsPage.tsx
+    16:3    error  'BsGlobe' is defined but never used        @typescript-eslint/no-unused-vars
+    45:11   error  'user' is assigned a value but never used  @typescript-eslint/no-unused-vars
+    65:42   error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+    68:56   error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  1169:155  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  1180:166  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  1189:161  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  1198:161  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  1207:159  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  1225:153  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  1236:164  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  1245:159  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  1254:159  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  1272:154  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  1283:165  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  1292:160  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  1301:160  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  1368:39   error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\settings\WebhooksPage.tsx
+    9:3   error  'BsKey' is defined but never used         @typescript-eslint/no-unused-vars
+   12:3   error  'BsClock' is defined but never used       @typescript-eslint/no-unused-vars
+  400:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\shared\ModuleCustomFieldsPage.tsx
+   82:3   error    'moduleColor' is assigned a value but never used                                                               @typescript-eslint/no-unused-vars
+  133:11  error    'actionKey' is assigned a value but never used                                                                 @typescript-eslint/no-unused-vars
+  180:6   warning  React Hook useEffect has a missing dependency: 'loadFields'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  187:14  error    'error' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+  284:21  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+  303:21  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+  318:14  error    'error' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+  372:14  error    'error' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\surveys\SurveysPage.tsx
+   94:6   warning  React Hook useEffect has a missing dependency: 'loadSurveys'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  103:14  error    'error' is defined but never used                                                                               @typescript-eslint/no-unused-vars
+  122:14  error    'error' is defined but never used                                                                               @typescript-eslint/no-unused-vars
+  175:14  error    'error' is defined but never used                                                                               @typescript-eslint/no-unused-vars
+  286:14  error    'error' is defined but never used                                                                               @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\training\TrainingPage.tsx
+   13:3  error    'BsEye' is defined but never used                                                                                                      @typescript-eslint/no-unused-vars
+   16:3  error    'BsClock' is defined but never used                                                                                                    @typescript-eslint/no-unused-vars
+  113:6  warning  React Hook useEffect has missing dependencies: 'loadSessions' and 'loadTrainings'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\users\RoleDetailPage.tsx
+   11:3   error    'BsActivity' is defined but never used                                                                                                            @typescript-eslint/no-unused-vars
+   12:3   error    'BsCheckCircle' is defined but never used                                                                                                         @typescript-eslint/no-unused-vars
+   13:3   error    'BsXCircle' is defined but never used                                                                                                             @typescript-eslint/no-unused-vars
+   74:6   warning  React Hook useEffect has missing dependencies: 'loadActivities', 'loadRole', and 'loadUsers'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  130:21  error    Unexpected any. Specify a different type                                                                                                          @typescript-eslint/no-explicit-any
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\users\UserDetailPage.tsx
+    9:3   error    'BsEnvelope' is defined but never used                                                                                              @typescript-eslint/no-unused-vars
+   16:3   error    'BsFileText' is defined but never used                                                                                              @typescript-eslint/no-unused-vars
+   20:3   error    'BsCheckCircle' is defined but never used                                                                                           @typescript-eslint/no-unused-vars
+   44:14  error    Unexpected any. Specify a different type                                                                                            @typescript-eslint/no-explicit-any
+  102:6   warning  React Hook useEffect has missing dependencies: 'loadActivities' and 'loadUser'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  108:6   warning  React Hook useEffect has a missing dependency: 'loadSessions'. Either include it or remove the dependency array                     react-hooks/exhaustive-deps
+C:\xampp\htdocs\alatax-hr\frontend\apps\company\src\pages\users\UsersPage.tsx
+   74:6   warning  React Hook useEffect has a missing dependency: 'loadUsers'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  107:14  error    'error' is defined but never used                                                                             @typescript-eslint/no-unused-vars

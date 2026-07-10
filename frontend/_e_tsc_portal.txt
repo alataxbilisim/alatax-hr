@@ -1,0 +1,6 @@
+﻿src/layouts/PortalLayout.tsx(110,10): error TS6133: 'showMoreMenu' is declared but its value is never read.
+src/pages/DocumentsPage.tsx(4,41): error TS6133: 'BsEye' is declared but its value is never read.
+src/pages/PayslipsPage.tsx(21,10): error TS6133: 'selectedPayslip' is declared but its value is never read.
+src/pages/ProfilePage.tsx(6,10): error TS6133: 'BsPersonCircle' is declared but its value is never read.
+src/pages/TimesheetPage.tsx(10,3): error TS6133: 'BsStop' is declared but its value is never read.
+../../packages/shared/src/store/slices/authSlice.ts(100,13): error TS6133: 'rejectWithValue' is declared but its value is never read.

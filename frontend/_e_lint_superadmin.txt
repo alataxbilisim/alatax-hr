@@ -1,0 +1,39 @@
+﻿C:\xampp\htdocs\alatax-hr\frontend\apps\superadmin\src\components\LedgerModal.tsx
+   6:11  error  'LedgerEntry' is defined but never used              @typescript-eslint/no-unused-vars
+  92:14  error  'error' is defined but never used                    @typescript-eslint/no-unused-vars
+  99:9   error  'formatCurrency' is assigned a value but never used  @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\superadmin\src\components\ModuleForm.tsx
+  123:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+C:\xampp\htdocs\alatax-hr\frontend\apps\superadmin\src\components\PackageForm.tsx
+   77:25  error    Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
+   78:22  error    Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
+   96:6   warning  React Hook useEffect has a missing dependency: 'loadModules'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  187:21  error    Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
+C:\xampp\htdocs\alatax-hr\frontend\apps\superadmin\src\pages\CompaniesPage.tsx
+    9:3   error    'BsEye' is defined but never used                                                                                 @typescript-eslint/no-unused-vars
+   63:6   warning  React Hook useEffect has a missing dependency: 'loadCompanies'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+   83:14  error    'error' is defined but never used                                                                                 @typescript-eslint/no-unused-vars
+  113:14  error    'error' is defined but never used                                                                                 @typescript-eslint/no-unused-vars
+  134:9   error    'handleStatusChange' is assigned a value but never used                                                           @typescript-eslint/no-unused-vars
+  139:14  error    'error' is defined but never used                                                                                 @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\superadmin\src\pages\DashboardPage.tsx
+  67:14  error  'error' is defined but never used                    @typescript-eslint/no-unused-vars
+  85:9   error  'formatCurrency' is assigned a value but never used  @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\superadmin\src\pages\LoginPage.tsx
+  38:14  error  'error' is defined but never used  @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\superadmin\src\pages\LogsPage.tsx
+   4:10  error    'BsSearch' is defined but never used                                                                         @typescript-eslint/no-unused-vars
+   4:35  error    'BsFilter' is defined but never used                                                                         @typescript-eslint/no-unused-vars
+  30:6   warning  React Hook useEffect has a missing dependency: 'loadLogs'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  37:14  error    'error' is defined but never used                                                                            @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\superadmin\src\pages\ModulesPage.tsx
+  49:14  error  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  73:14  error  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  87:14  error  'error' is defined but never used  @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\superadmin\src\pages\PackagesPage.tsx
+  57:14  error  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  74:14  error  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  91:14  error  'error' is defined but never used  @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\superadmin\src\pages\UsersPage.tsx
+  28:6   warning  React Hook useEffect has a missing dependency: 'loadUsers'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  38:14  error    'error' is defined but never used                                                                             @typescript-eslint/no-unused-vars

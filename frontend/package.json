@@ -1,0 +1,25 @@
+{
+  "name": "alatax-hr-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "dev:superadmin": "pnpm --filter @alatax/superadmin dev",
+    "dev:company": "pnpm --filter @alatax/company dev",
+    "dev:portal": "pnpm --filter @alatax/portal dev",
+    "build": "pnpm -r build",
+    "build:superadmin": "pnpm --filter @alatax/superadmin build",
+    "build:company": "pnpm --filter @alatax/company build",
+    "build:portal": "pnpm --filter @alatax/portal build",
+    "lint": "pnpm -r lint"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "typescript": "~5.9.3"
+  },
+  "dependencies": {
+    "react-imask": "^7.6.1",
+    "recharts": "^3.6.0"
+  }
+}

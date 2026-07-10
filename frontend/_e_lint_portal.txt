@@ -1,0 +1,45 @@
+﻿C:\xampp\htdocs\alatax-hr\frontend\apps\portal\src\layouts\PortalLayout.tsx
+   52:7   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+  110:10  error  'showMoreMenu' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\portal\src\pages\AnnouncementsPage.tsx
+  30:14  error  'error' is defined but never used  @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\portal\src\pages\DashboardPage.tsx
+  59:14  error  'error' is defined but never used  @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\portal\src\pages\DocumentsPage.tsx
+   4:41  error  'BsEye' is defined but never used  @typescript-eslint/no-unused-vars
+  31:14  error  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  48:14  error  'error' is defined but never used  @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\portal\src\pages\ExpensesPage.tsx
+   77:14  error  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  189:14  error  'error' is defined but never used  @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\portal\src\pages\LeavesPage.tsx
+   61:14  error  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  113:14  error  'error' is defined but never used  @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\portal\src\pages\LoginPage.tsx
+  31:14  error  'error' is defined but never used  @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\portal\src\pages\PayslipsPage.tsx
+  21:10  error  'selectedPayslip' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  31:14  error  'error' is defined but never used                     @typescript-eslint/no-unused-vars
+  48:14  error  'error' is defined but never used                     @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\portal\src\pages\PerformancePage.tsx
+  68:6   warning  React Hook useEffect has a missing dependency: 'loadData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  83:14  error    'error' is defined but never used                                                                            @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\portal\src\pages\ProfilePage.tsx
+   6:10  error  'BsPersonCircle' is defined but never used  @typescript-eslint/no-unused-vars
+  73:14  error  'error' is defined but never used           @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\portal\src\pages\RequestsPage.tsx
+   51:14  error  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  115:14  error  'error' is defined but never used  @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\portal\src\pages\SurveysPage.tsx
+  41:6   warning  React Hook useEffect has a missing dependency: 'loadSurveys'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  54:14  error    'error' is defined but never used                                                                               @typescript-eslint/no-unused-vars
+  76:14  error    'error' is defined but never used                                                                               @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\portal\src\pages\TimesheetPage.tsx
+  10:3   error  'BsStop' is defined but never used  @typescript-eslint/no-unused-vars
+  69:14  error  'error' is defined but never used   @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\portal\src\pages\TrainingPage.tsx
+  40:6   warning  React Hook useEffect has a missing dependency: 'loadTrainings'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  53:14  error    'error' is defined but never used                                                                                 @typescript-eslint/no-unused-vars
+C:\xampp\htdocs\alatax-hr\frontend\apps\portal\src\utils\offlineStorage.ts
+   83:16  error  'e' is defined but never used  @typescript-eslint/no-unused-vars
+  111:16  error  'e' is defined but never used  @typescript-eslint/no-unused-vars

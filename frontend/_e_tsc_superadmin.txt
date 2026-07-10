@@ -1,0 +1,8 @@
+﻿src/components/LedgerModal.tsx(6,11): error TS6196: 'LedgerEntry' is declared but never used.
+src/components/LedgerModal.tsx(99,9): error TS6133: 'formatCurrency' is declared but its value is never read.
+src/pages/CompaniesPage.tsx(9,3): error TS6133: 'BsEye' is declared but its value is never read.
+src/pages/CompaniesPage.tsx(134,9): error TS6133: 'handleStatusChange' is declared but its value is never read.
+src/pages/DashboardPage.tsx(85,9): error TS6133: 'formatCurrency' is declared but its value is never read.
+src/pages/LogsPage.tsx(4,10): error TS6133: 'BsSearch' is declared but its value is never read.
+src/pages/LogsPage.tsx(4,35): error TS6133: 'BsFilter' is declared but its value is never read.
+../../packages/shared/src/store/slices/authSlice.ts(100,13): error TS6133: 'rejectWithValue' is declared but its value is never read.
