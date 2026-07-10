@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Models\Department;
 use App\Models\Employee;
 use App\Models\SavedReport;
-use App\Models\Department;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class EmployeeReportController extends BaseController
 {
@@ -71,11 +70,11 @@ class EmployeeReportController extends BaseController
             ->values();
 
         return $this->success([
-            'dimensions' => collect($this->dimensions)->map(fn($d, $k) => [
+            'dimensions' => collect($this->dimensions)->map(fn ($d, $k) => [
                 'value' => $k,
                 'label' => $d['label'],
             ])->values(),
-            'measures' => collect($this->measures)->map(fn($m, $k) => [
+            'measures' => collect($this->measures)->map(fn ($m, $k) => [
                 'value' => $k,
                 'label' => $m['label'],
             ])->values(),
@@ -159,11 +158,11 @@ class EmployeeReportController extends BaseController
         $filters = $request->input('filters', []);
 
         // Boyut ve metrik kontrolü
-        if (!isset($this->dimensions[$dimension])) {
+        if (! isset($this->dimensions[$dimension])) {
             return $this->error('Geçersiz boyut', 422);
         }
 
-        if (!isset($this->measures[$measure])) {
+        if (! isset($this->measures[$measure])) {
             return $this->error('Geçersiz metrik', 422);
         }
 
@@ -171,8 +170,8 @@ class EmployeeReportController extends BaseController
         $measureConfig = $this->measures[$measure];
         if (isset($measureConfig['requires_permission'])) {
             $user = auth()->user();
-            if (!$user->can($measureConfig['requires_permission']) && 
-                $user->type !== 'company_admin' && 
+            if (! $user->can($measureConfig['requires_permission']) &&
+                $user->type !== 'company_admin' &&
                 $user->type !== 'super_admin') {
                 return $this->error('Bu metrik için yetkiniz bulunmamaktadır', 403);
             }
@@ -180,7 +179,7 @@ class EmployeeReportController extends BaseController
 
         try {
             $data = $this->aggregateData($dimension, $measure, $filters);
-            
+
             return $this->success([
                 'data' => $data,
                 'dimension' => [
@@ -194,7 +193,7 @@ class EmployeeReportController extends BaseController
                 'total' => collect($data)->sum('value'),
             ]);
         } catch (\Exception $e) {
-            return $this->error('Rapor oluşturulurken bir hata oluştu: ' . $e->getMessage(), 500);
+            return $this->error('Rapor oluşturulurken bir hata oluştu: '.$e->getMessage(), 500);
         }
     }
 
@@ -225,7 +224,7 @@ class EmployeeReportController extends BaseController
                     if (isset($filters['date_range'])) {
                         $query->whereBetween('termination_date', [
                             $filters['date_range']['start'],
-                            $filters['date_range']['end']
+                            $filters['date_range']['end'],
                         ]);
                     }
                     break;
@@ -238,12 +237,12 @@ class EmployeeReportController extends BaseController
 
         switch ($dimensionType) {
             case 'year':
-                $query->selectRaw('YEAR(' . $groupField . ') as dimension_key');
-                $query->groupByRaw('YEAR(' . $groupField . ')');
+                $query->selectRaw('YEAR('.$groupField.') as dimension_key');
+                $query->groupByRaw('YEAR('.$groupField.')');
                 break;
             case 'month':
-                $query->selectRaw("DATE_FORMAT(" . $groupField . ", '%Y-%m') as dimension_key");
-                $query->groupByRaw("DATE_FORMAT(" . $groupField . ", '%Y-%m')");
+                $query->selectRaw('DATE_FORMAT('.$groupField.", '%Y-%m') as dimension_key");
+                $query->groupByRaw('DATE_FORMAT('.$groupField.", '%Y-%m')");
                 break;
             case 'age_group':
                 $query->selectRaw("
@@ -286,7 +285,7 @@ class EmployeeReportController extends BaseController
                 ");
                 break;
             default:
-                $query->select($groupField . ' as dimension_key');
+                $query->select($groupField.' as dimension_key');
                 $query->groupBy($groupField);
                 break;
         }
@@ -318,7 +317,7 @@ class EmployeeReportController extends BaseController
         if ($dimension === 'department') {
             $departments = Department::where('company_id', $this->getCompanyId())
                 ->pluck('name', 'id');
-            
+
             return $results->map(function ($item) use ($departments) {
                 return [
                     'id' => $item->dimension_key,
@@ -343,39 +342,39 @@ class EmployeeReportController extends BaseController
      */
     private function applyFilters($query, array $filters)
     {
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->whereIn('status', $filters['status']);
         }
 
-        if (!empty($filters['department_id'])) {
+        if (! empty($filters['department_id'])) {
             $query->whereIn('department_id', $filters['department_id']);
         }
 
-        if (!empty($filters['position'])) {
+        if (! empty($filters['position'])) {
             $query->whereIn('position', $filters['position']);
         }
 
-        if (!empty($filters['city'])) {
+        if (! empty($filters['city'])) {
             $query->whereIn('city', $filters['city']);
         }
 
-        if (!empty($filters['contract_type'])) {
+        if (! empty($filters['contract_type'])) {
             $query->whereIn('contract_type', $filters['contract_type']);
         }
 
-        if (!empty($filters['work_type'])) {
+        if (! empty($filters['work_type'])) {
             $query->whereIn('work_type', $filters['work_type']);
         }
 
-        if (!empty($filters['gender'])) {
+        if (! empty($filters['gender'])) {
             $query->whereIn('gender', $filters['gender']);
         }
 
-        if (!empty($filters['date_range']['start'])) {
+        if (! empty($filters['date_range']['start'])) {
             $query->where('hire_date', '>=', $filters['date_range']['start']);
         }
 
-        if (!empty($filters['date_range']['end'])) {
+        if (! empty($filters['date_range']['end'])) {
             $query->where('hire_date', '<=', $filters['date_range']['end']);
         }
 
@@ -558,7 +557,7 @@ class EmployeeReportController extends BaseController
             ->accessibleBy(auth()->id())
             ->findOrFail($id);
 
-        $report->is_favorite = !$report->is_favorite;
+        $report->is_favorite = ! $report->is_favorite;
         $report->save();
 
         return $this->success([
@@ -586,31 +585,30 @@ class EmployeeReportController extends BaseController
         $filters = $request->input('filters', []);
 
         $data = $this->aggregateData($dimension, $measure, $filters);
-        
+
         $dimensionLabel = $this->dimensions[$dimension]['label'] ?? $dimension;
         $measureLabel = $this->measures[$measure]['label'] ?? $measure;
 
-        $filename = 'rapor_' . date('Y-m-d_H-i-s') . '.csv';
+        $filename = 'rapor_'.date('Y-m-d_H-i-s').'.csv';
 
         return response()->streamDownload(function () use ($data, $dimensionLabel, $measureLabel) {
             $file = fopen('php://output', 'w');
-            
+
             // UTF-8 BOM
-            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
-            
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+
             // Header
             fputcsv($file, [$dimensionLabel, $measureLabel], ';');
-            
+
             // Data
             foreach ($data as $row) {
                 fputcsv($file, [$row['label'], $row['value']], ';');
             }
-            
+
             fclose($file);
         }, $filename, [
             'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ]);
     }
 }
-

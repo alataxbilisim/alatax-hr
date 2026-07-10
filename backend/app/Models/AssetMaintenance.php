@@ -75,4 +75,3 @@ class AssetMaintenance extends Model
             ->orderBy('scheduled_date');
     }
 }
-

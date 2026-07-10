@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api\V1\Training;
 
 use App\Http\Controllers\Api\V1\BaseController;
-use App\Models\Training;
 use App\Models\ActivityLog;
+use App\Models\Training;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -65,7 +65,7 @@ class TrainingController extends BaseController
             'created_by' => auth()->id(),
         ]);
 
-        ActivityLog::log('create', $training, 'Eğitim oluşturuldu: ' . $training->title);
+        ActivityLog::log('create', $training, 'Eğitim oluşturuldu: '.$training->title);
 
         return $this->success($training, 'Eğitim oluşturuldu', 201);
     }
@@ -111,7 +111,7 @@ class TrainingController extends BaseController
         $oldValues = $training->getOriginal();
         $training->update($validated);
 
-        ActivityLog::log('update', $training, 'Eğitim güncellendi: ' . $training->title, $oldValues, $training->fresh()->toArray());
+        ActivityLog::log('update', $training, 'Eğitim güncellendi: '.$training->title, $oldValues, $training->fresh()->toArray());
 
         return $this->success($training, 'Eğitim güncellendi');
     }
@@ -122,14 +122,14 @@ class TrainingController extends BaseController
     public function destroy(int $id): JsonResponse
     {
         $training = Training::where('company_id', $this->getCompanyId())->findOrFail($id);
-        
+
         if ($training->sessions()->whereHas('participants')->exists()) {
             return $this->error('Bu eğitime kayıtlı katılımcılar var, silinemez.', 422);
         }
 
         $trainingTitle = $training->title;
-        ActivityLog::log('delete', null, 'Eğitim silindi: ' . $trainingTitle);
-        
+        ActivityLog::log('delete', null, 'Eğitim silindi: '.$trainingTitle);
+
         $training->delete();
 
         return $this->success(null, 'Eğitim silindi');
@@ -148,4 +148,3 @@ class TrainingController extends BaseController
         return $this->success($categories, 'Kategoriler listelendi');
     }
 }
-

@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -13,7 +12,7 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasApiTokens, HasRoles, SoftDeletes;
+    use HasApiTokens, HasFactory, HasRoles, Notifiable, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -133,7 +132,7 @@ class User extends Authenticatable
         }
 
         // Firma yoksa erişim yok
-        if (!$this->company) {
+        if (! $this->company) {
             return false;
         }
 
@@ -143,7 +142,7 @@ class User extends Authenticatable
     /**
      * Son giriş bilgisini güncelle
      */
-    public function updateLastLogin(string $ip = null): void
+    public function updateLastLogin(?string $ip = null): void
     {
         $this->update([
             'last_login_at' => now(),

@@ -4,9 +4,8 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Models\ActivityLog;
 use App\Models\Branch;
-use App\Models\Company;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class BranchController extends BaseController
@@ -53,7 +52,7 @@ class BranchController extends BaseController
         $branch = Branch::with(['manager:id,name,email', 'createdBy:id,name', 'updatedBy:id,name'])
             ->find($id);
 
-        if (!$branch) {
+        if (! $branch) {
             return $this->notFound('Şube bulunamadı');
         }
 
@@ -67,7 +66,7 @@ class BranchController extends BaseController
     {
         $company = auth()->user()->company;
 
-        if (!$company) {
+        if (! $company) {
             return $this->notFound('Firma bulunamadı');
         }
 
@@ -81,7 +80,7 @@ class BranchController extends BaseController
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'code' => 'nullable|string|max:50|unique:branches,code,NULL,id,company_id,' . $company->id,
+            'code' => 'nullable|string|max:50|unique:branches,code,NULL,id,company_id,'.$company->id,
             'address' => 'nullable|string|max:500',
             'city' => 'nullable|string|max:100',
             'district' => 'nullable|string|max:100',
@@ -99,7 +98,7 @@ class BranchController extends BaseController
         // Manager'ın aynı firmaya ait olduğunu kontrol et
         if (isset($validated['manager_id'])) {
             $manager = \App\Models\User::find($validated['manager_id']);
-            if (!$manager || $manager->company_id !== $company->id) {
+            if (! $manager || $manager->company_id !== $company->id) {
                 return $this->error('Geçersiz yönetici seçimi', 422);
             }
         }
@@ -129,7 +128,8 @@ class BranchController extends BaseController
             return $this->created($branch->load(['manager:id,name,email']), 'Şube oluşturuldu');
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->serverError('Şube oluşturulurken bir hata oluştu: ' . $e->getMessage());
+
+            return $this->serverError('Şube oluşturulurken bir hata oluştu: '.$e->getMessage());
         }
     }
 
@@ -140,7 +140,7 @@ class BranchController extends BaseController
     {
         $branch = Branch::find($id);
 
-        if (!$branch) {
+        if (! $branch) {
             return $this->notFound('Şube bulunamadı');
         }
 
@@ -148,7 +148,7 @@ class BranchController extends BaseController
 
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
-            'code' => 'nullable|string|max:50|unique:branches,code,' . $id . ',id,company_id,' . $company->id,
+            'code' => 'nullable|string|max:50|unique:branches,code,'.$id.',id,company_id,'.$company->id,
             'address' => 'nullable|string|max:500',
             'city' => 'nullable|string|max:100',
             'district' => 'nullable|string|max:100',
@@ -166,7 +166,7 @@ class BranchController extends BaseController
         // Manager kontrolü
         if (isset($validated['manager_id'])) {
             $manager = \App\Models\User::find($validated['manager_id']);
-            if (!$manager || $manager->company_id !== $company->id) {
+            if (! $manager || $manager->company_id !== $company->id) {
                 return $this->error('Geçersiz yönetici seçimi', 422);
             }
         }
@@ -198,7 +198,8 @@ class BranchController extends BaseController
             return $this->success($branch->fresh()->load(['manager:id,name,email']), 'Şube güncellendi');
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->serverError('Şube güncellenirken bir hata oluştu: ' . $e->getMessage());
+
+            return $this->serverError('Şube güncellenirken bir hata oluştu: '.$e->getMessage());
         }
     }
 
@@ -209,7 +210,7 @@ class BranchController extends BaseController
     {
         $branch = Branch::find($id);
 
-        if (!$branch) {
+        if (! $branch) {
             return $this->notFound('Şube bulunamadı');
         }
 
@@ -242,7 +243,8 @@ class BranchController extends BaseController
             return $this->success(null, 'Şube silindi');
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->serverError('Şube silinirken bir hata oluştu: ' . $e->getMessage());
+
+            return $this->serverError('Şube silinirken bir hata oluştu: '.$e->getMessage());
         }
     }
 
@@ -253,11 +255,11 @@ class BranchController extends BaseController
     {
         $branch = Branch::find($id);
 
-        if (!$branch) {
+        if (! $branch) {
             return $this->notFound('Şube bulunamadı');
         }
 
-        if (!$branch->is_active) {
+        if (! $branch->is_active) {
             return $this->error('Pasif şubeler merkez şube yapılamaz', 422);
         }
 
@@ -279,7 +281,8 @@ class BranchController extends BaseController
             return $this->success($branch->fresh()->load(['manager:id,name,email']), 'Merkez şube güncellendi');
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->serverError('Merkez şube güncellenirken bir hata oluştu: ' . $e->getMessage());
+
+            return $this->serverError('Merkez şube güncellenirken bir hata oluştu: '.$e->getMessage());
         }
     }
 
@@ -290,7 +293,7 @@ class BranchController extends BaseController
     {
         $branch = Branch::find($id);
 
-        if (!$branch) {
+        if (! $branch) {
             return $this->notFound('Şube bulunamadı');
         }
 
@@ -320,4 +323,3 @@ class BranchController extends BaseController
         return $this->paginated($employees, 'Şube çalışanları listelendi');
     }
 }
-

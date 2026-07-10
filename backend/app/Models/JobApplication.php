@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class JobApplication extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -49,13 +49,21 @@ class JobApplication extends Model
 
     // Constants for status
     const STATUS_NEW = 'new';
+
     const STATUS_REVIEWING = 'reviewing';
+
     const STATUS_SHORTLISTED = 'shortlisted';
+
     const STATUS_INTERVIEW_SCHEDULED = 'interview_scheduled';
+
     const STATUS_INTERVIEWED = 'interviewed';
+
     const STATUS_OFFER_SENT = 'offer_sent';
+
     const STATUS_HIRED = 'hired';
+
     const STATUS_REJECTED = 'rejected';
+
     const STATUS_WITHDRAWN = 'withdrawn';
 
     // Status labels (Turkish)
@@ -145,7 +153,7 @@ class JobApplication extends Model
     public function changeStatus(string $newStatus, ?string $note = null, ?int $changedBy = null): void
     {
         $oldStatus = $this->status;
-        
+
         $this->update([
             'status' => $newStatus,
             'updated_by' => $changedBy ?? auth()->id(),
@@ -160,4 +168,3 @@ class JobApplication extends Model
         ]);
     }
 }
-

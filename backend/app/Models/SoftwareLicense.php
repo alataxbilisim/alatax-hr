@@ -6,12 +6,12 @@ use App\Traits\BelongsToCompany;
 use App\Traits\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SoftwareLicense extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany, HasAuditColumns;
+    use BelongsToCompany, HasAuditColumns, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -44,10 +44,15 @@ class SoftwareLicense extends Model
     ];
 
     const TYPE_PERPETUAL = 'perpetual';
+
     const TYPE_SUBSCRIPTION = 'subscription';
+
     const TYPE_PER_SEAT = 'per_seat';
+
     const TYPE_CONCURRENT = 'concurrent';
+
     const TYPE_SITE = 'site';
+
     const TYPE_OPEN_SOURCE = 'open_source';
 
     public static function getLicenseTypes(): array
@@ -89,19 +94,28 @@ class SoftwareLicense extends Model
     // Methods
     public function hasAvailableSeats(): bool
     {
-        if ($this->total_seats === null) return true;
+        if ($this->total_seats === null) {
+            return true;
+        }
+
         return $this->used_seats < $this->total_seats;
     }
 
     public function getAvailableSeats(): ?int
     {
-        if ($this->total_seats === null) return null;
+        if ($this->total_seats === null) {
+            return null;
+        }
+
         return $this->total_seats - $this->used_seats;
     }
 
     public function isExpired(): bool
     {
-        if (!$this->expiry_date) return false;
+        if (! $this->expiry_date) {
+            return false;
+        }
+
         return $this->expiry_date < now();
     }
 
@@ -111,5 +125,3 @@ class SoftwareLicense extends Model
         $this->save();
     }
 }
-
-

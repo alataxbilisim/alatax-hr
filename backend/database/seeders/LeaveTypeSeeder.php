@@ -105,7 +105,7 @@ class LeaveTypeSeeder extends Seeder
 
         // Her firma için varsayılan izin türlerini oluştur
         $companies = \App\Models\Company::all();
-        
+
         foreach ($companies as $company) {
             foreach ($leaveTypes as $leaveType) {
                 LeaveType::firstOrCreate(
@@ -119,4 +119,3 @@ class LeaveTypeSeeder extends Seeder
         }
     }
 }
-

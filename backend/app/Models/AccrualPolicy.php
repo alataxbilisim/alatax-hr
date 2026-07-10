@@ -6,13 +6,13 @@ use App\Traits\BelongsToCompany;
 use App\Traits\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class AccrualPolicy extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany, HasAuditColumns;
+    use BelongsToCompany, HasAuditColumns, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -55,9 +55,13 @@ class AccrualPolicy extends Model
 
     // Birikim tipleri
     const TYPE_ANNUAL = 'annual';
+
     const TYPE_MONTHLY = 'monthly';
+
     const TYPE_PER_PAY_PERIOD = 'per_pay_period';
+
     const TYPE_HOURLY = 'hourly';
+
     const TYPE_CUSTOM = 'custom';
 
     public static function getAccrualTypes(): array
@@ -133,7 +137,7 @@ class AccrualPolicy extends Model
      */
     public function calculateProratedDays(int $yearsOfService, \DateTime $startDate): float
     {
-        if (!$this->prorate_first_year) {
+        if (! $this->prorate_first_year) {
             return $this->getDaysForTenure($yearsOfService);
         }
 
@@ -150,7 +154,7 @@ class AccrualPolicy extends Model
      */
     public function calculateCarryover(float $unusedDays): float
     {
-        if (!$this->allow_carryover) {
+        if (! $this->allow_carryover) {
             return 0;
         }
 
@@ -161,5 +165,3 @@ class AccrualPolicy extends Model
         return $unusedDays;
     }
 }
-
-

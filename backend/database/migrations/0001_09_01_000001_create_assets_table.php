@@ -31,7 +31,7 @@ return new class extends Migration
             $table->json('specifications')->nullable(); // Teknik özellikler
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
-            
+
             $table->index(['company_id', 'asset_code']);
         });
     }
@@ -44,4 +44,3 @@ return new class extends Migration
         Schema::dropIfExists('assets');
     }
 };
-

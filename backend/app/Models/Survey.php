@@ -6,12 +6,12 @@ use App\Traits\BelongsToCompany;
 use App\Traits\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Survey extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany, HasAuditColumns;
+    use BelongsToCompany, HasAuditColumns, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -38,11 +38,17 @@ class Survey extends Model
     ];
 
     const TYPE_ENGAGEMENT = 'engagement';
+
     const TYPE_SATISFACTION = 'satisfaction';
+
     const TYPE_PULSE = 'pulse';
+
     const TYPE_ENPS = 'enps';
+
     const TYPE_ONBOARDING = 'onboarding';
+
     const TYPE_EXIT = 'exit';
+
     const TYPE_CUSTOM = 'custom';
 
     public static function getTypeLabels(): array
@@ -86,9 +92,16 @@ class Survey extends Model
     // Methods
     public function isOpen(): bool
     {
-        if (!$this->is_active) return false;
-        if ($this->start_date && $this->start_date > now()) return false;
-        if ($this->end_date && $this->end_date < now()) return false;
+        if (! $this->is_active) {
+            return false;
+        }
+        if ($this->start_date && $this->start_date > now()) {
+            return false;
+        }
+        if ($this->end_date && $this->end_date < now()) {
+            return false;
+        }
+
         return true;
     }
 
@@ -96,8 +109,7 @@ class Survey extends Model
     {
         $completed = $this->submissions()->where('status', 'completed')->count();
         $total = $this->submissions()->count();
+
         return $total > 0 ? ($completed / $total) * 100 : 0;
     }
 }
-
-

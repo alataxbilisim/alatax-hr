@@ -2,22 +2,26 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Route;
-use App\Models\User;
 use App\Models\Company;
 use App\Models\Module;
-use Laravel\Sanctum\Sanctum;
+use App\Models\User;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Route;
 
 class TestRoutes extends Command
 {
     protected $signature = 'test:routes {--detailed : Detaylı rapor göster}';
+
     protected $description = 'Tüm route\'ları ve yetkilendirmeleri test et';
 
     protected $superAdmin;
+
     protected $companyAdmin;
+
     protected $employee;
+
     protected $company;
+
     protected $results = [];
 
     public function handle()
@@ -99,7 +103,7 @@ class TestRoutes extends Command
                 $module->id => [
                     'is_active' => true,
                     'activated_at' => now(),
-                ]
+                ],
             ]);
         }
 
@@ -149,7 +153,9 @@ class TestRoutes extends Command
         }
 
         foreach ($routeGroups as $groupName => $routes) {
-            if (empty($routes)) continue;
+            if (empty($routes)) {
+                continue;
+            }
 
             $this->line("<fg=cyan>{$groupName} ({count($routes)})</>");
             foreach ($routes as $route) {
@@ -166,33 +172,33 @@ class TestRoutes extends Command
         $this->line('  php artisan test --filter RouteAuthorizationTest');
         $this->line('  php artisan test --filter RouteComprehensiveTest');
         $this->newLine();
-        
+
         // Route listesi ve yapı analizi
         $this->analyzeRouteStructure();
     }
-    
+
     protected function analyzeRouteStructure()
     {
         $this->info('Route yapısı analiz ediliyor...');
         $this->newLine();
-        
+
         $routes = Route::getRoutes();
         $apiRoutes = collect($routes)->filter(function ($route) {
             return str_starts_with($route->uri(), 'api/v1');
         });
-        
+
         $middlewareAnalysis = [];
-        
+
         foreach ($apiRoutes as $route) {
             $middleware = $route->middleware();
             foreach ($middleware as $mw) {
-                if (!isset($middlewareAnalysis[$mw])) {
+                if (! isset($middlewareAnalysis[$mw])) {
                     $middlewareAnalysis[$mw] = 0;
                 }
                 $middlewareAnalysis[$mw]++;
             }
         }
-        
+
         $this->line('Middleware Kullanım İstatistikleri:');
         arsort($middlewareAnalysis);
         foreach ($middlewareAnalysis as $mw => $count) {
@@ -200,7 +206,6 @@ class TestRoutes extends Command
         }
         $this->newLine();
     }
-
 
     protected function reportResults()
     {
@@ -212,4 +217,3 @@ class TestRoutes extends Command
         $this->newLine();
     }
 }
-

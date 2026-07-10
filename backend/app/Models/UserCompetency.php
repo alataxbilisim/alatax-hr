@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class UserCompetency extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
         'company_id',
@@ -47,9 +47,10 @@ class UserCompetency extends Model
     // Methods
     public function getGap(): int
     {
-        if (!$this->target_level) {
+        if (! $this->target_level) {
             return 0;
         }
+
         return $this->target_level - $this->current_level;
     }
 
@@ -60,11 +61,10 @@ class UserCompetency extends Model
 
     public function getProgressPercentage(): float
     {
-        if (!$this->target_level || $this->target_level == 0) {
+        if (! $this->target_level || $this->target_level == 0) {
             return 100;
         }
+
         return min(100, ($this->current_level / $this->target_level) * 100);
     }
 }
-
-

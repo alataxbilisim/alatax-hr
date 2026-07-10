@@ -18,8 +18,8 @@ class PortalPayslipController extends BaseController
     {
         $user = $request->user();
         $employee = Employee::where('user_id', $user->id)->first();
-        
-        if (!$employee) {
+
+        if (! $employee) {
             return $this->error('Personel kaydı bulunamadı', null, 404);
         }
 
@@ -45,7 +45,7 @@ class PortalPayslipController extends BaseController
                 'net_salary' => $payslip->net_salary,
                 'is_viewed' => $payslip->is_viewed,
                 'published_at' => $payslip->published_at,
-                'has_file' => !empty($payslip->file_path),
+                'has_file' => ! empty($payslip->file_path),
             ];
         });
 
@@ -59,8 +59,8 @@ class PortalPayslipController extends BaseController
     {
         $user = $request->user();
         $employee = Employee::where('user_id', $user->id)->first();
-        
-        if (!$employee) {
+
+        if (! $employee) {
             return $this->error('Personel kaydı bulunamadı', null, 404);
         }
 
@@ -69,7 +69,7 @@ class PortalPayslipController extends BaseController
             ->published()
             ->first();
 
-        if (!$payslip) {
+        if (! $payslip) {
             return $this->error('Bordro bulunamadı', null, 404);
         }
 
@@ -93,7 +93,7 @@ class PortalPayslipController extends BaseController
             'overtime_hours' => $payslip->overtime_hours,
             'notes' => $payslip->notes,
             'published_at' => $payslip->published_at,
-            'has_file' => !empty($payslip->file_path),
+            'has_file' => ! empty($payslip->file_path),
         ]);
     }
 
@@ -104,8 +104,8 @@ class PortalPayslipController extends BaseController
     {
         $user = $request->user();
         $employee = Employee::where('user_id', $user->id)->first();
-        
-        if (!$employee) {
+
+        if (! $employee) {
             return $this->error('Personel kaydı bulunamadı', null, 404);
         }
 
@@ -114,11 +114,11 @@ class PortalPayslipController extends BaseController
             ->published()
             ->first();
 
-        if (!$payslip) {
+        if (! $payslip) {
             return $this->error('Bordro bulunamadı', null, 404);
         }
 
-        if (!$payslip->file_path || !Storage::disk('public')->exists($payslip->file_path)) {
+        if (! $payslip->file_path || ! Storage::disk('public')->exists($payslip->file_path)) {
             return $this->error('Bordro dosyası bulunamadı', null, 404);
         }
 
@@ -134,8 +134,8 @@ class PortalPayslipController extends BaseController
     {
         $user = $request->user();
         $employee = Employee::where('user_id', $user->id)->first();
-        
-        if (!$employee) {
+
+        if (! $employee) {
             return $this->error('Personel kaydı bulunamadı', null, 404);
         }
 
@@ -148,4 +148,3 @@ class PortalPayslipController extends BaseController
         return $this->success($years);
     }
 }
-

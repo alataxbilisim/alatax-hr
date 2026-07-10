@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class ApprovalRecord extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
         'company_id',
@@ -37,9 +37,13 @@ class ApprovalRecord extends Model
 
     // Durumlar
     const STATUS_PENDING = 'pending';
+
     const STATUS_APPROVED = 'approved';
+
     const STATUS_REJECTED = 'rejected';
+
     const STATUS_SKIPPED = 'skipped';
+
     const STATUS_ESCALATED = 'escalated';
 
     public static function getStatusLabels(): array
@@ -96,7 +100,7 @@ class ApprovalRecord extends Model
     }
 
     // Methods
-    public function approve(string $comment = null): void
+    public function approve(?string $comment = null): void
     {
         $this->update([
             'status' => self::STATUS_APPROVED,
@@ -142,7 +146,7 @@ class ApprovalRecord extends Model
         );
     }
 
-    public function skip(string $reason = null): void
+    public function skip(?string $reason = null): void
     {
         $this->update([
             'status' => self::STATUS_SKIPPED,
@@ -163,7 +167,7 @@ class ApprovalRecord extends Model
         if ($nextStep) {
             // Sonraki adım için kayıt oluştur
             $approver = $nextStep->findApprover($approvable);
-            
+
             self::create([
                 'company_id' => $this->company_id,
                 'approval_workflow_id' => $workflow->id,
@@ -191,5 +195,3 @@ class ApprovalRecord extends Model
         }
     }
 }
-
-

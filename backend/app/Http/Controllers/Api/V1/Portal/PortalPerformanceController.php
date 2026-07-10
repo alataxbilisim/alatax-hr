@@ -3,12 +3,11 @@
 namespace App\Http\Controllers\Api\V1\Portal;
 
 use App\Http\Controllers\Api\V1\BaseController;
-use App\Models\Employee;
-use App\Models\PerformanceReview;
-use App\Models\PerformanceScore;
-use App\Models\Objective;
-use App\Models\KeyResult;
 use App\Models\ContinuousFeedback;
+use App\Models\Employee;
+use App\Models\KeyResult;
+use App\Models\Objective;
+use App\Models\PerformanceReview;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -22,7 +21,7 @@ class PortalPerformanceController extends BaseController
         $user = $request->user();
         $employee = Employee::where('user_id', $user->id)->first();
 
-        if (!$employee) {
+        if (! $employee) {
             return $this->error('Personel kaydı bulunamadı', null, 404);
         }
 
@@ -31,7 +30,7 @@ class PortalPerformanceController extends BaseController
             ->with([
                 'period:id,name,start_date,end_date,status',
                 'reviewer:id,name,email',
-                'approvedBy:id,name'
+                'approvedBy:id,name',
             ]);
 
         // Durum filtresi
@@ -58,7 +57,7 @@ class PortalPerformanceController extends BaseController
         $user = $request->user();
         $employee = Employee::where('user_id', $user->id)->first();
 
-        if (!$employee) {
+        if (! $employee) {
             return $this->error('Personel kaydı bulunamadı', null, 404);
         }
 
@@ -69,11 +68,11 @@ class PortalPerformanceController extends BaseController
                 'period:id,name,start_date,end_date,status,description',
                 'reviewer:id,name,email',
                 'approvedBy:id,name',
-                'scores.criteria:id,name,description,weight,max_score'
+                'scores.criteria:id,name,description,weight,max_score',
             ])
             ->first();
 
-        if (!$review) {
+        if (! $review) {
             return $this->error('Performans değerlendirmesi bulunamadı', null, 404);
         }
 
@@ -88,7 +87,7 @@ class PortalPerformanceController extends BaseController
         $user = $request->user();
         $employee = Employee::where('user_id', $user->id)->first();
 
-        if (!$employee) {
+        if (! $employee) {
             return $this->error('Personel kaydı bulunamadı', null, 404);
         }
 
@@ -98,7 +97,7 @@ class PortalPerformanceController extends BaseController
             ->whereIn('status', ['submitted', 'approved']) // Sadece gönderilmiş veya onaylanmış değerlendirmelere yorum yapılabilir
             ->first();
 
-        if (!$review) {
+        if (! $review) {
             return $this->error('Performans değerlendirmesi bulunamadı veya yorum eklenemez', null, 404);
         }
 
@@ -151,7 +150,7 @@ class PortalPerformanceController extends BaseController
             ->with(['keyResults'])
             ->first();
 
-        if (!$objective) {
+        if (! $objective) {
             return $this->error('Hedef bulunamadı', null, 404);
         }
 
@@ -172,7 +171,7 @@ class PortalPerformanceController extends BaseController
             })
             ->first();
 
-        if (!$keyResult) {
+        if (! $keyResult) {
             return $this->error('Anahtar sonuç bulunamadı', null, 404);
         }
 
@@ -219,7 +218,7 @@ class PortalPerformanceController extends BaseController
             })
             ->with([
                 'employee:id,name,email',
-                'givenBy:id,name,email'
+                'givenBy:id,name,email',
             ]);
 
         // Filtreleme
@@ -256,7 +255,7 @@ class PortalPerformanceController extends BaseController
             ->where('company_id', $user->company_id)
             ->first();
 
-        if (!$targetEmployee) {
+        if (! $targetEmployee) {
             return $this->error('Geçersiz kullanıcı', null, 422);
         }
 
@@ -274,4 +273,3 @@ class PortalPerformanceController extends BaseController
         return $this->created($feedback, 'Geri bildirim gönderildi');
     }
 }
-

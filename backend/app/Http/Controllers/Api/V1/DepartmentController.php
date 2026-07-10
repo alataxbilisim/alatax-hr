@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Models\ActivityLog;
 use App\Models\Department;
 use App\Models\Employee;
-use App\Models\ActivityLog;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class DepartmentController extends BaseController
@@ -50,7 +50,7 @@ class DepartmentController extends BaseController
                     ->where('company_id', $this->getCompanyId())
                     ->where('id', $dept->manager_id)
                     ->first();
-                
+
                 if ($employee) {
                     $dept->manager = [
                         'id' => $employee->id,
@@ -58,6 +58,7 @@ class DepartmentController extends BaseController
                     ];
                 }
             }
+
             return $dept;
         });
 
@@ -80,7 +81,7 @@ class DepartmentController extends BaseController
                 ->where('company_id', $this->getCompanyId())
                 ->where('id', $department->manager_id)
                 ->first();
-            
+
             if ($employee) {
                 $department->manager = [
                     'id' => $employee->id,
@@ -133,7 +134,7 @@ class DepartmentController extends BaseController
             'created_by' => auth()->id(),
         ]);
 
-        ActivityLog::log('create', $department, 'Departman oluşturuldu: ' . $department->name);
+        ActivityLog::log('create', $department, 'Departman oluşturuldu: '.$department->name);
 
         return $this->created($department->load('parent:id,name'), 'Departman başarıyla oluşturuldu');
     }
@@ -206,7 +207,7 @@ class DepartmentController extends BaseController
         }
 
         $oldValues = $department->toArray();
-        ActivityLog::log('delete', $department, 'Departman silindi: ' . $department->name, $oldValues);
+        ActivityLog::log('delete', $department, 'Departman silindi: '.$department->name, $oldValues);
 
         $department->delete();
 
@@ -262,7 +263,7 @@ class DepartmentController extends BaseController
         $code = str_replace(['ö', 'Ö'], 'O', $code);
         $code = str_replace(['ç', 'Ç'], 'C', $code);
         $code = preg_replace('/[^A-Z0-9]/', '', $code);
+
         return substr($code, 0, 10);
     }
 }
-

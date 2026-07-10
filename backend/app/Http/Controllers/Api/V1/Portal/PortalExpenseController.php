@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Api\V1\Portal;
 
 use App\Http\Controllers\Api\V1\BaseController;
-use App\Models\ExpenseClaim;
-use App\Models\ExpenseCategory;
-use App\Models\ExpenseItem;
 use App\Models\ActivityLog;
-use Illuminate\Http\Request;
+use App\Models\ExpenseCategory;
+use App\Models\ExpenseClaim;
+use App\Models\ExpenseItem;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class PortalExpenseController extends BaseController
@@ -178,7 +178,7 @@ class PortalExpenseController extends BaseController
     {
         $item = ExpenseItem::whereHas('expenseClaim', function ($q) {
             $q->where('user_id', auth()->id())
-              ->where('status', ExpenseClaim::STATUS_DRAFT);
+                ->where('status', ExpenseClaim::STATUS_DRAFT);
         })->findOrFail($itemId);
 
         $validated = $request->validate([
@@ -186,7 +186,7 @@ class PortalExpenseController extends BaseController
         ]);
 
         $path = $request->file('receipt')->store(
-            'expenses/' . auth()->user()->company_id . '/' . date('Y-m'),
+            'expenses/'.auth()->user()->company_id.'/'.date('Y-m'),
             'public'
         );
 
@@ -227,4 +227,3 @@ class PortalExpenseController extends BaseController
         return $this->success($summary, 'Masraf özeti');
     }
 }
-

@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Api\V1\Recruitment;
 
 use App\Http\Controllers\Api\V1\BaseController;
-use App\Models\JobPosition;
 use App\Models\ActivityLog;
-use Illuminate\Http\Request;
+use App\Models\JobPosition;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class JobPositionController extends BaseController
@@ -86,17 +86,17 @@ class JobPositionController extends BaseController
 
         // Company ID kontrolü
         $companyId = $this->getCompanyId();
-        if (!$companyId) {
+        if (! $companyId) {
             return $this->error('Bu işlem için bir firmaya bağlı olmanız gerekiyor.', 403);
         }
 
-        $validated['slug'] = Str::slug($validated['title']) . '-' . uniqid();
+        $validated['slug'] = Str::slug($validated['title']).'-'.uniqid();
         $validated['company_id'] = $companyId;
         $validated['status'] = 'draft';
 
         $position = JobPosition::create($validated);
 
-        ActivityLog::log('create', $position, 'İş pozisyonu oluşturuldu: ' . $position->title);
+        ActivityLog::log('create', $position, 'İş pozisyonu oluşturuldu: '.$position->title);
 
         return $this->created($position, 'İş pozisyonu oluşturuldu');
     }
@@ -131,7 +131,7 @@ class JobPositionController extends BaseController
 
         $position->update($validated);
 
-        ActivityLog::log('update', $position, 'İş pozisyonu güncellendi: ' . $position->title);
+        ActivityLog::log('update', $position, 'İş pozisyonu güncellendi: '.$position->title);
 
         return $this->success($position->fresh(), 'İş pozisyonu güncellendi');
     }
@@ -149,7 +149,7 @@ class JobPositionController extends BaseController
         $title = $position->title;
         $position->delete();
 
-        ActivityLog::log('delete', null, 'İş pozisyonu silindi: ' . $title);
+        ActivityLog::log('delete', null, 'İş pozisyonu silindi: '.$title);
 
         return $this->success(null, 'İş pozisyonu silindi');
     }

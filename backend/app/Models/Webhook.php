@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
 
 class Webhook extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany, HasAuditColumns;
+    use BelongsToCompany, HasAuditColumns, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -61,4 +61,3 @@ class Webhook extends Model
         return $this->is_active;
     }
 }
-

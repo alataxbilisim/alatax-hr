@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ApprovalDelegation extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
         'company_id',
@@ -87,5 +87,3 @@ class ApprovalDelegation extends Model
         return $delegation?->delegate;
     }
 }
-
-

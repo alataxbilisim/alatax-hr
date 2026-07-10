@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Api\V1\Onboarding;
 
 use App\Http\Controllers\Api\V1\BaseController;
-use App\Models\OnboardingTemplate;
 use App\Models\ActivityLog;
-use Illuminate\Http\Request;
+use App\Models\OnboardingTemplate;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class TemplateController extends BaseController
 {
@@ -48,7 +48,7 @@ class TemplateController extends BaseController
 
         $template = OnboardingTemplate::create($validated);
 
-        ActivityLog::log('create', $template, 'Onboarding şablonu oluşturuldu: ' . $template->name);
+        ActivityLog::log('create', $template, 'Onboarding şablonu oluşturuldu: '.$template->name);
 
         return $this->success($template, 'Onboarding şablonu oluşturuldu', 201);
     }
@@ -81,14 +81,14 @@ class TemplateController extends BaseController
         ]);
 
         // If setting as default, unset other defaults
-        if (($validated['is_default'] ?? false) && !$template->is_default) {
+        if (($validated['is_default'] ?? false) && ! $template->is_default) {
             OnboardingTemplate::where('is_default', true)->update(['is_default' => false]);
         }
 
         $oldValues = $template->getOriginal();
         $template->update($validated);
 
-        ActivityLog::log('update', $template, 'Onboarding şablonu güncellendi: ' . $template->name, $oldValues, $template->fresh()->toArray());
+        ActivityLog::log('update', $template, 'Onboarding şablonu güncellendi: '.$template->name, $oldValues, $template->fresh()->toArray());
 
         return $this->success($template, 'Onboarding şablonu güncellendi');
     }
@@ -103,9 +103,10 @@ class TemplateController extends BaseController
         }
 
         $templateName = $template->name;
-        ActivityLog::log('delete', null, 'Onboarding şablonu silindi: ' . $templateName);
-        
+        ActivityLog::log('delete', null, 'Onboarding şablonu silindi: '.$templateName);
+
         $template->delete();
+
         return $this->success(null, 'Onboarding şablonu silindi');
     }
 
@@ -115,11 +116,11 @@ class TemplateController extends BaseController
     public function duplicate(OnboardingTemplate $template): JsonResponse
     {
         $newTemplate = $template->replicate();
-        $newTemplate->name = $template->name . ' (Kopya)';
+        $newTemplate->name = $template->name.' (Kopya)';
         $newTemplate->is_default = false;
         $newTemplate->save();
 
-        ActivityLog::log('create', $newTemplate, 'Onboarding şablonu kopyalandı: ' . $newTemplate->name);
+        ActivityLog::log('create', $newTemplate, 'Onboarding şablonu kopyalandı: '.$newTemplate->name);
 
         return $this->success($newTemplate, 'Şablon kopyalandı', 201);
     }

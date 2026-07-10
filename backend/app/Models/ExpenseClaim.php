@@ -38,9 +38,13 @@ class ExpenseClaim extends Model
     ];
 
     const STATUS_DRAFT = 'draft';
+
     const STATUS_SUBMITTED = 'submitted';
+
     const STATUS_APPROVED = 'approved';
+
     const STATUS_REJECTED = 'rejected';
+
     const STATUS_PAID = 'paid';
 
     public function company(): BelongsTo
@@ -88,4 +92,3 @@ class ExpenseClaim extends Model
         return sprintf('EXP-%s-%04d', $year, $count);
     }
 }
-

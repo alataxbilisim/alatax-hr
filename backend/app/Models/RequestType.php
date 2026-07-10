@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RequestType extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -61,4 +61,3 @@ class RequestType extends Model
         return $query->orderBy('sort_order')->orderBy('name');
     }
 }
-

@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api\V1\Performance;
 
 use App\Http\Controllers\Api\V1\BaseController;
-use App\Models\PerformancePeriod;
 use App\Models\ActivityLog;
+use App\Models\PerformancePeriod;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -42,7 +42,7 @@ class PeriodController extends BaseController
             'created_by' => auth()->id(),
         ]);
 
-        ActivityLog::log('create', $period, 'Performans dönemi oluşturuldu: ' . $period->name);
+        ActivityLog::log('create', $period, 'Performans dönemi oluşturuldu: '.$period->name);
 
         return $this->success($period, 'Performans dönemi oluşturuldu', 201);
     }
@@ -77,7 +77,7 @@ class PeriodController extends BaseController
         $oldValues = $period->getOriginal();
         $period->update($validated);
 
-        ActivityLog::log('update', $period, 'Performans dönemi güncellendi: ' . $period->name, $oldValues, $period->fresh()->toArray());
+        ActivityLog::log('update', $period, 'Performans dönemi güncellendi: '.$period->name, $oldValues, $period->fresh()->toArray());
 
         return $this->success($period, 'Dönem güncellendi');
     }
@@ -88,14 +88,14 @@ class PeriodController extends BaseController
     public function destroy(int $id): JsonResponse
     {
         $period = PerformancePeriod::where('company_id', $this->getCompanyId())->findOrFail($id);
-        
+
         if ($period->reviews()->exists()) {
             return $this->error('Bu döneme ait değerlendirmeler var, silinemez.', 422);
         }
 
         $periodName = $period->name;
-        ActivityLog::log('delete', null, 'Performans dönemi silindi: ' . $periodName);
-        
+        ActivityLog::log('delete', null, 'Performans dönemi silindi: '.$periodName);
+
         $period->delete();
 
         return $this->success(null, 'Dönem silindi');
@@ -109,7 +109,7 @@ class PeriodController extends BaseController
         $period = PerformancePeriod::where('company_id', $this->getCompanyId())->findOrFail($id);
         $period->update(['status' => 'active']);
 
-        ActivityLog::log('update', $period, 'Dönem aktifleştirildi: ' . $period->name);
+        ActivityLog::log('update', $period, 'Dönem aktifleştirildi: '.$period->name);
 
         return $this->success($period, 'Dönem aktifleştirildi');
     }
@@ -122,9 +122,8 @@ class PeriodController extends BaseController
         $period = PerformancePeriod::where('company_id', $this->getCompanyId())->findOrFail($id);
         $period->update(['status' => 'closed']);
 
-        ActivityLog::log('update', $period, 'Dönem kapatıldı: ' . $period->name);
+        ActivityLog::log('update', $period, 'Dönem kapatıldı: '.$period->name);
 
         return $this->success($period, 'Dönem kapatıldı');
     }
 }
-

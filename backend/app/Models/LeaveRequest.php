@@ -6,23 +6,29 @@ use App\Traits\BelongsToCompany;
 use App\Traits\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class LeaveRequest extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany, HasAuditColumns;
+    use BelongsToCompany, HasAuditColumns, HasFactory, SoftDeletes;
 
     const STATUS_PENDING = 'pending';
+
     const STATUS_APPROVED = 'approved';
+
     const STATUS_REJECTED = 'rejected';
+
     const STATUS_CANCELLED = 'cancelled';
 
     // Workflow durumları
     const WORKFLOW_PENDING = 'pending';
+
     const WORKFLOW_IN_PROGRESS = 'in_progress';
+
     const WORKFLOW_COMPLETED = 'completed';
+
     const WORKFLOW_REJECTED = 'rejected';
 
     protected $fillable = [
@@ -213,4 +219,3 @@ class LeaveRequest extends Model
         ];
     }
 }
-

@@ -6,8 +6,8 @@ use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\Document;
 use App\Models\DocumentCategory;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ReportController extends BaseController
@@ -106,22 +106,22 @@ class ReportController extends BaseController
         $query = Document::where('company_id', $companyId);
 
         // Filtreleri uygula
-        if (!empty($filters['category_id'])) {
+        if (! empty($filters['category_id'])) {
             $query->where('category_id', $filters['category_id']);
         }
-        if (!empty($filters['file_type'])) {
+        if (! empty($filters['file_type'])) {
             $query->where('file_type', $filters['file_type']);
         }
-        if (!empty($filters['uploaded_by'])) {
+        if (! empty($filters['uploaded_by'])) {
             $query->where('uploaded_by', $filters['uploaded_by']);
         }
-        if (!empty($filters['approval_status'])) {
+        if (! empty($filters['approval_status'])) {
             $query->where('approval_status', $filters['approval_status']);
         }
-        if (!empty($filters['date_from'])) {
+        if (! empty($filters['date_from'])) {
             $query->whereDate('created_at', '>=', $filters['date_from']);
         }
-        if (!empty($filters['date_to'])) {
+        if (! empty($filters['date_to'])) {
             $query->whereDate('created_at', '<=', $filters['date_to']);
         }
 
@@ -228,8 +228,9 @@ class ReportController extends BaseController
                     ->get()
                     ->map(function ($item) {
                         $months = ['', 'Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+
                         return [
-                            'name' => $months[$item->month] . ' ' . $item->year,
+                            'name' => $months[$item->month].' '.$item->year,
                             'value' => (float) $item->value,
                         ];
                     })->toArray();
@@ -273,13 +274,13 @@ class ReportController extends BaseController
         $query = Document::where('company_id', $companyId);
 
         // Filtreleri uygula
-        if (!empty($filters['category_id'])) {
+        if (! empty($filters['category_id'])) {
             $query->where('category_id', $filters['category_id']);
         }
-        if (!empty($filters['date_from'])) {
+        if (! empty($filters['date_from'])) {
             $query->whereDate('created_at', '>=', $filters['date_from']);
         }
-        if (!empty($filters['date_to'])) {
+        if (! empty($filters['date_to'])) {
             $query->whereDate('created_at', '<=', $filters['date_to']);
         }
 
@@ -348,7 +349,7 @@ class ReportController extends BaseController
                 ->count();
             $months = ['', 'Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
             $trend[] = [
-                'name' => $months[$date->month] . ' ' . $date->year,
+                'name' => $months[$date->month].' '.$date->year,
                 'value' => $count,
             ];
         }
@@ -397,7 +398,9 @@ class ReportController extends BaseController
      */
     private function getFileTypeLabel(?string $mimeType): string
     {
-        if (!$mimeType) return 'Bilinmiyor';
+        if (! $mimeType) {
+            return 'Bilinmiyor';
+        }
 
         $labels = [
             'application/pdf' => 'PDF',
@@ -425,10 +428,16 @@ class ReportController extends BaseController
      */
     private function formatFileSize(int $bytes): string
     {
-        if ($bytes < 1024) return $bytes . ' B';
-        if ($bytes < 1024 * 1024) return round($bytes / 1024, 1) . ' KB';
-        if ($bytes < 1024 * 1024 * 1024) return round($bytes / (1024 * 1024), 1) . ' MB';
-        return round($bytes / (1024 * 1024 * 1024), 2) . ' GB';
+        if ($bytes < 1024) {
+            return $bytes.' B';
+        }
+        if ($bytes < 1024 * 1024) {
+            return round($bytes / 1024, 1).' KB';
+        }
+        if ($bytes < 1024 * 1024 * 1024) {
+            return round($bytes / (1024 * 1024), 1).' MB';
+        }
+
+        return round($bytes / (1024 * 1024 * 1024), 2).' GB';
     }
 }
-

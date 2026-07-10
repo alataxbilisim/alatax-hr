@@ -2,22 +2,26 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use App\Models\User;
 use App\Models\Company;
 use App\Models\Module;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
 use Laravel\Sanctum\Sanctum;
+use Tests\TestCase;
 
 class RouteAuthorizationTest extends TestCase
 {
     use RefreshDatabase;
 
     protected $superAdmin;
+
     protected $companyAdmin;
+
     protected $employee;
+
     protected $company;
+
     protected $companyWithoutModule;
 
     protected function setUp(): void
@@ -216,7 +220,7 @@ class RouteAuthorizationTest extends TestCase
             $module->id => [
                 'is_active' => true,
                 'activated_at' => now(),
-            ]
+            ],
         ]);
 
         Sanctum::actingAs($this->companyAdmin);
@@ -258,7 +262,7 @@ class RouteAuthorizationTest extends TestCase
             $module->id => [
                 'is_active' => true,
                 'activated_at' => now(),
-            ]
+            ],
         ]);
 
         Sanctum::actingAs($this->companyAdmin);
@@ -305,7 +309,7 @@ class RouteAuthorizationTest extends TestCase
             $module->id => [
                 'is_active' => true,
                 'activated_at' => now(),
-            ]
+            ],
         ]);
 
         Sanctum::actingAs($this->companyAdmin);
@@ -342,7 +346,7 @@ class RouteAuthorizationTest extends TestCase
             $module->id => [
                 'is_active' => true,
                 'activated_at' => now(),
-            ]
+            ],
         ]);
 
         Sanctum::actingAs($this->companyAdmin);
@@ -374,7 +378,7 @@ class RouteAuthorizationTest extends TestCase
             $module->id => [
                 'is_active' => true,
                 'activated_at' => now(),
-            ]
+            ],
         ]);
 
         Sanctum::actingAs($this->companyAdmin);
@@ -482,4 +486,3 @@ class RouteAuthorizationTest extends TestCase
         $response->assertStatus(200);
     }
 }
-

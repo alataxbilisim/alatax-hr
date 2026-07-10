@@ -10,11 +10,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class OnboardingProcess extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany, HasAuditColumns;
+    use BelongsToCompany, HasAuditColumns, HasFactory, SoftDeletes;
 
     const STATUS_PENDING = 'pending';
+
     const STATUS_IN_PROGRESS = 'in_progress';
+
     const STATUS_COMPLETED = 'completed';
+
     const STATUS_CANCELLED = 'cancelled';
 
     protected $fillable = [
@@ -71,22 +74,22 @@ class OnboardingProcess extends Model
     {
         $total = $this->tasks()->count();
         $completed = $this->tasks()->where('status', 'completed')->count();
-        
+
         $this->progress = $total > 0 ? round(($completed / $total) * 100) : 0;
-        
+
         if ($this->progress === 100) {
             $this->status = self::STATUS_COMPLETED;
             $this->actual_end_date = now();
         } elseif ($this->progress > 0) {
             $this->status = self::STATUS_IN_PROGRESS;
         }
-        
+
         $this->save();
     }
 
     public function createTasksFromTemplate(): void
     {
-        if (!$this->template) {
+        if (! $this->template) {
             return;
         }
 
@@ -94,13 +97,13 @@ class OnboardingProcess extends Model
             OnboardingTask::create([
                 'company_id' => $this->company_id,
                 'process_id' => $this->id,
-                'title' => $taskData['title'] ?? 'Görev ' . ($index + 1),
+                'title' => $taskData['title'] ?? 'Görev '.($index + 1),
                 'description' => $taskData['description'] ?? null,
                 'type' => $taskData['type'] ?? 'custom',
                 'order' => $index,
                 'is_required' => $taskData['is_required'] ?? true,
-                'due_date' => isset($taskData['days_offset']) 
-                    ? $this->start_date->addDays($taskData['days_offset']) 
+                'due_date' => isset($taskData['days_offset'])
+                    ? $this->start_date->addDays($taskData['days_offset'])
                     : null,
                 'assigned_to' => $taskData['assigned_to'] ?? $this->assigned_to,
             ]);
@@ -117,4 +120,3 @@ class OnboardingProcess extends Model
         ];
     }
 }
-

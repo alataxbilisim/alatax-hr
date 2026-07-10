@@ -24,7 +24,7 @@ return new class extends Migration
                 'meeting',         // Toplantı
                 'system_setup',    // Sistem kurulumu
                 'quiz',            // Quiz/Anket
-                'custom'           // Özel görev
+                'custom',           // Özel görev
             ])->default('custom');
             $table->integer('order')->default(0);
             $table->boolean('is_required')->default(true);
@@ -52,4 +52,3 @@ return new class extends Migration
         Schema::dropIfExists('onboarding_tasks');
     }
 };
-

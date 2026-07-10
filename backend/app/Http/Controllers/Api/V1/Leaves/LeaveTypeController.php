@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Api\V1\Leaves;
 
 use App\Http\Controllers\Api\V1\BaseController;
-use App\Models\LeaveType;
 use App\Models\ActivityLog;
-use Illuminate\Http\Request;
+use App\Models\LeaveType;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class LeaveTypeController extends BaseController
 {
@@ -42,7 +42,7 @@ class LeaveTypeController extends BaseController
 
         $leaveType = LeaveType::create($validated);
 
-        ActivityLog::log('create', $leaveType, 'İzin türü oluşturuldu: ' . $leaveType->name);
+        ActivityLog::log('create', $leaveType, 'İzin türü oluşturuldu: '.$leaveType->name);
 
         return $this->success($leaveType, 'İzin türü oluşturuldu', 201);
     }
@@ -77,7 +77,7 @@ class LeaveTypeController extends BaseController
         $oldValues = $leaveType->getOriginal();
         $leaveType->update($validated);
 
-        ActivityLog::log('update', $leaveType, 'İzin türü güncellendi: ' . $leaveType->name, $oldValues, $leaveType->fresh()->toArray());
+        ActivityLog::log('update', $leaveType, 'İzin türü güncellendi: '.$leaveType->name, $oldValues, $leaveType->fresh()->toArray());
 
         return $this->success($leaveType, 'İzin türü güncellendi');
     }
@@ -88,9 +88,10 @@ class LeaveTypeController extends BaseController
     public function destroy(LeaveType $leaveType): JsonResponse
     {
         $leaveTypeName = $leaveType->name;
-        ActivityLog::log('delete', null, 'İzin türü silindi: ' . $leaveTypeName);
-        
+        ActivityLog::log('delete', null, 'İzin türü silindi: '.$leaveTypeName);
+
         $leaveType->delete();
+
         return $this->success(null, 'İzin türü silindi');
     }
 }

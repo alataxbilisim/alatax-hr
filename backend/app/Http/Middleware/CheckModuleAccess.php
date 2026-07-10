@@ -28,7 +28,7 @@ class CheckModuleAccess
                 ->where('company_modules.is_active', true)
                 ->exists();
 
-            if (!$hasModule) {
+            if (! $hasModule) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Bu modüle erişim yetkiniz bulunmamaktadır.',
@@ -42,4 +42,3 @@ class CheckModuleAccess
         return $next($request);
     }
 }
-

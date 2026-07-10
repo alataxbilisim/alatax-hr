@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Models\ActivityLog;
 use App\Models\Employee;
 use App\Models\EmployeeDocument;
-use App\Models\ActivityLog;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
@@ -184,7 +184,7 @@ class EmployeeDocumentController extends BaseController
             ->where('company_id', $this->getCompanyId())
             ->findOrFail($documentId);
 
-        if (!Storage::disk('private')->exists($document->file_path)) {
+        if (! Storage::disk('private')->exists($document->file_path)) {
             return $this->error('Dosya bulunamadı', 404);
         }
 
@@ -231,4 +231,3 @@ class EmployeeDocumentController extends BaseController
         return $this->success($documents);
     }
 }
-

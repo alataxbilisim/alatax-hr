@@ -132,4 +132,3 @@ class ActivityLog extends Model
         return $query->where('is_successful', false);
     }
 }
-

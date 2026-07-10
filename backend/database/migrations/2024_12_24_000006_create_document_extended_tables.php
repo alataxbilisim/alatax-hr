@@ -33,18 +33,18 @@ return new class extends Migration
             $table->id();
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->foreignId('document_category_id')->nullable()->constrained()->onDelete('set null');
-            
+
             $table->string('name'); // Kimlik Fotokopisi, Sağlık Raporu
             $table->text('description')->nullable();
-            
+
             // Uygulanacak kapsam
             $table->enum('scope', ['all', 'department', 'position', 'employee_type'])->default('all');
             $table->string('scope_value')->nullable(); // Departman adı, pozisyon adı vb.
-            
+
             $table->boolean('is_mandatory')->default(true);
             $table->integer('validity_months')->nullable(); // Geçerlilik süresi (ay)
             $table->integer('reminder_days_before')->default(30); // Kaç gün önce hatırlat
-            
+
             $table->boolean('is_active')->default(true);
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
@@ -60,12 +60,12 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('required_document_id')->constrained()->onDelete('cascade');
             $table->foreignId('document_id')->nullable()->constrained()->onDelete('set null');
-            
+
             $table->enum('status', ['missing', 'pending', 'approved', 'rejected', 'expired'])->default('missing');
             $table->date('expiry_date')->nullable();
             $table->date('last_reminded_at')->nullable();
             $table->text('rejection_reason')->nullable();
-            
+
             $table->foreignId('reviewed_by')->nullable()->constrained('users')->onDelete('set null');
             $table->datetime('reviewed_at')->nullable();
             $table->timestamps();
@@ -108,5 +108,3 @@ return new class extends Migration
         Schema::dropIfExists('document_versions');
     }
 };
-
-

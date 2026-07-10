@@ -25,7 +25,7 @@ return new class extends Migration
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
             $table->softDeletes();
-            
+
             $table->index('company_id');
             $table->index('is_active');
         });
@@ -41,7 +41,7 @@ return new class extends Migration
             $table->boolean('is_successful')->default(false);
             $table->timestamp('triggered_at');
             $table->timestamps();
-            
+
             $table->index('webhook_id');
             $table->index('is_successful');
             $table->index('triggered_at');
@@ -54,4 +54,3 @@ return new class extends Migration
         Schema::dropIfExists('webhooks');
     }
 };
-

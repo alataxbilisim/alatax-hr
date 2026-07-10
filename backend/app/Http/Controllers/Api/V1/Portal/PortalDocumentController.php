@@ -18,8 +18,8 @@ class PortalDocumentController extends BaseController
     {
         $user = $request->user();
         $employee = Employee::where('user_id', $user->id)->first();
-        
-        if (!$employee) {
+
+        if (! $employee) {
             return $this->error('Personel kaydı bulunamadı', null, 404);
         }
 
@@ -45,8 +45,8 @@ class PortalDocumentController extends BaseController
     {
         $user = $request->user();
         $employee = Employee::where('user_id', $user->id)->first();
-        
-        if (!$employee) {
+
+        if (! $employee) {
             return $this->error('Personel kaydı bulunamadı', null, 404);
         }
 
@@ -55,7 +55,7 @@ class PortalDocumentController extends BaseController
             ->visibleToEmployee()
             ->first();
 
-        if (!$document) {
+        if (! $document) {
             return $this->error('Belge bulunamadı', null, 404);
         }
 
@@ -69,8 +69,8 @@ class PortalDocumentController extends BaseController
     {
         $user = $request->user();
         $employee = Employee::where('user_id', $user->id)->first();
-        
-        if (!$employee) {
+
+        if (! $employee) {
             return $this->error('Personel kaydı bulunamadı', null, 404);
         }
 
@@ -79,11 +79,11 @@ class PortalDocumentController extends BaseController
             ->visibleToEmployee()
             ->first();
 
-        if (!$document) {
+        if (! $document) {
             return $this->error('Belge bulunamadı', null, 404);
         }
 
-        if (!Storage::disk('public')->exists($document->file_path)) {
+        if (! Storage::disk('public')->exists($document->file_path)) {
             return $this->error('Dosya bulunamadı', null, 404);
         }
 
@@ -107,4 +107,3 @@ class PortalDocumentController extends BaseController
         return $this->success($categories);
     }
 }
-

@@ -3,10 +3,9 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Models\ActivityLog;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Validator;
 
 class CompanySettingsController extends BaseController
 {
@@ -17,7 +16,7 @@ class CompanySettingsController extends BaseController
     {
         $company = auth()->user()->company;
 
-        if (!$company) {
+        if (! $company) {
             return $this->notFound('Firma bulunamadı');
         }
 
@@ -59,7 +58,7 @@ class CompanySettingsController extends BaseController
     {
         $company = auth()->user()->company;
 
-        if (!$company) {
+        if (! $company) {
             return $this->notFound('Firma bulunamadı');
         }
 
@@ -72,14 +71,14 @@ class CompanySettingsController extends BaseController
             'smtp.password' => 'required_with:smtp|string|max:255',
             'smtp.from_address' => 'required_with:smtp|email|max:255',
             'smtp.from_name' => 'required_with:smtp|string|max:255',
-            
+
             'sms' => 'sometimes|array',
             'sms.provider' => 'required_with:sms|in:netgsm,iletimerkezi,twilio,custom',
             'sms.username' => 'required_with:sms|string|max:255',
             'sms.password' => 'required_with:sms|string|max:255',
             'sms.sender' => 'required_with:sms|string|max:20',
             'sms.api_url' => 'nullable|url|max:500',
-            
+
             'general' => 'sometimes|array',
             'general.timezone' => 'sometimes|string|max:100',
             'general.language' => 'sometimes|in:tr,en',
@@ -87,7 +86,7 @@ class CompanySettingsController extends BaseController
             'general.currency' => 'sometimes|string|max:10',
             'general.working_days' => 'sometimes|array',
             'general.working_days.*' => 'integer|min:0|max:6',
-            
+
             'notifications' => 'sometimes|array',
             'notifications.email_enabled' => 'sometimes|boolean',
             'notifications.email_leave_requests' => 'sometimes|boolean',
@@ -102,7 +101,7 @@ class CompanySettingsController extends BaseController
             'notifications.push_leave_requests' => 'sometimes|boolean',
             'notifications.push_approvals' => 'sometimes|boolean',
             'notifications.push_reminders' => 'sometimes|boolean',
-            
+
             'integrations' => 'sometimes|array',
             'integrations.webhook_url' => 'nullable|url|max:500',
             'integrations.api_key' => 'nullable|string|max:255',
@@ -121,7 +120,7 @@ class CompanySettingsController extends BaseController
         }
 
         // SMTP şifresini encrypt et (eğer varsa)
-        if (isset($settings['smtp']['password']) && !empty($settings['smtp']['password'])) {
+        if (isset($settings['smtp']['password']) && ! empty($settings['smtp']['password'])) {
             $settings['smtp']['password'] = encrypt($settings['smtp']['password']);
         } elseif (isset($oldSettings['smtp']['password'])) {
             // Şifre değiştirilmediyse eski şifreyi koru
@@ -129,7 +128,7 @@ class CompanySettingsController extends BaseController
         }
 
         // SMS şifresini encrypt et (eğer varsa)
-        if (isset($settings['sms']['password']) && !empty($settings['sms']['password'])) {
+        if (isset($settings['sms']['password']) && ! empty($settings['sms']['password'])) {
             $settings['sms']['password'] = encrypt($settings['sms']['password']);
         } elseif (isset($oldSettings['sms']['password'])) {
             // Şifre değiştirilmediyse eski şifreyi koru
@@ -157,7 +156,7 @@ class CompanySettingsController extends BaseController
     {
         $company = auth()->user()->company;
 
-        if (!$company) {
+        if (! $company) {
             return $this->notFound('Firma bulunamadı');
         }
 
@@ -167,7 +166,7 @@ class CompanySettingsController extends BaseController
 
         $settings = $company->settings['smtp'] ?? null;
 
-        if (!$settings) {
+        if (! $settings) {
             return $this->error('SMTP ayarları yapılandırılmamış', 400);
         }
 
@@ -189,7 +188,7 @@ class CompanySettingsController extends BaseController
             Mail::raw('Bu bir test e-postasıdır. SMTP ayarlarınız doğru çalışıyor.', function ($message) use ($request, $settings) {
                 $message->to($request->to)
                     ->from($settings['from_address'], $settings['from_name'])
-                    ->subject('SMTP Test E-postası - ' . $company->name);
+                    ->subject('SMTP Test E-postası - '.$company->name);
             });
 
             ActivityLog::log(
@@ -212,7 +211,7 @@ class CompanySettingsController extends BaseController
                 $e->getMessage()
             );
 
-            return $this->error('SMTP test başarısız: ' . $e->getMessage(), 400);
+            return $this->error('SMTP test başarısız: '.$e->getMessage(), 400);
         }
     }
 
@@ -223,7 +222,7 @@ class CompanySettingsController extends BaseController
     {
         $company = auth()->user()->company;
 
-        if (!$company) {
+        if (! $company) {
             return $this->notFound('Firma bulunamadı');
         }
 
@@ -233,7 +232,7 @@ class CompanySettingsController extends BaseController
 
         $settings = $company->settings['sms'] ?? null;
 
-        if (!$settings) {
+        if (! $settings) {
             return $this->error('SMS ayarları yapılandırılmamış', 400);
         }
 
@@ -261,8 +260,7 @@ class CompanySettingsController extends BaseController
                 $e->getMessage()
             );
 
-            return $this->error('SMS test başarısız: ' . $e->getMessage(), 400);
+            return $this->error('SMS test başarısız: '.$e->getMessage(), 400);
         }
     }
 }
-

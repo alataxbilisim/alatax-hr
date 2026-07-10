@@ -33,11 +33,17 @@ class ApprovalStep extends Model
 
     // Onaylayıcı tipleri
     const APPROVER_DIRECT_MANAGER = 'direct_manager';
+
     const APPROVER_DEPARTMENT_HEAD = 'department_head';
+
     const APPROVER_SPECIFIC_USER = 'specific_user';
+
     const APPROVER_SPECIFIC_ROLE = 'specific_role';
+
     const APPROVER_HR = 'hr';
+
     const APPROVER_CFO = 'cfo';
+
     const APPROVER_CEO = 'ceo';
 
     public static function getApproverTypes(): array
@@ -55,7 +61,9 @@ class ApprovalStep extends Model
 
     // Timeout aksiyonları
     const TIMEOUT_ESCALATE = 'escalate';
+
     const TIMEOUT_AUTO_APPROVE = 'auto_approve';
+
     const TIMEOUT_AUTO_REJECT = 'auto_reject';
 
     // Relationships
@@ -81,8 +89,8 @@ class ApprovalStep extends Model
     {
         // Önce vekalet kontrolü yap
         $approver = $this->getBaseApprover($approvable);
-        
-        if (!$approver) {
+
+        if (! $approver) {
             return null;
         }
 
@@ -102,8 +110,8 @@ class ApprovalStep extends Model
     protected function getBaseApprover(Model $approvable): ?User
     {
         $requestingUser = $approvable->user ?? null;
-        
-        if (!$requestingUser) {
+
+        if (! $requestingUser) {
             return null;
         }
 
@@ -113,6 +121,7 @@ class ApprovalStep extends Model
 
             case self::APPROVER_DEPARTMENT_HEAD:
                 $department = $requestingUser->department;
+
                 return $department?->head;
 
             case self::APPROVER_SPECIFIC_USER:
@@ -120,22 +129,22 @@ class ApprovalStep extends Model
 
             case self::APPROVER_SPECIFIC_ROLE:
                 return User::where('company_id', $approvable->company_id)
-                    ->whereHas('roles', fn($q) => $q->where('name', $this->specific_role))
+                    ->whereHas('roles', fn ($q) => $q->where('name', $this->specific_role))
                     ->first();
 
             case self::APPROVER_HR:
                 return User::where('company_id', $approvable->company_id)
-                    ->whereHas('roles', fn($q) => $q->where('name', 'hr_manager'))
+                    ->whereHas('roles', fn ($q) => $q->where('name', 'hr_manager'))
                     ->first();
 
             case self::APPROVER_CFO:
                 return User::where('company_id', $approvable->company_id)
-                    ->whereHas('roles', fn($q) => $q->where('name', 'cfo'))
+                    ->whereHas('roles', fn ($q) => $q->where('name', 'cfo'))
                     ->first();
 
             case self::APPROVER_CEO:
                 return User::where('company_id', $approvable->company_id)
-                    ->whereHas('roles', fn($q) => $q->where('name', 'ceo'))
+                    ->whereHas('roles', fn ($q) => $q->where('name', 'ceo'))
                     ->first();
 
             default:
@@ -143,5 +152,3 @@ class ApprovalStep extends Model
         }
     }
 }
-
-

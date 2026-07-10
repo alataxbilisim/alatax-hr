@@ -3,17 +3,17 @@
 namespace App\Http\Controllers\Api\V1\Analytics;
 
 use App\Http\Controllers\Api\V1\BaseController;
-use App\Models\User;
-use App\Models\LeaveRequest;
 use App\Models\JobApplication;
+use App\Models\LeaveRequest;
+use App\Models\OnboardingProcess;
 use App\Models\PerformanceReview;
 use App\Models\Training;
 use App\Models\TrainingParticipant;
-use App\Models\OnboardingProcess;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
+use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class HrAnalyticsController extends BaseController
 {
@@ -23,7 +23,7 @@ class HrAnalyticsController extends BaseController
     public function workforce(): JsonResponse
     {
         $companyId = $this->getCompanyId();
-        
+
         // Toplam çalışan sayısı
         $totalEmployees = User::where('company_id', $companyId)
             ->where('is_active', true)
@@ -48,7 +48,7 @@ class HrAnalyticsController extends BaseController
                         ->orWhereDate('deleted_at', '>', $date->endOfMonth());
                 })
                 ->count();
-            
+
             $employeeTrend[] = [
                 'month' => $date->format('Y-m'),
                 'count' => $count,
@@ -69,7 +69,7 @@ class HrAnalyticsController extends BaseController
     {
         $companyId = $this->getCompanyId();
         $year = $request->get('year', now()->year);
-        
+
         // Ayrılan çalışanlar (soft delete)
         $leavers = User::where('company_id', $companyId)
             ->onlyTrashed()
@@ -78,7 +78,7 @@ class HrAnalyticsController extends BaseController
 
         // Ortalama çalışan sayısı (basit hesaplama)
         $avgEmployees = User::where('company_id', $companyId)->count();
-        
+
         // Turnover oranı
         $turnoverRate = $avgEmployees > 0 ? ($leavers / $avgEmployees) * 100 : 0;
 
@@ -90,7 +90,7 @@ class HrAnalyticsController extends BaseController
                 ->whereYear('deleted_at', $year)
                 ->whereMonth('deleted_at', $month)
                 ->count();
-            
+
             $monthlyTurnover[] = [
                 'month' => $month,
                 'count' => $count,
@@ -280,7 +280,7 @@ class HrAnalyticsController extends BaseController
 
         // Temel metrikler
         $totalEmployees = User::where('company_id', $companyId)->where('is_active', true)->count();
-        
+
         $pendingLeaves = LeaveRequest::where('company_id', $companyId)
             ->where('status', 'pending')
             ->count();
@@ -311,5 +311,3 @@ class HrAnalyticsController extends BaseController
         ], 'Dashboard özeti');
     }
 }
-
-

@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
 
 class ApiKey extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany, HasAuditColumns;
+    use BelongsToCompany, HasAuditColumns, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -47,7 +47,7 @@ class ApiKey extends Model
 
         static::creating(function ($apiKey) {
             if (empty($apiKey->key)) {
-                $apiKey->key = 'ak_' . Str::random(60);
+                $apiKey->key = 'ak_'.Str::random(60);
             }
         });
     }
@@ -65,7 +65,7 @@ class ApiKey extends Model
      */
     public function isActive(): bool
     {
-        return $this->is_active && (!$this->expires_at || $this->expires_at->isFuture());
+        return $this->is_active && (! $this->expires_at || $this->expires_at->isFuture());
     }
 
     /**
@@ -84,4 +84,3 @@ class ApiKey extends Model
         $this->update(['last_used_at' => now()]);
     }
 }
-

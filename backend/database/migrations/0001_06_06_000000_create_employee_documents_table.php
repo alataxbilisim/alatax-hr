@@ -15,31 +15,31 @@ return new class extends Migration
             $table->id();
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->foreignId('employee_id')->constrained()->onDelete('cascade');
-            
+
             // Belge bilgileri
             $table->string('title');
             $table->text('description')->nullable();
             $table->string('category'); // id_card, contract, certificate, education, health, other
-            
+
             // Dosya
             $table->string('file_path');
             $table->string('file_name');
             $table->string('file_type')->nullable();
             $table->bigInteger('file_size')->nullable();
-            
+
             // Geçerlilik
             $table->date('issue_date')->nullable();
             $table->date('expiry_date')->nullable();
             $table->boolean('is_expired')->default(false);
-            
+
             // Görünürlük
             $table->boolean('is_visible_to_employee')->default(true); // Personel görebilir mi?
-            
+
             // Durum
             $table->string('status')->default('active'); // active, archived, expired
-            
+
             $table->text('notes')->nullable();
-            
+
             $table->foreignId('uploaded_by')->nullable()->constrained('users')->onDelete('set null');
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
             $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('set null');
@@ -60,4 +60,3 @@ return new class extends Migration
         Schema::dropIfExists('employee_documents');
     }
 };
-

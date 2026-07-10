@@ -2,24 +2,25 @@
 
 namespace Tests\Feature\Api;
 
-use Tests\TestCase;
-use App\Models\User;
-use App\Models\Company;
 use App\Models\AttendanceRecord;
+use App\Models\Company;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
+use Tests\TestCase;
 
 class TimesheetTest extends TestCase
 {
     use RefreshDatabase;
 
     private User $user;
+
     private Company $company;
 
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $this->company = Company::factory()->create(['is_active' => true]);
         $this->user = User::factory()->create([
             'company_id' => $this->company->id,
@@ -137,7 +138,7 @@ class TimesheetTest extends TestCase
         $this->postJson('/api/v1/portal/timesheet/clock-in');
         // Start break
         $this->postJson('/api/v1/portal/timesheet/break/start');
-        
+
         // End break
         $response = $this->postJson('/api/v1/portal/timesheet/break/end');
 
@@ -185,7 +186,7 @@ class TimesheetTest extends TestCase
     {
         Sanctum::actingAs($this->user);
 
-        $response = $this->getJson('/api/v1/portal/timesheet/monthly?year=' . now()->year . '&month=' . now()->month);
+        $response = $this->getJson('/api/v1/portal/timesheet/monthly?year='.now()->year.'&month='.now()->month);
 
         $response->assertOk()
             ->assertJsonStructure([
@@ -200,4 +201,3 @@ class TimesheetTest extends TestCase
             ]);
     }
 }
-

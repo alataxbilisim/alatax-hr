@@ -110,4 +110,3 @@ trait ApiResponse
         return $this->error($message, 500);
     }
 }
-

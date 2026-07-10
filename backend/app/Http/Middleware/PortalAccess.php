@@ -16,23 +16,23 @@ class PortalAccess
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
-        
+
         // Kullanıcı var mı?
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'success' => false,
                 'message' => 'Kimlik doğrulama gerekli',
             ], 401);
         }
-        
+
         // Employee kaydı var mı?
-        if (!$user->employee) {
+        if (! $user->employee) {
             return response()->json([
                 'success' => false,
                 'message' => 'Portal erişim yetkiniz yok',
             ], 403);
         }
-        
+
         // Employee aktif mi?
         if ($user->employee->status !== 'active') {
             return response()->json([
@@ -40,8 +40,7 @@ class PortalAccess
                 'message' => 'Personel kaydınız aktif değil',
             ], 403);
         }
-        
+
         return $next($request);
     }
 }
-

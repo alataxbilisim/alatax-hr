@@ -2,11 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\AccrualLog;
+use App\Models\AccrualPolicy;
 use App\Models\Holiday;
 use App\Models\LeaveBalance;
 use App\Models\LeaveType;
-use App\Models\AccrualPolicy;
-use App\Models\AccrualLog;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 
@@ -127,7 +127,7 @@ class LeaveCalculationService
             ->where('year', $year)
             ->first();
 
-        if (!$balance) {
+        if (! $balance) {
             return [
                 'sufficient' => false,
                 'available' => 0,
@@ -161,7 +161,7 @@ class LeaveCalculationService
     public function processMonthlyAccruals(int $companyId, int $month, int $year): array
     {
         $results = [];
-        
+
         $policies = AccrualPolicy::where('company_id', $companyId)
             ->where('is_active', true)
             ->where('accrual_type', 'monthly')
@@ -169,7 +169,7 @@ class LeaveCalculationService
 
         foreach ($policies as $policy) {
             $leaveType = $policy->leaveType;
-            
+
             // Bu izin tipine sahip tüm kullanıcıları al
             $balances = LeaveBalance::where('company_id', $companyId)
                 ->where('leave_type_id', $leaveType->id)
@@ -178,12 +178,12 @@ class LeaveCalculationService
 
             foreach ($balances as $balance) {
                 $user = $balance->user;
-                if (!$user || !$user->is_active) {
+                if (! $user || ! $user->is_active) {
                     continue;
                 }
 
                 // Kıdem hesapla
-                $yearsOfService = $user->hire_date 
+                $yearsOfService = $user->hire_date
                     ? Carbon::parse($user->hire_date)->diffInYears(now())
                     : 0;
 
@@ -333,5 +333,3 @@ class LeaveCalculationService
         return $results;
     }
 }
-
-

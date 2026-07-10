@@ -35,7 +35,7 @@ return new class extends Migration
             $table->date('expires_at')->nullable();
             $table->json('settings')->nullable(); // Modül bazlı firma ayarları
             $table->timestamps();
-            
+
             $table->unique(['company_id', 'module_id']);
         });
     }
@@ -49,4 +49,3 @@ return new class extends Migration
         Schema::dropIfExists('modules');
     }
 };
-

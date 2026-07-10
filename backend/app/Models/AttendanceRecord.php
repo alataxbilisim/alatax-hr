@@ -49,10 +49,15 @@ class AttendanceRecord extends Model
     ];
 
     const STATUS_PRESENT = 'present';
+
     const STATUS_ABSENT = 'absent';
+
     const STATUS_LATE = 'late';
+
     const STATUS_EARLY_LEAVE = 'early_leave';
+
     const STATUS_HOLIDAY = 'holiday';
+
     const STATUS_LEAVE = 'leave';
 
     public function company(): BelongsTo
@@ -72,12 +77,12 @@ class AttendanceRecord extends Model
 
     public function calculateTotalHours(): float
     {
-        if (!$this->clock_in || !$this->clock_out) {
+        if (! $this->clock_in || ! $this->clock_out) {
             return 0;
         }
 
-        $clockIn = \Carbon\Carbon::parse($this->date->format('Y-m-d') . ' ' . $this->clock_in);
-        $clockOut = \Carbon\Carbon::parse($this->date->format('Y-m-d') . ' ' . $this->clock_out);
+        $clockIn = \Carbon\Carbon::parse($this->date->format('Y-m-d').' '.$this->clock_in);
+        $clockOut = \Carbon\Carbon::parse($this->date->format('Y-m-d').' '.$this->clock_out);
 
         // Handle overnight shifts
         if ($clockOut < $clockIn) {
@@ -88,8 +93,8 @@ class AttendanceRecord extends Model
 
         // Subtract break time if exists
         if ($this->break_start && $this->break_end) {
-            $breakStart = \Carbon\Carbon::parse($this->date->format('Y-m-d') . ' ' . $this->break_start);
-            $breakEnd = \Carbon\Carbon::parse($this->date->format('Y-m-d') . ' ' . $this->break_end);
+            $breakStart = \Carbon\Carbon::parse($this->date->format('Y-m-d').' '.$this->break_start);
+            $breakEnd = \Carbon\Carbon::parse($this->date->format('Y-m-d').' '.$this->break_end);
             $breakMinutes = $breakEnd->diffInMinutes($breakStart);
             $totalMinutes -= $breakMinutes;
         }
@@ -97,4 +102,3 @@ class AttendanceRecord extends Model
         return round($totalMinutes / 60, 2);
     }
 }
-

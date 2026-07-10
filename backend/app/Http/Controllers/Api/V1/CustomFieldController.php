@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Models\CustomFieldDefinition;
 use App\Models\ActivityLog;
-use Illuminate\Http\Request;
+use App\Models\CustomFieldDefinition;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class CustomFieldController extends BaseController
@@ -99,7 +99,7 @@ class CustomFieldController extends BaseController
             'created_by' => auth()->id(),
         ]);
 
-        ActivityLog::log('create', $field, 'Özel alan oluşturuldu: ' . $field->field_label);
+        ActivityLog::log('create', $field, 'Özel alan oluşturuldu: '.$field->field_label);
 
         return $this->created($field, 'Özel alan başarıyla oluşturuldu');
     }
@@ -135,7 +135,7 @@ class CustomFieldController extends BaseController
             'updated_by' => auth()->id(),
         ]));
 
-        ActivityLog::log('update', $field, 'Özel alan güncellendi: ' . $field->field_label);
+        ActivityLog::log('update', $field, 'Özel alan güncellendi: '.$field->field_label);
 
         return $this->success($field, 'Özel alan başarıyla güncellendi');
     }
@@ -148,7 +148,7 @@ class CustomFieldController extends BaseController
         $field = CustomFieldDefinition::where('company_id', $this->getCompanyId())
             ->findOrFail($id);
 
-        ActivityLog::log('delete', $field, 'Özel alan silindi: ' . $field->field_label);
+        ActivityLog::log('delete', $field, 'Özel alan silindi: '.$field->field_label);
 
         $field->delete();
 
@@ -191,4 +191,3 @@ class CustomFieldController extends BaseController
         return $this->success(CustomFieldDefinition::getEntityTypes());
     }
 }
-

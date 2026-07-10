@@ -75,4 +75,3 @@ class AssetAssignment extends Model
         return $query->whereNotNull('return_date');
     }
 }
-

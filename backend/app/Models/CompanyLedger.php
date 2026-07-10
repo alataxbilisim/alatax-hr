@@ -40,23 +40,31 @@ class CompanyLedger extends Model
      * İşlem tipleri
      */
     const TYPE_DEBIT = 'debit';   // Borç (firmaya)
+
     const TYPE_CREDIT = 'credit'; // Alacak (firmadan ödeme)
 
     /**
      * Ödeme yöntemleri
      */
     const PAYMENT_METHOD_BANK = 'bank_transfer';
+
     const PAYMENT_METHOD_CARD = 'credit_card';
+
     const PAYMENT_METHOD_CASH = 'cash';
+
     const PAYMENT_METHOD_EFT = 'eft';
 
     /**
      * Referans tipleri
      */
     const REF_LICENSE = 'license';     // Lisans satışı
+
     const REF_RENEWAL = 'renewal';     // Lisans yenileme
+
     const REF_MODULE = 'module';       // Modül satışı
+
     const REF_PAYMENT = 'payment';     // Ödeme
+
     const REF_ADJUSTMENT = 'adjustment'; // Manuel düzeltme
 
     /**
@@ -167,17 +175,17 @@ class CompanyLedger extends Model
         ?array $additionalData = []
     ): self {
         $company = Company::findOrFail($companyId);
-        
+
         // Mevcut bakiye
         $currentBalance = $company->current_balance;
-        
+
         // Yeni bakiye hesapla
         if ($type === self::TYPE_DEBIT) {
             $newBalance = $currentBalance + $amount; // Borç artırır
         } else {
             $newBalance = $currentBalance - $amount; // Alacak azaltır
         }
-        
+
         // İşlem kaydı oluştur
         $transaction = self::create(array_merge([
             'company_id' => $companyId,
@@ -189,11 +197,10 @@ class CompanyLedger extends Model
             'reference_id' => $referenceId,
             'created_by' => auth()->id(),
         ], $additionalData));
-        
+
         // Firma bakiyesini güncelle
         $company->update(['current_balance' => $newBalance]);
-        
+
         return $transaction;
     }
 }
-

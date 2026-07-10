@@ -69,4 +69,3 @@ class TrainingParticipant extends Model
         return $query->where('passed', true);
     }
 }
-

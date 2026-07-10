@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Api\V1\Leaves;
 
 use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\LeaveRequest;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class LeaveCalendarController extends BaseController
 {
@@ -25,11 +25,11 @@ class LeaveCalendarController extends BaseController
             ->where('status', LeaveRequest::STATUS_APPROVED)
             ->where(function ($q) use ($validated) {
                 $q->whereBetween('start_date', [$validated['start_date'], $validated['end_date']])
-                  ->orWhereBetween('end_date', [$validated['start_date'], $validated['end_date']])
-                  ->orWhere(function ($q2) use ($validated) {
-                      $q2->where('start_date', '<=', $validated['start_date'])
-                         ->where('end_date', '>=', $validated['end_date']);
-                  });
+                    ->orWhereBetween('end_date', [$validated['start_date'], $validated['end_date']])
+                    ->orWhere(function ($q2) use ($validated) {
+                        $q2->where('start_date', '<=', $validated['start_date'])
+                            ->where('end_date', '>=', $validated['end_date']);
+                    });
             });
 
         if ($request->has('user_id')) {
@@ -42,7 +42,7 @@ class LeaveCalendarController extends BaseController
         $events = $leaves->map(function ($leave) {
             return [
                 'id' => $leave->id,
-                'title' => $leave->user->name . ' - ' . $leave->leaveType->name,
+                'title' => $leave->user->name.' - '.$leave->leaveType->name,
                 'start' => $leave->start_date->format('Y-m-d'),
                 'end' => $leave->end_date->addDay()->format('Y-m-d'), // Calendar end is exclusive
                 'color' => $this->getLeaveColor($leave->leaveType->code),
@@ -65,7 +65,7 @@ class LeaveCalendarController extends BaseController
     public function today(): JsonResponse
     {
         $today = Carbon::today();
-        
+
         $leaves = LeaveRequest::with(['user', 'leaveType'])
             ->where('status', LeaveRequest::STATUS_APPROVED)
             ->where('start_date', '<=', $today)
@@ -83,7 +83,7 @@ class LeaveCalendarController extends BaseController
         $days = $request->get('days', 7);
         $startDate = Carbon::today();
         $endDate = Carbon::today()->addDays($days);
-        
+
         $leaves = LeaveRequest::with(['user', 'leaveType'])
             ->where('status', LeaveRequest::STATUS_APPROVED)
             ->whereBetween('start_date', [$startDate, $endDate])

@@ -2,18 +2,18 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Models\User;
-use App\Models\ActivityLog;
 use App\Mail\UserInvitation;
-use Illuminate\Http\Request;
+use App\Models\ActivityLog;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 use Laravel\Sanctum\PersonalAccessToken;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class UserController extends BaseController
 {
@@ -101,7 +101,7 @@ class UserController extends BaseController
         // Kullanıcı limiti kontrolü
         if ($company->hasReachedUserLimit()) {
             return $this->error(
-                'Kullanıcı limitinize ulaştınız. Mevcut limit: ' . $company->user_limit,
+                'Kullanıcı limitinize ulaştınız. Mevcut limit: '.$company->user_limit,
                 403
             );
         }
@@ -150,7 +150,7 @@ class UserController extends BaseController
         ]);
 
         // Rolleri ata (ID'lerden role isimlerini al)
-        if (!empty($validated['roles'])) {
+        if (! empty($validated['roles'])) {
             $roleIds = $validated['roles'];
             $user->roles()->sync($roleIds);
         } else {
@@ -160,7 +160,7 @@ class UserController extends BaseController
         ActivityLog::log(
             'create',
             $user,
-            'Kullanıcı oluşturuldu: ' . $user->name,
+            'Kullanıcı oluşturuldu: '.$user->name,
             null,
             $user->toArray()
         );
@@ -180,7 +180,7 @@ class UserController extends BaseController
 
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|email|unique:users,email,' . $user->id,
+            'email' => 'sometimes|email|unique:users,email,'.$user->id,
             'password' => [
                 'sometimes',
                 'nullable',
@@ -206,7 +206,7 @@ class UserController extends BaseController
         ]);
 
         // Şifre varsa hash'le
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);
         } else {
             unset($validated['password']);
@@ -222,7 +222,7 @@ class UserController extends BaseController
             $user->roles()->sync($validated['roles']);
         }
 
-        ActivityLog::log('update', $user, 'Kullanıcı güncellendi: ' . $user->name, $oldValues, $user->fresh()->toArray());
+        ActivityLog::log('update', $user, 'Kullanıcı güncellendi: '.$user->name, $oldValues, $user->fresh()->toArray());
 
         return $this->success($user->fresh()->load('roles'), 'Kullanıcı güncellendi');
     }
@@ -246,7 +246,7 @@ class UserController extends BaseController
         $oldValues = $user->toArray();
         $user->delete();
 
-        ActivityLog::log('delete', null, 'Kullanıcı silindi: ' . $userName, $oldValues, null);
+        ActivityLog::log('delete', null, 'Kullanıcı silindi: '.$userName, $oldValues, null);
 
         return $this->success(null, 'Kullanıcı silindi');
     }
@@ -266,10 +266,10 @@ class UserController extends BaseController
             return $this->error('Kendi durumunuzu değiştiremezsiniz', 400);
         }
 
-        $user->update(['is_active' => !$user->is_active]);
+        $user->update(['is_active' => ! $user->is_active]);
 
         $status = $user->is_active ? 'aktifleştirildi' : 'pasifleştirildi';
-        ActivityLog::log('update', $user, "Kullanıcı {$status}: " . $user->name);
+        ActivityLog::log('update', $user, "Kullanıcı {$status}: ".$user->name);
 
         return $this->success($user, "Kullanıcı {$status}");
     }
@@ -300,7 +300,7 @@ class UserController extends BaseController
         ActivityLog::log('update', $user, "Kullanıcı avatar'ı güncellendi: {$user->name}");
 
         return $this->success([
-            'avatar_url' => asset('storage/' . $path),
+            'avatar_url' => asset('storage/'.$path),
         ], 'Avatar başarıyla yüklendi');
     }
 
@@ -360,7 +360,7 @@ class UserController extends BaseController
         ]);
 
         // Roller atanırsa
-        if (!empty($validated['roles'])) {
+        if (! empty($validated['roles'])) {
             $user->roles()->sync($validated['roles']);
         }
 
@@ -369,9 +369,10 @@ class UserController extends BaseController
             $roleNames = $user->roles->pluck('name')->join(', ') ?: null;
             Mail::to($user->email)->send(new UserInvitation($company, $user->email, $token, $roleNames));
         } catch (\Exception $e) {
-            \Log::error('Invitation email failed: ' . $e->getMessage());
+            \Log::error('Invitation email failed: '.$e->getMessage());
             // Kullanıcıyı sil
             $user->delete();
+
             return $this->error('Davet e-postası gönderilemedi. Lütfen SMTP ayarlarınızı kontrol edin.', 500);
         }
 
@@ -443,21 +444,21 @@ class UserController extends BaseController
         $users = $query->get();
 
         // CSV oluştur
-        $filename = 'users_' . date('Y-m-d_His') . '.csv';
+        $filename = 'users_'.date('Y-m-d_His').'.csv';
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ];
 
-        $callback = function() use ($users) {
+        $callback = function () use ($users) {
             $file = fopen('php://output', 'w');
-            
+
             // BOM for Excel UTF-8 support
             fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
-            
+
             // Header
             fputcsv($file, ['Ad Soyad', 'E-posta', 'Telefon', 'Rol', 'Durum', 'Oluşturulma Tarihi']);
-            
+
             // Data
             foreach ($users as $user) {
                 $roles = $user->roles->pluck('name')->join(', ');
@@ -470,7 +471,7 @@ class UserController extends BaseController
                     $user->created_at->format('Y-m-d H:i:s'),
                 ]);
             }
-            
+
             fclose($file);
         };
 
@@ -525,7 +526,7 @@ class UserController extends BaseController
                     $count++;
                     break;
                 case 'assign_role':
-                    if (!$user->roles->contains($validated['role_id'])) {
+                    if (! $user->roles->contains($validated['role_id'])) {
                         $user->roles()->attach($validated['role_id']);
                         ActivityLog::log('update', $user, "Kullanıcıya rol atandı: {$user->name}");
                         $count++;
@@ -560,14 +561,15 @@ class UserController extends BaseController
         $path = $file->getRealPath();
         $handle = fopen($path, 'r');
 
-        if (!$handle) {
+        if (! $handle) {
             return $this->error('Dosya okunamadı', 400);
         }
 
         // İlk satırı header olarak oku
         $headers = fgetcsv($handle);
-        if (!$headers) {
+        if (! $headers) {
             fclose($handle);
+
             return $this->error('CSV dosyası boş veya geçersiz', 400);
         }
 
@@ -580,14 +582,15 @@ class UserController extends BaseController
         $requiredColumns = ['name', 'email'];
         $missingColumns = [];
         foreach ($requiredColumns as $col) {
-            if (!in_array($col, $headers)) {
+            if (! in_array($col, $headers)) {
                 $missingColumns[] = $col;
             }
         }
 
-        if (!empty($missingColumns)) {
+        if (! empty($missingColumns)) {
             fclose($handle);
-            return $this->error('CSV dosyasında gerekli kolonlar eksik: ' . implode(', ', $missingColumns), 400);
+
+            return $this->error('CSV dosyasında gerekli kolonlar eksik: '.implode(', ', $missingColumns), 400);
         }
 
         $results = [
@@ -604,6 +607,7 @@ class UserController extends BaseController
             if (count($row) !== count($headers)) {
                 $results['failed']++;
                 $results['errors'][] = "Satır {$lineNumber}: Kolon sayısı uyuşmuyor";
+
                 continue;
             }
 
@@ -617,9 +621,10 @@ class UserController extends BaseController
 
             // Email kontrolü
             $email = trim($data['email']);
-            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $results['failed']++;
                 $results['errors'][] = "Satır {$lineNumber}: Geçersiz e-posta adresi ({$email})";
+
                 continue;
             }
 
@@ -627,6 +632,7 @@ class UserController extends BaseController
             if ($company->hasReachedUserLimit()) {
                 $results['failed']++;
                 $results['errors'][] = "Satır {$lineNumber}: Kullanıcı limitine ulaşıldı";
+
                 continue;
             }
 
@@ -638,6 +644,7 @@ class UserController extends BaseController
             if ($existingUser) {
                 $results['failed']++;
                 $results['errors'][] = "Satır {$lineNumber}: Bu e-posta adresi zaten kullanılıyor ({$email})";
+
                 continue;
             }
 
@@ -656,13 +663,13 @@ class UserController extends BaseController
                 ]);
 
                 // Rolleri ata (virgülle ayrılmış rol isimleri)
-                if (!empty($data['roles'] ?? '')) {
+                if (! empty($data['roles'] ?? '')) {
                     $roleNames = array_map('trim', explode(',', $data['roles']));
                     $roles = \App\Models\Role::where('company_id', $company->id)
                         ->whereIn('name', $roleNames)
                         ->pluck('id')
                         ->toArray();
-                    if (!empty($roles)) {
+                    if (! empty($roles)) {
                         $user->roles()->sync($roles);
                     }
                 }
@@ -671,7 +678,7 @@ class UserController extends BaseController
                 $results['success']++;
             } catch (\Exception $e) {
                 $results['failed']++;
-                $results['errors'][] = "Satır {$lineNumber}: " . $e->getMessage();
+                $results['errors'][] = "Satır {$lineNumber}: ".$e->getMessage();
             }
         }
 
@@ -691,7 +698,7 @@ class UserController extends BaseController
 
         // Secret oluştur (basit bir implementasyon - production'da google2fa paketi kullanılmalı)
         $secret = bin2hex(random_bytes(16));
-        
+
         // Recovery codes oluştur
         $recoveryCodes = [];
         for ($i = 0; $i < 8; $i++) {
@@ -737,7 +744,7 @@ class UserController extends BaseController
 
         // Basit doğrulama (production'da TOTP algoritması kullanılmalı)
         // Şimdilik sadece secret'ın varlığını kontrol ediyoruz
-        if (!$user->two_factor_secret) {
+        if (! $user->two_factor_secret) {
             return $this->error('2FA secret bulunamadı', 400);
         }
 
@@ -748,7 +755,7 @@ class UserController extends BaseController
         // Şimdilik her zaman true döndürüyoruz (geliştirme için)
         $isValid = true;
 
-        if (!$isValid) {
+        if (! $isValid) {
             return $this->error('Geçersiz doğrulama kodu', 400);
         }
 
@@ -790,7 +797,7 @@ class UserController extends BaseController
             return $this->error('Yetkisiz erişim', 403);
         }
 
-        if (!$user->two_factor_recovery_codes) {
+        if (! $user->two_factor_recovery_codes) {
             return $this->error('Recovery code bulunamadı', 404);
         }
 
@@ -810,7 +817,7 @@ class UserController extends BaseController
             return $this->error('Yetkisiz erişim', 403);
         }
 
-        if (!$user->two_factor_enabled) {
+        if (! $user->two_factor_enabled) {
             return $this->error('2FA etkin değil', 400);
         }
 
@@ -870,7 +877,7 @@ class UserController extends BaseController
             ->where('tokenable_id', $user->id)
             ->first();
 
-        if (!$token) {
+        if (! $token) {
             return $this->error('Oturum bulunamadı', 404);
         }
 
@@ -900,4 +907,3 @@ class UserController extends BaseController
         return $this->success(['revoked_count' => $count], "{$count} oturum başarıyla sonlandırıldı");
     }
 }
-

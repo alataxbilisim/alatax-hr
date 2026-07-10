@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Api\V1\Workflow;
 
 use App\Http\Controllers\Api\V1\BaseController;
-use App\Models\ApprovalRecord;
-use App\Models\ApprovalDelegation;
 use App\Models\ActivityLog;
+use App\Models\ApprovalDelegation;
+use App\Models\ApprovalRecord;
 use App\Services\WorkflowService;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ApprovalController extends BaseController
 {
@@ -70,7 +70,7 @@ class ApprovalController extends BaseController
             $validated['comment'] ?? null
         );
 
-        if (!$result) {
+        if (! $result) {
             return $this->error('Bu kaydı onaylama yetkiniz yok', 403);
         }
 
@@ -95,7 +95,7 @@ class ApprovalController extends BaseController
             $validated['reason']
         );
 
-        if (!$result) {
+        if (! $result) {
             return $this->error('Bu kaydı reddetme yetkiniz yok', 403);
         }
 
@@ -120,7 +120,7 @@ class ApprovalController extends BaseController
             $validated['reason'] ?? null
         );
 
-        if (!$result) {
+        if (! $result) {
             return $this->error('Bu adım atlanamaz', 400);
         }
 
@@ -234,5 +234,3 @@ class ApprovalController extends BaseController
         return $this->success($history, 'Onay geçmişi');
     }
 }
-
-

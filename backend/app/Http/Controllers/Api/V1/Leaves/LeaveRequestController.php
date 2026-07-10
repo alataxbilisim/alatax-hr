@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Api\V1\Leaves;
 
 use App\Http\Controllers\Api\V1\BaseController;
-use App\Models\LeaveRequest;
-use App\Models\LeaveBalance;
-use App\Models\LeaveType;
 use App\Models\ActivityLog;
-use Illuminate\Http\Request;
+use App\Models\LeaveBalance;
+use App\Models\LeaveRequest;
+use App\Models\LeaveType;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class LeaveRequestController extends BaseController
@@ -55,14 +55,14 @@ class LeaveRequestController extends BaseController
         ]);
 
         $leaveType = LeaveType::findOrFail($validated['leave_type_id']);
-        
+
         // Calculate total days (excluding weekends)
         $startDate = \Carbon\Carbon::parse($validated['start_date']);
         $endDate = \Carbon\Carbon::parse($validated['end_date']);
         $totalDays = 0;
-        
+
         for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
-            if (!$date->isWeekend()) {
+            if (! $date->isWeekend()) {
                 $totalDays++;
             }
         }
@@ -82,7 +82,7 @@ class LeaveRequestController extends BaseController
             ]
         );
 
-        if (!$balance->canRequest($totalDays)) {
+        if (! $balance->canRequest($totalDays)) {
             return $this->error('Yetersiz izin bakiyesi', null, 422);
         }
 
@@ -90,7 +90,7 @@ class LeaveRequestController extends BaseController
         $documentPath = null;
         $documentName = null;
         if ($request->hasFile('document')) {
-            $documentPath = $request->file('document')->store('leave-documents/' . $this->getCompanyId(), 'public');
+            $documentPath = $request->file('document')->store('leave-documents/'.$this->getCompanyId(), 'public');
             $documentName = $request->file('document')->getClientOriginalName();
         }
 
@@ -110,7 +110,7 @@ class LeaveRequestController extends BaseController
         // Update balance pending
         $balance->addPending($totalDays);
 
-        ActivityLog::log('create', $leaveRequest, 'İzin talebi oluşturuldu: ' . $leaveRequest->leaveType->name . ' - ' . $totalDays . ' gün');
+        ActivityLog::log('create', $leaveRequest, 'İzin talebi oluşturuldu: '.$leaveRequest->leaveType->name.' - '.$totalDays.' gün');
 
         return $this->success($leaveRequest->load(['leaveType', 'user']), 'İzin talebi oluşturuldu', 201);
     }
@@ -141,7 +141,7 @@ class LeaveRequestController extends BaseController
 
         $leaveRequest->approve(auth()->id(), $validated['note'] ?? null);
 
-        ActivityLog::log('approved', $leaveRequest, 'İzin talebi onaylandı: ' . $leaveRequest->leaveType->name);
+        ActivityLog::log('approved', $leaveRequest, 'İzin talebi onaylandı: '.$leaveRequest->leaveType->name);
 
         return $this->success($leaveRequest->fresh(), 'İzin talebi onaylandı');
     }
@@ -161,7 +161,7 @@ class LeaveRequestController extends BaseController
 
         $leaveRequest->reject(auth()->id(), $validated['reason']);
 
-        ActivityLog::log('rejected', $leaveRequest, 'İzin talebi reddedildi: ' . $leaveRequest->leaveType->name . ' - Sebep: ' . $validated['reason']);
+        ActivityLog::log('rejected', $leaveRequest, 'İzin talebi reddedildi: '.$leaveRequest->leaveType->name.' - Sebep: '.$validated['reason']);
 
         return $this->success($leaveRequest->fresh(), 'İzin talebi reddedildi');
     }
@@ -181,7 +181,7 @@ class LeaveRequestController extends BaseController
 
         $leaveRequest->cancel();
 
-        ActivityLog::log('cancelled', $leaveRequest, 'İzin talebi iptal edildi: ' . $leaveRequest->leaveType->name);
+        ActivityLog::log('cancelled', $leaveRequest, 'İzin talebi iptal edildi: '.$leaveRequest->leaveType->name);
 
         return $this->success($leaveRequest->fresh(), 'İzin talebi iptal edildi');
     }

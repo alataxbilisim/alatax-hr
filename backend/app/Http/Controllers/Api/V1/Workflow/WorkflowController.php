@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api\V1\Workflow;
 
 use App\Http\Controllers\Api\V1\BaseController;
-use App\Models\ApprovalWorkflow;
-use App\Models\ApprovalStep;
 use App\Models\ActivityLog;
-use Illuminate\Http\Request;
+use App\Models\ApprovalStep;
+use App\Models\ApprovalWorkflow;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class WorkflowController extends BaseController
@@ -40,7 +40,7 @@ class WorkflowController extends BaseController
     public function show(int $id): JsonResponse
     {
         $workflow = ApprovalWorkflow::where('company_id', $this->getCompanyId())
-            ->with(['steps' => fn($q) => $q->orderBy('step_order')])
+            ->with(['steps' => fn ($q) => $q->orderBy('step_order')])
             ->findOrFail($id);
 
         return $this->success($workflow, 'Onay akışı detayı');
@@ -107,14 +107,16 @@ class WorkflowController extends BaseController
 
             DB::commit();
 
-            ActivityLog::log('create', $workflow, 'Yeni onay akışı oluşturuldu: ' . $workflow->name);
+            ActivityLog::log('create', $workflow, 'Yeni onay akışı oluşturuldu: '.$workflow->name);
 
             $workflow->load('steps');
+
             return $this->created($workflow, 'Onay akışı oluşturuldu');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error('Onay akışı oluşturulamadı: ' . $e->getMessage(), 500);
+
+            return $this->error('Onay akışı oluşturulamadı: '.$e->getMessage(), 500);
         }
     }
 
@@ -148,7 +150,7 @@ class WorkflowController extends BaseController
             $oldValues = $workflow->toArray();
 
             // Varsayılan kontrolü
-            if (($validated['is_default'] ?? false) && !$workflow->is_default) {
+            if (($validated['is_default'] ?? false) && ! $workflow->is_default) {
                 ApprovalWorkflow::where('company_id', $this->getCompanyId())
                     ->where('entity_type', $workflow->entity_type)
                     ->where('id', '!=', $workflow->id)
@@ -191,11 +193,13 @@ class WorkflowController extends BaseController
             ActivityLog::log('update', $workflow, 'Onay akışı güncellendi', $oldValues, $workflow->toArray());
 
             $workflow->load('steps');
+
             return $this->success($workflow, 'Onay akışı güncellendi');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error('Onay akışı güncellenemedi: ' . $e->getMessage(), 500);
+
+            return $this->error('Onay akışı güncellenemedi: '.$e->getMessage(), 500);
         }
     }
 
@@ -213,7 +217,7 @@ class WorkflowController extends BaseController
 
         $workflow->delete();
 
-        ActivityLog::log('delete', $workflow, 'Onay akışı silindi: ' . $workflow->name);
+        ActivityLog::log('delete', $workflow, 'Onay akışı silindi: '.$workflow->name);
 
         return $this->success(null, 'Onay akışı silindi');
     }
@@ -248,5 +252,3 @@ class WorkflowController extends BaseController
         return $this->success(ApprovalStep::getApproverTypes(), 'Onaylayıcı tipleri');
     }
 }
-
-

@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
 
 class LicensePackage extends Model
 {
-    use HasFactory, SoftDeletes, HasAuditColumns;
+    use HasAuditColumns, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -59,12 +59,12 @@ class LicensePackage extends Model
         static::creating(function ($package) {
             if (empty($package->slug)) {
                 $package->slug = Str::slug($package->name);
-                
+
                 // Benzersiz yap
                 $originalSlug = $package->slug;
                 $count = 1;
                 while (static::where('slug', $package->slug)->exists()) {
-                    $package->slug = $originalSlug . '-' . $count++;
+                    $package->slug = $originalSlug.'-'.$count++;
                 }
             }
         });
@@ -139,7 +139,7 @@ class LicensePackage extends Model
 
     public function getStorageLimitLabel(): string
     {
-        return $this->hasUnlimitedStorage() ? 'Sınırsız' : $this->storage_limit_gb . ' GB';
+        return $this->hasUnlimitedStorage() ? 'Sınırsız' : $this->storage_limit_gb.' GB';
     }
 
     /**
@@ -148,9 +148,10 @@ class LicensePackage extends Model
     public function getAnnualPriceAttribute($value)
     {
         // Yıllık fiyat girilmemişse, aylık x 12 x 0.8 (20% indirim)
-        if (!$value && $this->base_price) {
+        if (! $value && $this->base_price) {
             return $this->base_price * 12 * 0.8;
         }
+
         return $value;
     }
 
@@ -178,4 +179,3 @@ class LicensePackage extends Model
         return $query->orderBy('sort_order')->orderBy('base_price');
     }
 }
-

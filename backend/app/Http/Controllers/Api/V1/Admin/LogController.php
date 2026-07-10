@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\ActivityLog;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class LogController extends BaseController
 {
@@ -60,4 +60,3 @@ class LogController extends BaseController
         return $this->paginated($logs, 'Loglar listelendi');
     }
 }
-

@@ -6,8 +6,8 @@ use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\ActivityLog;
 use App\Models\LicensePackage;
 use App\Models\Module;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -21,14 +21,14 @@ class LicensePackageController extends BaseController
         $query = LicensePackage::with(['modules' => function ($q) {
             $q->wherePivot('is_included', true);
         }])
-        ->withCount('companies');
+            ->withCount('companies');
 
         // Arama
         if ($request->has('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
@@ -99,7 +99,7 @@ class LicensePackageController extends BaseController
 
         // Modülleri ekle
         $syncData = [];
-        if (!empty($validated['module_ids'])) {
+        if (! empty($validated['module_ids'])) {
             foreach ($validated['module_ids'] as $moduleId) {
                 $syncData[$moduleId] = ['is_included' => true];
             }
@@ -108,19 +108,19 @@ class LicensePackageController extends BaseController
         // Core modülleri otomatik ekle
         $coreModules = Module::where('is_core', true)->pluck('id')->toArray();
         foreach ($coreModules as $moduleId) {
-            if (!isset($syncData[$moduleId])) {
+            if (! isset($syncData[$moduleId])) {
                 $syncData[$moduleId] = ['is_included' => true];
             }
         }
 
         // Tüm modülleri sync et
-        if (!empty($syncData)) {
+        if (! empty($syncData)) {
             $package->modules()->sync($syncData);
         }
 
         $package->load('modules');
 
-        ActivityLog::log('create', $package, 'Lisans paketi oluşturuldu: ' . $package->name);
+        ActivityLog::log('create', $package, 'Lisans paketi oluşturuldu: '.$package->name);
 
         return $this->success($package, 'Lisans paketi oluşturuldu', 201);
     }
@@ -133,14 +133,14 @@ class LicensePackageController extends BaseController
         // Route model binding - Laravel apiResource ile {license-package} parametresi gelir
         // Bu durumda parametre adı snake_case'e çevrilir: license_package
         // Controller metodunda LicensePackage $licensePackage veya manuel yükleme gerekir
-        if (!$package instanceof LicensePackage) {
+        if (! $package instanceof LicensePackage) {
             $packageId = is_numeric($package) ? $package : $request->route('license-package') ?? $request->route('package') ?? $request->route('id');
-            if (!$packageId) {
+            if (! $packageId) {
                 // Route parametrelerinden ID'yi bul
                 $routeParams = $request->route()->parameters();
                 $packageId = $routeParams['license-package'] ?? $routeParams['package'] ?? $routeParams['id'] ?? null;
             }
-            if (!$packageId) {
+            if (! $packageId) {
                 abort(404, 'Package not found');
             }
             $package = LicensePackage::findOrFail($packageId);
@@ -151,7 +151,7 @@ class LicensePackageController extends BaseController
         $nameChanged = $request->has('name') && $request->input('name') !== $package->name;
         if ($nameChanged) {
             // Name değişmişse unique kontrolü yap
-            $nameRules .= '|unique:license_packages,name,' . $package->id;
+            $nameRules .= '|unique:license_packages,name,'.$package->id;
         }
 
         try {
@@ -198,19 +198,19 @@ class LicensePackageController extends BaseController
             // Core modülleri otomatik ekle
             $coreModules = Module::where('is_core', true)->pluck('id')->toArray();
             foreach ($coreModules as $moduleId) {
-                if (!isset($syncData[$moduleId])) {
+                if (! isset($syncData[$moduleId])) {
                     $syncData[$moduleId] = ['is_included' => true];
                 }
             }
 
-            if (!empty($syncData)) {
+            if (! empty($syncData)) {
                 $package->modules()->sync($syncData);
             }
         }
 
         $package->load('modules');
 
-        ActivityLog::log('update', $package, 'Lisans paketi güncellendi: ' . $package->name);
+        ActivityLog::log('update', $package, 'Lisans paketi güncellendi: '.$package->name);
 
         return $this->success($package, 'Lisans paketi güncellendi');
     }
@@ -228,7 +228,7 @@ class LicensePackageController extends BaseController
         $packageName = $package->name;
         $package->delete();
 
-        ActivityLog::log('delete', null, 'Lisans paketi silindi: ' . $packageName);
+        ActivityLog::log('delete', null, 'Lisans paketi silindi: '.$packageName);
 
         return $this->success(null, 'Lisans paketi silindi');
     }
@@ -256,7 +256,7 @@ class LicensePackageController extends BaseController
         $package->modules()->sync($syncData);
         $package->load('modules');
 
-        ActivityLog::log('update', $package, 'Paket modülleri güncellendi: ' . $package->name);
+        ActivityLog::log('update', $package, 'Paket modülleri güncellendi: '.$package->name);
 
         return $this->success($package, 'Paket modülleri güncellendi');
     }
@@ -267,7 +267,7 @@ class LicensePackageController extends BaseController
     public function duplicate(LicensePackage $package): JsonResponse
     {
         $newPackage = $package->replicate();
-        $newPackage->name = $package->name . ' (Kopya)';
+        $newPackage->name = $package->name.' (Kopya)';
         $newPackage->slug = Str::slug($newPackage->name);
         $newPackage->is_active = false;
         $newPackage->created_by = auth()->id();
@@ -283,7 +283,7 @@ class LicensePackageController extends BaseController
 
         $newPackage->load('modules');
 
-        ActivityLog::log('create', $newPackage, 'Paket kopyalandı: ' . $package->name . ' → ' . $newPackage->name);
+        ActivityLog::log('create', $newPackage, 'Paket kopyalandı: '.$package->name.' → '.$newPackage->name);
 
         return $this->success($newPackage, 'Paket kopyalandı', 201);
     }

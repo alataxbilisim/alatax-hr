@@ -19,7 +19,7 @@ trait BelongsToCompany
     {
         // Yeni kayıt oluşturulurken otomatik company_id ata
         static::creating(function ($model) {
-            if (auth()->check() && !$model->company_id) {
+            if (auth()->check() && ! $model->company_id) {
                 $user = auth()->user();
                 // SuperAdmin değilse company_id ata
                 if ($user->type !== 'super_admin' && $user->company_id) {
@@ -32,15 +32,15 @@ trait BelongsToCompany
         static::addGlobalScope('company', function (Builder $builder) {
             if (auth()->check()) {
                 $user = auth()->user();
-                
+
                 // SuperAdmin tüm verileri görebilir
                 if ($user->type === 'super_admin') {
                     return;
                 }
-                
+
                 // Diğer kullanıcılar sadece kendi firmalarının verilerini görür
                 if ($user->company_id) {
-                    $builder->where($builder->getModel()->getTable() . '.company_id', $user->company_id);
+                    $builder->where($builder->getModel()->getTable().'.company_id', $user->company_id);
                 }
             }
         });
@@ -70,4 +70,3 @@ trait BelongsToCompany
         return $query->withoutGlobalScope('company');
     }
 }
-

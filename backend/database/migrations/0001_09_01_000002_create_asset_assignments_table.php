@@ -24,7 +24,7 @@ return new class extends Migration
             $table->foreignId('assigned_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('returned_to')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
-            
+
             $table->index(['asset_id', 'user_id']);
         });
     }
@@ -37,4 +37,3 @@ return new class extends Migration
         Schema::dropIfExists('asset_assignments');
     }
 };
-

@@ -19,7 +19,7 @@ return new class extends Migration
             $table->integer('score'); // Verilen puan
             $table->text('comment')->nullable();
             $table->timestamps();
-            
+
             $table->unique(['review_id', 'criteria_id']);
         });
     }
@@ -32,4 +32,3 @@ return new class extends Migration
         Schema::dropIfExists('performance_scores');
     }
 };
-

@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\ExpenseClaim;
 use App\Models\Company;
+use App\Models\ExpenseClaim;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -18,7 +18,7 @@ class ExpenseClaimFactory extends Factory
             'user_id' => User::factory(),
             'title' => $this->faker->sentence(3),
             'description' => $this->faker->optional()->paragraph(),
-            'claim_number' => 'EXP-' . now()->format('Y') . '-' . str_pad($this->faker->unique()->randomNumber(4), 4, '0', STR_PAD_LEFT),
+            'claim_number' => 'EXP-'.now()->format('Y').'-'.str_pad($this->faker->unique()->randomNumber(4), 4, '0', STR_PAD_LEFT),
             'expense_date' => $this->faker->date(),
             'total_amount' => $this->faker->randomFloat(2, 50, 2000),
             'currency' => 'TRY',
@@ -51,4 +51,3 @@ class ExpenseClaimFactory extends Factory
         ]);
     }
 }
-

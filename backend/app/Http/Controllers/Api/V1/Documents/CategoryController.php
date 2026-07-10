@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Api\V1\Documents;
 
 use App\Http\Controllers\Api\V1\BaseController;
-use App\Models\DocumentCategory;
 use App\Models\ActivityLog;
-use Illuminate\Http\Request;
+use App\Models\DocumentCategory;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class CategoryController extends BaseController
@@ -52,7 +52,7 @@ class CategoryController extends BaseController
             'color' => $validated['color'] ?? null,
         ]);
 
-        ActivityLog::log('create', $category, 'Doküman kategorisi oluşturuldu: ' . $category->name);
+        ActivityLog::log('create', $category, 'Doküman kategorisi oluşturuldu: '.$category->name);
 
         return $this->success($category, 'Kategori oluşturuldu', 201);
     }
@@ -64,7 +64,7 @@ class CategoryController extends BaseController
     {
         $category = DocumentCategory::find($id);
 
-        if (!$category) {
+        if (! $category) {
             return $this->notFound('Kategori bulunamadı');
         }
 
@@ -81,7 +81,7 @@ class CategoryController extends BaseController
         $oldValues = $category->getOriginal();
         $category->update($validated);
 
-        ActivityLog::log('update', $category, 'Doküman kategorisi güncellendi: ' . $category->name, $oldValues, $category->fresh()->toArray());
+        ActivityLog::log('update', $category, 'Doküman kategorisi güncellendi: '.$category->name, $oldValues, $category->fresh()->toArray());
 
         return $this->success($category, 'Kategori güncellendi');
     }
@@ -93,16 +93,16 @@ class CategoryController extends BaseController
     {
         $category = DocumentCategory::find($id);
 
-        if (!$category) {
+        if (! $category) {
             return $this->notFound('Kategori bulunamadı');
         }
 
         // Kategorideki dokümanları kategorisiz yap
         $categoryName = $category->name;
         $category->documents()->update(['category_id' => null]);
-        
-        ActivityLog::log('delete', null, 'Doküman kategorisi silindi: ' . $categoryName);
-        
+
+        ActivityLog::log('delete', null, 'Doküman kategorisi silindi: '.$categoryName);
+
         $category->delete();
 
         return $this->success(null, 'Kategori silindi');

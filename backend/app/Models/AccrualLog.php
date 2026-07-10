@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class AccrualLog extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
         'company_id',
@@ -38,11 +38,17 @@ class AccrualLog extends Model
 
     // Log tipleri
     const TYPE_ACCRUAL = 'accrual';
+
     const TYPE_USAGE = 'usage';
+
     const TYPE_ADJUSTMENT = 'adjustment';
+
     const TYPE_CARRYOVER = 'carryover';
+
     const TYPE_EXPIRY = 'expiry';
+
     const TYPE_ENCASHMENT = 'encashment';
+
     const TYPE_INITIAL_GRANT = 'initial_grant';
 
     public static function getTypeLabels(): array
@@ -138,5 +144,3 @@ class AccrualLog extends Model
         ]);
     }
 }
-
-

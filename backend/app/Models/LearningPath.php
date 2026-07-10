@@ -6,12 +6,12 @@ use App\Traits\BelongsToCompany;
 use App\Traits\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class LearningPath extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany, HasAuditColumns;
+    use BelongsToCompany, HasAuditColumns, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -33,7 +33,9 @@ class LearningPath extends Model
     ];
 
     const LEVEL_BEGINNER = 'beginner';
+
     const LEVEL_INTERMEDIATE = 'intermediate';
+
     const LEVEL_ADVANCED = 'advanced';
 
     public static function getLevelLabels(): array
@@ -68,5 +70,3 @@ class LearningPath extends Model
         return $this->items()->count();
     }
 }
-
-

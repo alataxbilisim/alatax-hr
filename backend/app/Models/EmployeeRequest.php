@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class EmployeeRequest extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany, HasAuditColumns;
+    use BelongsToCompany, HasAuditColumns, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -44,14 +44,21 @@ class EmployeeRequest extends Model
     ];
 
     const STATUS_PENDING = 'pending';
+
     const STATUS_IN_REVIEW = 'in_review';
+
     const STATUS_APPROVED = 'approved';
+
     const STATUS_REJECTED = 'rejected';
+
     const STATUS_CANCELLED = 'cancelled';
 
     const PRIORITY_LOW = 'low';
+
     const PRIORITY_NORMAL = 'normal';
+
     const PRIORITY_HIGH = 'high';
+
     const PRIORITY_URGENT = 'urgent';
 
     /**
@@ -98,6 +105,7 @@ class EmployeeRequest extends Model
             self::STATUS_REJECTED => 'Reddedildi',
             self::STATUS_CANCELLED => 'İptal Edildi',
         ];
+
         return $statuses[$this->status] ?? $this->status;
     }
 
@@ -112,6 +120,7 @@ class EmployeeRequest extends Model
             self::PRIORITY_HIGH => 'Yüksek',
             self::PRIORITY_URGENT => 'Acil',
         ];
+
         return $priorities[$this->priority] ?? $this->priority;
     }
 
@@ -129,7 +138,7 @@ class EmployeeRequest extends Model
     public function approve(?string $note = null): void
     {
         $oldStatus = $this->status;
-        
+
         $this->update([
             'status' => self::STATUS_APPROVED,
             'approved_by' => auth()->id(),
@@ -150,7 +159,7 @@ class EmployeeRequest extends Model
     public function reject(string $reason): void
     {
         $oldStatus = $this->status;
-        
+
         $this->update([
             'status' => self::STATUS_REJECTED,
             'rejection_reason' => $reason,
@@ -172,7 +181,7 @@ class EmployeeRequest extends Model
     public function cancel(): void
     {
         $oldStatus = $this->status;
-        
+
         $this->update([
             'status' => self::STATUS_CANCELLED,
         ]);
@@ -201,4 +210,3 @@ class EmployeeRequest extends Model
         return $query->whereIn('status', [self::STATUS_PENDING, self::STATUS_IN_REVIEW]);
     }
 }
-

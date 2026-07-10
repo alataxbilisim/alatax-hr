@@ -23,17 +23,17 @@ return new class extends Migration
             $table->enum('status', ['pending', 'approved', 'rejected', 'cancelled'])->default('pending');
             $table->string('document_path')->nullable();
             $table->string('document_name')->nullable();
-            
+
             // Onay bilgileri
             $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamp('approved_at')->nullable();
             $table->text('approval_note')->nullable();
-            
+
             // Ret bilgileri
             $table->foreignId('rejected_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamp('rejected_at')->nullable();
             $table->text('rejection_reason')->nullable();
-            
+
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
             $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
@@ -51,4 +51,3 @@ return new class extends Migration
         Schema::dropIfExists('leave_requests');
     }
 };
-

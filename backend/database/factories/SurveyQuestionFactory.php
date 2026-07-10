@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\SurveyQuestion;
 use App\Models\Survey;
+use App\Models\SurveyQuestion;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class SurveyQuestionFactory extends Factory
@@ -22,7 +22,7 @@ class SurveyQuestionFactory extends Factory
 
         return [
             'survey_id' => Survey::factory(),
-            'question_text' => $this->faker->sentence() . '?',
+            'question_text' => $this->faker->sentence().'?',
             'question_type' => $type,
             'is_required' => $this->faker->boolean(80),
             'options' => $options,
@@ -54,4 +54,3 @@ class SurveyQuestionFactory extends Factory
         ]);
     }
 }
-

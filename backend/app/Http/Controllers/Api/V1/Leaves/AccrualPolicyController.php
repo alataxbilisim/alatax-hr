@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Api\V1\Leaves;
 
 use App\Http\Controllers\Api\V1\BaseController;
-use App\Models\AccrualPolicy;
 use App\Models\AccrualLog;
+use App\Models\AccrualPolicy;
 use App\Models\ActivityLog;
 use App\Services\LeaveCalculationService;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class AccrualPolicyController extends BaseController
 {
@@ -100,7 +100,7 @@ class AccrualPolicyController extends BaseController
             'created_by' => auth()->id(),
         ]);
 
-        ActivityLog::log('create', $policy, 'Yeni hakediş politikası oluşturuldu: ' . $policy->name);
+        ActivityLog::log('create', $policy, 'Yeni hakediş politikası oluşturuldu: '.$policy->name);
 
         return $this->created($policy->load('leaveType'), 'Hakediş politikası oluşturuldu');
     }
@@ -153,7 +153,7 @@ class AccrualPolicyController extends BaseController
 
         $policy->delete();
 
-        ActivityLog::log('delete', $policy, 'Hakediş politikası silindi: ' . $policy->name);
+        ActivityLog::log('delete', $policy, 'Hakediş politikası silindi: '.$policy->name);
 
         return $this->success(null, 'Politika silindi');
     }
@@ -240,5 +240,3 @@ class AccrualPolicyController extends BaseController
         return $this->success(AccrualLog::getTypeLabels(), 'Log tipleri');
     }
 }
-
-

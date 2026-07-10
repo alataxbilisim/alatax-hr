@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\LicensePackage;
 use App\Models\Module;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
 
 class LicensePackageSeeder extends Seeder
 {
@@ -118,7 +117,6 @@ class LicensePackageSeeder extends Seeder
             $package->modules()->sync($syncData);
         }
 
-        $this->command->info('Lisans paketleri oluşturuldu: ' . count($packages) . ' paket');
+        $this->command->info('Lisans paketleri oluşturuldu: '.count($packages).' paket');
     }
 }
-

@@ -32,4 +32,3 @@ class WebhookLog extends Model
         return $this->belongsTo(Webhook::class);
     }
 }
-

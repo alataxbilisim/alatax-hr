@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Api\V1\Recruitment;
 
 use App\Http\Controllers\Api\V1\BaseController;
-use App\Models\JobApplication;
 use App\Models\ActivityLog;
-use Illuminate\Http\Request;
+use App\Models\JobApplication;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class CvPoolController extends BaseController
 {
@@ -20,18 +20,18 @@ class CvPoolController extends BaseController
             'applicant_name',
             'applicant_phone',
         )
-        ->selectRaw('MAX(id) as id')
-        ->selectRaw('MAX(cv_path) as cv_path')
-        ->selectRaw('MAX(rating) as rating')
-        ->selectRaw('MAX(created_at) as last_application_date')
-        ->groupBy('applicant_email', 'applicant_name', 'applicant_phone');
+            ->selectRaw('MAX(id) as id')
+            ->selectRaw('MAX(cv_path) as cv_path')
+            ->selectRaw('MAX(rating) as rating')
+            ->selectRaw('MAX(created_at) as last_application_date')
+            ->groupBy('applicant_email', 'applicant_name', 'applicant_phone');
 
         // Arama
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('applicant_name', 'like', "%{$search}%")
-                  ->orWhere('applicant_email', 'like', "%{$search}%");
+                    ->orWhere('applicant_email', 'like', "%{$search}%");
             });
         }
 
@@ -56,7 +56,7 @@ class CvPoolController extends BaseController
                     'tags' => $latestApplication->tags ?? [],
                     'rating' => $candidate->rating,
                     'status' => $latestApplication->status,
-                    'cv_path' => $candidate->cv_path ? asset('storage/' . $candidate->cv_path) : null,
+                    'cv_path' => $candidate->cv_path ? asset('storage/'.$candidate->cv_path) : null,
                     'last_application_date' => $candidate->last_application_date,
                     'created_at' => $latestApplication->created_at->toDateTimeString(),
                 ];
@@ -81,7 +81,7 @@ class CvPoolController extends BaseController
             $application = JobApplication::find($id);
             if ($application) {
                 $tags = $application->tags ?? [];
-                if (!in_array($validated['tag'], $tags)) {
+                if (! in_array($validated['tag'], $tags)) {
                     $tags[] = $validated['tag'];
                     $application->update(['tags' => $tags]);
                     ActivityLog::log('update', $application, "Etiket eklendi: {$validated['tag']}");
@@ -100,7 +100,7 @@ class CvPoolController extends BaseController
     {
         $application = JobApplication::find($id);
 
-        if (!$application) {
+        if (! $application) {
             return $this->notFound('Aday bulunamadı');
         }
 
@@ -109,7 +109,7 @@ class CvPoolController extends BaseController
         ]);
 
         $oldTags = $application->tags ?? [];
-        $tags = array_values(array_filter($oldTags, fn($t) => $t !== $validated['tag']));
+        $tags = array_values(array_filter($oldTags, fn ($t) => $t !== $validated['tag']));
         $application->update(['tags' => $tags]);
 
         ActivityLog::log('update', $application, "Etiket kaldırıldı: {$validated['tag']}", ['tags' => $oldTags], ['tags' => $tags]);
@@ -124,7 +124,7 @@ class CvPoolController extends BaseController
     {
         $application = JobApplication::find($id);
 
-        if (!$application) {
+        if (! $application) {
             return $this->notFound('Aday bulunamadı');
         }
 

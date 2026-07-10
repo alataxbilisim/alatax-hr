@@ -20,16 +20,16 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->string('icon')->nullable();
             $table->string('color')->nullable();
-            
+
             // Ayarlar
             $table->boolean('requires_approval')->default(true);
             $table->boolean('requires_attachment')->default(false);
             $table->json('approval_flow')->nullable(); // Onay akışı
             $table->json('form_fields')->nullable(); // Özel form alanları
-            
+
             $table->boolean('is_active')->default(true);
             $table->integer('sort_order')->default(0);
-            
+
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
             $table->softDeletes();
@@ -43,33 +43,33 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->foreignId('employee_id')->constrained()->onDelete('cascade');
             $table->foreignId('request_type_id')->constrained()->onDelete('cascade');
-            
+
             // Talep içeriği
             $table->string('title');
             $table->text('description')->nullable();
             $table->json('form_data')->nullable(); // Özel form verileri
-            
+
             // Durum
             $table->string('status')->default('pending'); // pending, in_review, approved, rejected, cancelled
             $table->text('rejection_reason')->nullable();
-            
+
             // Ekler
             $table->json('attachments')->nullable();
-            
+
             // Onay bilgileri
             $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamp('approved_at')->nullable();
-            
+
             // Öncelik
             $table->string('priority')->default('normal'); // low, normal, high, urgent
-            
+
             // Tarihler
             $table->date('effective_date')->nullable(); // Geçerlilik tarihi
             $table->date('due_date')->nullable(); // Son tarih
-            
+
             $table->text('notes')->nullable();
             $table->text('admin_notes')->nullable(); // İK notları (personel göremez)
-            
+
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
             $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
@@ -102,4 +102,3 @@ return new class extends Migration
         Schema::dropIfExists('request_types');
     }
 };
-

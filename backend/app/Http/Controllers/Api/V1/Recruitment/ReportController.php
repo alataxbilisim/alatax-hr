@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Api\V1\Recruitment;
 
 use App\Http\Controllers\Api\V1\BaseController;
-use App\Models\JobPosition;
-use App\Models\JobApplication;
 use App\Models\Interview;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
+use App\Models\JobApplication;
+use App\Models\JobPosition;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ReportController extends BaseController
 {
@@ -120,8 +120,8 @@ class ReportController extends BaseController
                     'interview_count' => $position->interview_count,
                     'hired_count' => $position->hired_count,
                     'rejected_count' => $position->rejected_count,
-                    'conversion_rate' => $position->applications_count > 0 
-                        ? round(($position->hired_count / $position->applications_count) * 100, 2) 
+                    'conversion_rate' => $position->applications_count > 0
+                        ? round(($position->hired_count / $position->applications_count) * 100, 2)
                         : 0,
                 ];
             });
@@ -146,7 +146,7 @@ class ReportController extends BaseController
                 DB::raw('count(*) as total'),
                 DB::raw("SUM(CASE WHEN status = 'hired' THEN 1 ELSE 0 END) as hired"),
                 DB::raw("SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected"),
-                DB::raw("AVG(rating) as avg_rating")
+                DB::raw('AVG(rating) as avg_rating')
             )
             ->groupBy('source')
             ->orderBy('total', 'desc')
@@ -158,8 +158,8 @@ class ReportController extends BaseController
                     'hired' => (int) $source->hired,
                     'rejected' => (int) $source->rejected,
                     'avg_rating' => $source->avg_rating ? round($source->avg_rating, 2) : null,
-                    'conversion_rate' => $source->total > 0 
-                        ? round(($source->hired / $source->total) * 100, 2) 
+                    'conversion_rate' => $source->total > 0
+                        ? round(($source->hired / $source->total) * 100, 2)
                         : 0,
                 ];
             });
@@ -177,7 +177,7 @@ class ReportController extends BaseController
         $endDate = $request->get('end_date', Carbon::now()->format('Y-m-d'));
         $interval = $request->get('interval', 'month'); // day, week, month
 
-        $dateFormat = match($interval) {
+        $dateFormat = match ($interval) {
             'day' => '%Y-%m-%d',
             'week' => '%Y-%u',
             'month' => '%Y-%m',
@@ -226,7 +226,7 @@ class ReportController extends BaseController
             $count++;
 
             $positionTitle = $app->position->title ?? 'Bilinmeyen';
-            if (!isset($byPosition[$positionTitle])) {
+            if (! isset($byPosition[$positionTitle])) {
                 $byPosition[$positionTitle] = ['total_days' => 0, 'count' => 0];
             }
             $byPosition[$positionTitle]['total_days'] += $days;
@@ -244,7 +244,7 @@ class ReportController extends BaseController
             ];
         }
 
-        usort($byPositionAvg, fn($a, $b) => $b['hired_count'] - $a['hired_count']);
+        usort($byPositionAvg, fn ($a, $b) => $b['hired_count'] - $a['hired_count']);
 
         return $this->success([
             'overall_avg_days' => $avgTimeToHire,
@@ -253,4 +253,3 @@ class ReportController extends BaseController
         ]);
     }
 }
-

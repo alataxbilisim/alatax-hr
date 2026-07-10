@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class LeaveBalance extends Model
 {
-    use HasFactory, BelongsToCompany, HasAuditColumns;
+    use BelongsToCompany, HasAuditColumns, HasFactory;
 
     protected $fillable = [
         'company_id',
@@ -73,4 +73,3 @@ class LeaveBalance extends Model
         $this->save();
     }
 }
-

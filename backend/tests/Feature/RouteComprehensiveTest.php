@@ -2,13 +2,13 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use App\Models\User;
 use App\Models\Company;
 use App\Models\Module;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
 use Laravel\Sanctum\Sanctum;
+use Tests\TestCase;
 
 /**
  * Kapsamlı Route ve Yetkilendirme Testleri
@@ -19,9 +19,13 @@ class RouteComprehensiveTest extends TestCase
     use RefreshDatabase;
 
     protected $superAdmin;
+
     protected $companyAdmin;
+
     protected $employee;
+
     protected $company;
+
     protected $testResults = [];
 
     protected function setUp(): void
@@ -74,7 +78,7 @@ class RouteComprehensiveTest extends TestCase
                 $module->id => [
                     'is_active' => true,
                     'activated_at' => now(),
-                ]
+                ],
             ]);
         }
     }
@@ -105,7 +109,7 @@ class RouteComprehensiveTest extends TestCase
         }
 
         $this->assertGreaterThan(0, count($routeList), 'API route\'ları bulunamadı');
-        
+
         // Route listesini output'a yazdır
         echo "\n\n=== TÜM API ROUTE'LARI ===\n";
         foreach ($routeList as $route) {
@@ -115,7 +119,7 @@ class RouteComprehensiveTest extends TestCase
                 $route['uri']
             );
         }
-        echo "\nToplam Route Sayısı: " . count($routeList) . "\n\n";
+        echo "\nToplam Route Sayısı: ".count($routeList)."\n\n";
     }
 
     /**
@@ -133,7 +137,7 @@ class RouteComprehensiveTest extends TestCase
                 'allowedUsers' => ['public'],
                 'testData' => ['email' => 'superadmin@test.com', 'password' => 'password'],
             ],
-            
+
             // Protected Routes - Company Admin
             [
                 'route' => 'GET /api/v1/dashboard',
@@ -245,7 +249,7 @@ class RouteComprehensiveTest extends TestCase
         foreach ($testCases as $testCase) {
             $result = $this->testRouteAuthorization($testCase);
             $results['details'][] = $result;
-            
+
             if ($result['status'] === 'passed') {
                 $results['passed']++;
             } elseif ($result['status'] === 'failed') {
@@ -265,7 +269,7 @@ class RouteComprehensiveTest extends TestCase
     /**
      * Tek bir route için yetkilendirme testi
      */
-    protected function testRouteAuthorization(array $testCase): array
+    protected function test_route_authorization(array $testCase): array
     {
         $result = [
             'route' => $testCase['route'],
@@ -276,7 +280,7 @@ class RouteComprehensiveTest extends TestCase
 
         try {
             // Authentication gerektirmeyen route'lar
-            if (!$testCase['requiresAuth']) {
+            if (! $testCase['requiresAuth']) {
                 $response = $this->json($testCase['method'], $testCase['uri'], $testCase['testData'] ?? []);
                 $result['tests'][] = [
                     'test' => 'Public access',
@@ -284,6 +288,7 @@ class RouteComprehensiveTest extends TestCase
                     'statusCode' => $response->status(),
                 ];
                 $result['status'] = $response->status() !== 401 ? 'passed' : 'failed';
+
                 return $result;
             }
 
@@ -302,7 +307,7 @@ class RouteComprehensiveTest extends TestCase
                     $module->id => [
                         'is_active' => true,
                         'activated_at' => now(),
-                    ]
+                    ],
                 ]);
             }
 
@@ -310,7 +315,9 @@ class RouteComprehensiveTest extends TestCase
             if (isset($testCase['allowedUsers'])) {
                 foreach ($testCase['allowedUsers'] as $userType) {
                     $user = $this->getUserByType($userType);
-                    if (!$user) continue;
+                    if (! $user) {
+                        continue;
+                    }
 
                     Sanctum::actingAs($user);
                     $response = $this->json($testCase['method'], $testCase['uri'], $testCase['testData'] ?? []);
@@ -334,7 +341,9 @@ class RouteComprehensiveTest extends TestCase
             if (isset($testCase['forbiddenUsers'])) {
                 foreach ($testCase['forbiddenUsers'] as $userType) {
                     $user = $this->getUserByType($userType);
-                    if (!$user) continue;
+                    if (! $user) {
+                        continue;
+                    }
 
                     Sanctum::actingAs($user);
                     $response = $this->json($testCase['method'], $testCase['uri'], $testCase['testData'] ?? []);
@@ -361,7 +370,7 @@ class RouteComprehensiveTest extends TestCase
             ];
 
             // Genel durum belirleme
-            $allPassed = collect($result['tests'])->every(fn($test) => $test['status'] === 'passed');
+            $allPassed = collect($result['tests'])->every(fn ($test) => $test['status'] === 'passed');
             $result['status'] = $allPassed ? 'passed' : 'failed';
             $result['message'] = $allPassed ? 'All tests passed' : 'Some tests failed';
 
@@ -379,7 +388,7 @@ class RouteComprehensiveTest extends TestCase
      */
     protected function getUserByType(string $type): ?User
     {
-        return match($type) {
+        return match ($type) {
             'super_admin' => $this->superAdmin,
             'company_admin' => $this->companyAdmin,
             'employee' => $this->employee,
@@ -396,15 +405,15 @@ class RouteComprehensiveTest extends TestCase
         echo "========================================\n";
         echo "  ROUTE YETKİLENDİRME TEST RAPORU\n";
         echo "========================================\n\n";
-        echo "Toplam Test: " . count($results['details']) . "\n";
-        echo "Geçen: " . $results['passed'] . "\n";
-        echo "Başarısız: " . $results['failed'] . "\n";
-        echo "Atlanan: " . $results['skipped'] . "\n\n";
+        echo 'Toplam Test: '.count($results['details'])."\n";
+        echo 'Geçen: '.$results['passed']."\n";
+        echo 'Başarısız: '.$results['failed']."\n";
+        echo 'Atlanan: '.$results['skipped']."\n\n";
 
         foreach ($results['details'] as $detail) {
             $statusIcon = $detail['status'] === 'passed' ? '✓' : '✗';
             echo sprintf("%s %s\n", $statusIcon, $detail['route']);
-            
+
             foreach ($detail['tests'] as $test) {
                 $testIcon = $test['status'] === 'passed' ? '  ✓' : '  ✗';
                 echo sprintf(
@@ -414,7 +423,7 @@ class RouteComprehensiveTest extends TestCase
                     $test['statusCode'],
                     $test['expected'] ?? 'N/A'
                 );
-                
+
                 if (isset($test['error'])) {
                     echo sprintf("    Error: %s\n", $test['error']);
                 }
@@ -425,4 +434,3 @@ class RouteComprehensiveTest extends TestCase
         echo "========================================\n\n";
     }
 }
-

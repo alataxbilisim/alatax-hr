@@ -32,11 +32,17 @@ class SurveyQuestion extends Model
     ];
 
     const TYPE_SINGLE_CHOICE = 'single_choice';
+
     const TYPE_MULTIPLE_CHOICE = 'multiple_choice';
+
     const TYPE_RATING = 'rating';
+
     const TYPE_NPS = 'nps';
+
     const TYPE_TEXT = 'text';
+
     const TYPE_SCALE = 'scale';
+
     const TYPE_MATRIX = 'matrix';
 
     public static function getTypeLabels(): array
@@ -69,5 +75,3 @@ class SurveyQuestion extends Model
         return $this->responses()->whereNotNull('answer_numeric')->avg('answer_numeric');
     }
 }
-
-

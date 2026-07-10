@@ -6,12 +6,12 @@ use App\Traits\BelongsToCompany;
 use App\Traits\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Competency extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany, HasAuditColumns;
+    use BelongsToCompany, HasAuditColumns, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -33,10 +33,15 @@ class Competency extends Model
 
     // Yaygın kategoriler
     const CATEGORY_TECHNICAL = 'technical';
+
     const CATEGORY_LEADERSHIP = 'leadership';
+
     const CATEGORY_COMMUNICATION = 'communication';
+
     const CATEGORY_PROBLEM_SOLVING = 'problem_solving';
+
     const CATEGORY_TEAMWORK = 'teamwork';
+
     const CATEGORY_INNOVATION = 'innovation';
 
     public static function getCategoryLabels(): array
@@ -81,6 +86,7 @@ class Competency extends Model
         }
 
         $levelData = collect($this->levels)->firstWhere('level', $level);
+
         return $levelData['description'] ?? null;
     }
 
@@ -91,6 +97,7 @@ class Competency extends Model
         }
 
         $levelData = collect($this->levels)->firstWhere('level', $level);
+
         return $levelData['name'] ?? "Seviye {$level}";
     }
 
@@ -108,5 +115,3 @@ class Competency extends Model
         ];
     }
 }
-
-

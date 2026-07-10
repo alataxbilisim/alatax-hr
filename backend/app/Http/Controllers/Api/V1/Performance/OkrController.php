@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api\V1\Performance;
 
 use App\Http\Controllers\Api\V1\BaseController;
-use App\Models\Objective;
-use App\Models\KeyResult;
 use App\Models\ActivityLog;
-use Illuminate\Http\Request;
+use App\Models\KeyResult;
+use App\Models\Objective;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class OkrController extends BaseController
@@ -40,7 +40,7 @@ class OkrController extends BaseController
             $query->where('parent_id', $request->parent_id);
         } else {
             // Sadece üst düzey hedefleri getir
-            if (!$request->has('all')) {
+            if (! $request->has('all')) {
                 $query->whereNull('parent_id');
             }
         }
@@ -61,10 +61,10 @@ class OkrController extends BaseController
             ->with([
                 'owner:id,name,email',
                 'keyResults.owner:id,name',
-                'keyResults.updates' => fn($q) => $q->latest()->limit(5),
+                'keyResults.updates' => fn ($q) => $q->latest()->limit(5),
                 'children.keyResults',
                 'parent:id,title',
-                'department:id,name'
+                'department:id,name',
             ])
             ->findOrFail($id);
 
@@ -116,7 +116,7 @@ class OkrController extends BaseController
             ]);
 
             // Key Results oluştur
-            if (!empty($validated['key_results'])) {
+            if (! empty($validated['key_results'])) {
                 foreach ($validated['key_results'] as $krData) {
                     KeyResult::create([
                         'objective_id' => $objective->id,
@@ -137,13 +137,14 @@ class OkrController extends BaseController
 
             DB::commit();
 
-            ActivityLog::log('create', $objective, 'Yeni hedef oluşturuldu: ' . $objective->title);
+            ActivityLog::log('create', $objective, 'Yeni hedef oluşturuldu: '.$objective->title);
 
             return $this->created($objective->load('keyResults'), 'Hedef oluşturuldu');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error('Hedef oluşturulamadı: ' . $e->getMessage(), 500);
+
+            return $this->error('Hedef oluşturulamadı: '.$e->getMessage(), 500);
         }
     }
 
@@ -185,7 +186,7 @@ class OkrController extends BaseController
 
         $objective->delete();
 
-        ActivityLog::log('delete', $objective, 'Hedef silindi: ' . $objective->title);
+        ActivityLog::log('delete', $objective, 'Hedef silindi: '.$objective->title);
 
         return $this->success(null, 'Hedef silindi');
     }
@@ -242,7 +243,7 @@ class OkrController extends BaseController
             'created_by' => auth()->id(),
         ]);
 
-        ActivityLog::log('create', $keyResult, 'Anahtar sonuç eklendi: ' . $keyResult->title);
+        ActivityLog::log('create', $keyResult, 'Anahtar sonuç eklendi: '.$keyResult->title);
 
         return $this->created($keyResult, 'Anahtar sonuç eklendi');
     }
@@ -252,7 +253,7 @@ class OkrController extends BaseController
      */
     public function updateKeyResult(Request $request, int $keyResultId): JsonResponse
     {
-        $keyResult = KeyResult::whereHas('objective', fn($q) => $q->where('company_id', $this->getCompanyId()))
+        $keyResult = KeyResult::whereHas('objective', fn ($q) => $q->where('company_id', $this->getCompanyId()))
             ->findOrFail($keyResultId);
 
         $validated = $request->validate([
@@ -277,7 +278,7 @@ class OkrController extends BaseController
      */
     public function deleteKeyResult(int $keyResultId): JsonResponse
     {
-        $keyResult = KeyResult::whereHas('objective', fn($q) => $q->where('company_id', $this->getCompanyId()))
+        $keyResult = KeyResult::whereHas('objective', fn ($q) => $q->where('company_id', $this->getCompanyId()))
             ->findOrFail($keyResultId);
 
         $objective = $keyResult->objective;
@@ -304,5 +305,3 @@ class OkrController extends BaseController
         ], 'Etiketler');
     }
 }
-
-

@@ -20,24 +20,24 @@ class PortalDashboardController extends BaseController
     {
         $user = $request->user();
         $employee = $this->getEmployee($user);
-        
-        if (!$employee) {
+
+        if (! $employee) {
             return $this->error('Personel kaydı bulunamadı', null, 404);
         }
 
         // İzin bakiyesi
         $leaveBalance = $this->getLeaveBalance($employee);
-        
+
         // Bekleyen talepler
         $pendingRequests = EmployeeRequest::where('employee_id', $employee->id)
             ->pending()
             ->count();
-        
+
         // Bekleyen izin talepleri
         $pendingLeaves = LeaveRequest::where('user_id', $user->id)
             ->where('status', 'pending')
             ->count();
-        
+
         // Son duyurular
         $announcements = Announcement::where('company_id', $employee->company_id)
             ->active()
@@ -93,7 +93,7 @@ class PortalDashboardController extends BaseController
     {
         // LeaveBalance modelinden veya hesaplayarak
         $currentYear = now()->year;
-        
+
         $balances = \App\Models\LeaveBalance::where('user_id', $employee->user_id)
             ->where('year', $currentYear)
             ->with('leaveType:id,name')
@@ -109,4 +109,3 @@ class PortalDashboardController extends BaseController
         })->toArray();
     }
 }
-

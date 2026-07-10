@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 
 // API Version 1
 Route::prefix('v1')->group(function () {
-    
+
     // Public routes (authentication required olmayan)
     Route::prefix('auth')->group(function () {
         Route::post('/login', [\App\Http\Controllers\Api\V1\AuthController::class, 'login']);
@@ -23,10 +23,10 @@ Route::prefix('v1')->group(function () {
         Route::post('/forgot-password', [\App\Http\Controllers\Api\V1\AuthController::class, 'forgotPassword']);
         Route::post('/reset-password', [\App\Http\Controllers\Api\V1\AuthController::class, 'resetPassword']);
     });
-    
+
     // Protected routes (authentication required)
     Route::middleware(['auth:sanctum', 'company.active'])->group(function () {
-        
+
         // Auth endpoints
         Route::prefix('auth')->group(function () {
             Route::post('/logout', [\App\Http\Controllers\Api\V1\AuthController::class, 'logout']);
@@ -34,10 +34,10 @@ Route::prefix('v1')->group(function () {
             Route::put('/profile', [\App\Http\Controllers\Api\V1\AuthController::class, 'updateProfile']);
             Route::put('/password', [\App\Http\Controllers\Api\V1\AuthController::class, 'updatePassword']);
         });
-        
+
         // Dashboard
         Route::get('/dashboard', [\App\Http\Controllers\Api\V1\DashboardController::class, 'index']);
-        
+
         // Users (Company Admin only)
         Route::middleware('company_admin')->group(function () {
             // Export/Import routes (must be before apiResource to avoid conflicts)
@@ -45,7 +45,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/users/import', [\App\Http\Controllers\Api\V1\UserController::class, 'import']);
             Route::post('/users/invite', [\App\Http\Controllers\Api\V1\UserController::class, 'invite']);
             Route::post('/users/bulk-update', [\App\Http\Controllers\Api\V1\UserController::class, 'bulkUpdate']);
-            
+
             Route::apiResource('users', \App\Http\Controllers\Api\V1\UserController::class);
             Route::post('/users/{user}/reset-password', [\App\Http\Controllers\Api\V1\UserController::class, 'resetPassword']);
             Route::post('/users/{user}/toggle-status', [\App\Http\Controllers\Api\V1\UserController::class, 'toggleStatus']);
@@ -60,13 +60,13 @@ Route::prefix('v1')->group(function () {
             Route::delete('/users/{user}/sessions/{tokenId}', [\App\Http\Controllers\Api\V1\UserController::class, 'revokeSession']);
             Route::delete('/users/{user}/sessions', [\App\Http\Controllers\Api\V1\UserController::class, 'revokeAllSessions']);
         });
-        
+
         // Roles & Permissions
         Route::middleware('company_admin')->group(function () {
             Route::apiResource('roles', \App\Http\Controllers\Api\V1\RoleController::class);
             Route::get('/permissions', [\App\Http\Controllers\Api\V1\RoleController::class, 'permissions']);
         });
-        
+
         // Webhooks (Company Admin only)
         Route::middleware('company_admin')->prefix('webhooks')->group(function () {
             Route::apiResource('', \App\Http\Controllers\Api\V1\WebhookController::class)->parameters(['' => 'webhook']);
@@ -82,7 +82,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/modules', [\App\Http\Controllers\Api\V1\CompanyController::class, 'modules']);
             Route::post('/logo', [\App\Http\Controllers\Api\V1\CompanyController::class, 'uploadLogo']);
             Route::delete('/logo', [\App\Http\Controllers\Api\V1\CompanyController::class, 'deleteLogo']);
-            
+
             // Settings
             Route::get('/settings', [\App\Http\Controllers\Api\V1\CompanySettingsController::class, 'index']);
             Route::put('/settings', [\App\Http\Controllers\Api\V1\CompanySettingsController::class, 'update']);
@@ -110,7 +110,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/{id}/set-headquarters', [\App\Http\Controllers\Api\V1\BranchController::class, 'setHeadquarters']);
             Route::get('/{id}/employees', [\App\Http\Controllers\Api\V1\BranchController::class, 'employees']);
         });
-        
+
         // Employees (Company Admin only)
         Route::middleware('company_admin')->prefix('employees')->group(function () {
             Route::get('/', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'index']);
@@ -125,7 +125,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/custom-fields', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'getCustomFields']);
             Route::get('/organization-chart', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'getOrganizationChart']);
             Route::get('/stats', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'getStats']);
-            
+
             // BI Raporlama (MUST be before /{id} routes)
             Route::prefix('reports')->group(function () {
                 Route::get('/metadata', [\App\Http\Controllers\Api\V1\EmployeeReportController::class, 'metadata']);
@@ -156,14 +156,14 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{id}', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'destroy']);
             Route::post('/{id}/portal-access', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'createPortalAccess']);
             Route::delete('/{id}/portal-access', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'revokePortalAccess']);
-            
+
             // Personel alt verileri
             Route::get('/{id}/leaves', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'getLeaves']);
             Route::get('/{id}/trainings', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'getTrainings']);
             Route::get('/{id}/assets', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'getAssets']);
             Route::get('/{id}/performance', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'getPerformance']);
             Route::get('/{id}/activity', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'getActivity']);
-            
+
             // Personel belgeleri
             Route::get('/{id}/documents', [\App\Http\Controllers\Api\V1\EmployeeDocumentController::class, 'index']);
             Route::post('/{id}/documents', [\App\Http\Controllers\Api\V1\EmployeeDocumentController::class, 'store']);
@@ -172,13 +172,13 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{id}/documents/{docId}', [\App\Http\Controllers\Api\V1\EmployeeDocumentController::class, 'destroy']);
             Route::get('/{id}/documents/{docId}/download', [\App\Http\Controllers\Api\V1\EmployeeDocumentController::class, 'download']);
         });
-        
+
         // Personel belge kategorileri ve süresi dolacak belgeler
         Route::middleware('company_admin')->prefix('employee-documents')->group(function () {
             Route::get('/categories', [\App\Http\Controllers\Api\V1\EmployeeDocumentController::class, 'categories']);
             Route::get('/expiring-soon', [\App\Http\Controllers\Api\V1\EmployeeDocumentController::class, 'expiringSoon']);
         });
-        
+
         // Departments (Departman Yönetimi)
         Route::middleware('company_admin')->prefix('departments')->group(function () {
             Route::get('/', [\App\Http\Controllers\Api\V1\DepartmentController::class, 'index']);
@@ -189,7 +189,7 @@ Route::prefix('v1')->group(function () {
             Route::put('/{id}', [\App\Http\Controllers\Api\V1\DepartmentController::class, 'update']);
             Route::delete('/{id}', [\App\Http\Controllers\Api\V1\DepartmentController::class, 'destroy']);
         });
-        
+
         // Custom Fields (Company Admin only)
         Route::middleware('company_admin')->prefix('custom-fields')->group(function () {
             Route::get('/', [\App\Http\Controllers\Api\V1\CustomFieldController::class, 'index']);
@@ -201,40 +201,40 @@ Route::prefix('v1')->group(function () {
             Route::put('/{id}', [\App\Http\Controllers\Api\V1\CustomFieldController::class, 'update']);
             Route::delete('/{id}', [\App\Http\Controllers\Api\V1\CustomFieldController::class, 'destroy']);
         });
-        
+
         // Activity Logs
         Route::get('/activity-logs', [\App\Http\Controllers\Api\V1\ActivityLogController::class, 'index']);
         Route::get('/activity-logs/export', [\App\Http\Controllers\Api\V1\ActivityLogController::class, 'export']);
         Route::get('/activity-logs/{id}', [\App\Http\Controllers\Api\V1\ActivityLogController::class, 'show']);
-        
+
         // Notifications
         Route::prefix('notifications')->group(function () {
             Route::get('/', [\App\Http\Controllers\Api\V1\NotificationController::class, 'index']);
             Route::post('/{id}/read', [\App\Http\Controllers\Api\V1\NotificationController::class, 'markAsRead']);
             Route::post('/read-all', [\App\Http\Controllers\Api\V1\NotificationController::class, 'markAllAsRead']);
         });
-        
+
         // ===========================================
         // MODÜL BAZLI ROUTES
         // ===========================================
-        
+
         // İş Başvuru Modülü
         Route::middleware('module.access:job-applications')->prefix('recruitment')->group(function () {
             Route::apiResource('positions', \App\Http\Controllers\Api\V1\Recruitment\JobPositionController::class);
-            
+
             // Başvurular
             Route::get('/applications', [\App\Http\Controllers\Api\V1\Recruitment\ApplicationController::class, 'index']);
             Route::get('/applications/{id}', [\App\Http\Controllers\Api\V1\Recruitment\ApplicationController::class, 'show']);
             Route::put('/applications/{id}/status', [\App\Http\Controllers\Api\V1\Recruitment\ApplicationController::class, 'updateStatus']);
             Route::put('/applications/{id}/notes', [\App\Http\Controllers\Api\V1\Recruitment\ApplicationController::class, 'updateNotes']);
             Route::put('/applications/{id}/rate', [\App\Http\Controllers\Api\V1\Recruitment\ApplicationController::class, 'rate']);
-            
+
             // CV Havuzu
             Route::get('/cv-pool', [\App\Http\Controllers\Api\V1\Recruitment\CvPoolController::class, 'index']);
             Route::post('/cv-pool/bulk-tag', [\App\Http\Controllers\Api\V1\Recruitment\CvPoolController::class, 'bulkTag']);
             Route::delete('/cv-pool/{id}/tag', [\App\Http\Controllers\Api\V1\Recruitment\CvPoolController::class, 'removeTag']);
             Route::put('/cv-pool/{id}/rate', [\App\Http\Controllers\Api\V1\Recruitment\CvPoolController::class, 'rate']);
-            
+
             // Raporlar
             Route::prefix('reports')->group(function () {
                 Route::get('/summary', [\App\Http\Controllers\Api\V1\Recruitment\ReportController::class, 'summary']);
@@ -243,7 +243,7 @@ Route::prefix('v1')->group(function () {
                 Route::get('/trends', [\App\Http\Controllers\Api\V1\Recruitment\ReportController::class, 'trends']);
                 Route::get('/time-to-hire', [\App\Http\Controllers\Api\V1\Recruitment\ReportController::class, 'timeToHire']);
             });
-            
+
             // Mülakatlar
             Route::prefix('interviews')->group(function () {
                 Route::get('/', [\App\Http\Controllers\Api\V1\Recruitment\InterviewController::class, 'index']);
@@ -256,11 +256,11 @@ Route::prefix('v1')->group(function () {
                 Route::post('/{id}/complete', [\App\Http\Controllers\Api\V1\Recruitment\InterviewController::class, 'complete']);
                 Route::post('/{id}/cancel', [\App\Http\Controllers\Api\V1\Recruitment\InterviewController::class, 'cancel']);
             });
-            
+
             // Form Builder
             Route::apiResource('forms', \App\Http\Controllers\Api\V1\Recruitment\FormBuilderController::class);
         });
-        
+
         // Evrak Yönetimi Modülü
         Route::middleware('module.access:document-management')->prefix('documents')->group(function () {
             // Kategoriler
@@ -268,7 +268,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/categories', [\App\Http\Controllers\Api\V1\Documents\CategoryController::class, 'store']);
             Route::put('/categories/{id}', [\App\Http\Controllers\Api\V1\Documents\CategoryController::class, 'update']);
             Route::delete('/categories/{id}', [\App\Http\Controllers\Api\V1\Documents\CategoryController::class, 'destroy']);
-            
+
             // Raporlar (MUST be before /{id} routes)
             Route::prefix('reports')->group(function () {
                 Route::get('/metadata', [\App\Http\Controllers\Api\V1\Documents\ReportController::class, 'metadata']);
@@ -276,11 +276,11 @@ Route::prefix('v1')->group(function () {
                 Route::post('/kpi-data', [\App\Http\Controllers\Api\V1\Documents\ReportController::class, 'getKpiData']);
                 Route::get('/summary', [\App\Http\Controllers\Api\V1\Documents\ReportController::class, 'summary']);
             });
-            
+
             // İstatistikler
             Route::get('/stats', [\App\Http\Controllers\Api\V1\Documents\DocumentController::class, 'stats']);
         });
-        
+
         Route::middleware('module.access:document-management')->group(function () {
             Route::get('/documents', [\App\Http\Controllers\Api\V1\Documents\DocumentController::class, 'index']);
             Route::post('/documents', [\App\Http\Controllers\Api\V1\Documents\DocumentController::class, 'store']);
@@ -291,14 +291,14 @@ Route::prefix('v1')->group(function () {
             Route::get('/documents/{id}/versions', [\App\Http\Controllers\Api\V1\Documents\DocumentController::class, 'versions']);
             Route::get('/documents/{id}/versions/{versionId}/download', [\App\Http\Controllers\Api\V1\Documents\DocumentController::class, 'downloadVersion']);
         });
-        
+
         // Onboarding Modülü
         Route::middleware('module.access:onboarding')->prefix('onboarding')->group(function () {
             Route::apiResource('templates', \App\Http\Controllers\Api\V1\Onboarding\TemplateController::class);
             Route::apiResource('processes', \App\Http\Controllers\Api\V1\Onboarding\ProcessController::class);
             Route::post('/processes/{id}/tasks/{taskId}/complete', [\App\Http\Controllers\Api\V1\Onboarding\ProcessController::class, 'completeTask']);
         });
-        
+
         // İzin Yönetimi Modülü
         Route::middleware('module.access:leave-management')->prefix('leaves')->group(function () {
             Route::apiResource('types', \App\Http\Controllers\Api\V1\Leaves\LeaveTypeController::class);
@@ -307,7 +307,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/requests/{id}/reject', [\App\Http\Controllers\Api\V1\Leaves\LeaveRequestController::class, 'reject']);
             Route::get('/calendar', [\App\Http\Controllers\Api\V1\Leaves\LeaveCalendarController::class, 'index']);
             Route::get('/balance', [\App\Http\Controllers\Api\V1\Leaves\LeaveBalanceController::class, 'index']);
-            
+
             // Tatil Takvimi
             Route::prefix('holidays')->group(function () {
                 Route::get('/', [\App\Http\Controllers\Api\V1\Leaves\HolidayController::class, 'index']);
@@ -319,7 +319,7 @@ Route::prefix('v1')->group(function () {
                 Route::put('/{id}', [\App\Http\Controllers\Api\V1\Leaves\HolidayController::class, 'update']);
                 Route::delete('/{id}', [\App\Http\Controllers\Api\V1\Leaves\HolidayController::class, 'destroy']);
             });
-            
+
             // Hakediş Politikaları
             Route::prefix('accrual-policies')->group(function () {
                 Route::get('/', [\App\Http\Controllers\Api\V1\Leaves\AccrualPolicyController::class, 'index']);
@@ -334,7 +334,7 @@ Route::prefix('v1')->group(function () {
                 Route::post('/process-carryover', [\App\Http\Controllers\Api\V1\Leaves\AccrualPolicyController::class, 'processYearEndCarryover']);
             });
         });
-        
+
         // Onay İş Akışları (Workflow Engine)
         Route::middleware('company_admin')->prefix('workflows')->group(function () {
             Route::get('/entity-types', [\App\Http\Controllers\Api\V1\Workflow\WorkflowController::class, 'getEntityTypes']);
@@ -342,7 +342,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/by-entity/{entityType}', [\App\Http\Controllers\Api\V1\Workflow\WorkflowController::class, 'getByEntityType']);
             Route::apiResource('/', \App\Http\Controllers\Api\V1\Workflow\WorkflowController::class)->parameters(['' => 'workflow']);
         });
-        
+
         // Onay İşlemleri
         Route::prefix('approvals')->group(function () {
             Route::get('/pending', [\App\Http\Controllers\Api\V1\Workflow\ApprovalController::class, 'pendingApprovals']);
@@ -351,7 +351,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/{id}/reject', [\App\Http\Controllers\Api\V1\Workflow\ApprovalController::class, 'reject']);
             Route::post('/{id}/skip', [\App\Http\Controllers\Api\V1\Workflow\ApprovalController::class, 'skip']);
             Route::get('/record-history', [\App\Http\Controllers\Api\V1\Workflow\ApprovalController::class, 'getApprovalHistory']);
-            
+
             // Vekaletler
             Route::prefix('delegations')->group(function () {
                 Route::get('/', [\App\Http\Controllers\Api\V1\Workflow\ApprovalController::class, 'delegations']);
@@ -360,20 +360,20 @@ Route::prefix('v1')->group(function () {
                 Route::post('/{id}/cancel', [\App\Http\Controllers\Api\V1\Workflow\ApprovalController::class, 'cancelDelegation']);
             });
         });
-        
+
         // Performans Değerlendirme Modülü
         Route::middleware('module.access:performance')->prefix('performance')->group(function () {
             Route::apiResource('periods', \App\Http\Controllers\Api\V1\Performance\PeriodController::class);
             Route::post('/periods/{id}/activate', [\App\Http\Controllers\Api\V1\Performance\PeriodController::class, 'activate']);
             Route::post('/periods/{id}/close', [\App\Http\Controllers\Api\V1\Performance\PeriodController::class, 'close']);
-            
+
             Route::apiResource('criteria', \App\Http\Controllers\Api\V1\Performance\CriteriaController::class);
-            
+
             Route::apiResource('reviews', \App\Http\Controllers\Api\V1\Performance\ReviewController::class);
             Route::post('/reviews/{id}/submit', [\App\Http\Controllers\Api\V1\Performance\ReviewController::class, 'submit']);
             Route::post('/reviews/{id}/approve', [\App\Http\Controllers\Api\V1\Performance\ReviewController::class, 'approve']);
             Route::post('/reviews/{id}/reject', [\App\Http\Controllers\Api\V1\Performance\ReviewController::class, 'reject']);
-            
+
             // OKR (Objectives & Key Results)
             Route::prefix('okr')->group(function () {
                 Route::get('/labels', [\App\Http\Controllers\Api\V1\Performance\OkrController::class, 'getLabels']);
@@ -387,7 +387,7 @@ Route::prefix('v1')->group(function () {
                 Route::put('/key-results/{id}', [\App\Http\Controllers\Api\V1\Performance\OkrController::class, 'updateKeyResult']);
                 Route::delete('/key-results/{id}', [\App\Http\Controllers\Api\V1\Performance\OkrController::class, 'deleteKeyResult']);
             });
-            
+
             // 360 Derece Geri Bildirim
             Route::prefix('feedback')->group(function () {
                 Route::get('/types', [\App\Http\Controllers\Api\V1\Performance\FeedbackController::class, 'getFeedbackTypes']);
@@ -397,12 +397,12 @@ Route::prefix('v1')->group(function () {
                 Route::post('/decline/{providerId}', [\App\Http\Controllers\Api\V1\Performance\FeedbackController::class, 'declineFeedback']);
                 Route::post('/reviews/{reviewId}/providers', [\App\Http\Controllers\Api\V1\Performance\FeedbackController::class, 'addProviders']);
                 Route::get('/reviews/{reviewId}/results', [\App\Http\Controllers\Api\V1\Performance\FeedbackController::class, 'getReviewFeedbacks']);
-                
+
                 // Sürekli Geri Bildirim
                 Route::get('/continuous', [\App\Http\Controllers\Api\V1\Performance\FeedbackController::class, 'continuousFeedbacks']);
                 Route::post('/continuous', [\App\Http\Controllers\Api\V1\Performance\FeedbackController::class, 'sendContinuousFeedback']);
             });
-            
+
             // Yetkinlikler
             Route::prefix('competencies')->group(function () {
                 Route::get('/categories', [\App\Http\Controllers\Api\V1\Performance\CompetencyController::class, 'getCategories']);
@@ -411,20 +411,20 @@ Route::prefix('v1')->group(function () {
                 Route::post('/', [\App\Http\Controllers\Api\V1\Performance\CompetencyController::class, 'store']);
                 Route::put('/{id}', [\App\Http\Controllers\Api\V1\Performance\CompetencyController::class, 'update']);
                 Route::delete('/{id}', [\App\Http\Controllers\Api\V1\Performance\CompetencyController::class, 'destroy']);
-                
+
                 // Kullanıcı Yetkinlikleri
                 Route::get('/user/{userId}', [\App\Http\Controllers\Api\V1\Performance\CompetencyController::class, 'getUserCompetencies']);
                 Route::post('/user/{userId}', [\App\Http\Controllers\Api\V1\Performance\CompetencyController::class, 'setUserCompetency']);
-                
+
                 // Pozisyon Yetkinlikleri
                 Route::get('/position/{positionName}', [\App\Http\Controllers\Api\V1\Performance\CompetencyController::class, 'getPositionCompetencies']);
                 Route::post('/position', [\App\Http\Controllers\Api\V1\Performance\CompetencyController::class, 'setPositionCompetency']);
                 Route::delete('/position', [\App\Http\Controllers\Api\V1\Performance\CompetencyController::class, 'removePositionCompetency']);
-                
+
                 // Skill Gap Analizi
                 Route::get('/skill-gap/{userId}/{positionName}', [\App\Http\Controllers\Api\V1\Performance\CompetencyController::class, 'getSkillGapAnalysis']);
             });
-            
+
             // 1-on-1 Görüşmeleri
             Route::prefix('one-on-one')->group(function () {
                 Route::get('/labels', [\App\Http\Controllers\Api\V1\Performance\OneOnOneController::class, 'getLabels']);
@@ -438,30 +438,30 @@ Route::prefix('v1')->group(function () {
                 Route::post('/{id}/reschedule', [\App\Http\Controllers\Api\V1\Performance\OneOnOneController::class, 'reschedule']);
             });
         });
-        
+
         // Eğitim Yönetimi Modülü
         Route::middleware('module.access:training')->prefix('training')->group(function () {
             Route::get('/categories', [\App\Http\Controllers\Api\V1\Training\TrainingController::class, 'categories']);
             Route::apiResource('trainings', \App\Http\Controllers\Api\V1\Training\TrainingController::class);
-            
+
             Route::apiResource('sessions', \App\Http\Controllers\Api\V1\Training\SessionController::class);
             Route::post('/sessions/{id}/participants', [\App\Http\Controllers\Api\V1\Training\SessionController::class, 'addParticipant']);
             Route::delete('/sessions/{id}/participants/{userId}', [\App\Http\Controllers\Api\V1\Training\SessionController::class, 'removeParticipant']);
             Route::post('/sessions/{id}/attendance', [\App\Http\Controllers\Api\V1\Training\SessionController::class, 'updateAttendance']);
         });
-        
+
         // Varlık Yönetimi Modülü
         Route::middleware('module.access:asset-management')->prefix('assets')->group(function () {
             Route::apiResource('categories', \App\Http\Controllers\Api\V1\Assets\CategoryController::class);
-            
+
             Route::apiResource('items', \App\Http\Controllers\Api\V1\Assets\AssetController::class);
             Route::post('/items/{id}/assign', [\App\Http\Controllers\Api\V1\Assets\AssetController::class, 'assign']);
             Route::post('/items/{id}/return', [\App\Http\Controllers\Api\V1\Assets\AssetController::class, 'returnAsset']);
-            
+
             Route::apiResource('maintenance', \App\Http\Controllers\Api\V1\Assets\MaintenanceController::class);
             Route::post('/maintenance/{id}/complete', [\App\Http\Controllers\Api\V1\Assets\MaintenanceController::class, 'complete']);
         });
-        
+
         // Anket & Geri Bildirim Modülü
         Route::middleware('module.access:surveys')->prefix('surveys')->group(function () {
             Route::get('/types', [\App\Http\Controllers\Api\V1\Surveys\SurveyController::class, 'getTypes']);
@@ -473,7 +473,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/{id}/submit', [\App\Http\Controllers\Api\V1\Surveys\SurveyController::class, 'submit']);
             Route::get('/{id}/results', [\App\Http\Controllers\Api\V1\Surveys\SurveyController::class, 'results']);
         });
-        
+
         // HR Analytics Modülü
         Route::middleware('module.access:hr-analytics')->prefix('analytics')->group(function () {
             Route::get('/summary', [\App\Http\Controllers\Api\V1\Analytics\HrAnalyticsController::class, 'summary']);
@@ -483,7 +483,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/leaves', [\App\Http\Controllers\Api\V1\Analytics\HrAnalyticsController::class, 'leaves']);
             Route::get('/training', [\App\Http\Controllers\Api\V1\Analytics\HrAnalyticsController::class, 'training']);
         });
-        
+
         // Timesheet / Attendance (Company Admin)
         Route::prefix('attendance')->group(function () {
             Route::get('/', [\App\Http\Controllers\Api\V1\Timesheet\AttendanceController::class, 'index']);
@@ -495,7 +495,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/bulk-approve', [\App\Http\Controllers\Api\V1\Timesheet\AttendanceController::class, 'bulkApprove']);
         });
     });
-    
+
     // ===========================================
     // SUPERADMIN ROUTES
     // ===========================================
@@ -506,49 +506,49 @@ Route::prefix('v1')->group(function () {
         Route::post('/companies/{company}/modules', [\App\Http\Controllers\Api\V1\Admin\CompanyController::class, 'syncModules']);
         Route::post('/companies/{company}/assign-package', [\App\Http\Controllers\Api\V1\Admin\CompanyController::class, 'assignPackage']);
         Route::post('/companies/{company}/extend-license', [\App\Http\Controllers\Api\V1\Admin\CompanyController::class, 'extendLicense']);
-        
+
         // Company Ledger (Cari Hesap)
         Route::get('/companies/{company}/ledger', [\App\Http\Controllers\Api\V1\Admin\CompanyLedgerController::class, 'index']);
         Route::post('/companies/{company}/ledger/debit', [\App\Http\Controllers\Api\V1\Admin\CompanyLedgerController::class, 'addDebit']);
         Route::post('/companies/{company}/ledger/credit', [\App\Http\Controllers\Api\V1\Admin\CompanyLedgerController::class, 'addCredit']);
         Route::get('/companies/{company}/ledger/{transaction}', [\App\Http\Controllers\Api\V1\Admin\CompanyLedgerController::class, 'showTransaction']);
-        
+
         // Ledger Summary (Tüm firmalar)
         Route::get('/ledger/summary', [\App\Http\Controllers\Api\V1\Admin\CompanyLedgerController::class, 'summary']);
-        
+
         // License Packages (Lisans Paketleri)
         Route::apiResource('license-packages', \App\Http\Controllers\Api\V1\Admin\LicensePackageController::class);
         Route::post('/license-packages/{package}/modules', [\App\Http\Controllers\Api\V1\Admin\LicensePackageController::class, 'syncModules']);
         Route::post('/license-packages/{package}/duplicate', [\App\Http\Controllers\Api\V1\Admin\LicensePackageController::class, 'duplicate']);
         Route::get('/available-modules', [\App\Http\Controllers\Api\V1\Admin\LicensePackageController::class, 'availableModules']);
-        
+
         // Modules
         Route::apiResource('modules', \App\Http\Controllers\Api\V1\Admin\ModuleController::class);
-        
+
         // All Users
         Route::get('/users', [\App\Http\Controllers\Api\V1\Admin\UserController::class, 'index']);
         Route::get('/users/{user}', [\App\Http\Controllers\Api\V1\Admin\UserController::class, 'show']);
-        
+
         // System Logs
         Route::get('/logs', [\App\Http\Controllers\Api\V1\Admin\LogController::class, 'index']);
-        
+
         // Dashboard Stats
         Route::get('/dashboard', [\App\Http\Controllers\Api\V1\Admin\DashboardController::class, 'index']);
     });
-    
+
     // ===========================================
     // PORTAL ROUTES (Personel Self-Servis)
     // ===========================================
     Route::middleware(['auth:sanctum', 'company.active', 'portal.access'])->prefix('portal')->group(function () {
         // Dashboard
         Route::get('/dashboard', [\App\Http\Controllers\Api\V1\Portal\PortalDashboardController::class, 'index']);
-        
+
         // Profil
         Route::get('/profile', [\App\Http\Controllers\Api\V1\Portal\PortalProfileController::class, 'show']);
         Route::put('/profile', [\App\Http\Controllers\Api\V1\Portal\PortalProfileController::class, 'update']);
         Route::put('/profile/password', [\App\Http\Controllers\Api\V1\Portal\PortalProfileController::class, 'updatePassword']);
         Route::post('/profile/avatar', [\App\Http\Controllers\Api\V1\Portal\PortalProfileController::class, 'updateAvatar']);
-        
+
         // İzinler
         Route::prefix('leaves')->group(function () {
             Route::get('/types', [\App\Http\Controllers\Api\V1\Portal\PortalLeaveController::class, 'types']);
@@ -559,7 +559,7 @@ Route::prefix('v1')->group(function () {
             Route::put('/{id}', [\App\Http\Controllers\Api\V1\Portal\PortalLeaveController::class, 'update']);
             Route::post('/{id}/cancel', [\App\Http\Controllers\Api\V1\Portal\PortalLeaveController::class, 'cancel']);
         });
-        
+
         // Belgeler
         Route::prefix('documents')->group(function () {
             Route::get('/categories', [\App\Http\Controllers\Api\V1\Portal\PortalDocumentController::class, 'categories']);
@@ -567,7 +567,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/{id}', [\App\Http\Controllers\Api\V1\Portal\PortalDocumentController::class, 'show']);
             Route::get('/{id}/download', [\App\Http\Controllers\Api\V1\Portal\PortalDocumentController::class, 'download']);
         });
-        
+
         // Bordrolar
         Route::prefix('payslips')->group(function () {
             Route::get('/years', [\App\Http\Controllers\Api\V1\Portal\PortalPayslipController::class, 'years']);
@@ -575,7 +575,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/{id}', [\App\Http\Controllers\Api\V1\Portal\PortalPayslipController::class, 'show']);
             Route::get('/{id}/download', [\App\Http\Controllers\Api\V1\Portal\PortalPayslipController::class, 'download']);
         });
-        
+
         // Duyurular
         Route::prefix('announcements')->group(function () {
             Route::get('/unread-count', [\App\Http\Controllers\Api\V1\Portal\PortalAnnouncementController::class, 'unreadCount']);
@@ -583,7 +583,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/{id}', [\App\Http\Controllers\Api\V1\Portal\PortalAnnouncementController::class, 'show']);
             Route::post('/{id}/acknowledge', [\App\Http\Controllers\Api\V1\Portal\PortalAnnouncementController::class, 'acknowledge']);
         });
-        
+
         // Talepler
         Route::prefix('requests')->group(function () {
             Route::get('/types', [\App\Http\Controllers\Api\V1\Portal\PortalRequestController::class, 'types']);
@@ -594,7 +594,7 @@ Route::prefix('v1')->group(function () {
             Route::put('/{id}', [\App\Http\Controllers\Api\V1\Portal\PortalRequestController::class, 'update']);
             Route::post('/{id}/cancel', [\App\Http\Controllers\Api\V1\Portal\PortalRequestController::class, 'cancel']);
         });
-        
+
         // Eğitimler (Training Module)
         Route::middleware('module.access:training')->prefix('training')->group(function () {
             Route::get('/', [\App\Http\Controllers\Api\V1\Portal\PortalTrainingController::class, 'index']);
@@ -603,7 +603,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/certificates/list', [\App\Http\Controllers\Api\V1\Portal\PortalTrainingController::class, 'certificates']);
             Route::get('/certificates/{id}', [\App\Http\Controllers\Api\V1\Portal\PortalTrainingController::class, 'certificate']);
         });
-        
+
         // Performans (Performance Module)
         Route::middleware('module.access:performance')->prefix('performance')->group(function () {
             Route::get('/reviews', [\App\Http\Controllers\Api\V1\Portal\PortalPerformanceController::class, 'reviews']);
@@ -615,7 +615,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/feedbacks', [\App\Http\Controllers\Api\V1\Portal\PortalPerformanceController::class, 'feedbacks']);
             Route::post('/feedbacks', [\App\Http\Controllers\Api\V1\Portal\PortalPerformanceController::class, 'giveFeedback']);
         });
-        
+
         // Anketler (Survey Module)
         Route::middleware('module.access:surveys')->prefix('surveys')->group(function () {
             Route::get('/', [\App\Http\Controllers\Api\V1\Portal\PortalSurveyController::class, 'index']);
@@ -624,7 +624,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/{id}/start', [\App\Http\Controllers\Api\V1\Portal\PortalSurveyController::class, 'start']);
             Route::post('/{id}/submit', [\App\Http\Controllers\Api\V1\Portal\PortalSurveyController::class, 'submit']);
         });
-        
+
         // Puantaj / Timesheet
         Route::prefix('timesheet')->group(function () {
             Route::get('/today', [\App\Http\Controllers\Api\V1\Portal\PortalTimesheetController::class, 'todayStatus']);
@@ -636,7 +636,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/monthly', [\App\Http\Controllers\Api\V1\Portal\PortalTimesheetController::class, 'monthlyRecords']);
             Route::get('/shifts', [\App\Http\Controllers\Api\V1\Portal\PortalTimesheetController::class, 'shifts']);
         });
-        
+
         // Masraf Yönetimi
         Route::prefix('expenses')->group(function () {
             Route::get('/categories', [\App\Http\Controllers\Api\V1\Portal\PortalExpenseController::class, 'categories']);
@@ -650,19 +650,18 @@ Route::prefix('v1')->group(function () {
             Route::post('/items/{itemId}/receipt', [\App\Http\Controllers\Api\V1\Portal\PortalExpenseController::class, 'uploadReceipt']);
         });
     });
-    
+
     // ===========================================
     // PUBLIC ROUTES (Başvuru formları vb.)
     // ===========================================
     Route::prefix('public')->group(function () {
         // Firma bazlı açık pozisyonlar
         Route::get('/companies/{companySlug}/jobs', [\App\Http\Controllers\Api\V1\Public\JobController::class, 'index']);
-        
+
         // Pozisyon detayı (slug ile)
         Route::get('/jobs/{positionSlug}', [\App\Http\Controllers\Api\V1\Public\JobController::class, 'show']);
-        
+
         // Başvuru gönder
         Route::post('/jobs/{positionSlug}/apply', [\App\Http\Controllers\Api\V1\Public\ApplicationController::class, 'store']);
     });
 });
-

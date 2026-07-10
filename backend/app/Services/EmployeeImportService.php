@@ -2,23 +2,25 @@
 
 namespace App\Services;
 
-use App\Models\Employee;
 use App\Models\Department;
+use App\Models\Employee;
 use App\Models\User;
-use App\Models\ActivityLog;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 
 class EmployeeImportService
 {
     protected int $companyId;
+
     protected int $userId;
+
     protected array $errors = [];
+
     protected array $successRows = [];
+
     protected array $failedRows = [];
+
     protected array $departments = [];
 
     public function __construct(int $companyId, int $userId)
@@ -44,8 +46,8 @@ class EmployeeImportService
     public function import(UploadedFile $file): array
     {
         $extension = strtolower($file->getClientOriginalExtension());
-        
-        if (!in_array($extension, ['csv', 'xlsx', 'xls'])) {
+
+        if (! in_array($extension, ['csv', 'xlsx', 'xls'])) {
             return [
                 'success' => false,
                 'message' => 'Geçersiz dosya formatı. CSV, XLSX veya XLS formatında olmalıdır.',
@@ -55,7 +57,7 @@ class EmployeeImportService
 
         try {
             $rows = $this->parseFile($file, $extension);
-            
+
             if (empty($rows)) {
                 return [
                     'success' => false,
@@ -80,7 +82,7 @@ class EmployeeImportService
         } catch (\Exception $e) {
             return [
                 'success' => false,
-                'message' => 'Import sırasında hata oluştu: ' . $e->getMessage(),
+                'message' => 'Import sırasında hata oluştu: '.$e->getMessage(),
                 'data' => null,
             ];
         }
@@ -94,7 +96,7 @@ class EmployeeImportService
         if ($extension === 'csv') {
             return $this->parseCsv($file);
         }
-        
+
         // Excel için PhpSpreadsheet kullan
         return $this->parseExcel($file);
     }
@@ -106,7 +108,7 @@ class EmployeeImportService
     {
         $rows = [];
         $handle = fopen($file->getPathname(), 'r');
-        
+
         // BOM karakterini kontrol et
         $bom = fread($handle, 3);
         if ($bom !== "\xEF\xBB\xBF") {
@@ -114,10 +116,10 @@ class EmployeeImportService
         }
 
         $headers = fgetcsv($handle, 0, ';');
-        if (!$headers) {
+        if (! $headers) {
             $headers = fgetcsv($handle, 0, ',');
         }
-        
+
         $headers = array_map('trim', $headers);
         $headerMap = $this->mapHeaders($headers);
 
@@ -125,18 +127,19 @@ class EmployeeImportService
             if (count($data) === 1 && strpos($data[0], ',') !== false) {
                 $data = str_getcsv($data[0], ',');
             }
-            
+
             $row = [];
             foreach ($headerMap as $field => $index) {
                 $row[$field] = isset($data[$index]) ? trim($data[$index]) : null;
             }
-            
-            if (!empty(array_filter($row))) {
+
+            if (! empty(array_filter($row))) {
                 $rows[] = $row;
             }
         }
 
         fclose($handle);
+
         return $rows;
     }
 
@@ -146,13 +149,13 @@ class EmployeeImportService
     protected function parseExcel(UploadedFile $file): array
     {
         $rows = [];
-        
+
         // PhpSpreadsheet kütüphanesi varsa kullan
         if (class_exists(\PhpOffice\PhpSpreadsheet\IOFactory::class)) {
             $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getPathname());
             $worksheet = $spreadsheet->getActiveSheet();
             $data = $worksheet->toArray();
-            
+
             if (empty($data)) {
                 return [];
             }
@@ -165,8 +168,8 @@ class EmployeeImportService
                 foreach ($headerMap as $field => $index) {
                     $row[$field] = isset($data[$i][$index]) ? trim($data[$i][$index]) : null;
                 }
-                
-                if (!empty(array_filter($row))) {
+
+                if (! empty(array_filter($row))) {
                     $rows[] = $row;
                 }
             }
@@ -249,7 +252,7 @@ class EmployeeImportService
     {
         foreach ($rows as $index => $row) {
             $rowNumber = $index + 2; // Header dahil satır numarası
-            
+
             try {
                 $this->processRow($row, $rowNumber);
             } catch (\Exception $e) {
@@ -294,11 +297,11 @@ class EmployeeImportService
 
         // Departman ID'sini bul
         $departmentId = null;
-        if (!empty($row['department'])) {
+        if (! empty($row['department'])) {
             $departmentId = $this->departments[$row['department']] ?? null;
-            
+
             // Departman yoksa oluştur
-            if (!$departmentId) {
+            if (! $departmentId) {
                 $department = Department::create([
                     'company_id' => $this->companyId,
                     'name' => $row['department'],
@@ -358,7 +361,7 @@ class EmployeeImportService
                 ]);
 
                 // User adını güncelle
-                if ($existingEmployee->user && !empty($row['name'])) {
+                if ($existingEmployee->user && ! empty($row['name'])) {
                     $existingEmployee->user->update(['name' => $row['name']]);
                 }
 
@@ -489,14 +492,13 @@ class EmployeeImportService
         ];
 
         // CSV oluştur
-        $output = chr(0xEF) . chr(0xBB) . chr(0xBF); // BOM
-        $output .= implode(';', $headers) . "\n";
-        
+        $output = chr(0xEF).chr(0xBB).chr(0xBF); // BOM
+        $output .= implode(';', $headers)."\n";
+
         foreach ($sampleData as $row) {
-            $output .= implode(';', $row) . "\n";
+            $output .= implode(';', $row)."\n";
         }
 
         return $output;
     }
 }
-

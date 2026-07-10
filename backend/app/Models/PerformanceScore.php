@@ -37,4 +37,3 @@ class PerformanceScore extends Model
         return $this->belongsTo(PerformanceCriteria::class, 'criteria_id');
     }
 }
-

@@ -10,19 +10,28 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class OnboardingTask extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany, HasAuditColumns;
+    use BelongsToCompany, HasAuditColumns, HasFactory, SoftDeletes;
 
     const TYPE_DOCUMENT_UPLOAD = 'document_upload';
+
     const TYPE_DOCUMENT_FILL = 'document_fill';
+
     const TYPE_TRAINING = 'training';
+
     const TYPE_MEETING = 'meeting';
+
     const TYPE_SYSTEM_SETUP = 'system_setup';
+
     const TYPE_QUIZ = 'quiz';
+
     const TYPE_CUSTOM = 'custom';
 
     const STATUS_PENDING = 'pending';
+
     const STATUS_IN_PROGRESS = 'in_progress';
+
     const STATUS_COMPLETED = 'completed';
+
     const STATUS_SKIPPED = 'skipped';
 
     protected $fillable = [
@@ -82,7 +91,7 @@ class OnboardingTask extends Model
 
     public function skip(): void
     {
-        if (!$this->is_required) {
+        if (! $this->is_required) {
             $this->update(['status' => self::STATUS_SKIPPED]);
             $this->process->updateProgress();
         }
@@ -111,4 +120,3 @@ class OnboardingTask extends Model
         ];
     }
 }
-

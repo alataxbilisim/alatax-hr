@@ -26,7 +26,7 @@ return new class extends Migration
             $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
             $table->softDeletes();
-            
+
             $table->index(['company_id', 'category_id']);
             $table->index(['company_id', 'created_at']);
         });
@@ -37,4 +37,3 @@ return new class extends Migration
         Schema::dropIfExists('documents');
     }
 };
-

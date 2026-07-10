@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\V1\Portal;
 
 use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\ActivityLog;
-use App\Models\Employee;
 use App\Models\LeaveBalance;
 use App\Models\LeaveRequest;
 use App\Models\LeaveType;
@@ -20,7 +19,7 @@ class PortalLeaveController extends BaseController
     public function types(Request $request): JsonResponse
     {
         $user = $request->user();
-        
+
         $leaveTypes = LeaveType::where('company_id', $user->company_id)
             ->where('is_active', true)
             ->get(['id', 'name', 'description', 'unit', 'default_limit', 'is_paid', 'requires_document']);
@@ -82,7 +81,7 @@ class PortalLeaveController extends BaseController
             ->with(['leaveType:id,name,unit', 'approver:id,name'])
             ->first();
 
-        if (!$leaveRequest) {
+        if (! $leaveRequest) {
             return $this->error('İzin talebi bulunamadı', null, 404);
         }
 
@@ -110,12 +109,12 @@ class PortalLeaveController extends BaseController
             ->where('is_active', true)
             ->first();
 
-        if (!$leaveType) {
+        if (! $leaveType) {
             return $this->error('Geçersiz izin türü', null, 422);
         }
 
         // Belge zorunlu mu?
-        if ($leaveType->requires_document && !$request->hasFile('document')) {
+        if ($leaveType->requires_document && ! $request->hasFile('document')) {
             return $this->error('Bu izin türü için belge zorunludur', null, 422);
         }
 
@@ -127,10 +126,10 @@ class PortalLeaveController extends BaseController
         // Hafta sonlarını çıkar (opsiyonel)
         // $totalDays = $startDate->diffInWeekdays($endDate) + 1;
 
-        return DB::transaction(function () use ($request, $validated, $user, $leaveType, $totalDays) {
+        return DB::transaction(function () use ($request, $validated, $user, $totalDays) {
             $documentPath = null;
             if ($request->hasFile('document')) {
-                $documentPath = $request->file('document')->store('leave_documents/' . $user->company_id, 'public');
+                $documentPath = $request->file('document')->store('leave_documents/'.$user->company_id, 'public');
             }
 
             $leaveRequest = LeaveRequest::create([
@@ -145,7 +144,7 @@ class PortalLeaveController extends BaseController
                 'status' => 'pending',
             ]);
 
-            ActivityLog::log('leave_requested', $leaveRequest, 'İzin talebi oluşturuldu: ' . $leaveRequest->leaveType->name . ' - ' . $totalDays . ' gün');
+            ActivityLog::log('leave_requested', $leaveRequest, 'İzin talebi oluşturuldu: '.$leaveRequest->leaveType->name.' - '.$totalDays.' gün');
 
             return $this->created($leaveRequest, 'İzin talebi başarıyla oluşturuldu');
         });
@@ -163,7 +162,7 @@ class PortalLeaveController extends BaseController
             ->where('status', 'pending')
             ->first();
 
-        if (!$leaveRequest) {
+        if (! $leaveRequest) {
             return $this->error('İzin talebi bulunamadı veya düzenlenemez', null, 404);
         }
 
@@ -175,11 +174,11 @@ class PortalLeaveController extends BaseController
         ]);
 
         // Gün sayısını yeniden hesapla
-        $startDate = isset($validated['start_date']) 
-            ? \Carbon\Carbon::parse($validated['start_date']) 
+        $startDate = isset($validated['start_date'])
+            ? \Carbon\Carbon::parse($validated['start_date'])
             : $leaveRequest->start_date;
-        $endDate = isset($validated['end_date']) 
-            ? \Carbon\Carbon::parse($validated['end_date']) 
+        $endDate = isset($validated['end_date'])
+            ? \Carbon\Carbon::parse($validated['end_date'])
             : $leaveRequest->end_date;
         $validated['total_days'] = $startDate->diffInDays($endDate) + 1;
 
@@ -188,7 +187,7 @@ class PortalLeaveController extends BaseController
             if ($leaveRequest->document_path) {
                 \Storage::disk('public')->delete($leaveRequest->document_path);
             }
-            $validated['document_path'] = $request->file('document')->store('leave_documents/' . $user->company_id, 'public');
+            $validated['document_path'] = $request->file('document')->store('leave_documents/'.$user->company_id, 'public');
         }
 
         $leaveRequest->update($validated);
@@ -210,7 +209,7 @@ class PortalLeaveController extends BaseController
             ->whereIn('status', ['pending', 'approved'])
             ->first();
 
-        if (!$leaveRequest) {
+        if (! $leaveRequest) {
             return $this->error('İzin talebi bulunamadı veya iptal edilemez', null, 404);
         }
 
@@ -226,4 +225,3 @@ class PortalLeaveController extends BaseController
         return $this->success(null, 'İzin talebi iptal edildi');
     }
 }
-

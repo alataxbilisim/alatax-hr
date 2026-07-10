@@ -35,7 +35,7 @@ return new class extends Migration
 
             // Unique constraint: company_id + code (code null olabilir)
             $table->unique(['company_id', 'code'], 'branches_company_code_unique');
-            
+
             // Indexes
             $table->index(['company_id', 'is_active']);
             $table->index(['company_id', 'is_headquarters']);
@@ -50,4 +50,3 @@ return new class extends Migration
         Schema::dropIfExists('branches');
     }
 };
-

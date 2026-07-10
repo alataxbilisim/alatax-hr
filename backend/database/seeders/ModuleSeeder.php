@@ -44,7 +44,7 @@ class ModuleSeeder extends Seeder
                 'price_yearly' => 0,
                 'sort_order' => 3,
             ],
-            
+
             // Satılabilir Modüller
             [
                 'name' => 'İş Başvuru & CV Havuzu',
@@ -116,7 +116,7 @@ class ModuleSeeder extends Seeder
                 'price_yearly' => 1490,
                 'sort_order' => 16,
             ],
-            
+
             // Yeni Modüller (Global Standart)
             [
                 'name' => 'İK Analitiği',
@@ -148,4 +148,3 @@ class ModuleSeeder extends Seeder
         }
     }
 }
-

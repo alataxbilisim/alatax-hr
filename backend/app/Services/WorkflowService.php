@@ -2,11 +2,10 @@
 
 namespace App\Services;
 
-use App\Models\ApprovalWorkflow;
-use App\Models\ApprovalStep;
-use App\Models\ApprovalRecord;
-use App\Models\ApprovalDelegation;
 use App\Models\ActivityLog;
+use App\Models\ApprovalDelegation;
+use App\Models\ApprovalRecord;
+use App\Models\ApprovalWorkflow;
 use Illuminate\Database\Eloquent\Model;
 
 class WorkflowService
@@ -22,17 +21,18 @@ class WorkflowService
         // Uygun workflow'u bul
         $workflow = ApprovalWorkflow::findForRequest($companyId, $entityType, $context);
 
-        if (!$workflow) {
+        if (! $workflow) {
             // Workflow yoksa direkt onayla
             if (method_exists($approvable, 'onWorkflowCompleted')) {
                 $approvable->onWorkflowCompleted();
             }
+
             return null;
         }
 
         // İlk adımı al
         $firstStep = $workflow->getFirstStep();
-        if (!$firstStep) {
+        if (! $firstStep) {
             return null;
         }
 
@@ -82,14 +82,14 @@ class WorkflowService
     public function approve(ApprovalRecord $record, int $approverId, ?string $comment = null): bool
     {
         // Yetki kontrolü
-        if (!$this->canApprove($record, $approverId)) {
+        if (! $this->canApprove($record, $approverId)) {
             return false;
         }
 
         $record->update([
             'approver_id' => $approverId,
         ]);
-        
+
         $record->approve($comment);
 
         return true;
@@ -101,14 +101,14 @@ class WorkflowService
     public function reject(ApprovalRecord $record, int $approverId, string $reason): bool
     {
         // Yetki kontrolü
-        if (!$this->canApprove($record, $approverId)) {
+        if (! $this->canApprove($record, $approverId)) {
             return false;
         }
 
         $record->update([
             'approver_id' => $approverId,
         ]);
-        
+
         $record->reject($reason);
 
         return true;
@@ -120,15 +120,15 @@ class WorkflowService
     public function skip(ApprovalRecord $record, int $approverId, ?string $reason = null): bool
     {
         $step = $record->step;
-        
-        if (!$step->can_skip) {
+
+        if (! $step->can_skip) {
             return false;
         }
 
         $record->update([
             'approver_id' => $approverId,
         ]);
-        
+
         $record->skip($reason);
 
         return true;
@@ -177,7 +177,7 @@ class WorkflowService
             return false;
         }
 
-        if (!$record->is_current) {
+        if (! $record->is_current) {
             return false;
         }
 
@@ -202,7 +202,7 @@ class WorkflowService
     protected function getEntityType(Model $approvable): string
     {
         $class = class_basename($approvable);
-        
+
         $mapping = [
             'LeaveRequest' => ApprovalWorkflow::ENTITY_LEAVE_REQUEST,
             'AssetRequest' => ApprovalWorkflow::ENTITY_ASSET_REQUEST,
@@ -223,5 +223,3 @@ class WorkflowService
         // $approver->notify(new ApprovalRequestNotification($approvable, $step));
     }
 }
-
-

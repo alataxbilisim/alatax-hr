@@ -17,14 +17,14 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->foreignId('onboarding_process_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
-            
+
             $table->string('token', 64)->unique();
             $table->string('email');
             $table->string('name');
             $table->datetime('expires_at');
             $table->datetime('used_at')->nullable();
             $table->boolean('is_active')->default(true);
-            
+
             $table->timestamps();
 
             $table->index(['token', 'is_active']);
@@ -35,17 +35,17 @@ return new class extends Migration
             $table->id();
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->foreignId('onboarding_template_id')->nullable()->constrained()->onDelete('cascade');
-            
+
             $table->string('name'); // "30 Gün Değerlendirme"
             $table->integer('day_number'); // 30, 60, 90
             $table->text('description')->nullable();
             $table->json('checklist')->nullable(); // Kontrol listesi
             $table->json('evaluation_criteria')->nullable(); // Değerlendirme kriterleri
-            
+
             $table->boolean('requires_meeting')->default(true);
             $table->boolean('requires_feedback')->default(true);
             $table->boolean('is_active')->default(true);
-            
+
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
         });
@@ -56,18 +56,18 @@ return new class extends Migration
             $table->foreignId('onboarding_process_id')->constrained()->onDelete('cascade');
             $table->foreignId('onboarding_milestone_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade'); // Çalışan
-            
+
             $table->enum('status', ['pending', 'scheduled', 'completed', 'skipped'])->default('pending');
             $table->date('due_date');
             $table->datetime('completed_at')->nullable();
-            
+
             // Değerlendirme
             $table->json('checklist_responses')->nullable();
             $table->json('evaluation_scores')->nullable();
             $table->text('employee_feedback')->nullable();
             $table->text('manager_feedback')->nullable();
             $table->integer('overall_rating')->nullable(); // 1-5
-            
+
             $table->foreignId('completed_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
 
@@ -81,12 +81,12 @@ return new class extends Migration
             $table->foreignId('onboarding_process_id')->constrained()->onDelete('cascade');
             $table->foreignId('new_hire_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('buddy_id')->constrained('users')->onDelete('cascade');
-            
+
             $table->date('start_date');
             $table->date('end_date')->nullable();
             $table->enum('status', ['active', 'completed', 'cancelled'])->default('active');
             $table->text('notes')->nullable();
-            
+
             $table->foreignId('assigned_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
 
@@ -98,12 +98,12 @@ return new class extends Migration
             $table->id();
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            
+
             $table->integer('max_mentees')->default(3);
             $table->integer('current_mentees')->default(0);
             $table->json('expertise_areas')->nullable();
             $table->boolean('is_available')->default(true);
-            
+
             $table->timestamps();
 
             $table->unique(['company_id', 'user_id']);
@@ -115,12 +115,12 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->foreignId('onboarding_process_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            
+
             $table->enum('survey_type', ['week_1', 'week_4', 'month_3', 'exit'])->default('month_3');
             $table->integer('nps_score')->nullable(); // 0-10
             $table->json('responses')->nullable();
             $table->text('additional_comments')->nullable();
-            
+
             $table->datetime('sent_at')->nullable();
             $table->datetime('completed_at')->nullable();
             $table->timestamps();
@@ -155,4 +155,3 @@ return new class extends Migration
         Schema::dropIfExists('preboarding_tokens');
     }
 };
-

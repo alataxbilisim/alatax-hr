@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Traits\BelongsToCompany;
 use App\Traits\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,7 +10,7 @@ use Illuminate\Support\Carbon;
 
 class Holiday extends Model
 {
-    use HasFactory, SoftDeletes, HasAuditColumns;
+    use HasAuditColumns, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -38,8 +37,11 @@ class Holiday extends Model
 
     // Tatil tipleri
     const TYPE_NATIONAL = 'national';
+
     const TYPE_RELIGIOUS = 'religious';
+
     const TYPE_COMPANY = 'company';
+
     const TYPE_REGIONAL = 'regional';
 
     public static function getTypeLabels(): array
@@ -212,5 +214,3 @@ class Holiday extends Model
         }
     }
 }
-
-

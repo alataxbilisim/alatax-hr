@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api\V1\Assets;
 
 use App\Http\Controllers\Api\V1\BaseController;
-use App\Models\Asset;
 use App\Models\ActivityLog;
+use App\Models\Asset;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -35,8 +35,8 @@ class AssetController extends BaseController
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('asset_code', 'like', "%{$search}%")
-                  ->orWhere('serial_number', 'like', "%{$search}%");
+                    ->orWhere('asset_code', 'like', "%{$search}%")
+                    ->orWhere('serial_number', 'like', "%{$search}%");
             });
         }
 
@@ -75,7 +75,7 @@ class AssetController extends BaseController
             'created_by' => auth()->id(),
         ]);
 
-        ActivityLog::log('create', $asset, 'Varlık oluşturuldu: ' . $asset->name);
+        ActivityLog::log('create', $asset, 'Varlık oluşturuldu: '.$asset->name);
 
         return $this->success($asset->load('category'), 'Varlık oluşturuldu', 201);
     }
@@ -128,7 +128,7 @@ class AssetController extends BaseController
         $oldValues = $asset->getOriginal();
         $asset->update($validated);
 
-        ActivityLog::log('update', $asset, 'Varlık güncellendi: ' . $asset->name, $oldValues, $asset->fresh()->toArray());
+        ActivityLog::log('update', $asset, 'Varlık güncellendi: '.$asset->name, $oldValues, $asset->fresh()->toArray());
 
         return $this->success($asset, 'Varlık güncellendi');
     }
@@ -139,14 +139,14 @@ class AssetController extends BaseController
     public function destroy(int $id): JsonResponse
     {
         $asset = Asset::where('company_id', $this->getCompanyId())->findOrFail($id);
-        
+
         if ($asset->status === 'assigned') {
             return $this->error('Zimmetli varlık silinemez. Önce iade alınmalıdır.', 422);
         }
 
         $assetName = $asset->name;
-        ActivityLog::log('delete', null, 'Varlık silindi: ' . $assetName);
-        
+        ActivityLog::log('delete', null, 'Varlık silindi: '.$assetName);
+
         $asset->delete();
 
         return $this->success(null, 'Varlık silindi');
@@ -220,4 +220,3 @@ class AssetController extends BaseController
         return $this->success($asset, 'Varlık iade alındı');
     }
 }
-

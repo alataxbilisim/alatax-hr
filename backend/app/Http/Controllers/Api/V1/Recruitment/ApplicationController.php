@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api\V1\Recruitment;
 
 use App\Http\Controllers\Api\V1\BaseController;
-use App\Models\JobApplication;
-use App\Models\ApplicationStatusLog;
 use App\Models\ActivityLog;
-use Illuminate\Http\Request;
+use App\Models\ApplicationStatusLog;
+use App\Models\JobApplication;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ApplicationController extends BaseController
 {
@@ -28,8 +28,8 @@ class ApplicationController extends BaseController
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('applicant_name', 'like', "%{$search}%")
-                  ->orWhere('applicant_email', 'like', "%{$search}%")
-                  ->orWhere('applicant_phone', 'like', "%{$search}%");
+                    ->orWhere('applicant_email', 'like', "%{$search}%")
+                    ->orWhere('applicant_phone', 'like', "%{$search}%");
             });
         }
 
@@ -53,7 +53,7 @@ class ApplicationController extends BaseController
                 ] : null,
                 'status' => $app->status,
                 'form_data' => $app->form_data ?? [],
-                'cv_path' => $app->cv_path ? asset('storage/' . $app->cv_path) : null,
+                'cv_path' => $app->cv_path ? asset('storage/'.$app->cv_path) : null,
                 'notes' => $app->notes,
                 'rating' => $app->rating,
                 'created_at' => $app->created_at->toDateTimeString(),
@@ -70,7 +70,7 @@ class ApplicationController extends BaseController
     {
         $application = JobApplication::with(['position', 'statusLogs.user'])->find($id);
 
-        if (!$application) {
+        if (! $application) {
             return $this->notFound('Başvuru bulunamadı');
         }
 
@@ -85,7 +85,7 @@ class ApplicationController extends BaseController
             ] : null,
             'status' => $application->status,
             'form_data' => $application->form_data ?? [],
-            'cv_path' => $application->cv_path ? asset('storage/' . $application->cv_path) : null,
+            'cv_path' => $application->cv_path ? asset('storage/'.$application->cv_path) : null,
             'notes' => $application->notes,
             'rating' => $application->rating,
             'status_logs' => $application->statusLogs->map(function ($log) {
@@ -108,7 +108,7 @@ class ApplicationController extends BaseController
     {
         $application = JobApplication::find($id);
 
-        if (!$application) {
+        if (! $application) {
             return $this->notFound('Başvuru bulunamadı');
         }
 
@@ -141,7 +141,7 @@ class ApplicationController extends BaseController
     {
         $application = JobApplication::find($id);
 
-        if (!$application) {
+        if (! $application) {
             return $this->notFound('Başvuru bulunamadı');
         }
 
@@ -164,7 +164,7 @@ class ApplicationController extends BaseController
     {
         $application = JobApplication::find($id);
 
-        if (!$application) {
+        if (! $application) {
             return $this->notFound('Başvuru bulunamadı');
         }
 

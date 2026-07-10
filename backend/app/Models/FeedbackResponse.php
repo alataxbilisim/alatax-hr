@@ -32,5 +32,3 @@ class FeedbackResponse extends Model
         return $this->belongsTo(PerformanceCriteria::class, 'performance_criteria_id');
     }
 }
-
-

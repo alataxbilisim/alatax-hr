@@ -15,7 +15,7 @@ class CompanyAdminOnly
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'success' => false,
                 'message' => 'Oturum açmanız gerekmektedir.',
@@ -26,7 +26,7 @@ class CompanyAdminOnly
         }
 
         // SuperAdmin ve Company Admin izinli
-        if (!in_array($user->type, ['super_admin', 'company_admin'])) {
+        if (! in_array($user->type, ['super_admin', 'company_admin'])) {
             return response()->json([
                 'success' => false,
                 'message' => 'Bu işlem için yönetici yetkisi gereklidir.',
@@ -39,4 +39,3 @@ class CompanyAdminOnly
         return $next($request);
     }
 }
-

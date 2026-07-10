@@ -17,22 +17,22 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->foreignId('job_application_id')->constrained()->onDelete('cascade');
             $table->foreignId('job_position_id')->constrained()->onDelete('cascade');
-            
+
             $table->string('title'); // "Teknik Mülakat", "HR Görüşmesi"
             $table->enum('type', ['phone', 'video', 'onsite', 'technical', 'hr', 'panel'])->default('onsite');
             $table->datetime('scheduled_at');
             $table->integer('duration_minutes')->default(60);
             $table->string('location')->nullable();
             $table->string('meeting_link')->nullable();
-            
+
             $table->enum('status', ['scheduled', 'completed', 'cancelled', 'no_show', 'rescheduled'])->default('scheduled');
             $table->text('notes')->nullable();
-            
+
             // Değerlendirme
             $table->integer('overall_rating')->nullable(); // 1-5
             $table->enum('recommendation', ['strong_hire', 'hire', 'no_decision', 'no_hire', 'strong_no_hire'])->nullable();
             $table->text('feedback')->nullable();
-            
+
             $table->foreignId('interviewer_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
@@ -57,21 +57,21 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->foreignId('job_application_id')->constrained()->onDelete('cascade');
             $table->foreignId('job_position_id')->constrained()->onDelete('cascade');
-            
+
             $table->decimal('salary_offered', 15, 2)->nullable();
             $table->string('currency', 3)->default('TRY');
             $table->date('start_date');
             $table->date('valid_until'); // Teklif geçerlilik
-            
+
             $table->json('benefits')->nullable(); // Yan haklar
             $table->text('additional_terms')->nullable();
             $table->string('document_path')->nullable(); // Teklif dokümanı
-            
+
             $table->enum('status', ['draft', 'sent', 'accepted', 'rejected', 'expired', 'withdrawn'])->default('draft');
             $table->datetime('sent_at')->nullable();
             $table->datetime('responded_at')->nullable();
             $table->text('rejection_reason')->nullable();
-            
+
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
             $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
@@ -85,13 +85,13 @@ return new class extends Migration
             $table->id();
             $table->foreignId('job_application_id')->constrained()->onDelete('cascade');
             $table->foreignId('job_position_id')->constrained()->onDelete('cascade');
-            
+
             $table->decimal('overall_score', 5, 2); // 0-100
             $table->json('skill_matches')->nullable(); // Yetenek eşleşmeleri
             $table->json('experience_score')->nullable(); // Deneyim puanı
             $table->json('education_score')->nullable(); // Eğitim puanı
             $table->json('keyword_matches')->nullable(); // Anahtar kelime eşleşmeleri
-            
+
             $table->text('summary')->nullable(); // AI özeti
             $table->timestamps();
 
@@ -136,5 +136,3 @@ return new class extends Migration
         Schema::dropIfExists('interviews');
     }
 };
-
-

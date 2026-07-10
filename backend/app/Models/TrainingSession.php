@@ -91,12 +91,11 @@ class TrainingSession extends Model
     public function hasAvailableSlots(): bool
     {
         $maxParticipants = $this->training->max_participants;
-        
-        if (!$maxParticipants) {
+
+        if (! $maxParticipants) {
             return true;
         }
-        
+
         return $this->current_participants_count < $maxParticipants;
     }
 }
-

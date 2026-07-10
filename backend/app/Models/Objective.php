@@ -6,13 +6,13 @@ use App\Traits\BelongsToCompany;
 use App\Traits\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Objective extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany, HasAuditColumns;
+    use BelongsToCompany, HasAuditColumns, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -40,13 +40,19 @@ class Objective extends Model
     ];
 
     const LEVEL_COMPANY = 'company';
+
     const LEVEL_DEPARTMENT = 'department';
+
     const LEVEL_TEAM = 'team';
+
     const LEVEL_INDIVIDUAL = 'individual';
 
     const STATUS_DRAFT = 'draft';
+
     const STATUS_ACTIVE = 'active';
+
     const STATUS_COMPLETED = 'completed';
+
     const STATUS_CANCELLED = 'cancelled';
 
     public static function getLevelLabels(): array
@@ -120,7 +126,7 @@ class Objective extends Model
     public function updateProgress(): void
     {
         $keyResults = $this->keyResults;
-        
+
         if ($keyResults->isEmpty()) {
             return;
         }
@@ -151,5 +157,3 @@ class Objective extends Model
         };
     }
 }
-
-

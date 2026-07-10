@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Api\V1\BaseController;
-use App\Models\Company;
-use App\Models\User;
-use App\Models\Module;
 use App\Models\ActivityLog;
-use Illuminate\Http\Request;
+use App\Models\Company;
+use App\Models\Module;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class DashboardController extends BaseController
 {
@@ -70,4 +70,3 @@ class DashboardController extends BaseController
         ]);
     }
 }
-

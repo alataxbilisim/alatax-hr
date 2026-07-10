@@ -15,7 +15,7 @@ class SuperAdminOnly
     {
         $user = $request->user();
 
-        if (!$user || $user->type !== 'super_admin') {
+        if (! $user || $user->type !== 'super_admin') {
             return response()->json([
                 'success' => false,
                 'message' => 'Bu işlem için SuperAdmin yetkisi gereklidir.',
@@ -28,4 +28,3 @@ class SuperAdminOnly
         return $next($request);
     }
 }
-

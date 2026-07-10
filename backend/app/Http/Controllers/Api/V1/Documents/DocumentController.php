@@ -3,12 +3,11 @@
 namespace App\Http\Controllers\Api\V1\Documents;
 
 use App\Http\Controllers\Api\V1\BaseController;
-use App\Models\Document;
-use App\Models\DocumentCategory;
-use App\Models\DocumentVersion;
 use App\Models\ActivityLog;
-use Illuminate\Http\Request;
+use App\Models\Document;
+use App\Models\DocumentVersion;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -38,7 +37,7 @@ class DocumentController extends BaseController
                 'presentation' => ['application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation'],
                 'archive' => ['application/zip', 'application/x-rar-compressed', 'application/x-7z-compressed'],
             ];
-            
+
             if (isset($mimeTypes[$fileType])) {
                 $query->whereIn('file_type', $mimeTypes[$fileType]);
             } else {
@@ -69,8 +68,8 @@ class DocumentController extends BaseController
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('file_name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                    ->orWhere('file_name', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
@@ -91,7 +90,7 @@ class DocumentController extends BaseController
                 'id' => $doc->id,
                 'name' => $doc->name,
                 'file_name' => $doc->file_name,
-                'file_path' => $doc->file_path ? asset('storage/' . $doc->file_path) : null,
+                'file_path' => $doc->file_path ? asset('storage/'.$doc->file_path) : null,
                 'file_size' => $doc->file_size,
                 'file_type' => $doc->file_type,
                 'category' => $doc->category ? [
@@ -130,7 +129,7 @@ class DocumentController extends BaseController
         ]);
 
         $file = $request->file('file');
-        $path = $file->store('documents/' . $this->getCompanyId(), 'public');
+        $path = $file->store('documents/'.$this->getCompanyId(), 'public');
 
         $document = Document::create([
             'company_id' => $this->getCompanyId(),
@@ -145,12 +144,12 @@ class DocumentController extends BaseController
             'uploaded_by' => auth()->id(),
         ]);
 
-        ActivityLog::log('create', $document, 'Doküman yüklendi: ' . $document->name);
+        ActivityLog::log('create', $document, 'Doküman yüklendi: '.$document->name);
 
         return $this->success([
             'id' => $document->id,
             'name' => $document->name,
-            'file_path' => asset('storage/' . $document->file_path),
+            'file_path' => asset('storage/'.$document->file_path),
         ], 'Doküman başarıyla yüklendi', 201);
     }
 
@@ -161,7 +160,7 @@ class DocumentController extends BaseController
     {
         $document = Document::with(['category', 'uploadedBy'])->find($id);
 
-        if (!$document) {
+        if (! $document) {
             return $this->notFound('Doküman bulunamadı');
         }
 
@@ -192,7 +191,7 @@ class DocumentController extends BaseController
             'id' => $document->id,
             'name' => $document->name,
             'file_name' => $document->file_name,
-            'file_path' => $document->file_path ? asset('storage/' . $document->file_path) : null,
+            'file_path' => $document->file_path ? asset('storage/'.$document->file_path) : null,
             'file_size' => $document->file_size,
             'file_type' => $document->file_type,
             'category' => $document->category,
@@ -221,15 +220,15 @@ class DocumentController extends BaseController
     {
         $document = Document::find($id);
 
-        if (!$document) {
+        if (! $document) {
             return $this->notFound('Doküman bulunamadı');
         }
 
-        if (!$document->file_path || !Storage::disk('public')->exists($document->file_path)) {
+        if (! $document->file_path || ! Storage::disk('public')->exists($document->file_path)) {
             return $this->error('Dosya bulunamadı', 404);
         }
 
-        ActivityLog::log('download', $document, 'Doküman indirildi: ' . $document->name);
+        ActivityLog::log('download', $document, 'Doküman indirildi: '.$document->name);
 
         return Storage::disk('public')->download(
             $document->file_path,
@@ -247,7 +246,7 @@ class DocumentController extends BaseController
     {
         $document = Document::find($id);
 
-        if (!$document) {
+        if (! $document) {
             return $this->notFound('Doküman bulunamadı');
         }
 
@@ -284,25 +283,25 @@ class DocumentController extends BaseController
     {
         $document = Document::find($id);
 
-        if (!$document) {
+        if (! $document) {
             return $this->notFound('Doküman bulunamadı');
         }
 
-        if (!class_exists(DocumentVersion::class)) {
+        if (! class_exists(DocumentVersion::class)) {
             return $this->error('Versiyon sistemi aktif değil', 400);
         }
 
         $version = DocumentVersion::where('document_id', $id)->where('id', $versionId)->first();
 
-        if (!$version) {
+        if (! $version) {
             return $this->notFound('Versiyon bulunamadı');
         }
 
-        if (!$version->file_path || !Storage::disk('public')->exists($version->file_path)) {
+        if (! $version->file_path || ! Storage::disk('public')->exists($version->file_path)) {
             return $this->error('Dosya bulunamadı', 404);
         }
 
-        ActivityLog::log('download', $document, 'Doküman versiyonu indirildi: ' . $document->name . ' v' . $version->version_number);
+        ActivityLog::log('download', $document, 'Doküman versiyonu indirildi: '.$document->name.' v'.$version->version_number);
 
         return Storage::disk('public')->download(
             $version->file_path,
@@ -359,10 +358,17 @@ class DocumentController extends BaseController
      */
     private function formatFileSize(int $bytes): string
     {
-        if ($bytes < 1024) return $bytes . ' B';
-        if ($bytes < 1024 * 1024) return round($bytes / 1024, 1) . ' KB';
-        if ($bytes < 1024 * 1024 * 1024) return round($bytes / (1024 * 1024), 1) . ' MB';
-        return round($bytes / (1024 * 1024 * 1024), 2) . ' GB';
+        if ($bytes < 1024) {
+            return $bytes.' B';
+        }
+        if ($bytes < 1024 * 1024) {
+            return round($bytes / 1024, 1).' KB';
+        }
+        if ($bytes < 1024 * 1024 * 1024) {
+            return round($bytes / (1024 * 1024), 1).' MB';
+        }
+
+        return round($bytes / (1024 * 1024 * 1024), 2).' GB';
     }
 
     /**
@@ -372,7 +378,7 @@ class DocumentController extends BaseController
     {
         $document = Document::find($id);
 
-        if (!$document) {
+        if (! $document) {
             return $this->notFound('Doküman bulunamadı');
         }
 
@@ -385,7 +391,7 @@ class DocumentController extends BaseController
         $oldValues = $document->getOriginal();
         $document->update($validated);
 
-        ActivityLog::log('update', $document, 'Doküman güncellendi: ' . $document->name, $oldValues, $document->fresh()->toArray());
+        ActivityLog::log('update', $document, 'Doküman güncellendi: '.$document->name, $oldValues, $document->fresh()->toArray());
 
         return $this->success($document, 'Doküman güncellendi');
     }
@@ -397,7 +403,7 @@ class DocumentController extends BaseController
     {
         $document = Document::find($id);
 
-        if (!$document) {
+        if (! $document) {
             return $this->notFound('Doküman bulunamadı');
         }
 
@@ -406,8 +412,8 @@ class DocumentController extends BaseController
             Storage::disk('public')->delete($document->file_path);
         }
 
-        ActivityLog::log('delete', $document, 'Doküman silindi: ' . $document->name);
-        
+        ActivityLog::log('delete', $document, 'Doküman silindi: '.$document->name);
+
         $document->delete();
 
         return $this->success(null, 'Doküman silindi');

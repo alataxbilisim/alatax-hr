@@ -42,7 +42,7 @@ return new class extends Migration
                 'specific_role',      // Belirli rol
                 'hr',                 // İK departmanı
                 'cfo',                // Finans müdürü
-                'ceo'                 // Genel müdür
+                'ceo',                 // Genel müdür
             ]);
             $table->foreignId('specific_user_id')->nullable()->constrained('users')->onDelete('set null');
             $table->string('specific_role')->nullable(); // Spatie rol adı
@@ -105,4 +105,3 @@ return new class extends Migration
         Schema::dropIfExists('approval_workflows');
     }
 };
-

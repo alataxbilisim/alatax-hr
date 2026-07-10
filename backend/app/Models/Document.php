@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Document extends Model
 {
-    use SoftDeletes, BelongsToCompany, HasAuditColumns;
+    use BelongsToCompany, HasAuditColumns, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -42,4 +42,3 @@ class Document extends Model
         return $this->belongsTo(User::class, 'uploaded_by');
     }
 }
-

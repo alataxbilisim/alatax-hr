@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Api\V1\BaseController;
-use App\Models\Module;
 use App\Models\ActivityLog;
-use Illuminate\Http\Request;
+use App\Models\Module;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ModuleController extends BaseController
 {
@@ -60,7 +60,7 @@ class ModuleController extends BaseController
 
         $module = Module::create($validated);
 
-        ActivityLog::log('create', $module, 'Modül oluşturuldu: ' . $module->name);
+        ActivityLog::log('create', $module, 'Modül oluşturuldu: '.$module->name);
 
         return $this->created($module, 'Modül oluşturuldu');
     }
@@ -72,7 +72,7 @@ class ModuleController extends BaseController
     {
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
-            'slug' => 'sometimes|string|max:100|unique:modules,slug,' . $module->id,
+            'slug' => 'sometimes|string|max:100|unique:modules,slug,'.$module->id,
             'description' => 'sometimes|nullable|string|max:1000',
             'icon' => 'sometimes|nullable|string|max:50',
             'price_monthly' => 'sometimes|numeric|min:0',
@@ -84,7 +84,7 @@ class ModuleController extends BaseController
         $oldValues = $module->toArray();
         $module->update($validated);
 
-        ActivityLog::log('update', $module, 'Modül güncellendi: ' . $module->name, $oldValues, $module->fresh()->toArray());
+        ActivityLog::log('update', $module, 'Modül güncellendi: '.$module->name, $oldValues, $module->fresh()->toArray());
 
         return $this->success($module->fresh(), 'Modül güncellendi');
     }
@@ -107,9 +107,8 @@ class ModuleController extends BaseController
         $moduleName = $module->name;
         $module->delete();
 
-        ActivityLog::log('delete', null, 'Modül silindi: ' . $moduleName);
+        ActivityLog::log('delete', null, 'Modül silindi: '.$moduleName);
 
         return $this->success(null, 'Modül silindi');
     }
 }
-

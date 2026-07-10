@@ -31,14 +31,21 @@ class FeedbackProvider extends Model
     ];
 
     const RELATIONSHIP_SELF = 'self';
+
     const RELATIONSHIP_MANAGER = 'manager';
+
     const RELATIONSHIP_PEER = 'peer';
+
     const RELATIONSHIP_DIRECT_REPORT = 'direct_report';
+
     const RELATIONSHIP_EXTERNAL = 'external';
 
     const STATUS_PENDING = 'pending';
+
     const STATUS_IN_PROGRESS = 'in_progress';
+
     const STATUS_SUBMITTED = 'submitted';
+
     const STATUS_DECLINED = 'declined';
 
     public static function getRelationshipLabels(): array
@@ -109,7 +116,7 @@ class FeedbackProvider extends Model
     public function getAverageScore(): ?float
     {
         $responses = $this->responses()->whereNotNull('score')->get();
-        
+
         if ($responses->isEmpty()) {
             return null;
         }
@@ -117,5 +124,3 @@ class FeedbackProvider extends Model
         return $responses->avg('score');
     }
 }
-
-

@@ -25,7 +25,9 @@ class KeyResultUpdate extends Model
     ];
 
     const CONFIDENCE_LOW = 'low';
+
     const CONFIDENCE_MEDIUM = 'medium';
+
     const CONFIDENCE_HIGH = 'high';
 
     public static function getConfidenceLevels(): array
@@ -59,9 +61,7 @@ class KeyResultUpdate extends Model
         if ($this->previous_value == 0) {
             return $this->new_value > 0 ? 100 : 0;
         }
-        
+
         return (($this->new_value - $this->previous_value) / $this->previous_value) * 100;
     }
 }
-
-

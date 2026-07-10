@@ -3,13 +3,12 @@
 namespace App\Http\Controllers\Api\V1\Portal;
 
 use App\Http\Controllers\Api\V1\BaseController;
-use App\Models\AttendanceRecord;
-use App\Models\Timesheet;
-use App\Models\EmployeeShift;
 use App\Models\ActivityLog;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
+use App\Models\AttendanceRecord;
+use App\Models\EmployeeShift;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class PortalTimesheetController extends BaseController
 {
@@ -77,7 +76,7 @@ class PortalTimesheetController extends BaseController
             ->where('date', $today)
             ->first();
 
-        if (!$record || !$record->clock_in) {
+        if (! $record || ! $record->clock_in) {
             return $this->error('Önce giriş yapmalısınız', 422);
         }
 
@@ -126,11 +125,11 @@ class PortalTimesheetController extends BaseController
             ->where('date', $today)
             ->first();
 
-        if (!$record || !$record->clock_in) {
+        if (! $record || ! $record->clock_in) {
             return $this->error('Önce giriş yapmalısınız', 422);
         }
 
-        if ($record->break_start && !$record->break_end) {
+        if ($record->break_start && ! $record->break_end) {
             return $this->error('Zaten molada olduğunuz görünüyor', 422);
         }
 
@@ -159,7 +158,7 @@ class PortalTimesheetController extends BaseController
             ->where('date', $today)
             ->first();
 
-        if (!$record || !$record->break_start) {
+        if (! $record || ! $record->break_start) {
             return $this->error('Aktif mola bulunamadı', 422);
         }
 
@@ -206,9 +205,9 @@ class PortalTimesheetController extends BaseController
         ];
 
         if ($record) {
-            $status['is_clocked_in'] = !empty($record->clock_in);
-            $status['is_clocked_out'] = !empty($record->clock_out);
-            $status['is_on_break'] = !empty($record->break_start) && empty($record->break_end);
+            $status['is_clocked_in'] = ! empty($record->clock_in);
+            $status['is_clocked_out'] = ! empty($record->clock_out);
+            $status['is_on_break'] = ! empty($record->break_start) && empty($record->break_end);
             $status['clock_in'] = $record->clock_in;
             $status['clock_out'] = $record->clock_out;
             $status['break_start'] = $record->break_start;
@@ -216,14 +215,14 @@ class PortalTimesheetController extends BaseController
             $status['total_hours'] = $record->total_hours;
 
             // Calculate current working duration if clocked in but not out
-            if ($status['is_clocked_in'] && !$status['is_clocked_out']) {
-                $clockIn = Carbon::parse($today . ' ' . $record->clock_in);
+            if ($status['is_clocked_in'] && ! $status['is_clocked_out']) {
+                $clockIn = Carbon::parse($today.' '.$record->clock_in);
                 $now = now();
                 $minutes = $now->diffInMinutes($clockIn);
-                
+
                 // Subtract break time if on break
                 if ($status['is_on_break']) {
-                    $breakStart = Carbon::parse($today . ' ' . $record->break_start);
+                    $breakStart = Carbon::parse($today.' '.$record->break_start);
                     $minutes -= $now->diffInMinutes($breakStart);
                 }
 
@@ -353,4 +352,3 @@ class PortalTimesheetController extends BaseController
         ], 'Vardiya takvimi');
     }
 }
-

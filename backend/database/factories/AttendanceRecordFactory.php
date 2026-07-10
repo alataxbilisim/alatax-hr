@@ -54,4 +54,3 @@ class AttendanceRecordFactory extends Factory
         ]);
     }
 }
-

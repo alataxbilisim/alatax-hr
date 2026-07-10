@@ -2,26 +2,28 @@
 
 namespace Tests\Feature\Api;
 
-use Tests\TestCase;
-use App\Models\User;
 use App\Models\Company;
 use App\Models\ExpenseCategory;
 use App\Models\ExpenseClaim;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
+use Tests\TestCase;
 
 class ExpenseTest extends TestCase
 {
     use RefreshDatabase;
 
     private User $user;
+
     private Company $company;
+
     private ExpenseCategory $category;
 
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $this->company = Company::factory()->create(['is_active' => true]);
         $this->user = User::factory()->create([
             'company_id' => $this->company->id,
@@ -187,4 +189,3 @@ class ExpenseTest extends TestCase
             ]);
     }
 }
-

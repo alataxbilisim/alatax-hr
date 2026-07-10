@@ -9,11 +9,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Employee extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany, HasAuditColumns;
+    use BelongsToCompany, HasAuditColumns, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -164,7 +163,10 @@ class Employee extends Model
      */
     public function getSeniorityYearsAttribute(): ?int
     {
-        if (!$this->hire_date) return null;
+        if (! $this->hire_date) {
+            return null;
+        }
+
         return $this->hire_date->diffInYears(now());
     }
 
@@ -184,4 +186,3 @@ class Employee extends Model
         return $query->where('department_id', $departmentId);
     }
 }
-

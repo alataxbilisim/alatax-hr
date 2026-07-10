@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api\V1\Leaves;
 
 use App\Http\Controllers\Api\V1\BaseController;
+use App\Models\ActivityLog;
 use App\Models\LeaveBalance;
 use App\Models\LeaveType;
-use App\Models\ActivityLog;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class LeaveBalanceController extends BaseController
 {
@@ -39,7 +39,7 @@ class LeaveBalanceController extends BaseController
     public function myBalance(Request $request): JsonResponse
     {
         $year = $request->get('year', now()->year);
-        
+
         $balances = LeaveBalance::with('leaveType')
             ->where('user_id', auth()->id())
             ->where('year', $year)
@@ -47,10 +47,10 @@ class LeaveBalanceController extends BaseController
 
         // Get all leave types and create missing balances
         $leaveTypes = LeaveType::active()->get();
-        
+
         foreach ($leaveTypes as $leaveType) {
             $exists = $balances->where('leave_type_id', $leaveType->id)->first();
-            if (!$exists) {
+            if (! $exists) {
                 $balance = LeaveBalance::create([
                     'company_id' => $this->getCompanyId(),
                     'user_id' => auth()->id(),
@@ -81,7 +81,7 @@ class LeaveBalanceController extends BaseController
         $oldValues = $leaveBalance->getOriginal();
         $leaveBalance->update($validated);
 
-        ActivityLog::log('update', $leaveBalance, 'İzin bakiyesi güncellendi: ' . $leaveBalance->leaveType->name, $oldValues, $leaveBalance->fresh()->toArray());
+        ActivityLog::log('update', $leaveBalance, 'İzin bakiyesi güncellendi: '.$leaveBalance->leaveType->name, $oldValues, $leaveBalance->fresh()->toArray());
 
         return $this->success($leaveBalance, 'İzin bakiyesi güncellendi');
     }
@@ -111,8 +111,8 @@ class LeaveBalanceController extends BaseController
                     'total_days' => $balanceData['total_days'],
                 ]
             );
-            
-            ActivityLog::log('update', $balance, 'İzin bakiyesi toplu güncellendi: ' . $balance->leaveType->name);
+
+            ActivityLog::log('update', $balance, 'İzin bakiyesi toplu güncellendi: '.$balance->leaveType->name);
         }
 
         return $this->success(null, 'İzin bakiyeleri toplu güncellendi');

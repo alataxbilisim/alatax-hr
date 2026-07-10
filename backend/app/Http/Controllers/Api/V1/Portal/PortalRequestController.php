@@ -18,7 +18,7 @@ class PortalRequestController extends BaseController
     public function types(Request $request): JsonResponse
     {
         $user = $request->user();
-        
+
         $requestTypes = RequestType::where('company_id', $user->company_id)
             ->active()
             ->ordered()
@@ -34,8 +34,8 @@ class PortalRequestController extends BaseController
     {
         $user = $request->user();
         $employee = Employee::where('user_id', $user->id)->first();
-        
-        if (!$employee) {
+
+        if (! $employee) {
             return $this->error('Personel kaydı bulunamadı', null, 404);
         }
 
@@ -65,8 +65,8 @@ class PortalRequestController extends BaseController
     {
         $user = $request->user();
         $employee = Employee::where('user_id', $user->id)->first();
-        
-        if (!$employee) {
+
+        if (! $employee) {
             return $this->error('Personel kaydı bulunamadı', null, 404);
         }
 
@@ -75,7 +75,7 @@ class PortalRequestController extends BaseController
             ->with(['requestType:id,name,icon,color', 'approver:id,name', 'history.changedBy:id,name'])
             ->first();
 
-        if (!$employeeRequest) {
+        if (! $employeeRequest) {
             return $this->error('Talep bulunamadı', null, 404);
         }
 
@@ -89,8 +89,8 @@ class PortalRequestController extends BaseController
     {
         $user = $request->user();
         $employee = Employee::where('user_id', $user->id)->first();
-        
-        if (!$employee) {
+
+        if (! $employee) {
             return $this->error('Personel kaydı bulunamadı', null, 404);
         }
 
@@ -111,7 +111,7 @@ class PortalRequestController extends BaseController
             ->where('is_active', true)
             ->first();
 
-        if (!$requestType) {
+        if (! $requestType) {
             return $this->error('Geçersiz talep türü', null, 422);
         }
 
@@ -125,7 +125,7 @@ class PortalRequestController extends BaseController
             $attachments = [];
             if ($request->hasFile('attachments')) {
                 foreach ($request->file('attachments') as $file) {
-                    $path = $file->store('request_attachments/' . $user->company_id, 'public');
+                    $path = $file->store('request_attachments/'.$user->company_id, 'public');
                     $attachments[] = [
                         'path' => $path,
                         'name' => $file->getClientOriginalName(),
@@ -144,7 +144,7 @@ class PortalRequestController extends BaseController
                 'form_data' => $validated['form_data'] ?? null,
                 'priority' => $validated['priority'] ?? 'normal',
                 'effective_date' => $validated['effective_date'] ?? null,
-                'attachments' => !empty($attachments) ? $attachments : null,
+                'attachments' => ! empty($attachments) ? $attachments : null,
                 'status' => 'pending',
                 'created_by' => $user->id,
             ]);
@@ -168,8 +168,8 @@ class PortalRequestController extends BaseController
     {
         $user = $request->user();
         $employee = Employee::where('user_id', $user->id)->first();
-        
-        if (!$employee) {
+
+        if (! $employee) {
             return $this->error('Personel kaydı bulunamadı', null, 404);
         }
 
@@ -178,7 +178,7 @@ class PortalRequestController extends BaseController
             ->where('status', 'pending')
             ->first();
 
-        if (!$employeeRequest) {
+        if (! $employeeRequest) {
             return $this->error('Talep bulunamadı veya düzenlenemez', null, 404);
         }
 
@@ -202,8 +202,8 @@ class PortalRequestController extends BaseController
     {
         $user = $request->user();
         $employee = Employee::where('user_id', $user->id)->first();
-        
-        if (!$employee) {
+
+        if (! $employee) {
             return $this->error('Personel kaydı bulunamadı', null, 404);
         }
 
@@ -212,7 +212,7 @@ class PortalRequestController extends BaseController
             ->whereIn('status', ['pending', 'in_review'])
             ->first();
 
-        if (!$employeeRequest) {
+        if (! $employeeRequest) {
             return $this->error('Talep bulunamadı veya iptal edilemez', null, 404);
         }
 
@@ -228,8 +228,8 @@ class PortalRequestController extends BaseController
     {
         $user = $request->user();
         $employee = Employee::where('user_id', $user->id)->first();
-        
-        if (!$employee) {
+
+        if (! $employee) {
             return $this->success(['count' => 0]);
         }
 
@@ -240,4 +240,3 @@ class PortalRequestController extends BaseController
         return $this->success(['count' => $count]);
     }
 }
-

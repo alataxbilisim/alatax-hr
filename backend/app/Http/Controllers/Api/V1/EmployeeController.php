@@ -2,23 +2,23 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Models\Employee;
-use App\Models\User;
 use App\Models\ActivityLog;
+use App\Models\AssetAssignment;
 use App\Models\CustomFieldDefinition;
 use App\Models\Department;
+use App\Models\Employee;
 use App\Models\LeaveBalance;
 use App\Models\LeaveRequest;
-use App\Models\TrainingParticipant;
-use App\Models\TrainingCertificate;
-use App\Models\AssetAssignment;
 use App\Models\PerformanceReview;
+use App\Models\TrainingCertificate;
+use App\Models\TrainingParticipant;
+use App\Models\User;
 use App\Services\EmployeeImportService;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class EmployeeController extends BaseController
@@ -93,7 +93,7 @@ class EmployeeController extends BaseController
         $leaveData = null;
         if ($employee->user_id) {
             $currentYear = now()->year;
-            
+
             // İzin bakiyeleri
             $leaveBalances = LeaveBalance::where('user_id', $employee->user_id)
                 ->where('year', $currentYear)
@@ -204,7 +204,7 @@ class EmployeeController extends BaseController
             'title' => 'nullable|string|max:100',
             'position' => 'nullable|string|max:100',
             'manager_id' => 'nullable|exists:employees,id',
-            
+
             // Kişisel bilgiler
             'birth_date' => 'nullable|date',
             'national_id' => 'nullable|string|max:20',
@@ -212,7 +212,7 @@ class EmployeeController extends BaseController
             'marital_status' => 'nullable|in:single,married,divorced,widowed',
             'blood_type' => 'nullable|string|max:10',
             'education_level' => 'nullable|string|max:50',
-            
+
             // İletişim
             'personal_email' => 'nullable|email|max:255',
             'personal_phone' => 'nullable|string|max:20',
@@ -220,35 +220,35 @@ class EmployeeController extends BaseController
             'city' => 'nullable|string|max:100',
             'district' => 'nullable|string|max:100',
             'postal_code' => 'nullable|string|max:20',
-            
+
             // Acil durum
             'emergency_contact_name' => 'nullable|string|max:255',
             'emergency_contact_phone' => 'nullable|string|max:20',
             'emergency_contact_relation' => 'nullable|string|max:50',
-            
+
             // İş bilgileri
             'hire_date' => 'nullable|date',
             'contract_start_date' => 'nullable|date',
             'contract_end_date' => 'nullable|date|after:contract_start_date',
             'contract_type' => 'nullable|in:permanent,temporary,intern,contract',
             'work_type' => 'nullable|in:full_time,part_time,remote,hybrid',
-            
+
             // Maaş bilgileri
             'gross_salary' => 'nullable|numeric|min:0',
             'net_salary' => 'nullable|numeric|min:0',
             'currency' => 'nullable|string|max:3',
             'bank_name' => 'nullable|string|max:100',
             'iban' => 'nullable|string|max:34',
-            
+
             // SGK
             'sgk_number' => 'nullable|string|max:20',
             'sgk_start_date' => 'nullable|date',
-            
+
             // Durum
             'status' => 'nullable|in:active,on_leave,suspended,terminated',
             'notes' => 'nullable|string',
             'custom_fields' => 'nullable|array',
-            
+
             // Portal erişimi
             'create_portal_access' => 'boolean',
             'portal_email' => 'nullable|required_if:create_portal_access,true|email|unique:users,email',
@@ -300,7 +300,7 @@ class EmployeeController extends BaseController
             // Portal erişimi oluştur
             if ($request->get('create_portal_access', false)) {
                 $temporaryPassword = Str::random(12);
-                
+
                 $user = User::create([
                     'company_id' => $this->getCompanyId(),
                     'name' => $validated['name'],
@@ -321,14 +321,15 @@ class EmployeeController extends BaseController
                 // Mail::to($user->email)->send(new EmployeeInvitation($user, $employee, $temporaryPassword));
             }
 
-            ActivityLog::log('create', $employee, 'Personel kaydı oluşturuldu: ' . $validated['name'], null, $employee->toArray());
+            ActivityLog::log('create', $employee, 'Personel kaydı oluşturuldu: '.$validated['name'], null, $employee->toArray());
 
             DB::commit();
 
             return $this->created($employee->load('user', 'department', 'manager'), 'Personel başarıyla oluşturuldu');
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error('Personel oluşturulurken hata oluştu: ' . $e->getMessage(), 500);
+
+            return $this->error('Personel oluşturulurken hata oluştu: '.$e->getMessage(), 500);
         }
     }
 
@@ -387,7 +388,7 @@ class EmployeeController extends BaseController
         ]);
 
         $oldValues = $employee->toArray();
-        
+
         $employee->update(array_merge($validated, [
             'updated_by' => auth()->id(),
         ]));
@@ -431,7 +432,7 @@ class EmployeeController extends BaseController
         DB::beginTransaction();
         try {
             $temporaryPassword = Str::random(12);
-            
+
             $user = User::create([
                 'company_id' => $this->getCompanyId(),
                 'name' => $validated['name'],
@@ -448,7 +449,7 @@ class EmployeeController extends BaseController
             ActivityLog::log('update', $employee, 'Personele portal erişimi verildi');
 
             // TODO: Davet emaili gönder
-            
+
             DB::commit();
 
             return $this->success([
@@ -457,7 +458,8 @@ class EmployeeController extends BaseController
             ], 'Portal erişimi başarıyla oluşturuldu');
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error('Portal erişimi oluşturulurken hata oluştu: ' . $e->getMessage(), 500);
+
+            return $this->error('Portal erişimi oluşturulurken hata oluştu: '.$e->getMessage(), 500);
         }
     }
 
@@ -468,17 +470,17 @@ class EmployeeController extends BaseController
     {
         $employee = Employee::where('company_id', $this->getCompanyId())->findOrFail($id);
 
-        if (!$employee->user_id) {
+        if (! $employee->user_id) {
             return $this->error('Bu personelin portal erişimi yok', 400);
         }
 
         DB::beginTransaction();
         try {
             $user = $employee->user;
-            
+
             // Kullanıcıyı pasif yap
             $user->update(['is_active' => false]);
-            
+
             // Employee'den user_id'yi kaldır
             $employee->update(['user_id' => null]);
 
@@ -489,7 +491,8 @@ class EmployeeController extends BaseController
             return $this->success($employee, 'Portal erişimi başarıyla kaldırıldı');
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error('Portal erişimi kaldırılırken hata oluştu: ' . $e->getMessage(), 500);
+
+            return $this->error('Portal erişimi kaldırılırken hata oluştu: '.$e->getMessage(), 500);
         }
     }
 
@@ -527,7 +530,7 @@ class EmployeeController extends BaseController
         $employees = $query->get();
 
         // CSV oluştur
-        $filename = 'personel_listesi_' . date('Y-m-d_His') . '.csv';
+        $filename = 'personel_listesi_'.date('Y-m-d_His').'.csv';
         $headers = [
             'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
@@ -535,10 +538,10 @@ class EmployeeController extends BaseController
 
         $callback = function () use ($employees) {
             $file = fopen('php://output', 'w');
-            
+
             // BOM ekle (Excel için UTF-8 desteği)
-            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
-            
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+
             // Başlıklar
             fputcsv($file, [
                 'Sicil No',
@@ -589,11 +592,11 @@ class EmployeeController extends BaseController
 
         $result = $importService->import($request->file('file'));
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             return $this->error($result['message'], 400);
         }
 
-        ActivityLog::log('import', null, 'Personel import işlemi tamamlandı. Başarılı: ' . $result['data']['success_count'] . ', Hatalı: ' . $result['data']['failed_count']);
+        ActivityLog::log('import', null, 'Personel import işlemi tamamlandı. Başarılı: '.$result['data']['success_count'].', Hatalı: '.$result['data']['failed_count']);
 
         return $this->success($result['data'], $result['message']);
     }
@@ -604,7 +607,7 @@ class EmployeeController extends BaseController
     public function importTemplate()
     {
         $content = EmployeeImportService::generateTemplate();
-        
+
         $filename = 'personel_import_sablonu.csv';
         $headers = [
             'Content-Type' => 'text/csv; charset=UTF-8',
@@ -635,7 +638,7 @@ class EmployeeController extends BaseController
             return $this->error('Personel bulunamadı', 404);
         }
 
-        $updateData = array_filter($validated['data'], fn($v) => $v !== null);
+        $updateData = array_filter($validated['data'], fn ($v) => $v !== null);
         $updateData['updated_by'] = auth()->id();
 
         DB::beginTransaction();
@@ -653,7 +656,8 @@ class EmployeeController extends BaseController
             ], 'Personeller başarıyla güncellendi');
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error('Güncelleme sırasında hata oluştu: ' . $e->getMessage(), 500);
+
+            return $this->error('Güncelleme sırasında hata oluştu: '.$e->getMessage(), 500);
         }
     }
 
@@ -690,7 +694,8 @@ class EmployeeController extends BaseController
             ], 'Personeller başarıyla silindi');
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error('Silme sırasında hata oluştu: ' . $e->getMessage(), 500);
+
+            return $this->error('Silme sırasında hata oluştu: '.$e->getMessage(), 500);
         }
     }
 
@@ -728,7 +733,7 @@ class EmployeeController extends BaseController
     {
         $employee = Employee::where('company_id', $this->getCompanyId())->findOrFail($id);
 
-        if (!$employee->user_id) {
+        if (! $employee->user_id) {
             return $this->success([
                 'balances' => [],
                 'requests' => [],
@@ -760,7 +765,7 @@ class EmployeeController extends BaseController
     {
         $employee = Employee::where('company_id', $this->getCompanyId())->findOrFail($id);
 
-        if (!$employee->user_id) {
+        if (! $employee->user_id) {
             return $this->success([
                 'participations' => [],
                 'certificates' => [],
@@ -790,7 +795,7 @@ class EmployeeController extends BaseController
     {
         $employee = Employee::where('company_id', $this->getCompanyId())->findOrFail($id);
 
-        if (!$employee->user_id) {
+        if (! $employee->user_id) {
             return $this->success([
                 'active' => [],
                 'history' => [],
@@ -822,7 +827,7 @@ class EmployeeController extends BaseController
     {
         $employee = Employee::where('company_id', $this->getCompanyId())->findOrFail($id);
 
-        if (!$employee->user_id) {
+        if (! $employee->user_id) {
             return $this->success([
                 'reviews' => [],
             ]);
@@ -910,11 +915,11 @@ class EmployeeController extends BaseController
     {
         try {
             $companyId = $this->getCompanyId();
-            
+
             // Tarih validasyonu
             $startDate = $request->get('start', now()->startOfYear()->toDateString());
             $endDate = $request->get('end', now()->toDateString());
-            
+
             // Tarih formatını kontrol et ve düzelt
             try {
                 $startDate = \Carbon\Carbon::parse($startDate)->toDateString();
@@ -938,7 +943,7 @@ class EmployeeController extends BaseController
                 ->orderByDesc('count')
                 ->get()
                 ->map(function ($item) {
-                    return ['name' => $item->name, 'count' => (int)$item->count];
+                    return ['name' => $item->name, 'count' => (int) $item->count];
                 })
                 ->toArray();
 
@@ -950,7 +955,7 @@ class EmployeeController extends BaseController
                 ->groupBy('contract_type')
                 ->get()
                 ->map(function ($item) {
-                    return ['type' => $item->type, 'count' => (int)$item->count];
+                    return ['type' => $item->type, 'count' => (int) $item->count];
                 })
                 ->toArray();
 
@@ -961,7 +966,7 @@ class EmployeeController extends BaseController
                 ->groupBy('gender')
                 ->get()
                 ->map(function ($item) {
-                    return ['gender' => $item->gender, 'count' => (int)$item->count];
+                    return ['gender' => $item->gender, 'count' => (int) $item->count];
                 })
                 ->toArray();
 
@@ -982,7 +987,7 @@ class EmployeeController extends BaseController
                 ->groupBy('group')
                 ->get()
                 ->map(function ($item) {
-                    return ['name' => $item->group, 'count' => (int)$item->count];
+                    return ['name' => $item->group, 'count' => (int) $item->count];
                 })
                 ->toArray();
 
@@ -1003,7 +1008,7 @@ class EmployeeController extends BaseController
                 ->groupBy('range')
                 ->get()
                 ->map(function ($item) {
-                    return ['range' => $item->range, 'count' => (int)$item->count];
+                    return ['range' => $item->range, 'count' => (int) $item->count];
                 })
                 ->toArray();
 
@@ -1034,12 +1039,12 @@ class EmployeeController extends BaseController
                 'recent_terminations' => $recentTerminations,
             ]);
         } catch (\Exception $e) {
-            \Log::error('Employee stats error: ' . $e->getMessage(), [
+            \Log::error('Employee stats error: '.$e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
                 'request' => $request->all(),
             ]);
-            return $this->error('İstatistikler yüklenirken bir hata oluştu: ' . $e->getMessage(), 500);
+
+            return $this->error('İstatistikler yüklenirken bir hata oluştu: '.$e->getMessage(), 500);
         }
     }
 }
-

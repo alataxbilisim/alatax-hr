@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SavedReport extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
         'company_id',
@@ -76,8 +76,7 @@ class SavedReport extends Model
     {
         return $query->where(function ($q) use ($userId) {
             $q->where('user_id', $userId)
-              ->orWhere('is_shared', true);
+                ->orWhere('is_shared', true);
         });
     }
 }
-

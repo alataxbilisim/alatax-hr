@@ -20,34 +20,34 @@ return new class extends Migration
             $table->string('avatar')->nullable();
             $table->string('title')->nullable(); // Ünvan
             $table->string('department')->nullable(); // Departman
-            
+
             // Kullanıcı tipi
             $table->enum('type', ['super_admin', 'company_admin', 'user'])->default('user');
-            
+
             // Kimlik doğrulama
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
-            
+
             // 2FA
             $table->boolean('two_factor_enabled')->default(false);
             $table->string('two_factor_secret')->nullable();
             $table->text('two_factor_recovery_codes')->nullable();
-            
+
             // Durum ve aktivite
             $table->boolean('is_active')->default(true);
             $table->timestamp('last_login_at')->nullable();
             $table->string('last_login_ip')->nullable();
-            
+
             // Tercihler
             $table->json('preferences')->nullable(); // UI tercihleri (tema, dil vb.)
-            
+
             // Audit
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
             $table->softDeletes();
-            
+
             // İndeksler
             $table->index('company_id');
             $table->index('type');

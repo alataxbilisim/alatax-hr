@@ -71,11 +71,10 @@ class Module extends Model
         if ($this->price_monthly <= 0) {
             return 0;
         }
-        
+
         $yearlyWithoutDiscount = $this->price_monthly * 12;
         $discount = (($yearlyWithoutDiscount - $this->price_yearly) / $yearlyWithoutDiscount) * 100;
-        
+
         return round($discount, 1);
     }
 }
-

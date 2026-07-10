@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Announcement extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany, HasAuditColumns;
+    use BelongsToCompany, HasAuditColumns, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -80,6 +80,7 @@ class Announcement extends Model
             'important' => 'Önemli',
             'info' => 'Bilgi',
         ];
+
         return $types[$this->type] ?? $this->type;
     }
 
@@ -88,8 +89,13 @@ class Announcement extends Model
      */
     public function isActive(): bool
     {
-        if (!$this->is_published) return false;
-        if ($this->expires_at && $this->expires_at->isPast()) return false;
+        if (! $this->is_published) {
+            return false;
+        }
+        if ($this->expires_at && $this->expires_at->isPast()) {
+            return false;
+        }
+
         return true;
     }
 
@@ -98,24 +104,28 @@ class Announcement extends Model
      */
     public function canBeViewedBy(Employee $employee): bool
     {
-        if (!$this->isActive()) return false;
-        if ($this->is_for_all) return true;
-        
+        if (! $this->isActive()) {
+            return false;
+        }
+        if ($this->is_for_all) {
+            return true;
+        }
+
         // Departman kontrolü
         if ($this->target_departments && in_array($employee->department_id, $this->target_departments)) {
             return true;
         }
-        
+
         // Pozisyon kontrolü
         if ($this->target_positions && in_array($employee->position, $this->target_positions)) {
             return true;
         }
-        
+
         // Personel kontrolü
         if ($this->target_employees && in_array($employee->id, $this->target_employees)) {
             return true;
         }
-        
+
         return false;
     }
 
@@ -128,7 +138,7 @@ class Announcement extends Model
             ['user_id' => $user->id],
             ['read_at' => now()]
         );
-        
+
         $this->increment('view_count');
     }
 
@@ -186,4 +196,3 @@ class Announcement extends Model
             ->orderByDesc('published_at');
     }
 }
-

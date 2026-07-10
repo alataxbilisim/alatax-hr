@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CustomFieldDefinition extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany, HasAuditColumns;
+    use BelongsToCompany, HasAuditColumns, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -40,25 +40,42 @@ class CustomFieldDefinition extends Model
 
     // Field types
     const TYPE_TEXT = 'text';
+
     const TYPE_NUMBER = 'number';
+
     const TYPE_DATE = 'date';
+
     const TYPE_SELECT = 'select';
+
     const TYPE_CHECKBOX = 'checkbox';
+
     const TYPE_RADIO = 'radio';
+
     const TYPE_TEXTAREA = 'textarea';
+
     const TYPE_FILE = 'file';
+
     const TYPE_EMAIL = 'email';
+
     const TYPE_PHONE = 'phone';
+
     const TYPE_URL = 'url';
 
     // Entity types
     const ENTITY_EMPLOYEE = 'employee';
+
     const ENTITY_LEAVE_REQUEST = 'leave_request';
+
     const ENTITY_TRAINING = 'training';
+
     const ENTITY_PERFORMANCE = 'performance';
+
     const ENTITY_DOCUMENT = 'document';
+
     const ENTITY_EXPENSE = 'expense';
+
     const ENTITY_JOB_APPLICATION = 'job_application';
+
     const ENTITY_ASSET = 'asset';
 
     /**
@@ -131,11 +148,10 @@ class CustomFieldDefinition extends Model
             return false;
         }
 
-        if (!empty($this->validation_rules)) {
+        if (! empty($this->validation_rules)) {
             // TODO: Implement validation logic
         }
 
         return true;
     }
 }
-

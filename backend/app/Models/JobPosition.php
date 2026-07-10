@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 
 class JobPosition extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany, HasAuditColumns;
+    use BelongsToCompany, HasAuditColumns, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -51,7 +51,7 @@ class JobPosition extends Model
 
         static::creating(function ($model) {
             if (empty($model->slug)) {
-                $model->slug = Str::slug($model->title) . '-' . uniqid();
+                $model->slug = Str::slug($model->title).'-'.uniqid();
             }
         });
     }
@@ -118,4 +118,3 @@ class JobPosition extends Model
         $this->update(['status' => 'closed']);
     }
 }
-

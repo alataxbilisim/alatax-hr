@@ -11,7 +11,7 @@ class PermissionSeeder extends Seeder
     /**
      * Hiyerarşik Yetki Sistemi
      * Format: {module}.{page}.{action}
-     * 
+     *
      * Wildcard desteği:
      * - module.* = Modüldeki tüm yetkiler
      * - module.page.* = Sayfadaki tüm yetkiler
@@ -23,10 +23,10 @@ class PermissionSeeder extends Seeder
 
         // Hiyerarşik yetki tanımları
         $hierarchicalPermissions = $this->getHierarchicalPermissions();
-        
+
         // Geriye uyumluluk için eski yetkiler
         $legacyPermissions = $this->getLegacyPermissions();
-        
+
         // Tüm yetkileri birleştir
         $allPermissions = array_merge($hierarchicalPermissions, $legacyPermissions);
 
@@ -47,7 +47,7 @@ class PermissionSeeder extends Seeder
     private function getHierarchicalPermissions(): array
     {
         $permissions = [];
-        
+
         // Sayfa bazlı aksiyon tanımları
         $modulePages = [
             // Yönetim Modülü
@@ -60,7 +60,7 @@ class PermissionSeeder extends Seeder
                 'webhooks' => ['view', 'create', 'edit', 'delete'],
                 'api_keys' => ['view', 'create', 'edit', 'delete'],
             ],
-            
+
             // Personel Modülü
             'employees' => [
                 'list' => ['view', 'create', 'edit', 'delete', 'export', 'import'],
@@ -70,7 +70,7 @@ class PermissionSeeder extends Seeder
                 'reports' => ['view', 'export'],
                 'documents' => ['view', 'create', 'edit', 'delete'],
             ],
-            
+
             // İşe Alım Modülü
             'recruitment' => [
                 'positions' => ['view', 'create', 'edit', 'delete'],
@@ -78,7 +78,7 @@ class PermissionSeeder extends Seeder
                 'cv_pool' => ['view', 'export'],
                 'custom_fields' => ['view', 'create', 'edit', 'delete'],
             ],
-            
+
             // İzin Yönetimi Modülü
             'leaves' => [
                 'requests' => ['view', 'create', 'edit', 'delete', 'approve'],
@@ -89,20 +89,20 @@ class PermissionSeeder extends Seeder
                 'accrual_policies' => ['view', 'create', 'edit', 'delete'],
                 'custom_fields' => ['view', 'create', 'edit', 'delete'],
             ],
-            
+
             // Evrak Yönetimi Modülü
             'documents' => [
                 'list' => ['view', 'create', 'edit', 'delete', 'approve'],
                 'categories' => ['view', 'create', 'edit', 'delete'],
                 'custom_fields' => ['view', 'create', 'edit', 'delete'],
             ],
-            
+
             // Onboarding Modülü
             'onboarding' => [
                 'processes' => ['view', 'create', 'edit', 'delete'],
                 'templates' => ['view', 'create', 'edit', 'delete'],
             ],
-            
+
             // Performans Modülü
             'performance' => [
                 'reviews' => ['view', 'create', 'edit', 'delete', 'approve'],
@@ -114,14 +114,14 @@ class PermissionSeeder extends Seeder
                 'one_on_one' => ['view', 'create', 'edit', 'delete'],
                 'custom_fields' => ['view', 'create', 'edit', 'delete'],
             ],
-            
+
             // Eğitim Modülü
             'training' => [
                 'list' => ['view', 'create', 'edit', 'delete'],
                 'sessions' => ['view', 'create', 'edit', 'delete'],
                 'custom_fields' => ['view', 'create', 'edit', 'delete'],
             ],
-            
+
             // Varlık Yönetimi Modülü
             'assets' => [
                 'list' => ['view', 'create', 'edit', 'delete', 'export'],
@@ -130,23 +130,23 @@ class PermissionSeeder extends Seeder
                 'maintenance' => ['view', 'create', 'edit', 'delete'],
                 'custom_fields' => ['view', 'create', 'edit', 'delete'],
             ],
-            
+
             // Anketler Modülü
             'surveys' => [
                 'list' => ['view', 'create', 'edit', 'delete'],
             ],
-            
+
             // Analitik Modülü
             'analytics' => [
                 'reports' => ['view', 'export'],
             ],
-            
+
             // Puantaj Modülü
             'timesheet' => [
                 'attendance' => ['view', 'create', 'edit', 'approve'],
                 'shifts' => ['view', 'create', 'edit', 'delete'],
             ],
-            
+
             // Masraf Yönetimi Modülü
             'expenses' => [
                 'claims' => ['view', 'create', 'edit', 'delete', 'approve'],
@@ -158,11 +158,11 @@ class PermissionSeeder extends Seeder
         foreach ($modulePages as $module => $pages) {
             // Modül wildcard yetkisi
             $permissions[] = "{$module}.*";
-            
+
             foreach ($pages as $page => $actions) {
                 // Sayfa wildcard yetkisi
                 $permissions[] = "{$module}.{$page}.*";
-                
+
                 // Sayfa aksiyonları
                 foreach ($actions as $action) {
                     $permissions[] = "{$module}.{$page}.{$action}";
@@ -184,31 +184,31 @@ class PermissionSeeder extends Seeder
             'users.create',
             'users.edit',
             'users.delete',
-            
+
             // Rol yönetimi
             'roles.view',
             'roles.create',
             'roles.edit',
             'roles.delete',
-            
+
             // Personel yönetimi
             'employees.view',
             'employees.create',
             'employees.edit',
             'employees.delete',
-            
+
             // Şube yönetimi
             'branches.view',
             'branches.create',
             'branches.edit',
             'branches.delete',
-            
+
             // Firma ayarları
             'company.view',
             'company.edit',
             'settings.view',
             'settings.edit',
-            
+
             // İş başvuru modülü
             'job-positions.view',
             'job-positions.create',
@@ -225,20 +225,20 @@ class PermissionSeeder extends Seeder
             'recruitment.create',
             'recruitment.edit',
             'recruitment.delete',
-            
+
             // Evrak yönetimi
             'documents.view',
             'documents.create',
             'documents.edit',
             'documents.delete',
             'documents.approve',
-            
+
             // Onboarding
             'onboarding.view',
             'onboarding.create',
             'onboarding.edit',
             'onboarding.delete',
-            
+
             // İzin yönetimi
             'leaves.view',
             'leaves.create',
@@ -246,29 +246,29 @@ class PermissionSeeder extends Seeder
             'leaves.delete',
             'leaves.approve',
             'leave-types.manage',
-            
+
             // Eğitim yönetimi
             'trainings.view',
             'trainings.create',
             'trainings.edit',
             'trainings.delete',
-            
+
             // Performans yönetimi
             'performance.view',
             'performance.create',
             'performance.edit',
             'performance.delete',
-            
+
             // Varlık yönetimi
             'assets.view',
             'assets.create',
             'assets.edit',
             'assets.delete',
-            
+
             // Raporlar
             'reports.view',
             'reports.export',
-            
+
             // Log görüntüleme ve denetim
             'logs.view',
             'audit.view',
@@ -295,41 +295,41 @@ class PermissionSeeder extends Seeder
                     'management.branches.view', 'management.branches.create', 'management.branches.edit',
                     'management.settings.view',
                     'management.audit_logs.view',
-                    
+
                     // Personel - Tam yetki
                     'employees.*',
-                    
+
                     // İşe Alım - Tam yetki
                     'recruitment.*',
-                    
+
                     // Evrak - Tam yetki
                     'documents.*',
-                    
+
                     // İzin - Tam yetki
                     'leaves.*',
-                    
+
                     // Onboarding - Tam yetki
                     'onboarding.*',
-                    
+
                     // Eğitim - Görüntüleme ve düzenleme
                     'training.list.view', 'training.list.create', 'training.list.edit',
                     'training.sessions.view', 'training.sessions.create', 'training.sessions.edit',
-                    
+
                     // Performans - Görüntüleme ve düzenleme
                     'performance.reviews.view', 'performance.reviews.create', 'performance.reviews.edit',
                     'performance.periods.view',
                     'performance.criteria.view',
-                    
+
                     // Varlıklar - Görüntüleme ve düzenleme
                     'assets.list.view', 'assets.list.create', 'assets.list.edit',
                     'assets.assignments.view', 'assets.assignments.create', 'assets.assignments.edit',
-                    
+
                     // Anketler
                     'surveys.list.view', 'surveys.list.create', 'surveys.list.edit',
-                    
+
                     // Analitik
                     'analytics.reports.view', 'analytics.reports.export',
-                    
+
                     // Geriye uyumluluk
                     'users.view', 'users.create', 'users.edit',
                     'roles.view',
@@ -346,39 +346,39 @@ class PermissionSeeder extends Seeder
                     // Yönetim - Sadece görüntüleme
                     'management.users.view',
                     'management.branches.view',
-                    
+
                     // Personel - Görüntüleme ve düzenleme
                     'employees.list.view', 'employees.list.create', 'employees.list.edit',
                     'employees.departments.view',
                     'employees.organization.view',
                     'employees.documents.view', 'employees.documents.create', 'employees.documents.edit',
-                    
+
                     // İşe Alım
                     'recruitment.positions.view',
                     'recruitment.applications.view', 'recruitment.applications.edit',
                     'recruitment.cv_pool.view',
-                    
+
                     // Evrak
                     'documents.list.view', 'documents.list.create', 'documents.list.edit',
                     'documents.categories.view',
-                    
+
                     // İzin
                     'leaves.requests.view', 'leaves.requests.create', 'leaves.requests.edit',
                     'leaves.types.view',
                     'leaves.balances.view',
                     'leaves.calendar.view',
-                    
+
                     // Onboarding
                     'onboarding.processes.view', 'onboarding.processes.edit',
                     'onboarding.templates.view',
-                    
+
                     // Eğitim
                     'training.list.view', 'training.list.create', 'training.list.edit',
                     'training.sessions.view', 'training.sessions.create', 'training.sessions.edit',
-                    
+
                     // Performans - Sadece görüntüleme
                     'performance.reviews.view',
-                    
+
                     // Geriye uyumluluk
                     'users.view',
                     'employees.view', 'employees.create', 'employees.edit',
@@ -393,22 +393,22 @@ class PermissionSeeder extends Seeder
                     'employees.list.view',
                     'employees.departments.view',
                     'employees.organization.view',
-                    
+
                     // İşe Alım - Görüntüleme
                     'recruitment.applications.view',
-                    
+
                     // Evrak - Görüntüleme
                     'documents.list.view',
-                    
+
                     // İzin - Görüntüleme ve onay
                     'leaves.requests.view', 'leaves.requests.approve',
                     'leaves.calendar.view',
-                    
+
                     // Performans - Değerlendirme yapabilir
                     'performance.reviews.view', 'performance.reviews.create', 'performance.reviews.edit',
                     'performance.feedback.view', 'performance.feedback.create',
                     'performance.one_on_one.view', 'performance.one_on_one.create', 'performance.one_on_one.edit',
-                    
+
                     // Geriye uyumluluk
                     'users.view',
                     'employees.view',
@@ -424,22 +424,22 @@ class PermissionSeeder extends Seeder
                 'permissions' => [
                     // Personel - Sadece kendi profilini
                     'employees.list.view',
-                    
+
                     // Evrak - Görüntüleme
                     'documents.list.view',
-                    
+
                     // İzin - Kendi taleplerini
                     'leaves.requests.view', 'leaves.requests.create',
                     'leaves.calendar.view',
-                    
+
                     // Eğitim - Görüntüleme
                     'training.list.view',
                     'training.sessions.view',
-                    
+
                     // Performans - Kendi değerlendirmelerini
                     'performance.reviews.view',
                     'performance.feedback.view',
-                    
+
                     // Geriye uyumluluk
                     'employees.view',
                     'documents.view',
@@ -453,12 +453,12 @@ class PermissionSeeder extends Seeder
             $role = Role::firstOrCreate(
                 ['name' => $roleName, 'guard_name' => 'sanctum']
             );
-            
+
             // Sadece mevcut yetkileri ata (olmayan yetkileri atla)
             $validPermissions = array_filter($roleData['permissions'], function ($perm) {
                 return Permission::where('name', $perm)->where('guard_name', 'sanctum')->exists();
             });
-            
+
             $role->syncPermissions($validPermissions);
         }
     }

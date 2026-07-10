@@ -5,12 +5,12 @@ namespace App\Models;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class OneOnOneMeeting extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -39,14 +39,21 @@ class OneOnOneMeeting extends Model
     ];
 
     const STATUS_SCHEDULED = 'scheduled';
+
     const STATUS_COMPLETED = 'completed';
+
     const STATUS_CANCELLED = 'cancelled';
+
     const STATUS_RESCHEDULED = 'rescheduled';
 
     const MOOD_VERY_NEGATIVE = 'very_negative';
+
     const MOOD_NEGATIVE = 'negative';
+
     const MOOD_NEUTRAL = 'neutral';
+
     const MOOD_POSITIVE = 'positive';
+
     const MOOD_VERY_POSITIVE = 'very_positive';
 
     public static function getStatusLabels(): array
@@ -121,7 +128,7 @@ class OneOnOneMeeting extends Model
     }
 
     // Methods
-    public function complete(string $notes = null, array $actionItems = null, string $mood = null): void
+    public function complete(?string $notes = null, ?array $actionItems = null, ?string $mood = null): void
     {
         $this->update([
             'status' => self::STATUS_COMPLETED,
@@ -150,5 +157,3 @@ class OneOnOneMeeting extends Model
         return $this->scheduled_at < now();
     }
 }
-
-

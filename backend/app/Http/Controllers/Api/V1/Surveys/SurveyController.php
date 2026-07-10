@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Api\V1\Surveys;
 
 use App\Http\Controllers\Api\V1\BaseController;
+use App\Models\ActivityLog;
 use App\Models\Survey;
 use App\Models\SurveyQuestion;
-use App\Models\SurveySubmission;
 use App\Models\SurveyResponse;
-use App\Models\ActivityLog;
-use Illuminate\Http\Request;
+use App\Models\SurveySubmission;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -109,13 +109,14 @@ class SurveyController extends BaseController
 
             DB::commit();
 
-            ActivityLog::log('create', $survey, 'Yeni anket oluşturuldu: ' . $survey->title);
+            ActivityLog::log('create', $survey, 'Yeni anket oluşturuldu: '.$survey->title);
 
             return $this->created($survey->load('questions'), 'Anket oluşturuldu');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error('Anket oluşturulamadı: ' . $e->getMessage(), 500);
+
+            return $this->error('Anket oluşturulamadı: '.$e->getMessage(), 500);
         }
     }
 
@@ -151,7 +152,7 @@ class SurveyController extends BaseController
 
         $survey->delete();
 
-        ActivityLog::log('delete', $survey, 'Anket silindi: ' . $survey->title);
+        ActivityLog::log('delete', $survey, 'Anket silindi: '.$survey->title);
 
         return $this->success(null, 'Anket silindi');
     }
@@ -165,7 +166,7 @@ class SurveyController extends BaseController
             ->with('questions')
             ->findOrFail($surveyId);
 
-        if (!$survey->isOpen()) {
+        if (! $survey->isOpen()) {
             return $this->error('Bu anket artık yanıtlanamaz', 400);
         }
 
@@ -208,7 +209,8 @@ class SurveyController extends BaseController
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error('Yanıt kaydedilemedi: ' . $e->getMessage(), 500);
+
+            return $this->error('Yanıt kaydedilemedi: '.$e->getMessage(), 500);
         }
     }
 
@@ -219,7 +221,7 @@ class SurveyController extends BaseController
     {
         $survey = Survey::where('company_id', $this->getCompanyId())
             ->with(['questions.responses'])
-            ->withCount(['submissions' => fn($q) => $q->where('status', 'completed')])
+            ->withCount(['submissions' => fn ($q) => $q->where('status', 'completed')])
             ->findOrFail($id);
 
         $results = [];
@@ -236,14 +238,14 @@ class SurveyController extends BaseController
                     $questionResult['average'] = $question->getAverageScore();
                     $questionResult['distribution'] = $question->responses
                         ->groupBy('answer_numeric')
-                        ->map(fn($group) => $group->count());
+                        ->map(fn ($group) => $group->count());
                     break;
 
                 case 'single_choice':
                 case 'multiple_choice':
                     $questionResult['distribution'] = $question->responses
                         ->groupBy('answer_text')
-                        ->map(fn($group) => $group->count());
+                        ->map(fn ($group) => $group->count());
                     break;
 
                 case 'text':
@@ -275,5 +277,3 @@ class SurveyController extends BaseController
         ], 'Anket tipleri');
     }
 }
-
-

@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class NotificationController extends BaseController
 {
@@ -39,7 +39,7 @@ class NotificationController extends BaseController
     {
         $notification = $request->user()->notifications()->find($id);
 
-        if (!$notification) {
+        if (! $notification) {
             return $this->notFound('Bildirim bulunamadı');
         }
 
@@ -58,4 +58,3 @@ class NotificationController extends BaseController
         return $this->success(null, 'Tüm bildirimler okundu olarak işaretlendi');
     }
 }
-

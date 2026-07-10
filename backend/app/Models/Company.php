@@ -4,9 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
@@ -69,12 +69,12 @@ class Company extends Model
         static::creating(function ($company) {
             if (empty($company->slug)) {
                 $company->slug = Str::slug($company->name);
-                
+
                 // Benzersiz yap
                 $originalSlug = $company->slug;
                 $count = 1;
                 while (static::where('slug', $company->slug)->exists()) {
-                    $company->slug = $originalSlug . '-' . $count++;
+                    $company->slug = $originalSlug.'-'.$count++;
                 }
             }
         });
@@ -178,7 +178,7 @@ class Company extends Model
         if ($this->status !== 'trial') {
             return false;
         }
-        
+
         return $this->trial_ends_at && $this->trial_ends_at->isPast();
     }
 
@@ -187,10 +187,10 @@ class Company extends Model
      */
     public function hasValidLicense(): bool
     {
-        if (!$this->license_end_date) {
+        if (! $this->license_end_date) {
             return true; // Süresiz lisans
         }
-        
+
         return $this->license_end_date->isFuture();
     }
 
@@ -208,6 +208,7 @@ class Company extends Model
     public function remainingUserSlots(): int
     {
         $currentUsers = $this->users()->where('is_active', true)->count();
+
         return max(0, $this->user_limit - $currentUsers);
     }
 
@@ -236,7 +237,7 @@ class Company extends Model
     public function assignPackage(LicensePackage $package, ?int $durationMonths = null): void
     {
         $duration = $durationMonths ?? $package->duration_months;
-        
+
         // Package slug'ını enum değerine map et
         $packageTypeMap = [
             'starter' => 'starter',
@@ -246,9 +247,9 @@ class Company extends Model
             'profesyonel' => 'professional',
             'kurumsal' => 'enterprise',
         ];
-        
+
         $packageType = $packageTypeMap[strtolower($package->slug)] ?? 'starter';
-        
+
         $this->update([
             'license_package_id' => $package->id,
             'package_type' => $packageType,
@@ -276,12 +277,12 @@ class Company extends Model
     public function extendLicense(int $months): void
     {
         $currentEnd = $this->license_end_date ?? now();
-        
+
         // Eğer lisans süresi dolmuşsa bugünden başlat
         if ($currentEnd->isPast()) {
             $currentEnd = now();
         }
-        
+
         $this->update([
             'license_end_date' => $currentEnd->addMonths($months),
             'status' => 'active',
@@ -293,8 +294,11 @@ class Company extends Model
      */
     public function hasReachedLocationLimit(): bool
     {
-        if ($this->location_limit === 0) return false; // Sınırsız
+        if ($this->location_limit === 0) {
+            return false;
+        } // Sınırsız
         $currentCount = $this->branches()->where('is_active', true)->count();
+
         return $currentCount >= $this->location_limit;
     }
 
@@ -313,7 +317,10 @@ class Company extends Model
      */
     public function hasReachedEmployeeLimit(): bool
     {
-        if ($this->employee_limit === 0) return false; // Sınırsız
+        if ($this->employee_limit === 0) {
+            return false;
+        } // Sınırsız
+
         return $this->employee_count >= $this->employee_limit;
     }
 
@@ -323,10 +330,11 @@ class Company extends Model
     public function getBalanceLabel(): string
     {
         if ($this->current_balance > 0) {
-            return number_format($this->current_balance, 2, ',', '.') . ' ₺ Borç';
+            return number_format($this->current_balance, 2, ',', '.').' ₺ Borç';
         } elseif ($this->current_balance < 0) {
-            return number_format(abs($this->current_balance), 2, ',', '.') . ' ₺ Alacak';
+            return number_format(abs($this->current_balance), 2, ',', '.').' ₺ Alacak';
         }
+
         return '0,00 ₺';
     }
 
@@ -338,4 +346,3 @@ class Company extends Model
         return $this->current_balance > 0;
     }
 }
-

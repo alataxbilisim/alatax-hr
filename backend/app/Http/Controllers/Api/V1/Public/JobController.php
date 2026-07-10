@@ -3,9 +3,8 @@
 namespace App\Http\Controllers\Api\V1\Public;
 
 use App\Http\Controllers\Controller;
-use App\Models\JobPosition;
 use App\Models\Company;
-use Illuminate\Http\Request;
+use App\Models\JobPosition;
 use Illuminate\Http\JsonResponse;
 
 class JobController extends Controller
@@ -17,7 +16,7 @@ class JobController extends Controller
     {
         $company = Company::where('slug', $companySlug)->first();
 
-        if (!$company) {
+        if (! $company) {
             return response()->json([
                 'success' => false,
                 'message' => 'Firma bulunamadı',
@@ -28,7 +27,7 @@ class JobController extends Controller
             ->where('status', 'published')
             ->where(function ($q) {
                 $q->whereNull('deadline')
-                  ->orWhere('deadline', '>=', now());
+                    ->orWhere('deadline', '>=', now());
             })
             ->orderBy('created_at', 'desc')
             ->get()
@@ -43,7 +42,7 @@ class JobController extends Controller
                     'description' => $position->description,
                     'company' => [
                         'name' => $company->name,
-                        'logo' => $company->logo ? asset('storage/' . $company->logo) : null,
+                        'logo' => $company->logo ? asset('storage/'.$company->logo) : null,
                     ],
                 ];
             });
@@ -64,7 +63,7 @@ class JobController extends Controller
             ->where('status', 'published')
             ->first();
 
-        if (!$position) {
+        if (! $position) {
             return response()->json([
                 'success' => false,
                 'message' => 'Pozisyon bulunamadı veya başvurular kapatılmış',
@@ -86,7 +85,7 @@ class JobController extends Controller
                 'salary_range' => $position->salary_range,
                 'company' => [
                     'name' => $position->company->name,
-                    'logo' => $position->company->logo ? asset('storage/' . $position->company->logo) : null,
+                    'logo' => $position->company->logo ? asset('storage/'.$position->company->logo) : null,
                 ],
                 'form' => $position->form ? [
                     'id' => $position->form->id,

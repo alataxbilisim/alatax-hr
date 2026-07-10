@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Api\V1\Performance;
 
 use App\Http\Controllers\Api\V1\BaseController;
-use App\Models\OneOnOneMeeting;
 use App\Models\ActivityLog;
-use Illuminate\Http\Request;
+use App\Models\OneOnOneMeeting;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class OneOnOneController extends BaseController
 {
@@ -19,7 +19,7 @@ class OneOnOneController extends BaseController
             ->with(['manager:id,name', 'employee:id,name']);
 
         // Sadece kendi görüşmelerini göster (yönetici veya çalışan olarak)
-        if (!$this->isSuperAdmin() && !$this->isCompanyAdmin()) {
+        if (! $this->isSuperAdmin() && ! $this->isCompanyAdmin()) {
             $userId = auth()->id();
             $query->where(function ($q) use ($userId) {
                 $q->where('manager_id', $userId)
@@ -60,7 +60,7 @@ class OneOnOneController extends BaseController
 
         // Yetki kontrolü
         $userId = auth()->id();
-        if (!$this->isSuperAdmin() && !$this->isCompanyAdmin() && 
+        if (! $this->isSuperAdmin() && ! $this->isCompanyAdmin() &&
             $meeting->manager_id !== $userId && $meeting->employee_id !== $userId) {
             return $this->error('Bu görüşmeye erişim yetkiniz yok', 403);
         }
@@ -204,7 +204,7 @@ class OneOnOneController extends BaseController
     public function upcoming(): JsonResponse
     {
         $userId = auth()->id();
-        
+
         $meetings = OneOnOneMeeting::where('company_id', $this->getCompanyId())
             ->where(function ($q) use ($userId) {
                 $q->where('manager_id', $userId)
@@ -230,5 +230,3 @@ class OneOnOneController extends BaseController
         ], 'Etiketler');
     }
 }
-
-

@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Models\Webhook;
-use App\Models\WebhookLog;
 use App\Models\ActivityLog;
-use Illuminate\Http\Request;
+use App\Models\Webhook;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class WebhookController extends BaseController
@@ -141,7 +140,7 @@ class WebhookController extends BaseController
 
             return $this->success(['message' => 'Test webhook gönderildi'], 'Test webhook başarıyla gönderildi');
         } catch (\Exception $e) {
-            return $this->error('Test webhook gönderilemedi: ' . $e->getMessage(), 500);
+            return $this->error('Test webhook gönderilemedi: '.$e->getMessage(), 500);
         }
     }
 
@@ -161,4 +160,3 @@ class WebhookController extends BaseController
         return $this->success(['secret' => $webhook->secret], 'Secret başarıyla yenilendi');
     }
 }
-

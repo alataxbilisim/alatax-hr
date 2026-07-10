@@ -51,7 +51,7 @@ class Shift extends Model
         }
 
         $minutes = $end->diffInMinutes($start) - $this->break_duration_minutes;
+
         return round($minutes / 60, 2);
     }
 }
-

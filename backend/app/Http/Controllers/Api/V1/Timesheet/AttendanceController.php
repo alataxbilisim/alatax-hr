@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api\V1\Timesheet;
 
 use App\Http\Controllers\Api\V1\BaseController;
-use App\Models\AttendanceRecord;
 use App\Models\ActivityLog;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
+use App\Models\AttendanceRecord;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class AttendanceController extends BaseController
 {
@@ -30,7 +30,7 @@ class AttendanceController extends BaseController
         } else {
             // Default: current month
             $query->whereMonth('date', now()->month)
-                  ->whereYear('date', now()->year);
+                ->whereYear('date', now()->year);
         }
 
         if ($request->has('status')) {
@@ -206,4 +206,3 @@ class AttendanceController extends BaseController
         return $this->success($summary, 'Günlük özet');
     }
 }
-

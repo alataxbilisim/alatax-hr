@@ -17,8 +17,8 @@ class PortalAnnouncementController extends BaseController
     {
         $user = $request->user();
         $employee = Employee::where('user_id', $user->id)->first();
-        
-        if (!$employee) {
+
+        if (! $employee) {
             return $this->error('Personel kaydı bulunamadı', null, 404);
         }
 
@@ -65,8 +65,8 @@ class PortalAnnouncementController extends BaseController
     {
         $user = $request->user();
         $employee = Employee::where('user_id', $user->id)->first();
-        
-        if (!$employee) {
+
+        if (! $employee) {
             return $this->error('Personel kaydı bulunamadı', null, 404);
         }
 
@@ -75,12 +75,12 @@ class PortalAnnouncementController extends BaseController
             ->active()
             ->first();
 
-        if (!$announcement) {
+        if (! $announcement) {
             return $this->error('Duyuru bulunamadı', null, 404);
         }
 
         // Personel bu duyuruyu görebilir mi?
-        if (!$announcement->canBeViewedBy($employee)) {
+        if (! $announcement->canBeViewedBy($employee)) {
             return $this->error('Bu duyuruya erişim izniniz yok', null, 403);
         }
 
@@ -117,8 +117,8 @@ class PortalAnnouncementController extends BaseController
     {
         $user = $request->user();
         $employee = Employee::where('user_id', $user->id)->first();
-        
-        if (!$employee) {
+
+        if (! $employee) {
             return $this->error('Personel kaydı bulunamadı', null, 404);
         }
 
@@ -127,11 +127,11 @@ class PortalAnnouncementController extends BaseController
             ->active()
             ->first();
 
-        if (!$announcement) {
+        if (! $announcement) {
             return $this->error('Duyuru bulunamadı', null, 404);
         }
 
-        if (!$announcement->requires_acknowledgment) {
+        if (! $announcement->requires_acknowledgment) {
             return $this->error('Bu duyuru onay gerektirmiyor', null, 422);
         }
 
@@ -139,7 +139,7 @@ class PortalAnnouncementController extends BaseController
             ->where('user_id', $user->id)
             ->first();
 
-        if (!$read) {
+        if (! $read) {
             // Henüz okunmamışsa önce oku
             $announcement->markAsReadBy($user);
             $read = $announcement->reads()->where('user_id', $user->id)->first();
@@ -161,8 +161,8 @@ class PortalAnnouncementController extends BaseController
     {
         $user = $request->user();
         $employee = Employee::where('user_id', $user->id)->first();
-        
-        if (!$employee) {
+
+        if (! $employee) {
             return $this->success(['count' => 0]);
         }
 
@@ -179,4 +179,3 @@ class PortalAnnouncementController extends BaseController
         return $this->success(['count' => $count]);
     }
 }
-

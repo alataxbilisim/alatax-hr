@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Api\V1\Performance;
 
 use App\Http\Controllers\Api\V1\BaseController;
-use App\Models\Competency;
-use App\Models\UserCompetency;
-use App\Models\PositionCompetency;
 use App\Models\ActivityLog;
-use Illuminate\Http\Request;
+use App\Models\Competency;
+use App\Models\PositionCompetency;
+use App\Models\UserCompetency;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class CompetencyController extends BaseController
 {
@@ -78,7 +78,7 @@ class CompetencyController extends BaseController
             'created_by' => auth()->id(),
         ]);
 
-        ActivityLog::log('create', $competency, 'Yeni yetkinlik oluşturuldu: ' . $competency->name);
+        ActivityLog::log('create', $competency, 'Yeni yetkinlik oluşturuldu: '.$competency->name);
 
         return $this->created($competency, 'Yetkinlik oluşturuldu');
     }
@@ -121,7 +121,7 @@ class CompetencyController extends BaseController
 
         $competency->delete();
 
-        ActivityLog::log('delete', $competency, 'Yetkinlik silindi: ' . $competency->name);
+        ActivityLog::log('delete', $competency, 'Yetkinlik silindi: '.$competency->name);
 
         return $this->success(null, 'Yetkinlik silindi');
     }
@@ -229,7 +229,7 @@ class CompetencyController extends BaseController
         }
 
         // Gap'e göre sırala (en büyük gap önce)
-        usort($analysis, fn($a, $b) => $b['gap'] - $a['gap']);
+        usort($analysis, fn ($a, $b) => $b['gap'] - $a['gap']);
 
         return $this->success([
             'position' => $positionName,
@@ -237,8 +237,8 @@ class CompetencyController extends BaseController
             'analysis' => $analysis,
             'summary' => [
                 'total_competencies' => count($analysis),
-                'met' => count(array_filter($analysis, fn($a) => $a['status'] === 'met')),
-                'gaps' => count(array_filter($analysis, fn($a) => $a['status'] === 'gap')),
+                'met' => count(array_filter($analysis, fn ($a) => $a['status'] === 'met')),
+                'gaps' => count(array_filter($analysis, fn ($a) => $a['status'] === 'gap')),
             ],
         ], 'Skill Gap Analizi');
     }
@@ -307,5 +307,3 @@ class CompetencyController extends BaseController
         return $this->success(null, 'Pozisyon yetkinliği kaldırıldı');
     }
 }
-
-

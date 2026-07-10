@@ -3,14 +3,13 @@
 namespace App\Http\Controllers\Api\V1\Performance;
 
 use App\Http\Controllers\Api\V1\BaseController;
+use App\Models\ActivityLog;
+use App\Models\ContinuousFeedback;
 use App\Models\FeedbackProvider;
 use App\Models\FeedbackResponse;
-use App\Models\ContinuousFeedback;
 use App\Models\PerformanceReview;
-use App\Models\PerformanceCriteria;
-use App\Models\ActivityLog;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class FeedbackController extends BaseController
@@ -31,7 +30,7 @@ class FeedbackController extends BaseController
         ]);
 
         $addedProviders = [];
-        
+
         foreach ($validated['providers'] as $providerData) {
             // Zaten eklenmişse atla
             if (FeedbackProvider::where('performance_review_id', $review->id)
@@ -70,7 +69,7 @@ class FeedbackController extends BaseController
             ->whereIn('status', [FeedbackProvider::STATUS_PENDING, FeedbackProvider::STATUS_IN_PROGRESS])
             ->with([
                 'review.user:id,name',
-                'review.period:id,name'
+                'review.period:id,name',
             ])
             ->get();
 
@@ -86,7 +85,7 @@ class FeedbackController extends BaseController
             ->with([
                 'review.user:id,name',
                 'review.period.criteria',
-                'responses'
+                'responses',
             ])
             ->findOrFail($providerId);
 
@@ -141,7 +140,8 @@ class FeedbackController extends BaseController
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->error('Geri bildirim gönderilemedi: ' . $e->getMessage(), 500);
+
+            return $this->error('Geri bildirim gönderilemedi: '.$e->getMessage(), 500);
         }
     }
 
@@ -171,7 +171,7 @@ class FeedbackController extends BaseController
     {
         $review = PerformanceReview::where('company_id', $this->getCompanyId())
             ->with([
-                'feedbackProviders' => fn($q) => $q->where('status', FeedbackProvider::STATUS_SUBMITTED),
+                'feedbackProviders' => fn ($q) => $q->where('status', FeedbackProvider::STATUS_SUBMITTED),
                 'feedbackProviders.responses.criteria',
             ])
             ->findOrFail($reviewId);
@@ -223,6 +223,7 @@ class FeedbackController extends BaseController
         }
 
         $scores = array_filter(array_column($group, 'average_score'));
+
         return empty($scores) ? null : array_sum($scores) / count($scores);
     }
 
@@ -232,11 +233,11 @@ class FeedbackController extends BaseController
 
         $selfScore = $providers->where('relationship', 'self')->first()?->getAverageScore();
         $managerScore = $providers->where('relationship', 'manager')->first()?->getAverageScore();
-        
-        $peerScores = $providers->where('relationship', 'peer')->map(fn($p) => $p->getAverageScore())->filter();
+
+        $peerScores = $providers->where('relationship', 'peer')->map(fn ($p) => $p->getAverageScore())->filter();
         $peerScore = $peerScores->isNotEmpty() ? $peerScores->avg() : null;
-        
-        $reportScores = $providers->where('relationship', 'direct_report')->map(fn($p) => $p->getAverageScore())->filter();
+
+        $reportScores = $providers->where('relationship', 'direct_report')->map(fn ($p) => $p->getAverageScore())->filter();
         $reportScore = $reportScores->isNotEmpty() ? $reportScores->avg() : null;
 
         // Ağırlıklı ortalama (varsayılan ağırlıklar)
@@ -355,5 +356,3 @@ class FeedbackController extends BaseController
         ], 'Geri bildirim tipleri');
     }
 }
-
-

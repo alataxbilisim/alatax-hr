@@ -2,26 +2,28 @@
 
 namespace Tests\Feature\Api;
 
-use Tests\TestCase;
-use App\Models\User;
 use App\Models\Company;
 use App\Models\Survey;
 use App\Models\SurveyQuestion;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
+use Tests\TestCase;
 
 class SurveyTest extends TestCase
 {
     use RefreshDatabase;
 
     private User $adminUser;
+
     private User $portalUser;
+
     private Company $company;
 
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $this->company = Company::factory()->create(['is_active' => true]);
         $this->adminUser = User::factory()->create([
             'company_id' => $this->company->id,
@@ -219,4 +221,3 @@ class SurveyTest extends TestCase
         ]);
     }
 }
-

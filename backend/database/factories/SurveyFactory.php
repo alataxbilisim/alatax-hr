@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\Survey;
 use App\Models\Company;
+use App\Models\Survey;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class SurveyFactory extends Factory
@@ -41,4 +41,3 @@ class SurveyFactory extends Factory
         ]);
     }
 }
-

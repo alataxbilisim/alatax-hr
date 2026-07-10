@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Payslip extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany, HasAuditColumns;
+    use BelongsToCompany, HasAuditColumns, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -86,10 +86,10 @@ class Payslip extends Model
         $months = [
             1 => 'Ocak', 2 => 'Şubat', 3 => 'Mart', 4 => 'Nisan',
             5 => 'Mayıs', 6 => 'Haziran', 7 => 'Temmuz', 8 => 'Ağustos',
-            9 => 'Eylül', 10 => 'Ekim', 11 => 'Kasım', 12 => 'Aralık'
+            9 => 'Eylül', 10 => 'Ekim', 11 => 'Kasım', 12 => 'Aralık',
         ];
-        
-        return ($months[$this->month] ?? '') . ' ' . $this->year;
+
+        return ($months[$this->month] ?? '').' '.$this->year;
     }
 
     /**
@@ -113,7 +113,7 @@ class Payslip extends Model
      */
     public function markAsViewed(): void
     {
-        if (!$this->is_viewed) {
+        if (! $this->is_viewed) {
             $this->update([
                 'is_viewed' => true,
                 'viewed_at' => now(),
@@ -133,4 +133,3 @@ class Payslip extends Model
         ]);
     }
 }
-

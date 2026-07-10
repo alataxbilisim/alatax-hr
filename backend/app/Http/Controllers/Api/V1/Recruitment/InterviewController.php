@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Api\V1\Recruitment;
 
 use App\Http\Controllers\Api\V1\BaseController;
+use App\Models\ActivityLog;
 use App\Models\Interview;
 use App\Models\JobApplication;
-use App\Models\ActivityLog;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class InterviewController extends BaseController
 {
@@ -30,7 +30,7 @@ class InterviewController extends BaseController
             $query->where('scheduled_at', '>=', $request->start_date);
         }
         if ($request->filled('end_date')) {
-            $query->where('scheduled_at', '<=', $request->end_date . ' 23:59:59');
+            $query->where('scheduled_at', '<=', $request->end_date.' 23:59:59');
         }
 
         // Pozisyon filtresi
@@ -71,7 +71,7 @@ class InterviewController extends BaseController
 
         $interviews = Interview::with(['application', 'application.position', 'interviewer:id,name'])
             ->where('company_id', $this->getCompanyId())
-            ->whereBetween('scheduled_at', [$startDate, $endDate . ' 23:59:59'])
+            ->whereBetween('scheduled_at', [$startDate, $endDate.' 23:59:59'])
             ->get()
             ->map(function ($interview) {
                 return [
@@ -79,8 +79,8 @@ class InterviewController extends BaseController
                     'title' => $interview->title,
                     'start' => $interview->scheduled_at->toIso8601String(),
                     'end' => $interview->scheduled_at->addMinutes($interview->duration_minutes)->toIso8601String(),
-                    'applicant_name' => $interview->application 
-                        ? $interview->application->first_name . ' ' . $interview->application->last_name 
+                    'applicant_name' => $interview->application
+                        ? $interview->application->first_name.' '.$interview->application->last_name
                         : 'Bilinmiyor',
                     'position' => $interview->application?->position?->title,
                     'type' => $interview->type,
@@ -103,7 +103,7 @@ class InterviewController extends BaseController
             'application.position',
             'application.statusLogs.user',
             'interviewer:id,name,email',
-            'scorecards'
+            'scorecards',
         ])
             ->where('company_id', $this->getCompanyId())
             ->findOrFail($id);
@@ -152,7 +152,7 @@ class InterviewController extends BaseController
             $application->update(['status' => 'interview_scheduled']);
         }
 
-        ActivityLog::log('create', $interview, 'Mülakat planlandı: ' . $interview->title);
+        ActivityLog::log('create', $interview, 'Mülakat planlandı: '.$interview->title);
 
         return $this->created($this->formatInterview($interview->load(['application.position', 'interviewer'])), 'Mülakat başarıyla oluşturuldu');
     }
@@ -178,7 +178,7 @@ class InterviewController extends BaseController
 
         $interview->update($validated);
 
-        ActivityLog::log('update', $interview, 'Mülakat güncellendi: ' . $interview->title);
+        ActivityLog::log('update', $interview, 'Mülakat güncellendi: '.$interview->title);
 
         return $this->success($this->formatInterview($interview->load(['application.position', 'interviewer'])), 'Mülakat güncellendi');
     }
@@ -209,7 +209,7 @@ class InterviewController extends BaseController
         ]);
 
         // Scorecard kaydet
-        if (!empty($validated['scorecards'])) {
+        if (! empty($validated['scorecards'])) {
             foreach ($validated['scorecards'] as $scorecard) {
                 $interview->scorecards()->create($scorecard);
             }
@@ -218,7 +218,7 @@ class InterviewController extends BaseController
         // Başvuru durumunu güncelle
         $interview->application->update(['status' => 'interviewed']);
 
-        ActivityLog::log('update', $interview, 'Mülakat tamamlandı: ' . $interview->title . ' - Öneri: ' . $validated['recommendation']);
+        ActivityLog::log('update', $interview, 'Mülakat tamamlandı: '.$interview->title.' - Öneri: '.$validated['recommendation']);
 
         return $this->success($this->formatInterview($interview->load(['application.position', 'interviewer', 'scorecards'])), 'Mülakat tamamlandı');
     }
@@ -240,7 +240,7 @@ class InterviewController extends BaseController
             'notes' => $validated['notes'] ?? $interview->notes,
         ]);
 
-        ActivityLog::log('update', $interview, 'Mülakat iptal edildi: ' . $interview->title);
+        ActivityLog::log('update', $interview, 'Mülakat iptal edildi: '.$interview->title);
 
         return $this->success(null, 'Mülakat iptal edildi');
     }
@@ -256,7 +256,7 @@ class InterviewController extends BaseController
         $title = $interview->title;
         $interview->delete();
 
-        ActivityLog::log('delete', null, 'Mülakat silindi: ' . $title);
+        ActivityLog::log('delete', null, 'Mülakat silindi: '.$title);
 
         return $this->success(null, 'Mülakat silindi');
     }
@@ -287,14 +287,14 @@ class InterviewController extends BaseController
             'status' => $interview->status,
             'overall_rating' => $interview->overall_rating,
             'recommendation' => $interview->recommendation,
-            'recommendation_label' => $interview->recommendation 
+            'recommendation_label' => $interview->recommendation
                 ? (Interview::getRecommendationLabels()[$interview->recommendation] ?? $interview->recommendation)
                 : null,
             'notes' => $interview->notes,
             'feedback' => $interview->feedback,
             'application' => $interview->application ? [
                 'id' => $interview->application->id,
-                'applicant_name' => $interview->application->first_name . ' ' . $interview->application->last_name,
+                'applicant_name' => $interview->application->first_name.' '.$interview->application->last_name,
                 'email' => $interview->application->email,
                 'phone' => $interview->application->phone,
                 'position' => $interview->application->position ? [
@@ -310,7 +310,7 @@ class InterviewController extends BaseController
         ];
 
         if ($detailed && $interview->relationLoaded('scorecards')) {
-            $data['scorecards'] = $interview->scorecards->map(fn($s) => [
+            $data['scorecards'] = $interview->scorecards->map(fn ($s) => [
                 'id' => $s->id,
                 'criteria_name' => $s->criteria_name,
                 'score' => $s->score,
@@ -321,4 +321,3 @@ class InterviewController extends BaseController
         return $data;
     }
 }
-

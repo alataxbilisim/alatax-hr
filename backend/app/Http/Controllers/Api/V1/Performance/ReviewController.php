@@ -3,10 +3,9 @@
 namespace App\Http\Controllers\Api\V1\Performance;
 
 use App\Http\Controllers\Api\V1\BaseController;
+use App\Models\ActivityLog;
 use App\Models\PerformanceReview;
 use App\Models\PerformanceScore;
-use App\Models\PerformanceCriteria;
-use App\Models\ActivityLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -115,7 +114,7 @@ class ReviewController extends BaseController
         ]);
 
         // Puanları kaydet
-        if (!empty($validated['scores'])) {
+        if (! empty($validated['scores'])) {
             foreach ($validated['scores'] as $scoreData) {
                 PerformanceScore::updateOrCreate(
                     [
@@ -147,13 +146,13 @@ class ReviewController extends BaseController
     public function destroy(int $id): JsonResponse
     {
         $review = PerformanceReview::where('company_id', $this->getCompanyId())->findOrFail($id);
-        
+
         if ($review->status === 'approved') {
             return $this->error('Onaylanmış değerlendirme silinemez.', 422);
         }
 
         ActivityLog::log('delete', null, 'Performans değerlendirmesi silindi');
-        
+
         $review->delete();
 
         return $this->success(null, 'Değerlendirme silindi');
@@ -228,4 +227,3 @@ class ReviewController extends BaseController
         return $this->success($review, 'Değerlendirme reddedildi');
     }
 }
-

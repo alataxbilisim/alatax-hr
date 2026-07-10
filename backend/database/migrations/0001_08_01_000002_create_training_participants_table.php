@@ -23,7 +23,7 @@ return new class extends Migration
             $table->timestamp('registered_at')->nullable();
             $table->timestamp('completed_at')->nullable();
             $table->timestamps();
-            
+
             $table->unique(['session_id', 'user_id']);
         });
     }
@@ -36,4 +36,3 @@ return new class extends Migration
         Schema::dropIfExists('training_participants');
     }
 };
-

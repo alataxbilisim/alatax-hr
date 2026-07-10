@@ -4,9 +4,8 @@ namespace App\Http\Controllers\Api\V1\Portal;
 
 use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\Survey;
-use App\Models\SurveySubmission;
-use App\Models\SurveyQuestion;
 use App\Models\SurveyResponse;
+use App\Models\SurveySubmission;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -87,11 +86,11 @@ class PortalSurveyController extends BaseController
             }])
             ->first();
 
-        if (!$survey) {
+        if (! $survey) {
             return $this->error('Anket bulunamadı', null, 404);
         }
 
-        if (!$survey->isOpen()) {
+        if (! $survey->isOpen()) {
             return $this->error('Anket henüz başlamadı veya sona erdi', null, 422);
         }
 
@@ -162,7 +161,7 @@ class PortalSurveyController extends BaseController
             ->where('is_active', true)
             ->first();
 
-        if (!$survey || !$survey->isOpen()) {
+        if (! $survey || ! $survey->isOpen()) {
             return $this->error('Anket bulunamadı veya açık değil', null, 404);
         }
 
@@ -175,6 +174,7 @@ class PortalSurveyController extends BaseController
             if ($submission->status === 'completed') {
                 return $this->error('Anket zaten tamamlanmış', null, 422);
             }
+
             // Devam eden submission varsa onu döndür
             return $this->success($submission->load('responses.question'), 'Devam eden anket');
         }
@@ -220,7 +220,7 @@ class PortalSurveyController extends BaseController
             ->where('status', '!=', 'completed')
             ->first();
 
-        if (!$submission) {
+        if (! $submission) {
             return $this->error('Yanıt bulunamadı veya gönderilemez', null, 404);
         }
 
@@ -228,7 +228,7 @@ class PortalSurveyController extends BaseController
             ->with('questions')
             ->first();
 
-        if (!$survey || !$survey->isOpen()) {
+        if (! $survey || ! $survey->isOpen()) {
             return $this->error('Anket bulunamadı veya açık değil', null, 404);
         }
 
@@ -239,11 +239,11 @@ class PortalSurveyController extends BaseController
         $missingQuestions = $requiredQuestions->diff($answeredQuestionIds);
         if ($missingQuestions->isNotEmpty()) {
             return $this->error('Zorunlu soruları yanıtlamanız gerekiyor', [
-                'missing_questions' => $missingQuestions->toArray()
+                'missing_questions' => $missingQuestions->toArray(),
             ], 422);
         }
 
-        return DB::transaction(function () use ($validated, $submission, $survey) {
+        return DB::transaction(function () use ($validated, $submission) {
             // Mevcut yanıtları sil
             SurveyResponse::where('survey_submission_id', $submission->id)->delete();
 
@@ -290,4 +290,3 @@ class PortalSurveyController extends BaseController
         return $this->paginated($submissions, 'Tamamlanan anketler listelendi');
     }
 }
-

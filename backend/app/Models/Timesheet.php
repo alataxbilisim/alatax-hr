@@ -41,8 +41,11 @@ class Timesheet extends Model
     ];
 
     const STATUS_DRAFT = 'draft';
+
     const STATUS_SUBMITTED = 'submitted';
+
     const STATUS_APPROVED = 'approved';
+
     const STATUS_REJECTED = 'rejected';
 
     public function company(): BelongsTo
@@ -88,4 +91,3 @@ class Timesheet extends Model
         $this->leave_days = $records->where('status', AttendanceRecord::STATUS_LEAVE)->count();
     }
 }
-

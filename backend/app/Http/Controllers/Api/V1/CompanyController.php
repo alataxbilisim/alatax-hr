@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Models\ActivityLog;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Facades\Image;
 
@@ -17,7 +17,7 @@ class CompanyController extends BaseController
     {
         $company = auth()->user()->company;
 
-        if (!$company) {
+        if (! $company) {
             return $this->notFound('Firma bulunamadı');
         }
 
@@ -38,7 +38,7 @@ class CompanyController extends BaseController
             'country' => $company->country,
             'sector' => $company->sector,
             'employee_count' => $company->employee_count,
-            'logo' => $company->logo ? asset('storage/' . $company->logo) : null,
+            'logo' => $company->logo ? asset('storage/'.$company->logo) : null,
             'logo_path' => $company->logo,
             'settings' => $company->settings ?? [],
             'package_type' => $company->package_type,
@@ -64,7 +64,7 @@ class CompanyController extends BaseController
     {
         $company = auth()->user()->company;
 
-        if (!$company) {
+        if (! $company) {
             return $this->notFound('Firma bulunamadı');
         }
 
@@ -115,7 +115,7 @@ class CompanyController extends BaseController
     {
         $company = auth()->user()->company;
 
-        if (!$company) {
+        if (! $company) {
             return $this->notFound('Firma bulunamadı');
         }
 
@@ -131,19 +131,19 @@ class CompanyController extends BaseController
 
             // Yeni logo yükle
             $file = $request->file('logo');
-            $filename = 'companies/logos/' . $company->id . '_' . time() . '.' . $file->getClientOriginalExtension();
-            
+            $filename = 'companies/logos/'.$company->id.'_'.time().'.'.$file->getClientOriginalExtension();
+
             // Resmi optimize et ve kaydet
             $image = Image::make($file);
-            
+
             // Maksimum boyut: 800x800
             $image->resize(800, 800, function ($constraint) {
                 $constraint->aspectRatio();
                 $constraint->upsize();
             });
-            
+
             // Kalite ayarı
-            $image->save(storage_path('app/public/' . $filename), 85);
+            $image->save(storage_path('app/public/'.$filename), 85);
 
             $oldValues = $company->toArray();
             $company->update(['logo' => $filename]);
@@ -157,11 +157,11 @@ class CompanyController extends BaseController
             );
 
             return $this->success([
-                'logo' => asset('storage/' . $filename),
+                'logo' => asset('storage/'.$filename),
                 'logo_path' => $filename,
             ], 'Logo başarıyla yüklendi');
         } catch (\Exception $e) {
-            return $this->serverError('Logo yüklenirken bir hata oluştu: ' . $e->getMessage());
+            return $this->serverError('Logo yüklenirken bir hata oluştu: '.$e->getMessage());
         }
     }
 
@@ -172,11 +172,11 @@ class CompanyController extends BaseController
     {
         $company = auth()->user()->company;
 
-        if (!$company) {
+        if (! $company) {
             return $this->notFound('Firma bulunamadı');
         }
 
-        if (!$company->logo) {
+        if (! $company->logo) {
             return $this->error('Logo bulunamadı', 404);
         }
 
@@ -199,7 +199,7 @@ class CompanyController extends BaseController
 
             return $this->success(null, 'Logo başarıyla silindi');
         } catch (\Exception $e) {
-            return $this->serverError('Logo silinirken bir hata oluştu: ' . $e->getMessage());
+            return $this->serverError('Logo silinirken bir hata oluştu: '.$e->getMessage());
         }
     }
 
@@ -210,7 +210,7 @@ class CompanyController extends BaseController
     {
         $company = auth()->user()->company;
 
-        if (!$company) {
+        if (! $company) {
             return $this->notFound('Firma bulunamadı');
         }
 

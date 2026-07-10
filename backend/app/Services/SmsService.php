@@ -8,24 +8,25 @@ use Illuminate\Support\Facades\Log;
 class SmsService
 {
     protected $provider;
+
     protected $config;
 
     public function __construct()
     {
         $company = auth()->user()?->company;
-        
+
         if ($company) {
             $smsSettings = $company->settings['sms'] ?? null;
             if ($smsSettings) {
                 $this->provider = $smsSettings['provider'] ?? 'netgsm';
                 $this->config = $smsSettings;
-                
+
                 // Şifreyi decrypt et
                 if (isset($this->config['password'])) {
                     try {
                         $this->config['password'] = decrypt($this->config['password']);
                     } catch (\Exception $e) {
-                        Log::error('SMS password decrypt failed: ' . $e->getMessage());
+                        Log::error('SMS password decrypt failed: '.$e->getMessage());
                     }
                 }
             }
@@ -39,7 +40,7 @@ class SmsService
     {
         $provider = $provider ?? $this->provider ?? 'netgsm';
 
-        if (!$this->config) {
+        if (! $this->config) {
             throw new \Exception('SMS ayarları yapılandırılmamış');
         }
 
@@ -64,11 +65,11 @@ class SmsService
         // Telefon numarasını temizle (0 ile başlıyorsa kaldır, +90 ekle)
         $phone = $this->cleanPhoneNumber($phone);
         if (strpos($phone, '90') !== 0) {
-            $phone = '90' . ltrim($phone, '0');
+            $phone = '90'.ltrim($phone, '0');
         }
 
         $url = 'https://api.netgsm.com.tr/sms/send/get';
-        
+
         $params = [
             'usercode' => $username,
             'password' => $password,
@@ -90,11 +91,11 @@ class SmsService
                     'response' => $body,
                 ];
             } else {
-                throw new \Exception('NetGSM hatası: ' . $body);
+                throw new \Exception('NetGSM hatası: '.$body);
             }
         } catch (\Exception $e) {
-            Log::error('NetGSM SMS gönderim hatası: ' . $e->getMessage());
-            throw new \Exception('SMS gönderilemedi: ' . $e->getMessage());
+            Log::error('NetGSM SMS gönderim hatası: '.$e->getMessage());
+            throw new \Exception('SMS gönderilemedi: '.$e->getMessage());
         }
     }
 
@@ -109,11 +110,11 @@ class SmsService
 
         $phone = $this->cleanPhoneNumber($phone);
         if (strpos($phone, '90') !== 0) {
-            $phone = '90' . ltrim($phone, '0');
+            $phone = '90'.ltrim($phone, '0');
         }
 
         $url = 'https://api.iletimerkezi.com/v1/send/sms';
-        
+
         $data = [
             'request' => [
                 'authentication' => [
@@ -148,11 +149,11 @@ class SmsService
                 ];
             } else {
                 $errorMsg = $result['response']['status']['message'] ?? 'Bilinmeyen hata';
-                throw new \Exception('İleti Merkezi hatası: ' . $errorMsg);
+                throw new \Exception('İleti Merkezi hatası: '.$errorMsg);
             }
         } catch (\Exception $e) {
-            Log::error('İleti Merkezi SMS gönderim hatası: ' . $e->getMessage());
-            throw new \Exception('SMS gönderilemedi: ' . $e->getMessage());
+            Log::error('İleti Merkezi SMS gönderim hatası: '.$e->getMessage());
+            throw new \Exception('SMS gönderilemedi: '.$e->getMessage());
         }
     }
 
@@ -167,7 +168,7 @@ class SmsService
 
         $phone = $this->cleanPhoneNumber($phone);
         if (strpos($phone, '+') !== 0) {
-            $phone = '+' . $phone;
+            $phone = '+'.$phone;
         }
 
         $url = "https://api.twilio.com/2010-04-01/Accounts/{$accountSid}/Messages.json";
@@ -193,11 +194,11 @@ class SmsService
                 ];
             } else {
                 $errorMsg = $result['message'] ?? 'Bilinmeyen hata';
-                throw new \Exception('Twilio hatası: ' . $errorMsg);
+                throw new \Exception('Twilio hatası: '.$errorMsg);
             }
         } catch (\Exception $e) {
-            Log::error('Twilio SMS gönderim hatası: ' . $e->getMessage());
-            throw new \Exception('SMS gönderilemedi: ' . $e->getMessage());
+            Log::error('Twilio SMS gönderim hatası: '.$e->getMessage());
+            throw new \Exception('SMS gönderilemedi: '.$e->getMessage());
         }
     }
 
@@ -207,7 +208,7 @@ class SmsService
     protected function sendViaCustom(string $phone, string $message): array
     {
         $apiUrl = $this->config['api_url'] ?? '';
-        
+
         if (empty($apiUrl)) {
             throw new \Exception('Custom API URL yapılandırılmamış');
         }
@@ -218,7 +219,7 @@ class SmsService
             $response = Http::timeout(10)
                 ->withHeaders([
                     'Content-Type' => 'application/json',
-                    'Authorization' => 'Bearer ' . ($this->config['password'] ?? ''),
+                    'Authorization' => 'Bearer '.($this->config['password'] ?? ''),
                 ])
                 ->post($apiUrl, [
                     'phone' => $phone,
@@ -234,11 +235,11 @@ class SmsService
                     'response' => $response->json(),
                 ];
             } else {
-                throw new \Exception('Custom API hatası: ' . $response->body());
+                throw new \Exception('Custom API hatası: '.$response->body());
             }
         } catch (\Exception $e) {
-            Log::error('Custom SMS gönderim hatası: ' . $e->getMessage());
-            throw new \Exception('SMS gönderilemedi: ' . $e->getMessage());
+            Log::error('Custom SMS gönderim hatası: '.$e->getMessage());
+            throw new \Exception('SMS gönderilemedi: '.$e->getMessage());
         }
     }
 
@@ -249,11 +250,10 @@ class SmsService
     {
         // Boşluk, tire, parantez gibi karakterleri temizle
         $phone = preg_replace('/[^0-9+]/', '', $phone);
-        
+
         // + işaretini kaldır
         $phone = ltrim($phone, '+');
-        
+
         return $phone;
     }
 }
-

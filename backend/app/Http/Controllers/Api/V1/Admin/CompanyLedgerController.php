@@ -6,8 +6,8 @@ use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\ActivityLog;
 use App\Models\Company;
 use App\Models\CompanyLedger;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class CompanyLedgerController extends BaseController
 {
@@ -21,8 +21,8 @@ class CompanyLedgerController extends BaseController
         // Tarih filtresi
         if ($request->has('start_date') && $request->has('end_date')) {
             $query->whereBetween('created_at', [
-                $request->start_date . ' 00:00:00',
-                $request->end_date . ' 23:59:59'
+                $request->start_date.' 00:00:00',
+                $request->end_date.' 23:59:59',
             ]);
         }
 
@@ -88,7 +88,7 @@ class CompanyLedgerController extends BaseController
 
         $company->refresh();
 
-        ActivityLog::log('create', $transaction, 'Borç kaydı eklendi: ' . $company->name . ' - ' . number_format($validated['amount'], 2) . ' TL');
+        ActivityLog::log('create', $transaction, 'Borç kaydı eklendi: '.$company->name.' - '.number_format($validated['amount'], 2).' TL');
 
         return $this->success([
             'transaction' => $transaction,
@@ -127,7 +127,7 @@ class CompanyLedgerController extends BaseController
 
         $company->refresh();
 
-        ActivityLog::log('create', $transaction, 'Ödeme kaydı eklendi: ' . $company->name . ' - ' . number_format($validated['amount'], 2) . ' TL');
+        ActivityLog::log('create', $transaction, 'Ödeme kaydı eklendi: '.$company->name.' - '.number_format($validated['amount'], 2).' TL');
 
         return $this->success([
             'transaction' => $transaction,
@@ -186,4 +186,3 @@ class CompanyLedgerController extends BaseController
         return $this->success($transaction, 'İşlem detayı');
     }
 }
-

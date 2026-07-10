@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Api\V1\Assets;
 
 use App\Http\Controllers\Api\V1\BaseController;
+use App\Models\ActivityLog;
 use App\Models\Asset;
 use App\Models\AssetMaintenance;
-use App\Models\ActivityLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -67,7 +67,7 @@ class MaintenanceController extends BaseController
             'created_by' => auth()->id(),
         ]);
 
-        ActivityLog::log('create', $maintenance, 'Bakım kaydı oluşturuldu: ' . $maintenance->title);
+        ActivityLog::log('create', $maintenance, 'Bakım kaydı oluşturuldu: '.$maintenance->title);
 
         return $this->success($maintenance->load('asset'), 'Bakım kaydı oluşturuldu', 201);
     }
@@ -110,7 +110,7 @@ class MaintenanceController extends BaseController
         $oldValues = $maintenance->getOriginal();
         $maintenance->update($validated);
 
-        ActivityLog::log('update', $maintenance, 'Bakım kaydı güncellendi: ' . $maintenance->title, $oldValues, $maintenance->fresh()->toArray());
+        ActivityLog::log('update', $maintenance, 'Bakım kaydı güncellendi: '.$maintenance->title, $oldValues, $maintenance->fresh()->toArray());
 
         return $this->success($maintenance, 'Bakım kaydı güncellendi');
     }
@@ -125,8 +125,8 @@ class MaintenanceController extends BaseController
         })->findOrFail($id);
 
         $maintenanceTitle = $maintenance->title;
-        ActivityLog::log('delete', null, 'Bakım kaydı silindi: ' . $maintenanceTitle);
-        
+        ActivityLog::log('delete', null, 'Bakım kaydı silindi: '.$maintenanceTitle);
+
         $maintenance->delete();
 
         return $this->success(null, 'Bakım kaydı silindi');
@@ -158,9 +158,8 @@ class MaintenanceController extends BaseController
             $maintenance->asset->update(['status' => 'available']);
         }
 
-        ActivityLog::log('update', $maintenance, 'Bakım tamamlandı: ' . $maintenance->title);
+        ActivityLog::log('update', $maintenance, 'Bakım tamamlandı: '.$maintenance->title);
 
         return $this->success($maintenance, 'Bakım tamamlandı');
     }
 }
-

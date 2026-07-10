@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Models\ActivityLog;
 use App\Models\ApiKey;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class ApiKeyController extends BaseController
@@ -47,7 +47,7 @@ class ApiKeyController extends BaseController
             ->with('creator:id,name,email')
             ->find($id);
 
-        if (!$apiKey) {
+        if (! $apiKey) {
             return $this->notFound('API anahtarı bulunamadı');
         }
 
@@ -70,7 +70,7 @@ class ApiKeyController extends BaseController
         $apiKey = ApiKey::create([
             'company_id' => $this->getCompanyId(),
             'name' => $validated['name'],
-            'key' => 'ak_' . Str::random(60),
+            'key' => 'ak_'.Str::random(60),
             'description' => $validated['description'] ?? null,
             'permissions' => $validated['permissions'] ?? null,
             'expires_at' => $validated['expires_at'] ?? null,
@@ -94,7 +94,7 @@ class ApiKeyController extends BaseController
     {
         $apiKey = ApiKey::where('company_id', $this->getCompanyId())->find($id);
 
-        if (!$apiKey) {
+        if (! $apiKey) {
             return $this->notFound('API anahtarı bulunamadı');
         }
 
@@ -121,7 +121,7 @@ class ApiKeyController extends BaseController
     {
         $apiKey = ApiKey::where('company_id', $this->getCompanyId())->find($id);
 
-        if (!$apiKey) {
+        if (! $apiKey) {
             return $this->notFound('API anahtarı bulunamadı');
         }
 
@@ -141,12 +141,12 @@ class ApiKeyController extends BaseController
     {
         $apiKey = ApiKey::where('company_id', $this->getCompanyId())->find($id);
 
-        if (!$apiKey) {
+        if (! $apiKey) {
             return $this->notFound('API anahtarı bulunamadı');
         }
 
         $oldKey = $apiKey->key;
-        $apiKey->update(['key' => 'ak_' . Str::random(60)]);
+        $apiKey->update(['key' => 'ak_'.Str::random(60)]);
 
         ActivityLog::log('update', $apiKey, "API anahtarı yeniden oluşturuldu: {$apiKey->name}");
 
@@ -156,4 +156,3 @@ class ApiKeyController extends BaseController
         return $this->success($response, 'API anahtarı yeniden oluşturuldu');
     }
 }
-

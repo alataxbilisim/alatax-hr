@@ -34,4 +34,3 @@ class ExpenseCategory extends Model
         return $this->hasMany(ExpenseItem::class);
     }
 }
-

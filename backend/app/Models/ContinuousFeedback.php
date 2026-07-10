@@ -5,13 +5,13 @@ namespace App\Models;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ContinuousFeedback extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $table = 'continuous_feedbacks';
 
@@ -36,8 +36,11 @@ class ContinuousFeedback extends Model
     ];
 
     const TYPE_PRAISE = 'praise';
+
     const TYPE_SUGGESTION = 'suggestion';
+
     const TYPE_CONCERN = 'concern';
+
     const TYPE_COACHING = 'coaching';
 
     public static function getTypeLabels(): array
@@ -103,8 +106,7 @@ class ContinuousFeedback extends Model
         if ($this->is_anonymous) {
             return null;
         }
+
         return $this->fromUser?->name;
     }
 }
-
-

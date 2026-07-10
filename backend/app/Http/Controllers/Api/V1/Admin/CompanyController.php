@@ -3,16 +3,16 @@
 namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Api\V1\BaseController;
+use App\Models\ActivityLog;
 use App\Models\Company;
 use App\Models\CompanyLedger;
 use App\Models\LicensePackage;
-use App\Models\User;
 use App\Models\Module;
-use App\Models\ActivityLog;
-use Illuminate\Http\Request;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 
@@ -120,17 +120,17 @@ class CompanyController extends BaseController
         return DB::transaction(function () use ($validated) {
             // Firma oluştur
             $companyData = collect($validated)->except([
-                'admin_name', 'admin_email', 'admin_password', 'admin_phone'
+                'admin_name', 'admin_email', 'admin_password', 'admin_phone',
             ])->toArray();
-            
+
             // Slug oluştur
             if (empty($companyData['slug'])) {
                 $companyData['slug'] = Str::slug($validated['name']);
             }
-            
+
             // License package varsa limitleri al
             $package = null;
-            if (!empty($validated['license_package_id'])) {
+            if (! empty($validated['license_package_id'])) {
                 $package = LicensePackage::find($validated['license_package_id']);
                 if ($package) {
                     $companyData['user_limit'] = $package->user_limit ?? $validated['user_limit'] ?? 5;
@@ -146,31 +146,31 @@ class CompanyController extends BaseController
                 $companyData['location_limit'] = 1;
                 $companyData['storage_limit'] = 10 * 1073741824; // 10 GB to bytes
             }
-            
+
             $company = Company::create($companyData);
-            
+
             // Core modülleri önce aktifle
             $coreModules = Module::where('is_core', true)->pluck('id')->toArray();
             $syncData = [];
             $activatedDate = now()->toDateString(); // date tipinde alan için
-            
+
             foreach ($coreModules as $moduleId) {
                 $syncData[$moduleId] = [
                     'is_active' => true,
                     'activated_at' => $activatedDate,
                 ];
             }
-            
+
             // License package varsa modülleri ekle (core modüller hariç)
             if ($package) {
                 $packageModules = $package->modules()
                     ->wherePivot('is_included', true)
                     ->pluck('id')
                     ->toArray();
-                
+
                 foreach ($packageModules as $moduleId) {
                     // Core modül değilse ekle
-                    if (!in_array($moduleId, $coreModules)) {
+                    if (! in_array($moduleId, $coreModules)) {
                         $syncData[$moduleId] = [
                             'is_active' => true,
                             'activated_at' => $activatedDate,
@@ -178,9 +178,9 @@ class CompanyController extends BaseController
                     }
                 }
             }
-            
+
             // Tüm modülleri sync et
-            if (!empty($syncData)) {
+            if (! empty($syncData)) {
                 $company->modules()->sync($syncData);
             }
 
@@ -202,8 +202,8 @@ class CompanyController extends BaseController
             );
             $admin->assignRole($role);
 
-            ActivityLog::log('create', $company, 'Firma oluşturuldu: ' . $company->name);
-            ActivityLog::log('create', $admin, 'Firma admin kullanıcısı oluşturuldu: ' . $admin->email);
+            ActivityLog::log('create', $company, 'Firma oluşturuldu: '.$company->name);
+            ActivityLog::log('create', $admin, 'Firma admin kullanıcısı oluşturuldu: '.$admin->email);
 
             return $this->created([
                 'company' => $company->load('modules'),
@@ -251,7 +251,7 @@ class CompanyController extends BaseController
         ]);
 
         $oldValues = $company->toArray();
-        
+
         // Eğer license_package_id değiştiyse, assignPackage() metodunu kullan (modülleri sync eder)
         // null değeri de değişiklik sayılır (paketi kaldırma)
         if (array_key_exists('license_package_id', $validated) && $validated['license_package_id'] != $company->license_package_id) {
@@ -289,7 +289,7 @@ class CompanyController extends BaseController
             $company->update($validated);
         }
 
-        ActivityLog::log('update', $company, 'Firma güncellendi: ' . $company->name, $oldValues, $company->fresh()->toArray());
+        ActivityLog::log('update', $company, 'Firma güncellendi: '.$company->name, $oldValues, $company->fresh()->toArray());
 
         return $this->success($company->fresh(), 'Firma güncellendi');
     }
@@ -307,7 +307,7 @@ class CompanyController extends BaseController
         $companyName = $company->name;
         $company->delete();
 
-        ActivityLog::log('delete', null, 'Firma silindi: ' . $companyName);
+        ActivityLog::log('delete', null, 'Firma silindi: '.$companyName);
 
         return $this->success(null, 'Firma silindi');
     }
@@ -387,8 +387,8 @@ class CompanyController extends BaseController
 
             // Cariye borç ekle
             if ($validated['add_to_ledger'] ?? true) {
-                $price = $validated['custom_price'] ?? ($durationMonths >= 12 
-                    ? $package->annual_price 
+                $price = $validated['custom_price'] ?? ($durationMonths >= 12
+                    ? $package->annual_price
                     : $package->base_price * $durationMonths);
 
                 CompanyLedger::addTransaction(
@@ -428,7 +428,7 @@ class CompanyController extends BaseController
             $company->extendLicense($validated['months']);
 
             // Cariye borç ekle
-            if (($validated['add_to_ledger'] ?? false) && !empty($validated['amount'])) {
+            if (($validated['add_to_ledger'] ?? false) && ! empty($validated['amount'])) {
                 CompanyLedger::addTransaction(
                     $company->id,
                     CompanyLedger::TYPE_DEBIT,
@@ -451,4 +451,3 @@ class CompanyController extends BaseController
         });
     }
 }
-

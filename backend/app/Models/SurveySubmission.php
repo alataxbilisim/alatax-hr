@@ -28,7 +28,9 @@ class SurveySubmission extends Model
     ];
 
     const STATUS_STARTED = 'started';
+
     const STATUS_COMPLETED = 'completed';
+
     const STATUS_ABANDONED = 'abandoned';
 
     // Relationships
@@ -59,11 +61,9 @@ class SurveySubmission extends Model
     public function getNpsScore(): ?int
     {
         $npsResponse = $this->responses()
-            ->whereHas('question', fn($q) => $q->where('question_type', 'nps'))
+            ->whereHas('question', fn ($q) => $q->where('question_type', 'nps'))
             ->first();
-        
+
         return $npsResponse?->answer_numeric;
     }
 }
-
-

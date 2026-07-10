@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PositionCompetency extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
         'company_id',
@@ -43,5 +43,3 @@ class PositionCompetency extends Model
         return $query->where('is_required', true);
     }
 }
-
-

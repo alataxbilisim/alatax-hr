@@ -14,41 +14,41 @@ return new class extends Migration
         Schema::create('announcements', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
-            
+
             // İçerik
             $table->string('title');
             $table->text('content');
             $table->text('summary')->nullable(); // Kısa özet
-            
+
             // Tip
             $table->string('type')->default('general'); // general, urgent, important, info
             $table->string('category')->nullable(); // hr, it, management, social
-            
+
             // Hedef kitle
             $table->boolean('is_for_all')->default(true); // Tüm personele mi?
             $table->json('target_departments')->nullable(); // Belirli departmanlar
             $table->json('target_positions')->nullable(); // Belirli pozisyonlar
             $table->json('target_employees')->nullable(); // Belirli personeller
-            
+
             // Görsel
             $table->string('image_path')->nullable();
             $table->json('attachments')->nullable(); // Ekler
-            
+
             // Yayın durumu
             $table->boolean('is_published')->default(false);
             $table->timestamp('published_at')->nullable();
             $table->timestamp('expires_at')->nullable(); // Son geçerlilik tarihi
-            
+
             // Pin (öne çıkarma)
             $table->boolean('is_pinned')->default(false);
             $table->integer('pin_order')->default(0);
-            
+
             // Görüntülenme
             $table->integer('view_count')->default(0);
-            
+
             // Onay gerektiriyor mu?
             $table->boolean('requires_acknowledgment')->default(false);
-            
+
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
             $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
@@ -81,4 +81,3 @@ return new class extends Migration
         Schema::dropIfExists('announcements');
     }
 };
-

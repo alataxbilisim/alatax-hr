@@ -30,22 +30,22 @@ return new class extends Migration
             $table->string('employee_count')->nullable(); // Çalışan sayı aralığı
             $table->string('logo')->nullable(); // Logo dosya yolu
             $table->json('settings')->nullable(); // Firma ayarları (tema, dil vb.)
-            
+
             // Lisans bilgileri
             $table->enum('package_type', ['starter', 'professional', 'enterprise'])->default('starter');
             $table->integer('user_limit')->default(5); // Kullanıcı limiti
             $table->bigInteger('storage_limit')->default(1073741824); // Storage limiti (byte) - 1GB default
             $table->date('license_start_date')->nullable();
             $table->date('license_end_date')->nullable();
-            
+
             // Durum
             $table->enum('status', ['active', 'suspended', 'cancelled', 'trial'])->default('trial');
             $table->timestamp('trial_ends_at')->nullable();
-            
+
             // Audit
             $table->timestamps();
             $table->softDeletes();
-            
+
             // İndeksler
             $table->index('status');
             $table->index('package_type');
@@ -60,4 +60,3 @@ return new class extends Migration
         Schema::dropIfExists('companies');
     }
 };
-

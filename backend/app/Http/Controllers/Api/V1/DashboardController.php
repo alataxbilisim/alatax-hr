@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Models\User;
 use App\Models\Company;
-use App\Models\LeaveRequest;
-use App\Models\JobPosition;
 use App\Models\Document;
-use Illuminate\Http\Request;
+use App\Models\JobPosition;
+use App\Models\LeaveRequest;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class DashboardController extends BaseController
 {
@@ -18,16 +18,16 @@ class DashboardController extends BaseController
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        
+
         // SuperAdmin için özel response
         if ($user->isSuperAdmin()) {
             return $this->superAdminDashboard($user);
         }
-        
+
         // Company yoksa hata döndürme, boş dashboard göster
-        if (!$user->company) {
+        if (! $user->company) {
             return $this->success([
-                'welcome_message' => 'Hoş geldiniz, ' . $user->name,
+                'welcome_message' => 'Hoş geldiniz, '.$user->name,
                 'company' => null,
                 'stats' => [],
                 'modules' => [],
@@ -38,32 +38,32 @@ class DashboardController extends BaseController
 
         $company = $user->company;
         $activeModules = $company->activeModules()->pluck('slug')->toArray();
-        
+
         // Temel istatistikler
         $stats = [
             'total_users' => User::where('company_id', $company->id)->where('is_active', true)->count(),
             'active_modules' => count($activeModules),
         ];
-        
+
         // Modüle göre ek istatistikler
         if (in_array('leave-management', $activeModules)) {
             $stats['pending_leaves'] = LeaveRequest::where('company_id', $company->id)
                 ->where('status', 'pending')
                 ->count();
         }
-        
+
         if (in_array('job-applications', $activeModules)) {
             $stats['open_positions'] = JobPosition::where('company_id', $company->id)
                 ->where('status', 'published')
                 ->count();
         }
-        
+
         if (in_array('document-management', $activeModules)) {
             $stats['total_documents'] = Document::where('company_id', $company->id)->count();
         }
-        
+
         $data = [
-            'welcome_message' => 'Hoş geldiniz, ' . $user->name,
+            'welcome_message' => 'Hoş geldiniz, '.$user->name,
             'company' => [
                 'id' => $company->id,
                 'name' => $company->name,
@@ -80,14 +80,14 @@ class DashboardController extends BaseController
 
         return $this->success($data);
     }
-    
+
     /**
      * SuperAdmin dashboard
      */
     private function superAdminDashboard($user): JsonResponse
     {
         return $this->success([
-            'welcome_message' => 'Hoş geldiniz, ' . $user->name,
+            'welcome_message' => 'Hoş geldiniz, '.$user->name,
             'is_super_admin' => true,
             'company' => null,
             'stats' => [
@@ -160,4 +160,3 @@ class DashboardController extends BaseController
         return $actions;
     }
 }
-

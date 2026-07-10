@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AssetCategory extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
         'company_id',
@@ -49,4 +49,3 @@ class AssetCategory extends Model
         return $query->orderBy('sort_order')->orderBy('name');
     }
 }
-

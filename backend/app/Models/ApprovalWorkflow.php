@@ -6,13 +6,12 @@ use App\Traits\BelongsToCompany;
 use App\Traits\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ApprovalWorkflow extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany, HasAuditColumns;
+    use BelongsToCompany, HasAuditColumns, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -34,9 +33,13 @@ class ApprovalWorkflow extends Model
 
     // Desteklenen entity tipleri
     const ENTITY_LEAVE_REQUEST = 'leave_request';
+
     const ENTITY_ASSET_REQUEST = 'asset_request';
+
     const ENTITY_EXPENSE_REQUEST = 'expense_request';
+
     const ENTITY_TRAINING_REQUEST = 'training_request';
+
     const ENTITY_DOCUMENT_APPROVAL = 'document_approval';
 
     public static function getEntityTypes(): array
@@ -149,22 +152,34 @@ class ApprovalWorkflow extends Model
             switch ($operator) {
                 case '=':
                 case '==':
-                    if ($contextValue != $value) return false;
+                    if ($contextValue != $value) {
+                        return false;
+                    }
                     break;
                 case '>':
-                    if ($contextValue <= $value) return false;
+                    if ($contextValue <= $value) {
+                        return false;
+                    }
                     break;
                 case '>=':
-                    if ($contextValue < $value) return false;
+                    if ($contextValue < $value) {
+                        return false;
+                    }
                     break;
                 case '<':
-                    if ($contextValue >= $value) return false;
+                    if ($contextValue >= $value) {
+                        return false;
+                    }
                     break;
                 case '<=':
-                    if ($contextValue > $value) return false;
+                    if ($contextValue > $value) {
+                        return false;
+                    }
                     break;
                 case 'in':
-                    if (!in_array($contextValue, (array)$value)) return false;
+                    if (! in_array($contextValue, (array) $value)) {
+                        return false;
+                    }
                     break;
             }
         }
@@ -172,5 +187,3 @@ class ApprovalWorkflow extends Model
         return true;
     }
 }
-
-

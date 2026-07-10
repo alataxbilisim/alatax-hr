@@ -5,13 +5,13 @@ namespace App\Models;
 use App\Traits\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class KeyResult extends Model
 {
-    use HasFactory, SoftDeletes, HasAuditColumns;
+    use HasAuditColumns, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'objective_id',
@@ -40,15 +40,23 @@ class KeyResult extends Model
     ];
 
     const METRIC_NUMBER = 'number';
+
     const METRIC_PERCENTAGE = 'percentage';
+
     const METRIC_CURRENCY = 'currency';
+
     const METRIC_BOOLEAN = 'boolean';
+
     const METRIC_MILESTONE = 'milestone';
 
     const STATUS_NOT_STARTED = 'not_started';
+
     const STATUS_ON_TRACK = 'on_track';
+
     const STATUS_AT_RISK = 'at_risk';
+
     const STATUS_BEHIND = 'behind';
+
     const STATUS_COMPLETED = 'completed';
 
     public static function getMetricTypes(): array
@@ -144,10 +152,10 @@ class KeyResult extends Model
             $objective = $this->objective;
             $totalDays = $objective->start_date->diffInDays($this->due_date);
             $elapsedDays = $objective->start_date->diffInDays(now());
-            
+
             if ($totalDays > 0) {
                 $expectedProgress = ($elapsedDays / $totalDays) * 100;
-                
+
                 if ($this->progress >= $expectedProgress) {
                     return self::STATUS_ON_TRACK;
                 } elseif ($this->progress >= $expectedProgress * 0.7) {
@@ -161,5 +169,3 @@ class KeyResult extends Model
         return self::STATUS_ON_TRACK;
     }
 }
-
-

@@ -19,7 +19,7 @@ return new class extends Migration
             $table->boolean('is_included')->default(true); // Pakete dahil mi
             $table->decimal('additional_price', 10, 2)->default(0); // Ek ücret (hibrit model için)
             $table->timestamps();
-            
+
             // Unique constraint
             $table->unique(['license_package_id', 'module_id'], 'pkg_module_unique');
         });
@@ -33,4 +33,3 @@ return new class extends Migration
         Schema::dropIfExists('license_package_modules');
     }
 };
-

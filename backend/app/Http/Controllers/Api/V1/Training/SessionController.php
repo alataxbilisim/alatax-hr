@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Api\V1\Training;
 
 use App\Http\Controllers\Api\V1\BaseController;
+use App\Models\ActivityLog;
 use App\Models\Training;
 use App\Models\TrainingSession;
-use App\Models\ActivityLog;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -64,7 +64,7 @@ class SessionController extends BaseController
             'created_by' => auth()->id(),
         ]);
 
-        ActivityLog::log('create', $session, 'Eğitim oturumu oluşturuldu: ' . $training->title);
+        ActivityLog::log('create', $session, 'Eğitim oturumu oluşturuldu: '.$training->title);
 
         return $this->success($session->load('training'), 'Oturum oluşturuldu', 201);
     }
@@ -123,7 +123,7 @@ class SessionController extends BaseController
         }
 
         ActivityLog::log('delete', null, 'Eğitim oturumu silindi');
-        
+
         $session->delete();
 
         return $this->success(null, 'Oturum silindi');
@@ -148,7 +148,7 @@ class SessionController extends BaseController
         }
 
         // Kontenjan var mı?
-        if (!$session->hasAvailableSlots()) {
+        if (! $session->hasAvailableSlots()) {
             return $this->error('Bu oturumda boş yer yok.', 422);
         }
 
@@ -215,4 +215,3 @@ class SessionController extends BaseController
         return $this->success($session->load('participants'), 'Katılım durumları güncellendi');
     }
 }
-

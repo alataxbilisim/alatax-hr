@@ -3,10 +3,9 @@
 namespace App\Http\Controllers\Api\V1\Portal;
 
 use App\Http\Controllers\Api\V1\BaseController;
-use App\Models\Training;
-use App\Models\TrainingSession;
-use App\Models\TrainingParticipant;
 use App\Models\TrainingCertificate;
+use App\Models\TrainingParticipant;
+use App\Models\TrainingSession;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -24,7 +23,7 @@ class PortalTrainingController extends BaseController
                 'session.training' => function ($q) use ($user) {
                     $q->where('company_id', $user->company_id);
                 },
-                'certificate'
+                'certificate',
             ])
             ->whereHas('session.training', function ($q) use ($user) {
                 $q->where('company_id', $user->company_id);
@@ -54,7 +53,7 @@ class PortalTrainingController extends BaseController
         // Response'u formatla
         $data = $participants->getCollection()->map(function ($participant) {
             $training = $participant->session->training ?? null;
-            if (!$training) {
+            if (! $training) {
                 return null;
             }
 
@@ -102,14 +101,14 @@ class PortalTrainingController extends BaseController
                 'session.training' => function ($q) use ($user) {
                     $q->where('company_id', $user->company_id);
                 },
-                'certificate'
+                'certificate',
             ])
             ->whereHas('session.training', function ($q) use ($user) {
                 $q->where('company_id', $user->company_id);
             })
             ->first();
 
-        if (!$participant || !$participant->session->training) {
+        if (! $participant || ! $participant->session->training) {
             return $this->error('Eğitim bulunamadı', null, 404);
         }
 
@@ -166,9 +165,9 @@ class PortalTrainingController extends BaseController
             ->pluck('session_id');
 
         $query = TrainingSession::whereHas('training', function ($q) use ($user) {
-                $q->where('company_id', $user->company_id)
-                    ->where('is_active', true);
-            })
+            $q->where('company_id', $user->company_id)
+                ->where('is_active', true);
+        })
             ->whereNotIn('id', $registeredSessionIds)
             ->where('status', 'scheduled')
             ->where('start_date', '>', now())
@@ -188,17 +187,17 @@ class PortalTrainingController extends BaseController
         $user = $request->user();
 
         $query = TrainingCertificate::whereHas('participant', function ($q) use ($user) {
-                $q->where('user_id', $user->id)
-                    ->whereHas('session.training', function ($q2) use ($user) {
-                        $q2->where('company_id', $user->company_id);
-                    });
-            })
+            $q->where('user_id', $user->id)
+                ->whereHas('session.training', function ($q2) use ($user) {
+                    $q2->where('company_id', $user->company_id);
+                });
+        })
             ->with([
-                'participant.session.training' => function ($q) use ($user) {
-                    $q->where('company_id', $user->company_id)
-                        ->select('id', 'title', 'category');
-                }
-            ]);
+            'participant.session.training' => function ($q) use ($user) {
+                $q->where('company_id', $user->company_id)
+                    ->select('id', 'title', 'category');
+            },
+        ]);
 
         $certificates = $query->orderByDesc('issue_date')
             ->paginate($request->get('per_page', 15));
@@ -223,11 +222,11 @@ class PortalTrainingController extends BaseController
             ->with([
                 'participant.session.training' => function ($q) use ($user) {
                     $q->where('company_id', $user->company_id);
-                }
+                },
             ])
             ->first();
 
-        if (!$certificate) {
+        if (! $certificate) {
             return $this->error('Sertifika bulunamadı', null, 404);
         }
 
@@ -246,4 +245,3 @@ class PortalTrainingController extends BaseController
         ]);
     }
 }
-

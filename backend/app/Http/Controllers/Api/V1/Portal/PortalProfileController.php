@@ -21,8 +21,8 @@ class PortalProfileController extends BaseController
         $employee = Employee::where('user_id', $user->id)
             ->with(['department:id,name', 'manager:id,user_id', 'manager.user:id,name'])
             ->first();
-        
-        if (!$employee) {
+
+        if (! $employee) {
             return $this->error('Personel kaydı bulunamadı', null, 404);
         }
 
@@ -41,25 +41,25 @@ class PortalProfileController extends BaseController
                 'position' => $employee->position,
                 'department' => $employee->department?->name,
                 'manager_name' => $employee->manager?->user?->name,
-                
+
                 // Kişisel bilgiler (düzenlenebilir)
                 'birth_date' => $employee->birth_date?->format('Y-m-d'),
                 'gender' => $employee->gender,
                 'marital_status' => $employee->marital_status,
                 'blood_type' => $employee->blood_type,
-                
+
                 // İletişim
                 'personal_email' => $employee->personal_email,
                 'personal_phone' => $employee->personal_phone,
                 'address' => $employee->address,
                 'city' => $employee->city,
                 'district' => $employee->district,
-                
+
                 // Acil durum
                 'emergency_contact_name' => $employee->emergency_contact_name,
                 'emergency_contact_phone' => $employee->emergency_contact_phone,
                 'emergency_contact_relation' => $employee->emergency_contact_relation,
-                
+
                 // İş bilgileri (sadece görüntüleme)
                 'hire_date' => $employee->hire_date?->format('d.m.Y'),
                 'contract_type' => $employee->contract_type,
@@ -76,8 +76,8 @@ class PortalProfileController extends BaseController
     {
         $user = $request->user();
         $employee = Employee::where('user_id', $user->id)->first();
-        
-        if (!$employee) {
+
+        if (! $employee) {
             return $this->error('Personel kaydı bulunamadı', null, 404);
         }
 
@@ -85,14 +85,14 @@ class PortalProfileController extends BaseController
             // Kullanıcı bilgileri
             'name' => 'sometimes|string|max:255',
             'phone' => 'sometimes|nullable|string|max:20',
-            
+
             // Personel bilgileri (düzenlenebilir alanlar)
             'personal_email' => 'sometimes|nullable|email|max:255',
             'personal_phone' => 'sometimes|nullable|string|max:20',
             'address' => 'sometimes|nullable|string|max:500',
             'city' => 'sometimes|nullable|string|max:100',
             'district' => 'sometimes|nullable|string|max:100',
-            
+
             // Acil durum
             'emergency_contact_name' => 'sometimes|nullable|string|max:255',
             'emergency_contact_phone' => 'sometimes|nullable|string|max:20',
@@ -102,17 +102,17 @@ class PortalProfileController extends BaseController
         // Kullanıcı bilgilerini güncelle
         $userFields = ['name', 'phone'];
         $userUpdates = array_intersect_key($validated, array_flip($userFields));
-        if (!empty($userUpdates)) {
+        if (! empty($userUpdates)) {
             $user->update($userUpdates);
         }
 
         // Personel bilgilerini güncelle
         $employeeFields = [
             'personal_email', 'personal_phone', 'address', 'city', 'district',
-            'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relation'
+            'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relation',
         ];
         $employeeUpdates = array_intersect_key($validated, array_flip($employeeFields));
-        if (!empty($employeeUpdates)) {
+        if (! empty($employeeUpdates)) {
             $employee->update($employeeUpdates);
         }
 
@@ -133,7 +133,7 @@ class PortalProfileController extends BaseController
 
         $user = $request->user();
 
-        if (!Hash::check($validated['current_password'], $user->password)) {
+        if (! Hash::check($validated['current_password'], $user->password)) {
             return $this->error('Mevcut şifre hatalı', ['current_password' => ['Mevcut şifre hatalı']], 422);
         }
 
@@ -156,13 +156,13 @@ class PortalProfileController extends BaseController
         ]);
 
         $user = $request->user();
-        
+
         // Eski avatarı sil
         if ($user->avatar) {
             \Storage::disk('public')->delete($user->avatar);
         }
 
-        $path = $request->file('avatar')->store('avatars/' . $user->company_id, 'public');
+        $path = $request->file('avatar')->store('avatars/'.$user->company_id, 'public');
         $user->update(['avatar' => $path]);
 
         ActivityLog::log('update', $user, 'Avatar güncellendi');
@@ -170,4 +170,3 @@ class PortalProfileController extends BaseController
         return $this->success(['avatar' => $path], 'Avatar başarıyla güncellendi');
     }
 }
-

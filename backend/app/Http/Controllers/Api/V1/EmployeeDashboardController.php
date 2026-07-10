@@ -9,7 +9,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -48,7 +47,7 @@ class EmployeeDashboardController extends Controller
     public function show(int $id): JsonResponse
     {
         $user = Auth::user();
-        
+
         $dashboard = EmployeeDashboard::where('company_id', $user->company_id)
             ->accessibleBy($user->id)
             ->findOrFail($id);
@@ -104,7 +103,7 @@ class EmployeeDashboardController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         $user = Auth::user();
-        
+
         $dashboard = EmployeeDashboard::where('company_id', $user->company_id)
             ->where('user_id', $user->id)
             ->findOrFail($id);
@@ -132,7 +131,7 @@ class EmployeeDashboardController extends Controller
     public function destroy(int $id): JsonResponse
     {
         $user = Auth::user();
-        
+
         $dashboard = EmployeeDashboard::where('company_id', $user->company_id)
             ->where('user_id', $user->id)
             ->findOrFail($id);
@@ -151,13 +150,13 @@ class EmployeeDashboardController extends Controller
     public function toggleFavorite(int $id): JsonResponse
     {
         $user = Auth::user();
-        
+
         $dashboard = EmployeeDashboard::where('company_id', $user->company_id)
             ->accessibleBy($user->id)
             ->findOrFail($id);
 
         $dashboard->update([
-            'is_favorite' => !$dashboard->is_favorite,
+            'is_favorite' => ! $dashboard->is_favorite,
         ]);
 
         return response()->json([
@@ -187,9 +186,9 @@ class EmployeeDashboardController extends Controller
         $query = Employee::where('company_id', $user->company_id);
 
         // Filtreleri uygula
-        if (!empty($config['filters'])) {
+        if (! empty($config['filters'])) {
             foreach ($config['filters'] as $field => $value) {
-                if (!empty($value)) {
+                if (! empty($value)) {
                     if (is_array($value)) {
                         $query->whereIn($field, $value);
                     } else {
@@ -202,6 +201,7 @@ class EmployeeDashboardController extends Controller
         // KPI widget için
         if ($type === 'kpi') {
             $data = $this->getKPIData($query, $config['measure']);
+
             return response()->json(['success' => true, 'data' => $data]);
         }
 
@@ -223,23 +223,25 @@ class EmployeeDashboardController extends Controller
     public function exportExcel(Request $request, int $id): StreamedResponse
     {
         $user = Auth::user();
-        
+
         $dashboard = EmployeeDashboard::where('company_id', $user->company_id)
             ->accessibleBy($user->id)
             ->findOrFail($id);
 
-        $spreadsheet = new Spreadsheet();
+        $spreadsheet = new Spreadsheet;
         $sheetIndex = 0;
 
         foreach ($dashboard->widgets as $widget) {
-            if ($widget['type'] === 'text') continue; // Text widget'ları atla
+            if ($widget['type'] === 'text') {
+                continue;
+            } // Text widget'ları atla
 
             // Her widget için ayrı sheet
             if ($sheetIndex > 0) {
                 $spreadsheet->createSheet();
             }
             $sheet = $spreadsheet->setActiveSheetIndex($sheetIndex);
-            $sheet->setTitle(substr($widget['title'] ?: "Widget " . ($sheetIndex + 1), 0, 31));
+            $sheet->setTitle(substr($widget['title'] ?: 'Widget '.($sheetIndex + 1), 0, 31));
 
             // Widget verisini al
             $config = $widget['config'];
@@ -251,8 +253,8 @@ class EmployeeDashboardController extends Controller
                 $sheet->setCellValue('B1', 'Değer');
                 $row = 2;
                 foreach ($data as $key => $value) {
-                    $sheet->setCellValue('A' . $row, $key);
-                    $sheet->setCellValue('B' . $row, $value);
+                    $sheet->setCellValue('A'.$row, $key);
+                    $sheet->setCellValue('B'.$row, $value);
                     $row++;
                 }
             } else {
@@ -261,8 +263,8 @@ class EmployeeDashboardController extends Controller
                 $sheet->setCellValue('B1', 'Değer');
                 $row = 2;
                 foreach ($data as $item) {
-                    $sheet->setCellValue('A' . $row, $item['name']);
-                    $sheet->setCellValue('B' . $row, $item['value']);
+                    $sheet->setCellValue('A'.$row, $item['name']);
+                    $sheet->setCellValue('B'.$row, $item['value']);
                     $row++;
                 }
             }
@@ -275,7 +277,7 @@ class EmployeeDashboardController extends Controller
             $spreadsheet->setActiveSheetIndex(0);
         }
 
-        $filename = 'dashboard_' . $dashboard->id . '_' . date('Y-m-d') . '.xlsx';
+        $filename = 'dashboard_'.$dashboard->id.'_'.date('Y-m-d').'.xlsx';
 
         return response()->streamDownload(function () use ($spreadsheet) {
             $writer = new Xlsx($spreadsheet);
@@ -291,7 +293,7 @@ class EmployeeDashboardController extends Controller
     private function getKPIData($query, string $measure): array
     {
         $measureField = $this->getMeasureField($measure);
-        
+
         if ($measureField === 'count') {
             return [
                 'total' => $query->count(),
@@ -325,23 +327,23 @@ class EmployeeDashboardController extends Controller
         $measureField = $this->getMeasureField($measure);
 
         // Hesaplanan boyutlar için özel işlem
-        $dimensionSelect = match($dimensionField) {
+        $dimensionSelect = match ($dimensionField) {
             'hire_year' => DB::raw('YEAR(hire_date) as dimension'),
             'birth_year' => DB::raw('YEAR(birth_date) as dimension'),
-            default => $dimensionField . ' as dimension',
+            default => $dimensionField.' as dimension',
         };
 
-        $dimensionGroup = match($dimensionField) {
+        $dimensionGroup = match ($dimensionField) {
             'hire_year' => DB::raw('YEAR(hire_date)'),
             'birth_year' => DB::raw('YEAR(birth_date)'),
             default => $dimensionField,
         };
 
         // Hesaplanan metrikler için özel işlem
-        $selectRaw = match($measureField) {
-            'count' => "COUNT(*) as value",
-            'age' => "AVG(TIMESTAMPDIFF(YEAR, birth_date, CURDATE())) as value",
-            'tenure' => "AVG(TIMESTAMPDIFF(YEAR, hire_date, CURDATE())) as value",
+        $selectRaw = match ($measureField) {
+            'count' => 'COUNT(*) as value',
+            'age' => 'AVG(TIMESTAMPDIFF(YEAR, birth_date, CURDATE())) as value',
+            'tenure' => 'AVG(TIMESTAMPDIFF(YEAR, hire_date, CURDATE())) as value',
             default => "AVG($measureField) as value",
         };
 
@@ -357,7 +359,7 @@ class EmployeeDashboardController extends Controller
         if ($dimensionField === 'department_id') {
             $departmentIds = $results->pluck('dimension')->filter()->toArray();
             $departments = \App\Models\Department::whereIn('id', $departmentIds)->pluck('name', 'id');
-            
+
             return $results->map(function ($item) use ($departments) {
                 return [
                     'name' => $departments[$item->dimension] ?? 'Belirtilmemiş',
@@ -415,4 +417,3 @@ class EmployeeDashboardController extends Controller
         return $map[$measure] ?? 'count';
     }
 }
-

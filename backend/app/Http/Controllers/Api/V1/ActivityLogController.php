@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Models\ActivityLog;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ActivityLogController extends BaseController
@@ -18,7 +18,7 @@ class ActivityLogController extends BaseController
             ->orderBy('created_at', 'desc');
 
         // SuperAdmin değilse sadece kendi firmasının loglarını görsün
-        if (!$this->isSuperAdmin()) {
+        if (! $this->isSuperAdmin()) {
             $query->where('company_id', $this->getCompanyId());
         }
 
@@ -42,7 +42,7 @@ class ActivityLogController extends BaseController
 
         // Model filtresi
         if ($request->has('model_type')) {
-            $query->where('model_type', 'like', '%' . $request->model_type . '%');
+            $query->where('model_type', 'like', '%'.$request->model_type.'%');
         }
 
         // Arama
@@ -67,13 +67,13 @@ class ActivityLogController extends BaseController
         $query = ActivityLog::with('user:id,name,email');
 
         // SuperAdmin değilse sadece kendi firmasının loglarını görsün
-        if (!$this->isSuperAdmin()) {
+        if (! $this->isSuperAdmin()) {
             $query->where('company_id', $this->getCompanyId());
         }
 
         $log = $query->find($id);
 
-        if (!$log) {
+        if (! $log) {
             return $this->notFound('Log kaydı bulunamadı');
         }
 
@@ -89,7 +89,7 @@ class ActivityLogController extends BaseController
             ->orderBy('created_at', 'desc');
 
         // SuperAdmin değilse sadece kendi firmasının loglarını görsün
-        if (!$this->isSuperAdmin()) {
+        if (! $this->isSuperAdmin()) {
             $query->where('company_id', $this->getCompanyId());
         }
 
@@ -110,21 +110,21 @@ class ActivityLogController extends BaseController
         $logs = $query->get();
 
         // CSV oluştur
-        $filename = 'activity_logs_' . date('Y-m-d_His') . '.csv';
+        $filename = 'activity_logs_'.date('Y-m-d_His').'.csv';
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ];
 
-        $callback = function() use ($logs) {
+        $callback = function () use ($logs) {
             $file = fopen('php://output', 'w');
-            
+
             // BOM for Excel UTF-8 support
             fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
-            
+
             // Header
             fputcsv($file, ['Tarih', 'Kullanıcı', 'E-posta', 'İşlem', 'Model', 'Model ID', 'Açıklama', 'IP Adresi', 'Durum']);
-            
+
             // Data
             foreach ($logs as $log) {
                 fputcsv($file, [
@@ -139,7 +139,7 @@ class ActivityLogController extends BaseController
                     $log->is_successful ? 'Başarılı' : 'Başarısız',
                 ]);
             }
-            
+
             fclose($file);
         };
 
@@ -148,4 +148,3 @@ class ActivityLogController extends BaseController
         return response()->stream($callback, 200, $headers);
     }
 }
-

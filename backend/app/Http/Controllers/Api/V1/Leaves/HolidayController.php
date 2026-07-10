@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Api\V1\Leaves;
 
 use App\Http\Controllers\Api\V1\BaseController;
-use App\Models\Holiday;
 use App\Models\ActivityLog;
-use Illuminate\Http\Request;
+use App\Models\Holiday;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class HolidayController extends BaseController
 {
@@ -70,7 +70,7 @@ class HolidayController extends BaseController
             'created_by' => auth()->id(),
         ]);
 
-        ActivityLog::log('create', $holiday, 'Yeni tatil eklendi: ' . $holiday->name);
+        ActivityLog::log('create', $holiday, 'Yeni tatil eklendi: '.$holiday->name);
 
         return $this->created($holiday, 'Tatil eklendi');
     }
@@ -110,7 +110,7 @@ class HolidayController extends BaseController
 
         $holiday->delete();
 
-        ActivityLog::log('delete', $holiday, 'Tatil silindi: ' . $holiday->name);
+        ActivityLog::log('delete', $holiday, 'Tatil silindi: '.$holiday->name);
 
         return $this->success(null, 'Tatil silindi');
     }
@@ -128,7 +128,7 @@ class HolidayController extends BaseController
      */
     public function seedNationalHolidays(Request $request): JsonResponse
     {
-        if (!$this->isSuperAdmin()) {
+        if (! $this->isSuperAdmin()) {
             return $this->error('Bu işlem için yetkiniz yok', 403);
         }
 
@@ -195,5 +195,3 @@ class HolidayController extends BaseController
         ], 'Tarih kontrol sonucu');
     }
 }
-
-

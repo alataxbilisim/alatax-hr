@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PerformancePeriod extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
         'company_id',
@@ -56,8 +56,7 @@ class PerformancePeriod extends Model
      */
     public function isOngoing(): bool
     {
-        return $this->status === 'active' && 
+        return $this->status === 'active' &&
                now()->between($this->start_date, $this->end_date);
     }
 }
-

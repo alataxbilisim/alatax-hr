@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api\V1\Public;
 
 use App\Http\Controllers\Controller;
-use App\Models\JobPosition;
-use App\Models\JobApplication;
 use App\Models\ActivityLog;
-use Illuminate\Http\Request;
+use App\Models\JobApplication;
+use App\Models\JobPosition;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class ApplicationController extends Controller
@@ -22,7 +22,7 @@ class ApplicationController extends Controller
             ->where('status', 'published')
             ->first();
 
-        if (!$position) {
+        if (! $position) {
             return response()->json([
                 'success' => false,
                 'message' => 'Pozisyon bulunamadı veya başvurular kapatılmış',
@@ -43,13 +43,13 @@ class ApplicationController extends Controller
 
             if ($field['type'] === 'file' && $request->hasFile($fieldId)) {
                 $file = $request->file($fieldId);
-                $path = $file->store('applications/' . $position->company_id, 'public');
-                
+                $path = $file->store('applications/'.$position->company_id, 'public');
+
                 // CV dosyası ise kaydet
                 if (str_contains(strtolower($field['label']), 'cv') || str_contains(strtolower($field['label']), 'özgeçmiş')) {
                     $cvPath = $path;
                 }
-                
+
                 $formData[$field['label']] = $path;
             } else {
                 $formData[$field['label']] = $value;
@@ -69,10 +69,10 @@ class ApplicationController extends Controller
         }
 
         // Zorunlu alanları kontrol et
-        if (!$applicantEmail) {
+        if (! $applicantEmail) {
             $applicantEmail = $request->input('email', $request->input('applicant_email'));
         }
-        if (!$applicantName) {
+        if (! $applicantName) {
             $applicantName = $request->input('name', $request->input('applicant_name', 'İsimsiz Başvuru'));
         }
 

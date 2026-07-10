@@ -37,4 +37,3 @@ class BaseController extends Controller
         return auth()->user()?->type === 'company_admin';
     }
 }
-

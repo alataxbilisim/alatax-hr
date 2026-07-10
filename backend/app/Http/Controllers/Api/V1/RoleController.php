@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Models\ActivityLog;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Spatie\Permission\Models\Role;
+use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class RoleController extends BaseController
 {
@@ -24,7 +24,7 @@ class RoleController extends BaseController
                     ->where('role_id', $role->id)
                     ->where('model_type', \App\Models\User::class)
                     ->count();
-                    
+
                 return [
                     'id' => $role->id,
                     'name' => $role->name,
@@ -53,11 +53,11 @@ class RoleController extends BaseController
             ->where('role_id', $role->id)
             ->where('model_type', \App\Models\User::class)
             ->pluck('model_id');
-            
+
         $users = \App\Models\User::whereIn('id', $userIds)
             ->select('id', 'name', 'email')
             ->get();
-            
+
         return $this->success([
             'id' => $role->id,
             'name' => $role->name,
@@ -94,7 +94,7 @@ class RoleController extends BaseController
         ActivityLog::log(
             'create',
             $role,
-            'Rol oluşturuldu: ' . $role->name,
+            'Rol oluşturuldu: '.$role->name,
             null,
             array_merge($role->toArray(), ['permissions' => $validated['permissions']])
         );
@@ -125,7 +125,7 @@ class RoleController extends BaseController
         }
 
         $validated = $request->validate([
-            'name' => 'sometimes|string|max:50|unique:roles,name,' . $role->id,
+            'name' => 'sometimes|string|max:50|unique:roles,name,'.$role->id,
             'permissions' => 'sometimes|array|min:1',
             'permissions.*' => 'string|exists:permissions,name',
         ]);
@@ -141,8 +141,8 @@ class RoleController extends BaseController
         }
 
         $newValues = array_merge($role->fresh()->toArray(), ['permissions' => $role->permissions->pluck('name')->toArray()]);
-        
-        ActivityLog::log('update', $role, 'Rol güncellendi: ' . $role->name, $oldValues, $newValues);
+
+        ActivityLog::log('update', $role, 'Rol güncellendi: '.$role->name, $oldValues, $newValues);
 
         return $this->success([
             'id' => $role->id,
@@ -174,7 +174,7 @@ class RoleController extends BaseController
             ->where('role_id', $role->id)
             ->where('model_type', \App\Models\User::class)
             ->count();
-            
+
         if ($usersCount > 0) {
             return $this->error('Bu role sahip kullanıcılar var. Önce kullanıcıların rollerini değiştirin.', 400);
         }
@@ -183,7 +183,7 @@ class RoleController extends BaseController
         $oldValues = array_merge($role->toArray(), ['permissions' => $role->permissions->pluck('name')->toArray()]);
         $role->delete();
 
-        ActivityLog::log('delete', null, 'Rol silindi: ' . $roleName, $oldValues, null);
+        ActivityLog::log('delete', null, 'Rol silindi: '.$roleName, $oldValues, null);
 
         return $this->success(null, 'Rol silindi');
     }
@@ -206,4 +206,3 @@ class RoleController extends BaseController
         return $this->success($permissions, 'Yetkiler listelendi');
     }
 }
-

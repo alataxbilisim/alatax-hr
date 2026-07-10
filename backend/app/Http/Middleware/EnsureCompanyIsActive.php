@@ -24,8 +24,8 @@ class EnsureCompanyIsActive
         if ($user && $user->company) {
             // active ve trial durumları izin verilen durumlar
             $allowedStatuses = ['active', 'trial'];
-            
-            if (!in_array($user->company->status, $allowedStatuses)) {
+
+            if (! in_array($user->company->status, $allowedStatuses)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Firma hesabınız aktif değil. Lütfen yöneticinizle iletişime geçin.',
@@ -39,4 +39,3 @@ class EnsureCompanyIsActive
         return $next($request);
     }
 }
-

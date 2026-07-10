@@ -16,7 +16,7 @@ return new class extends Migration
             $table->text('note')->nullable();
             $table->foreignId('changed_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
-            
+
             $table->index('job_application_id');
         });
     }
@@ -26,4 +26,3 @@ return new class extends Migration
         Schema::dropIfExists('application_status_logs');
     }
 };
-

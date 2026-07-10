@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PerformanceReview extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
         'company_id',
@@ -81,7 +81,7 @@ class PerformanceReview extends Model
     public function calculateOverallScore(): float
     {
         $scores = $this->scores()->with('criteria')->get();
-        
+
         if ($scores->isEmpty()) {
             return 0;
         }
@@ -92,10 +92,10 @@ class PerformanceReview extends Model
         foreach ($scores as $score) {
             $weight = $score->criteria->weight;
             $maxScore = $score->criteria->max_score;
-            
+
             // Normalize score to 100 scale
             $normalizedScore = ($score->score / $maxScore) * 100;
-            
+
             $totalWeightedScore += $normalizedScore * $weight;
             $totalWeight += $weight;
         }
@@ -121,4 +121,3 @@ class PerformanceReview extends Model
         return $query->where('status', 'approved');
     }
 }
-

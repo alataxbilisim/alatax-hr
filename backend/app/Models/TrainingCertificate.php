@@ -55,7 +55,7 @@ class TrainingCertificate extends Model
     {
         return $query->where(function ($q) {
             $q->whereNull('expiry_date')
-              ->orWhere('expiry_date', '>', now());
+                ->orWhere('expiry_date', '>', now());
         });
     }
 
@@ -68,4 +68,3 @@ class TrainingCertificate extends Model
             ->where('expiry_date', '<=', now());
     }
 }
-

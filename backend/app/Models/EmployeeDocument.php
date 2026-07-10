@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class EmployeeDocument extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany, HasAuditColumns;
+    use BelongsToCompany, HasAuditColumns, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -43,10 +43,15 @@ class EmployeeDocument extends Model
     ];
 
     const CATEGORY_ID_CARD = 'id_card';
+
     const CATEGORY_CONTRACT = 'contract';
+
     const CATEGORY_CERTIFICATE = 'certificate';
+
     const CATEGORY_EDUCATION = 'education';
+
     const CATEGORY_HEALTH = 'health';
+
     const CATEGORY_OTHER = 'other';
 
     /**
@@ -78,6 +83,7 @@ class EmployeeDocument extends Model
             self::CATEGORY_HEALTH => 'Sağlık',
             self::CATEGORY_OTHER => 'Diğer',
         ];
+
         return $categories[$this->category] ?? $this->category;
     }
 
@@ -88,13 +94,14 @@ class EmployeeDocument extends Model
     {
         $bytes = $this->file_size;
         if ($bytes >= 1073741824) {
-            return number_format($bytes / 1073741824, 2) . ' GB';
+            return number_format($bytes / 1073741824, 2).' GB';
         } elseif ($bytes >= 1048576) {
-            return number_format($bytes / 1048576, 2) . ' MB';
+            return number_format($bytes / 1048576, 2).' MB';
         } elseif ($bytes >= 1024) {
-            return number_format($bytes / 1024, 2) . ' KB';
+            return number_format($bytes / 1024, 2).' KB';
         }
-        return $bytes . ' bytes';
+
+        return $bytes.' bytes';
     }
 
     /**
@@ -102,14 +109,16 @@ class EmployeeDocument extends Model
      */
     public function checkExpiry(): bool
     {
-        if (!$this->expiry_date) return false;
-        
+        if (! $this->expiry_date) {
+            return false;
+        }
+
         $isExpired = $this->expiry_date->isPast();
-        
+
         if ($this->is_expired !== $isExpired) {
             $this->update(['is_expired' => $isExpired]);
         }
-        
+
         return $isExpired;
     }
 
@@ -137,4 +146,3 @@ class EmployeeDocument extends Model
         return $query->where('category', $category);
     }
 }
-

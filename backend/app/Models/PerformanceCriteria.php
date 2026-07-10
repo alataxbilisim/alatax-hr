@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PerformanceCriteria extends Model
 {
-    use HasFactory, BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $table = 'performance_criteria';
 
@@ -64,4 +64,3 @@ class PerformanceCriteria extends Model
         return $query->orderBy('sort_order')->orderBy('name');
     }
 }
-

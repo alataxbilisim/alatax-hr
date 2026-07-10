@@ -2,15 +2,13 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Models\User;
 use App\Models\ActivityLog;
-use Illuminate\Http\Request;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\Rules\Password as PasswordRule;
-use Illuminate\Validation\ValidationException;
 
 class AuthController extends BaseController
 {
@@ -26,11 +24,11 @@ class AuthController extends BaseController
 
         $user = User::where('email', $request->email)->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (! $user || ! Hash::check($request->password, $user->password)) {
             // Başarısız giriş logla
             ActivityLog::create([
                 'action' => 'login_failed',
-                'description' => 'Başarısız giriş denemesi: ' . $request->email,
+                'description' => 'Başarısız giriş denemesi: '.$request->email,
                 'ip_address' => $request->ip(),
                 'user_agent' => $request->userAgent(),
                 'is_successful' => false,
@@ -40,17 +38,17 @@ class AuthController extends BaseController
         }
 
         // Kullanıcı aktif mi?
-        if (!$user->is_active) {
+        if (! $user->is_active) {
             return $this->error('Hesabınız devre dışı bırakılmış. Lütfen yöneticinizle iletişime geçin.', 403);
         }
 
         // Firma kontrolü (SuperAdmin hariç)
-        if (!$user->isSuperAdmin()) {
-            if (!$user->company) {
+        if (! $user->isSuperAdmin()) {
+            if (! $user->company) {
                 return $this->error('Hesabınız bir firmaya bağlı değil.', 403);
             }
 
-            if (!$user->company->isActive() && !$user->company->status === 'trial') {
+            if (! $user->company->isActive() && ! $user->company->status === 'trial') {
                 return $this->error('Firma hesabınız aktif değil. Lütfen yöneticinizle iletişime geçin.', 403);
             }
 
@@ -64,24 +62,24 @@ class AuthController extends BaseController
         if ($request->has('portal_login') && $request->boolean('portal_login')) {
             // User'ın employee kaydı var mı?
             $employee = $user->employee;
-            if (!$employee) {
+            if (! $employee) {
                 return $this->error('Portal erişim yetkiniz yok', 403);
             }
-            
+
             // Employee aktif mi?
             if ($employee->status !== 'active') {
                 return $this->error('Personel kaydınız aktif değil', 403);
             }
-            
+
             // Portal token oluştur
             $token = $user->createToken('portal-token', ['portal:access'])->plainTextToken;
-            
+
             // Son giriş bilgisini güncelle
             $user->updateLastLogin($request->ip());
-            
+
             // Başarılı giriş logla
             ActivityLog::log('login', $user, 'Portal girişi yapıldı');
-            
+
             return $this->success([
                 'user' => $this->formatUser($user),
                 'employee' => $employee,
@@ -111,7 +109,7 @@ class AuthController extends BaseController
     public function logout(Request $request): JsonResponse
     {
         $user = $request->user();
-        
+
         // Mevcut token'ı sil
         $request->user()->currentAccessToken()->delete();
 
@@ -194,7 +192,7 @@ class AuthController extends BaseController
         $user = $request->user();
 
         // Mevcut şifre kontrolü
-        if (!Hash::check($request->current_password, $user->password)) {
+        if (! Hash::check($request->current_password, $user->password)) {
             return $this->error('Mevcut şifreniz hatalı', 422, [
                 'current_password' => ['Mevcut şifreniz hatalı'],
             ]);
@@ -256,7 +254,7 @@ class AuthController extends BaseController
                 $user->update([
                     'password' => Hash::make($password),
                 ]);
-                
+
                 // Tüm token'ları sil
                 $user->tokens()->delete();
             }
@@ -347,7 +345,7 @@ class AuthController extends BaseController
             'name' => $user->name,
             'email' => $user->email,
             'phone' => $user->phone,
-            'avatar' => $user->avatar ? asset('storage/' . $user->avatar) : null,
+            'avatar' => $user->avatar ? asset('storage/'.$user->avatar) : null,
             'title' => $user->title,
             'department' => $user->department,
             'type' => $user->type,
@@ -365,7 +363,7 @@ class AuthController extends BaseController
                 'id' => $company->id,
                 'name' => $company->name,
                 'slug' => $company->slug,
-                'logo' => $company->logo ? asset('storage/' . $company->logo) : null,
+                'logo' => $company->logo ? asset('storage/'.$company->logo) : null,
                 'status' => $company->status,
                 'package_type' => $company->package_type,
                 'active_modules' => $activeModules,
@@ -375,4 +373,3 @@ class AuthController extends BaseController
         return $data;
     }
 }
-

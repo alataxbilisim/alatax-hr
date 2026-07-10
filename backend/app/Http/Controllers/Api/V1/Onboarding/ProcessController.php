@@ -3,12 +3,11 @@
 namespace App\Http\Controllers\Api\V1\Onboarding;
 
 use App\Http\Controllers\Api\V1\BaseController;
-use App\Models\OnboardingProcess;
-use App\Models\OnboardingTemplate;
-use App\Models\OnboardingTask;
 use App\Models\ActivityLog;
-use Illuminate\Http\Request;
+use App\Models\OnboardingProcess;
+use App\Models\OnboardingTask;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ProcessController extends BaseController
 {
@@ -58,7 +57,7 @@ class ProcessController extends BaseController
             $process->createTasksFromTemplate();
         }
 
-        ActivityLog::log('create', $process, 'Onboarding süreci başlatıldı: ' . $process->title);
+        ActivityLog::log('create', $process, 'Onboarding süreci başlatıldı: '.$process->title);
 
         return $this->success($process->load(['user', 'template', 'tasks']), 'Onboarding süreci oluşturuldu', 201);
     }
@@ -91,7 +90,7 @@ class ProcessController extends BaseController
         $oldValues = $process->getOriginal();
         $process->update($validated);
 
-        ActivityLog::log('update', $process, 'Onboarding süreci güncellendi: ' . $process->title, $oldValues, $process->fresh()->toArray());
+        ActivityLog::log('update', $process, 'Onboarding süreci güncellendi: '.$process->title, $oldValues, $process->fresh()->toArray());
 
         return $this->success($process, 'Onboarding süreci güncellendi');
     }
@@ -102,10 +101,11 @@ class ProcessController extends BaseController
     public function destroy(OnboardingProcess $process): JsonResponse
     {
         $processTitle = $process->title;
-        ActivityLog::log('delete', null, 'Onboarding süreci silindi: ' . $processTitle);
-        
+        ActivityLog::log('delete', null, 'Onboarding süreci silindi: '.$processTitle);
+
         $process->tasks()->delete();
         $process->delete();
+
         return $this->success(null, 'Onboarding süreci silindi');
     }
 
@@ -134,7 +134,7 @@ class ProcessController extends BaseController
 
         $process->updateProgress();
 
-        ActivityLog::log('create', $task, 'Onboarding görevi eklendi: ' . $task->title);
+        ActivityLog::log('create', $task, 'Onboarding görevi eklendi: '.$task->title);
 
         return $this->success($task, 'Görev eklendi', 201);
     }
@@ -154,12 +154,12 @@ class ProcessController extends BaseController
         ]);
 
         $task->complete(auth()->id(), $validated['data'] ?? null);
-        
+
         if (isset($validated['notes'])) {
             $task->update(['notes' => $validated['notes']]);
         }
 
-        ActivityLog::log('update', $task, 'Onboarding görevi tamamlandı: ' . $task->title);
+        ActivityLog::log('update', $task, 'Onboarding görevi tamamlandı: '.$task->title);
 
         return $this->success($task->fresh(), 'Görev tamamlandı');
     }
@@ -179,7 +179,7 @@ class ProcessController extends BaseController
 
         $task->skip();
 
-        ActivityLog::log('update', $task, 'Onboarding görevi atlandı: ' . $task->title);
+        ActivityLog::log('update', $task, 'Onboarding görevi atlandı: '.$task->title);
 
         return $this->success($task->fresh(), 'Görev atlandı');
     }

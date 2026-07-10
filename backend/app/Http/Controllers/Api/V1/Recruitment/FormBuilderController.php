@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Api\V1\Recruitment;
 
 use App\Http\Controllers\Api\V1\BaseController;
-use App\Models\ApplicationForm;
 use App\Models\ActivityLog;
-use Illuminate\Http\Request;
+use App\Models\ApplicationForm;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class FormBuilderController extends BaseController
 {
@@ -62,7 +62,7 @@ class FormBuilderController extends BaseController
             'company_id' => $this->getCompanyId(),
         ]);
 
-        ActivityLog::log('create', $form, 'Başvuru formu oluşturuldu: ' . $form->name);
+        ActivityLog::log('create', $form, 'Başvuru formu oluşturuldu: '.$form->name);
 
         return $this->success($form, 'Form başarıyla oluşturuldu', 201);
     }
@@ -74,7 +74,7 @@ class FormBuilderController extends BaseController
     {
         $form = ApplicationForm::find($id);
 
-        if (!$form) {
+        if (! $form) {
             return $this->notFound('Form bulunamadı');
         }
 
@@ -95,7 +95,7 @@ class FormBuilderController extends BaseController
     {
         $form = ApplicationForm::find($id);
 
-        if (!$form) {
+        if (! $form) {
             return $this->notFound('Form bulunamadı');
         }
 
@@ -109,7 +109,7 @@ class FormBuilderController extends BaseController
         $oldValues = $form->toArray();
         $form->update($validated);
 
-        ActivityLog::log('update', $form, 'Başvuru formu güncellendi: ' . $form->name, $oldValues);
+        ActivityLog::log('update', $form, 'Başvuru formu güncellendi: '.$form->name, $oldValues);
 
         return $this->success($form, 'Form güncellendi');
     }
@@ -121,12 +121,12 @@ class FormBuilderController extends BaseController
     {
         $form = ApplicationForm::find($id);
 
-        if (!$form) {
+        if (! $form) {
             return $this->notFound('Form bulunamadı');
         }
 
-        ActivityLog::log('delete', $form, 'Başvuru formu silindi: ' . $form->name);
-        
+        ActivityLog::log('delete', $form, 'Başvuru formu silindi: '.$form->name);
+
         $form->delete();
 
         return $this->success(null, 'Form silindi');

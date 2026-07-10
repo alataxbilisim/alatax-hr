@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api\V1\Performance;
 
 use App\Http\Controllers\Api\V1\BaseController;
-use App\Models\PerformanceCriteria;
 use App\Models\ActivityLog;
+use App\Models\PerformanceCriteria;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -47,7 +47,7 @@ class CriteriaController extends BaseController
             'created_by' => auth()->id(),
         ]);
 
-        ActivityLog::log('create', $criteria, 'Performans kriteri oluşturuldu: ' . $criteria->name);
+        ActivityLog::log('create', $criteria, 'Performans kriteri oluşturuldu: '.$criteria->name);
 
         return $this->success($criteria, 'Kriter oluşturuldu', 201);
     }
@@ -82,7 +82,7 @@ class CriteriaController extends BaseController
         $oldValues = $criteria->getOriginal();
         $criteria->update($validated);
 
-        ActivityLog::log('update', $criteria, 'Performans kriteri güncellendi: ' . $criteria->name, $oldValues, $criteria->fresh()->toArray());
+        ActivityLog::log('update', $criteria, 'Performans kriteri güncellendi: '.$criteria->name, $oldValues, $criteria->fresh()->toArray());
 
         return $this->success($criteria, 'Kriter güncellendi');
     }
@@ -93,17 +93,16 @@ class CriteriaController extends BaseController
     public function destroy(int $id): JsonResponse
     {
         $criteria = PerformanceCriteria::where('company_id', $this->getCompanyId())->findOrFail($id);
-        
+
         if ($criteria->scores()->exists()) {
             return $this->error('Bu kritere ait puanlamalar var, silinemez. Pasif yapabilirsiniz.', 422);
         }
 
         $criteriaName = $criteria->name;
-        ActivityLog::log('delete', null, 'Performans kriteri silindi: ' . $criteriaName);
-        
+        ActivityLog::log('delete', null, 'Performans kriteri silindi: '.$criteriaName);
+
         $criteria->delete();
 
         return $this->success(null, 'Kriter silindi');
     }
 }
-
