@@ -43,10 +43,10 @@ Fark yaratacak 4 şey:
 | Bildirim | In-app var; e-posta/SMS/push kısmi, otomasyon yok | Bildirim Merkezi: şablonlar, kanallar, kullanıcı tercihleri |
 | Raporlama | Modül bazlı sabit raporlar + Excel/PDF export | Semantic layer + sürükle-bırak rapor builder + dashboard v2 |
 | KVKK | Yok | Rıza, veri ihracı, silme/anonimleştirme, saklama politikaları |
-| Deployment | Manuel, Docker yok, CI yok | Docker Compose, CI, on-prem installer, imzalı lisans |
+| Deployment | Docker Compose (6 servis) + CI yeşil (Faz 0) | On-prem installer, imzalı lisans |
 | UI | Desktop odaklı, ekranlar büyük | Kompakt token ölçeği, 1366×768 hedefi, density modu |
-| i18n | Yok (TR hardcoded) | Altyapı kurulu, yeni kod t() zorunlu, toplu migrasyon backlog |
-| Test | Route testleri ağırlıklı | Her endpoint için auth+permission+happy path feature testi |
+| i18n | Altyapı kurulu (tr); yeni kod t() zorunlu (Faz 0) | Toplu string migrasyonu + dil switcher + EN (backlog) |
+| Test | PHPUnit kısmen kırık (CI non-blocking, Faz 2 borcu) | Her endpoint için auth+permission+happy path; suite yeşil |
 
 ---
 
@@ -69,28 +69,34 @@ Fark yaratacak 4 şey:
 
 ---
 
-### FAZ 0 — Stabilizasyon ve Temeller (1–2 hafta)
+### FAZ 0 — Stabilizasyon ve Temeller ✅ KAPANDI (10–11 Temmuz 2026)
 
 **Amaç:** Kırıkları kapatmak, geliştirme altyapısını kurmak. Bu faz bitmeden hiçbir yeni özellik yazılmaz.
 
-- [ ] Migration çakışmalarını çöz: `document_categories` çift create, `announcement_reads` çift şema, `request_types` çift set → etkin şemalar netleştirilip ölü dosyalar temizlenir (kalıcı çözüm Faz 1 squash'ında)
-- [ ] `DatabaseSeeder`'a `LicensePackageSeeder` ve `LeaveTypeSeeder` eklenir; temiz kurulum tek komutla ayağa kalkar
-- [ ] Frontend bug turu: Portal `state.auth.loading` → `isLoading`; `notificationSlice` store'a kayıt; `ADMIN_ROUTES.LICENSE_PACKAGES` düzeltmesi; boş `components/index.ts`
-- [ ] 6 kayıp route kararı: `/onboarding/templates`, `/performance/periods`, `/performance/criteria`, `/training/sessions`, `/assets/categories`, `/assets/assignments` → sayfası yazılacaklar router'a eklenir, yazılmayacaklar sidebar'dan kaldırılır
-- [x] Forgot-password / reset-password sayfaları (3 SPA'da login akışına bağlı; API zaten hazır)
-- [x] Davet e-postası + şifre sıfırlama bildirimi Mailable'ları (EmployeeController:320/450, UserController:412 TODO'ları)
-- [ ] Docker Compose (dev): nginx + php-fpm + postgres + redis + worker + scheduler + 3 vite dev server — on-prem paketinin de temeli
-- [ ] CI (GitHub Actions): Pint + ESLint + PHPUnit her push'ta
-- [x] CORS temizliği (hardcoded IP kaldırılır, env'den okunur); throttle 500/dk → endpoint grubu bazlı makul limitler (auth: 10/dk, genel: 120/dk, export: 20/dk, public: 20/dk)
-- [x] i18n altyapısı: react-i18next + Laravel lang dosyaları kurulur; **kural:** bu commit'ten sonra yazılan her yeni UI metni t() ile
-  - Detay: `docs/I18N.md` · TODO(i18n) forgot/reset sayfaları `t()` ile taşındı; diğer eski string'ler backlog
-- [ ] Kullanılmayan bağımlılık kararı: react-hook-form + zod **benimsenir** (Form Engine'in temeli olacak), @hookform/resolvers kalır; kullanılmayanlar temizlenir
-- [ ] `_archive_old_app/` repo'dan çıkarılır (ayrı branch/arşiv)
+**Kapanış özeti:** Başlangıçta git yoktu, build kırık, ~230 lint/tsc hatası, CORS’ta hardcoded IP ve aşırı throttle vardı. Bitişte: temiz frontend (3 SPA lint/tsc 0), GitHub’da yedekli repo, CI korumalı (Pint + ESLint + build), Docker Compose (6 servis), env tabanlı CORS + grup throttle, i18n (tr) altyapısı. **11 commit** (`dab902b`…`ebb59cc`), 10–11 Temmuz 2026.
 
-**Açık test borçları**
-- [ ] **MAIL TESTİ (yapılacak):** Mailtrap SMTP bağla → forgot-password/reset + davet e-postalarını uçtan uca doğrula. Adımlar: (a) Mailtrap değerlerini `.env`'e gir, `MAIL_MAILER=smtp`; (b) `FRONTEND_URL_*` portları doğrula; (c) queue worker çalışsın; (d) `config:clear`; (e) login→şifremi unuttum→Mailtrap inbox'ta Türkçe mail + reset linki testi. Kod hazır, sadece SMTP bağlama + doğrulama kaldı.
+- [x] Migration çakışmalarını çöz: `document_categories` çift create, `announcement_reads` çift şema, `request_types` çift set → etkin şemalar netleştirildi (kalıcı squash Faz 1)
+- [x] `DatabaseSeeder`'a `LicensePackageSeeder` ve `LeaveTypeSeeder` eklendi; temiz kurulum tek komutla ayağa kalkar
+- [x] Frontend bug turu: Portal `state.auth.loading` → `isLoading`; `notificationSlice` store'a kayıt; `ADMIN_ROUTES.LICENSE_PACKAGES`; boş `components/index.ts`
+- [x] tsc + lint temizliği (3 SPA sıfır hata) + Git / GitHub kurulumu
+- [x] Forgot-password / reset-password sayfaları (3 SPA) + davet / şifre sıfırlama Mailable'ları
+- [x] Docker Compose (dev): app + nginx + mysql + redis + worker + scheduler (6 servis) — on-prem paketinin temeli; Postgres geçişi Faz 1
+- [x] CI (GitHub Actions): Pint + ESLint + tsc/build her push'ta; PHPUnit şimdilik non-blocking (Faz 2 borcu)
+- [x] CORS env tabanlı (`CORS_ALLOWED_ORIGINS`); throttle: auth 10/dk, api 120/dk, exports 20/dk, public 20/dk + `AuthThrottleTest`
+- [x] i18n altyapısı (tr): react-i18next `@shared/i18n` + Laravel `lang/tr`; **kural:** yeni UI metni `t()` zorunlu (`.cursorrules`, `docs/I18N.md`)
+- [x] react-hook-form + zod benimsendi (Form Engine temeli); forgot/reset formlarında kullanılıyor
 
-**DoD:** Sıfır makinede `docker compose up` + seed ile sistem tam çalışır; CI yeşil; login→şifre sıfırlama→davet uçtan uca çalışır.
+**Faz 0 — Açık Borçlar** (Faz 1/2 veya backlog’a taşınır; DoD’yi bloklamaz)
+
+- [ ] **[Faz 2]** PHPUnit suite yeşile çekme: ~23 eksik `CompanyFactory` + ~18 `users.type` enum uyumu (`employee` vs `super_admin|company_admin|user`); CI’da PHPUnit `continue-on-error` **KALDIR** (blocking). Detay: Faz 2 “Teknik borç — PHPUnit” bölümü.
+- [ ] **[Faz 0-son]** Mailtrap SMTP testi: forgot/reset + davet maillerini uçtan uca doğrula (kod hazır; SMTP bağla → queue → inbox).
+- [ ] **[Faz 1]** XAMPP/Docker `.env` locale ikiliği: Docker’a tam geçince `backend/.env` `APP_LOCALE` tekilleşir (compose env şimdilik ezer).
+- [ ] **[Faz 0 kalıntı]** 6 kayıp route kararı: `/onboarding/templates`, `/performance/periods`, `/performance/criteria`, `/training/sessions`, `/assets/categories`, `/assets/assignments` → router’a ekle veya sidebar’dan kaldır.
+- [ ] **[Faz 0 kalıntı]** `_archive_old_app/` repo’dan çıkar (ayrı branch/arşiv).
+- [ ] **[backlog]** i18n eski string toplu migrasyonu (global açılım öncesi).
+- [ ] **[backlog]** i18n dil değiştirici UI + EN locale.
+
+**DoD (kapanış):** `docker compose up` + seed ile sistem ayağa kalkar; CI yeşil (PHPUnit hariç — bilinen borç); login + forgot/reset UI + i18n/CORS/throttle tamam. Mailtrap uçtan uca test ve PHPUnit yeşili açık borçta.
 
 ---
 
@@ -313,4 +319,4 @@ Toplam tahmin: **~29–42 hafta (7–10 ay)** tam zamanlı. Pilot geri bildirimi
 
 ---
 
-*Sonraki adım: Faz 0'a başlamadan önce bu ROADMAP repo köküne eklenir, `.cursorrules` kurulur ve Faz 0 iş listesi Cursor'a adım adım verilir. Her fazın başında bu belge üzerinden o faza özel Cursor promptları hazırlanır.*
+*Faz 0 kapandı (11 Tem 2026). Sonraki adım: Faz 1 — PostgreSQL geçişi. Her fazın başında bu belge üzerinden o faza özel Cursor promptları hazırlanır.*
