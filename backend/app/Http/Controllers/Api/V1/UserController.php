@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Mail\PasswordResetByAdmin;
 use App\Mail\UserInvitation;
 use App\Models\ActivityLog;
 use App\Models\User;
@@ -364,16 +365,16 @@ class UserController extends BaseController
             $user->roles()->sync($validated['roles']);
         }
 
-        // E-posta gönder
+        // E-posta gönder (queued)
         try {
             $roleNames = $user->roles->pluck('name')->join(', ') ?: null;
-            Mail::to($user->email)->send(new UserInvitation($company, $user->email, $token, $roleNames));
+            Mail::to($user->email)->queue(new UserInvitation($company, $user->email, $token, $roleNames));
         } catch (\Exception $e) {
             \Log::error('Invitation email failed: '.$e->getMessage());
             // Kullanıcıyı sil
             $user->delete();
 
-            return $this->error('Davet e-postası gönderilemedi. Lütfen SMTP ayarlarınızı kontrol edin.', 500);
+            return $this->error('Davet e-postası kuyruğa alınamadı. Lütfen SMTP/queue ayarlarınızı kontrol edin.', 500);
         }
 
         ActivityLog::log('create', $user, "Kullanıcı davet edildi: {$user->name} ({$user->email})");
@@ -410,7 +411,7 @@ class UserController extends BaseController
 
         // Kullanıcıya bildirim gönderilmesi istenirse
         if ($request->boolean('notify_user')) {
-            // TODO: E-posta gönder (şifre sıfırlama bildirimi)
+            Mail::to($user->email)->queue(new PasswordResetByAdmin($user, $validated['password']));
         }
 
         return $this->success(null, 'Şifre başarıyla sıfırlandı');

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Notifications\ResetPasswordNotification;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -118,7 +119,15 @@ class User extends Authenticatable
      */
     public function isActive(): bool
     {
-        return $this->is_active;
+        return (bool) $this->is_active;
+    }
+
+    /**
+     * Şifre sıfırlama bildirimi — SPA reset URL'si (queued).
+     */
+    public function sendPasswordResetNotification(#[\SensitiveParameter] $token): void
+    {
+        $this->notify(new ResetPasswordNotification($token));
     }
 
     /**

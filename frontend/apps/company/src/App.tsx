@@ -17,6 +17,8 @@ import ModuleProtectedRoute from './components/routing/ModuleProtectedRoute';
 
 // Auth Pages
 import LoginPage from './pages/auth/LoginPage';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 
 // Dashboard
 import DashboardPage from './pages/DashboardPage';
@@ -174,6 +176,8 @@ const App: React.FC = () => {
         {/* Auth Routes */}
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
         </Route>
 
         {/* Protected Routes */}

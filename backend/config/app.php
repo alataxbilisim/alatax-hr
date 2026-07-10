@@ -56,6 +56,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Frontend SPA URL'leri (şifre sıfırlama / davet linkleri)
+    |--------------------------------------------------------------------------
+    |
+    | Şifre sıfırlama ve davet e-postalarındaki linkler bu adreslere gider.
+    | Tek FRONTEND_URL geriye uyumluluk için company paneline düşer.
+    |
+    */
+
+    'frontend_url' => env('FRONTEND_URL', env('FRONTEND_URL_COMPANY', 'http://localhost:3002')),
+
+    'frontend_urls' => [
+        'company' => env('FRONTEND_URL_COMPANY', env('FRONTEND_URL', 'http://localhost:3002')),
+        'portal' => env('FRONTEND_URL_PORTAL', 'http://localhost:3003'),
+        'superadmin' => env('FRONTEND_URL_SUPERADMIN', 'http://localhost:3001'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

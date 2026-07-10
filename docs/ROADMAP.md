@@ -77,14 +77,17 @@ Fark yaratacak 4 şey:
 - [ ] `DatabaseSeeder`'a `LicensePackageSeeder` ve `LeaveTypeSeeder` eklenir; temiz kurulum tek komutla ayağa kalkar
 - [ ] Frontend bug turu: Portal `state.auth.loading` → `isLoading`; `notificationSlice` store'a kayıt; `ADMIN_ROUTES.LICENSE_PACKAGES` düzeltmesi; boş `components/index.ts`
 - [ ] 6 kayıp route kararı: `/onboarding/templates`, `/performance/periods`, `/performance/criteria`, `/training/sessions`, `/assets/categories`, `/assets/assignments` → sayfası yazılacaklar router'a eklenir, yazılmayacaklar sidebar'dan kaldırılır
-- [ ] Forgot-password / reset-password sayfaları (3 SPA'da login akışına bağlı; API zaten hazır)
-- [ ] Davet e-postası + şifre sıfırlama bildirimi Mailable'ları (EmployeeController:320/450, UserController:412 TODO'ları)
+- [x] Forgot-password / reset-password sayfaları (3 SPA'da login akışına bağlı; API zaten hazır)
+- [x] Davet e-postası + şifre sıfırlama bildirimi Mailable'ları (EmployeeController:320/450, UserController:412 TODO'ları)
 - [ ] Docker Compose (dev): nginx + php-fpm + postgres + redis + worker + scheduler + 3 vite dev server — on-prem paketinin de temeli
 - [ ] CI (GitHub Actions): Pint + ESLint + PHPUnit her push'ta
 - [ ] CORS temizliği (hardcoded IP kaldırılır, env'den okunur); throttle 500/dk → endpoint grubu bazlı makul limitler (auth: 10/dk, genel: 120/dk, export: 10/dk)
 - [ ] i18n altyapısı: react-i18next + Laravel lang dosyaları kurulur; **kural:** bu commit'ten sonra yazılan her yeni UI metni t() ile
 - [ ] Kullanılmayan bağımlılık kararı: react-hook-form + zod **benimsenir** (Form Engine'in temeli olacak), @hookform/resolvers kalır; kullanılmayanlar temizlenir
 - [ ] `_archive_old_app/` repo'dan çıkarılır (ayrı branch/arşiv)
+
+**Açık test borçları**
+- [ ] **MAIL TESTİ (yapılacak):** Mailtrap SMTP bağla → forgot-password/reset + davet e-postalarını uçtan uca doğrula. Adımlar: (a) Mailtrap değerlerini `.env`'e gir, `MAIL_MAILER=smtp`; (b) `FRONTEND_URL_*` portları doğrula; (c) queue worker çalışsın; (d) `config:clear`; (e) login→şifremi unuttum→Mailtrap inbox'ta Türkçe mail + reset linki testi. Kod hazır, sadece SMTP bağlama + doğrulama kaldı.
 
 **DoD:** Sıfır makinede `docker compose up` + seed ile sistem tam çalışır; CI yeşil; login→şifre sıfırlama→davet uçtan uca çalışır.
 

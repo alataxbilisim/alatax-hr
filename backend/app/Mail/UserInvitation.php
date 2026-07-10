@@ -4,12 +4,13 @@ namespace App\Mail;
 
 use App\Models\Company;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class UserInvitation extends Mailable
+class UserInvitation extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
@@ -23,16 +24,17 @@ class UserInvitation extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: $this->company->name.' - Sistem Daveti',
+            subject: $this->company->name.' — Sistem Daveti',
         );
     }
 
     public function content(): Content
     {
-        $invitationUrl = config('app.frontend_url', 'http://localhost:3000').'/invite/'.$this->invitationToken;
+        $base = rtrim((string) config('app.frontend_urls.company', config('app.frontend_url', 'http://localhost:3002')), '/');
+        $invitationUrl = $base.'/invite/'.$this->invitationToken;
 
         return new Content(
-            view: 'emails.user-invitation',
+            markdown: 'emails.user-invitation',
             with: [
                 'company' => $this->company,
                 'email' => $this->email,

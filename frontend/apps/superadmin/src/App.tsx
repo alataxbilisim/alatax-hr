@@ -10,6 +10,8 @@ import AuthLayout from './layouts/AuthLayout';
 
 // Pages
 import LoginPage from './pages/LoginPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import DashboardPage from './pages/DashboardPage';
 import CompaniesPage from './pages/CompaniesPage';
 import PackagesPage from './pages/PackagesPage';
@@ -68,6 +70,8 @@ const App: React.FC = () => {
         {/* Auth Routes */}
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
         </Route>
 
         {/* Protected Admin Routes */}

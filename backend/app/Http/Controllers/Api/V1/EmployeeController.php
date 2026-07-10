@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Mail\EmployeeInvitation;
 use App\Models\ActivityLog;
 use App\Models\AssetAssignment;
 use App\Models\CustomFieldDefinition;
@@ -18,6 +19,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -300,6 +302,7 @@ class EmployeeController extends BaseController
             // Portal erişimi oluştur
             if ($request->get('create_portal_access', false)) {
                 $temporaryPassword = Str::random(12);
+                $invitationToken = Str::random(64);
 
                 $user = User::create([
                     'company_id' => $this->getCompanyId(),
@@ -308,6 +311,8 @@ class EmployeeController extends BaseController
                     'password' => Hash::make($temporaryPassword),
                     'type' => 'user',
                     'is_active' => true,
+                    'invitation_token' => Hash::make($invitationToken),
+                    'invited_at' => now(),
                     'created_by' => auth()->id(),
                 ]);
 
@@ -317,8 +322,9 @@ class EmployeeController extends BaseController
                 // Varsayılan rol ata
                 $user->assignRole('employee');
 
-                // TODO: Davet emaili gönder
-                // Mail::to($user->email)->send(new EmployeeInvitation($user, $employee, $temporaryPassword));
+                Mail::to($user->email)->queue(
+                    new EmployeeInvitation($user->load('company'), $employee, $temporaryPassword, $invitationToken)
+                );
             }
 
             ActivityLog::log('create', $employee, 'Personel kaydı oluşturuldu: '.$validated['name'], null, $employee->toArray());
@@ -432,6 +438,7 @@ class EmployeeController extends BaseController
         DB::beginTransaction();
         try {
             $temporaryPassword = Str::random(12);
+            $invitationToken = Str::random(64);
 
             $user = User::create([
                 'company_id' => $this->getCompanyId(),
@@ -440,6 +447,8 @@ class EmployeeController extends BaseController
                 'password' => Hash::make($temporaryPassword),
                 'type' => 'user',
                 'is_active' => true,
+                'invitation_token' => Hash::make($invitationToken),
+                'invited_at' => now(),
                 'created_by' => auth()->id(),
             ]);
 
@@ -448,7 +457,9 @@ class EmployeeController extends BaseController
 
             ActivityLog::log('update', $employee, 'Personele portal erişimi verildi');
 
-            // TODO: Davet emaili gönder
+            Mail::to($user->email)->queue(
+                new EmployeeInvitation($user->load('company'), $employee, $temporaryPassword, $invitationToken)
+            );
 
             DB::commit();
 

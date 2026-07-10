@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { AppDispatch, RootState } from '../store';
 import { login } from '@shared/store/slices/authSlice';
 import toast from 'react-hot-toast';
@@ -90,6 +90,12 @@ const LoginPage: React.FC = () => {
           {isLoading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
         </button>
       </form>
+
+      <div className="auth-footer mt-3 text-center">
+        <p>
+          Şifrenizi mi unuttunuz? <Link to="/forgot-password">Şifre Sıfırla</Link>
+        </p>
+      </div>
     </div>
   );
 };

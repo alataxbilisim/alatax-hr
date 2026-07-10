@@ -41,12 +41,19 @@ api.interceptors.response.use(
     if (response) {
       switch (response.status) {
         case 401:
-          // Token geçersiz - logout yap (login sayfasında yeniden yönlendirme yapma)
+          // Token geçersiz - logout yap (public auth sayfalarında yeniden yönlendirme yapma)
           localStorage.removeItem('token');
           localStorage.removeItem('user');
-          if (!window.location.pathname.includes('/login')) {
-            window.location.href = '/login';
-            toast.error('Oturumunuz sona erdi. Lütfen tekrar giriş yapın.');
+          {
+            const path = window.location.pathname;
+            const isPublicAuth =
+              path.includes('/login') ||
+              path.includes('/forgot-password') ||
+              path.includes('/reset-password');
+            if (!isPublicAuth) {
+              window.location.href = '/login';
+              toast.error('Oturumunuz sona erdi. Lütfen tekrar giriş yapın.');
+            }
           }
           break;
         case 403:
