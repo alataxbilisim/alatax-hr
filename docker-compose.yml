@@ -98,6 +98,29 @@ services:
       - alatax
   # --- /mysql ---
 
+  # --- PostgreSQL (Faz 1: mysql YANINA; app default hâlâ mysql) ---
+  postgres:
+    image: postgres:16-alpine
+    container_name: alatax-hr-postgres
+    restart: unless-stopped
+    ports:
+      - "${POSTGRES_HOST_PORT:-5432}:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-alatax_hr}
+      POSTGRES_USER: ${POSTGRES_USER:-alatax}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secret}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    networks:
+      - alatax
+  # --- /postgres ---
+
   redis:
     image: redis:7-alpine
     container_name: alatax-hr-redis
@@ -198,4 +221,5 @@ networks:
 
 volumes:
   mysql_data:
+  postgres_data:
   redis_data:
