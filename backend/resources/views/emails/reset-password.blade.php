@@ -1,16 +1,20 @@
 <x-mail::message>
-# Şifre Sıfırlama
+# {{ __('messages.mail.reset_password_heading') }}
 
-Merhaba{{ isset($user) && $user->name ? ' '.$user->name : '' }},
+@if(isset($user) && $user->name)
+{{ __('messages.mail.hello_name', ['name' => $user->name]) }},
+@else
+{{ __('messages.mail.hello') }},
+@endif
 
-Hesabınız için şifre sıfırlama talebi aldık. Aşağıdaki düğmeye tıklayarak yeni şifrenizi belirleyebilirsiniz.
+{{ __('messages.mail.reset_password_intro') }}
 
 <x-mail::button :url="$url" color="success">
-Şifremi Sıfırla
+{{ __('messages.mail.reset_password_action') }}
 </x-mail::button>
 
-Bu bağlantı yaklaşık **{{ $expireMinutes }} dakika** geçerlidir. Talebi siz oluşturmadıysanız bu e-postayı yok sayabilirsiniz.
+{!! __('messages.mail.reset_password_expire', ['minutes' => $expireMinutes]) !!}
 
-Saygılarımızla,<br>
+{{ __('messages.mail.reset_password_salutation') }},<br>
 {{ config('app.name') }}
 </x-mail::message>

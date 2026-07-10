@@ -11,6 +11,7 @@ ALATAX HR: Türkiye odaklı, multi-tenant B2B HR SaaS. Backend: Laravel 12 REST 
 1. Değişiklik yapmadan ÖNCE ilgili mevcut dosyaları oku; projedeki mevcut desenleri taklit et, yeni desen icat etme.
 2. Büyük refactor'ları küçük, çalışır adımlara böl. Her adımda proje ayağa kalkabilir durumda kalmalı.
 3. Kod, yorum ve commit mesajları: kod İngilizce, UI metinleri Türkçe (ama her zaman t() üzerinden), yorumlar Türkçe olabilir.
+   **i18n kuralı (Faz 0+):** Bundan sonra yazılan HER yeni UI metni `t()` ile yazılır (hardcode yasak). Eski string'ler backlog; toplu çeviri yapılmaz. Çeviri dosyaları: `packages/shared/src/i18n/locales/tr/*.json` + backend `lang/tr/`. Detay: `docs/I18N.md`.
 4. Bir şeyi silmeden önce kullanım yerlerini ara; kullanılmayan kodu tespit edersen sor, sessizce bırakma.
 5. Emin olmadığın mimari kararlarda uygulamadan önce seçenekleri özetleyip sor.
 
@@ -39,7 +40,7 @@ ALATAX HR: Türkiye odaklı, multi-tenant B2B HR SaaS. Backend: Laravel 12 REST 
 - **Server state:** TanStack React Query (yeni tüm veri çekme/mutation). Redux yalnızca auth/theme/ui state. Axios çağrıları `packages/shared/src/services/api.ts` client'ı üzerinden.
 - **Formlar:** react-hook-form + zod. Form Engine (Faz 4) hazır olduktan sonra entity formları FormEngine bileşeniyle kurulur, elle form yazılmaz.
 - **Stil:** Renk/spacing/font-size hardcode YASAK; her zaman `theme.css` CSS variable'ları. Yeni token gerekiyorsa önce theme.css'e eklenir. Density (`data-density`) desteğini boz­ma.
-- **Metinler:** Yeni her UI metni i18n t() ile yazılır; string hardcode edilmez.
+- **Metinler:** Yeni her UI metni i18n `t()` ile yazılır; string hardcode edilmez. Namespace: `common` / `auth` / `validation` (+ modül JSON'ları). Dil sabit `tr` (switcher yok). Eski hardcoded metinler backlog.
 - **Yapı:** Bir bileşen 2+ app'te kullanılacaksa `packages/shared`'a, tek app'e özelse o app'in `components/` klasörüne. Sayfa eklerken üçlü birlikte yapılır: route tanımı + sidebar girişi + permission/module guard. Sidebar'a route'suz link eklemek yasak.
 - Liste sayfaları ortak DataTable bileşenini kullanır; özel tablo yazılmaz.
 

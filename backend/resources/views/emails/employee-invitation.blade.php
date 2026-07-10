@@ -1,33 +1,31 @@
 <x-mail::message>
-# Portal Daveti
+# {{ __('messages.mail.employee_invitation_heading') }}
 
-Merhaba {{ $user->name }},
+{{ __('messages.mail.hello_name', ['name' => $user->name]) }},
 
 @if($company)
-**{{ $company->name }}** sizi {{ config('app.name') }} personel self-servis portalına davet ediyor.
+{!! __('messages.mail.employee_invitation_intro', ['company' => $company->name, 'app' => config('app.name')]) !!}
 @else
-{{ config('app.name') }} personel self-servis portalına davet edildiniz.
+{{ __('messages.mail.employee_invitation_intro_generic', ['app' => config('app.name')]) }}
 @endif
 
-Geçici giriş bilgileriniz:
+{{ __('messages.mail.employee_invitation_credentials') }}
 
-- **E-posta:** {{ $user->email }}
-- **Geçici şifre:** `{{ $temporaryPassword }}`
+- **{{ __('messages.mail.employee_invitation_email') }}:** {{ $user->email }}
+- **{{ __('messages.mail.employee_invitation_temp_password') }}:** `{{ $temporaryPassword }}`
 
 <x-mail::button :url="$loginUrl" color="success">
-Portala Giriş Yap
+{{ __('messages.mail.employee_invitation_login') }}
 </x-mail::button>
 
 @if($inviteUrl)
-Daveti kabul edip kendi şifrenizi belirlemek için:
-
 <x-mail::button :url="$inviteUrl">
-Daveti Kabul Et
+{{ __('messages.mail.employee_invitation_accept') }}
 </x-mail::button>
 @endif
 
-Güvenliğiniz için ilk girişten sonra şifrenizi değiştirmenizi öneririz.
+{{ __('messages.mail.employee_invitation_change_hint') }}
 
-Saygılarımızla,<br>
+{{ __('messages.mail.reset_password_salutation') }},<br>
 {{ config('app.name') }}
 </x-mail::message>

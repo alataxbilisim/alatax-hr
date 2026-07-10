@@ -3,6 +3,8 @@
  * Standart validation fonksiyonları ve helper'lar
  */
 
+import i18n from '../i18n';
+
 // Validation Rule Types
 export type ValidationRule<T = string> = (value: T, formData?: Record<string, unknown>) => string | null;
 
@@ -21,13 +23,13 @@ export interface ValidationErrors {
 /**
  * Required field validation
  */
-export const required = (message = 'Bu alan zorunludur'): ValidationRule => 
+export const required = (message?: string): ValidationRule => 
   (value) => {
     if (value === null || value === undefined || value === '') {
-      return message;
+      return message ?? i18n.t('validation:required');
     }
     if (Array.isArray(value) && value.length === 0) {
-      return message;
+      return message ?? i18n.t('validation:required');
     }
     return null;
   };
@@ -35,11 +37,11 @@ export const required = (message = 'Bu alan zorunludur'): ValidationRule =>
 /**
  * Email format validation
  */
-export const email = (message = 'Geçerli bir e-posta adresi girin'): ValidationRule => 
+export const email = (message?: string): ValidationRule => 
   (value) => {
     if (!value) return null;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(String(value)) ? null : message;
+    return emailRegex.test(String(value)) ? null : (message ?? i18n.t('validation:email'));
   };
 
 /**
@@ -49,7 +51,7 @@ export const minLength = (min: number, message?: string): ValidationRule =>
   (value) => {
     if (!value) return null;
     const len = String(value).length;
-    return len >= min ? null : (message || `En az ${min} karakter olmalı`);
+    return len >= min ? null : (message || i18n.t('validation:min_length', { min }));
   };
 
 /**
@@ -59,7 +61,7 @@ export const maxLength = (max: number, message?: string): ValidationRule =>
   (value) => {
     if (!value) return null;
     const len = String(value).length;
-    return len <= max ? null : (message || `En fazla ${max} karakter olabilir`);
+    return len <= max ? null : (message || i18n.t('validation:max_length', { max }));
   };
 
 /**
@@ -68,7 +70,7 @@ export const maxLength = (max: number, message?: string): ValidationRule =>
 export const minValue = (min: number, message?: string): ValidationRule<number> => 
   (value) => {
     if (value === null || value === undefined) return null;
-    return value >= min ? null : (message || `En az ${min} olmalı`);
+    return value >= min ? null : (message || i18n.t('validation:min_value', { min }));
   };
 
 /**
@@ -77,41 +79,41 @@ export const minValue = (min: number, message?: string): ValidationRule<number> 
 export const maxValue = (max: number, message?: string): ValidationRule<number> => 
   (value) => {
     if (value === null || value === undefined) return null;
-    return value <= max ? null : (message || `En fazla ${max} olabilir`);
+    return value <= max ? null : (message || i18n.t('validation:max_value', { max }));
   };
 
 /**
  * Pattern validation (regex)
  */
-export const pattern = (regex: RegExp, message = 'Geçerli bir format girin'): ValidationRule => 
+export const pattern = (regex: RegExp, message?: string): ValidationRule => 
   (value) => {
     if (!value) return null;
-    return regex.test(String(value)) ? null : message;
+    return regex.test(String(value)) ? null : (message ?? i18n.t('validation:pattern'));
   };
 
 /**
  * Phone number validation (Turkish format)
  */
-export const phone = (message = 'Geçerli bir telefon numarası girin'): ValidationRule => 
+export const phone = (message?: string): ValidationRule => 
   (value) => {
     if (!value) return null;
     // Turkish phone: 05XX XXX XX XX or +90 5XX XXX XX XX
     const phoneRegex = /^(\+90|0)?[5][0-9]{9}$/;
     const cleaned = String(value).replace(/[\s\-\(\)]/g, '');
-    return phoneRegex.test(cleaned) ? null : message;
+    return phoneRegex.test(cleaned) ? null : (message ?? i18n.t('validation:phone'));
   };
 
 /**
  * URL validation
  */
-export const url = (message = 'Geçerli bir URL girin'): ValidationRule => 
+export const url = (message?: string): ValidationRule => 
   (value) => {
     if (!value) return null;
     try {
       new URL(String(value));
       return null;
     } catch {
-      return message;
+      return message ?? i18n.t('validation:url');
     }
   };
 

@@ -8,7 +8,7 @@ Türkiye odaklı multi-tenant B2B HR SaaS.
 | Frontend | pnpm monorepo — SuperAdmin `:3001`, Company `:3002`, Portal `:3003` |
 | API | `http://localhost:8000` |
 
-Yol haritası: [`docs/ROADMAP.md`](docs/ROADMAP.md) · Başlangıç: [`docs/BURADAN_BASLA.md`](docs/BURADAN_BASLA.md)
+Yol haritası: [`docs/ROADMAP.md`](docs/ROADMAP.md) · Başlangıç: [`docs/BURADAN_BASLA.md`](docs/BURADAN_BASLA.md) · i18n: [`docs/I18N.md`](docs/I18N.md)
 
 ---
 

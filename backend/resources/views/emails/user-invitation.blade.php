@@ -1,24 +1,24 @@
 <x-mail::message>
-# Sistem Daveti
+# {{ __('messages.mail.invitation_heading') }}
 
-Merhaba,
+{{ __('messages.mail.hello') }},
 
-**{{ $company->name }}** sizi {{ config('app.name') }} sistemine davet ediyor.
+{!! __('messages.mail.invitation_intro', ['company' => $company->name, 'app' => config('app.name')]) !!}
 
 @if($role)
-Size atanan rol: **{{ $role }}**
+{!! __('messages.mail.invitation_role', ['role' => $role]) !!}
 @endif
 
 <x-mail::button :url="$invitationUrl" color="success">
-Daveti Kabul Et
+{{ __('messages.mail.invitation_action') }}
 </x-mail::button>
 
-Veya şu bağlantıyı tarayıcınıza yapıştırın:
+{{ __('messages.mail.invitation_copy') }}
 
 {{ $invitationUrl }}
 
-Bu davet 7 gün geçerlidir. Daveti siz istemediyseniz bu e-postayı yok sayabilirsiniz.
+{{ __('messages.mail.invitation_expire') }}
 
-Saygılarımızla,<br>
+{{ __('messages.mail.reset_password_salutation') }},<br>
 {{ config('app.name') }}
 </x-mail::message>

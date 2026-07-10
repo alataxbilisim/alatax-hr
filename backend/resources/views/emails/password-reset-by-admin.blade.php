@@ -1,19 +1,19 @@
 <x-mail::message>
-# Şifreniz Sıfırlandı
+# {{ __('messages.mail.admin_reset_heading') }}
 
-Merhaba {{ $user->name }},
+{{ __('messages.mail.hello_name', ['name' => $user->name]) }},
 
-Yöneticiniz hesabınızın şifresini sıfırladı. Yeni giriş bilgileriniz:
+{{ __('messages.mail.admin_reset_intro') }}
 
-- **E-posta:** {{ $user->email }}
-- **Yeni şifre:** `{{ $newPassword }}`
+- **{{ __('messages.mail.employee_invitation_email') }}:** {{ $user->email }}
+- **{{ __('messages.mail.admin_reset_new_password') }}:** `{{ $newPassword }}`
 
 <x-mail::button :url="$loginUrl" color="success">
-Giriş Yap
+{{ __('messages.mail.admin_reset_login') }}
 </x-mail::button>
 
-Güvenliğiniz için giriş yaptıktan sonra şifrenizi değiştirmenizi öneririz. Bu işlemi siz talep etmediyseniz lütfen yöneticinizle iletişime geçin.
+{{ __('messages.mail.admin_reset_hint') }}
 
-Saygılarımızla,<br>
+{{ __('messages.mail.reset_password_salutation') }},<br>
 {{ config('app.name') }}
 </x-mail::message>

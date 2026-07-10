@@ -1,0 +1,20 @@
+{
+  "required": "Bu alan zorunludur",
+  "required_email": "E-posta adresi gerekli",
+  "required_password": "Şifre gerekli",
+  "required_password_confirmation": "Şifre tekrarı gerekli",
+  "email": "Geçerli bir e-posta adresi girin",
+  "min_length": "En az {{min}} karakter olmalı",
+  "max_length": "En fazla {{max}} karakter olabilir",
+  "min_value": "En az {{min}} olmalı",
+  "max_value": "En fazla {{max}} olabilir",
+  "pattern": "Geçerli bir format girin",
+  "phone": "Geçerli bir telefon numarası girin",
+  "url": "Geçerli bir URL girin",
+  "password_min": "Şifre en az {{min}} karakter olmalı",
+  "password_lower": "En az bir küçük harf gerekli",
+  "password_upper": "En az bir büyük harf gerekli",
+  "password_number": "En az bir rakam gerekli",
+  "password_symbol": "En az bir özel karakter gerekli",
+  "password_mismatch": "Şifreler eşleşmiyor"
+}

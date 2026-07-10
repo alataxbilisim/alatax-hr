@@ -224,10 +224,10 @@ class AuthController extends BaseController
         );
 
         if ($status === Password::RESET_LINK_SENT) {
-            return $this->success(null, 'Şifre sıfırlama linki e-posta adresinize gönderildi');
+            return $this->success(null, __($status));
         }
 
-        return $this->error('E-posta gönderilemedi. Lütfen e-posta adresinizi kontrol edin.', 400);
+        return $this->error(__($status), 400);
     }
 
     /**
@@ -261,10 +261,10 @@ class AuthController extends BaseController
         );
 
         if ($status === Password::PASSWORD_RESET) {
-            return $this->success(null, 'Şifreniz başarıyla sıfırlandı');
+            return $this->success(null, __($status));
         }
 
-        return $this->error('Şifre sıfırlanamadı. Link geçersiz veya süresi dolmuş olabilir.', 400);
+        return $this->error(__($status), 400);
     }
 
     /**

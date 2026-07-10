@@ -31,7 +31,7 @@ class EmployeeInvitation extends Mailable implements ShouldQueue
         $companyName = $this->user->company?->name ?? config('app.name');
 
         return new Envelope(
-            subject: $companyName.' — Portal Daveti',
+            subject: __('messages.mail.employee_invitation_subject', ['company' => $companyName]),
         );
     }
 

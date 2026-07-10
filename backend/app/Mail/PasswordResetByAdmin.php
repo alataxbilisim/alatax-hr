@@ -25,7 +25,7 @@ class PasswordResetByAdmin extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: config('app.name').' — Şifreniz Sıfırlandı',
+            subject: __('messages.mail.admin_reset_subject', ['app' => config('app.name')]),
         );
     }
 

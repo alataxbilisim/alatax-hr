@@ -13,7 +13,8 @@
     "./utils": "./src/utils/index.ts",
     "./types": "./src/types/index.ts",
     "./store": "./src/store/index.ts",
-    "./styles/*": "./src/styles/*"
+    "./styles/*": "./src/styles/*",
+    "./i18n": "./src/i18n/index.ts"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0",
@@ -24,8 +25,10 @@
     "@reduxjs/toolkit": "^2.11.2",
     "@tanstack/react-query": "^5.90.12",
     "axios": "^1.13.2",
+    "i18next": "^26.3.6",
     "react-hook-form": "^7.69.0",
     "react-hot-toast": "^2.6.0",
+    "react-i18next": "^17.0.9",
     "react-icons": "^5.5.0",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.11.0",
@@ -37,4 +40,3 @@
     "typescript": "~5.9.3"
   }
 }
-

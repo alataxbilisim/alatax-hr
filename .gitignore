@@ -15,6 +15,8 @@ vendor/
 .phpactor.json
 auth.json
 **/auth.json
+# i18n çeviri dosyası (Composer/auth.json değil)
+!frontend/packages/shared/src/i18n/locales/**/auth.json
 
 # --- Backend (Laravel) ---
 backend/node_modules/

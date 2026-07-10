@@ -30,7 +30,7 @@ class ResetPasswordNotification extends Notification implements ShouldQueue
         $url = $this->resetUrl($notifiable);
 
         return (new MailMessage)
-            ->subject(config('app.name').' — Şifre Sıfırlama')
+            ->subject(__('messages.mail.reset_password_subject', ['app' => config('app.name')]))
             ->markdown('emails.reset-password', [
                 'url' => $url,
                 'user' => $notifiable,

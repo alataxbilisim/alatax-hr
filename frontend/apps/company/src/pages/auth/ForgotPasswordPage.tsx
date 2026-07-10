@@ -1,21 +1,30 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslation } from '@shared/i18n';
 import { authApi } from '@shared/services/api';
 import toast from 'react-hot-toast';
 import { BsEnvelope, BsBuilding, BsArrowLeft } from 'react-icons/bs';
 
-// TODO(i18n): hardcode Türkçe — i18n turunda t()'ye çevrilecek
-const forgotSchema = z.object({
-  email: z.string().min(1, 'E-posta adresi gerekli').email('Geçerli bir e-posta adresi girin'),
-});
-
-type ForgotForm = z.infer<typeof forgotSchema>;
+type ForgotForm = { email: string };
 
 const ForgotPasswordPage: React.FC = () => {
+  const { t } = useTranslation(['auth', 'validation']);
   const [sent, setSent] = useState(false);
+
+  const forgotSchema = useMemo(
+    () =>
+      z.object({
+        email: z
+          .string()
+          .min(1, t('validation:required_email'))
+          .email(t('validation:email')),
+      }),
+    [t]
+  );
+
   const {
     register,
     handleSubmit,
@@ -29,7 +38,7 @@ const ForgotPasswordPage: React.FC = () => {
     try {
       await authApi.forgotPassword({ email: data.email });
       setSent(true);
-      toast.success('Sıfırlama linki e-postanıza gönderildi');
+      toast.success(t('auth:forgot.sentToast'));
     } catch {
       // Hata interceptor tarafından gösterilir
     }
@@ -54,29 +63,27 @@ const ForgotPasswordPage: React.FC = () => {
             >
               <BsBuilding size={24} color="white" />
             </div>
-            <h1>ALATAX HR</h1>
-            <span>Firma Yönetim Paneli</span>
+            <h1>{t('auth:brandName')}</h1>
+            <span>{t('auth:companyPanel')}</span>
           </div>
 
-          <h2 className="auth-title">Şifremi Unuttum</h2>
-          <p className="auth-subtitle">
-            E-posta adresinize şifre sıfırlama bağlantısı göndereceğiz
-          </p>
+          <h2 className="auth-title">{t('auth:forgot.title')}</h2>
+          <p className="auth-subtitle">{t('auth:forgot.subtitle')}</p>
 
           {sent ? (
             <div style={{ textAlign: 'center' }}>
               <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-                Sıfırlama linki e-postanıza gönderildi. Gelen kutunuzu (ve spam klasörünü) kontrol edin.
+                {t('auth:forgot.sentBody')}
               </p>
               <Link to="/login" className="btn btn-primary btn-lg" style={{ width: '100%' }}>
-                Giriş sayfasına dön
+                {t('auth:backToLoginPage')}
               </Link>
             </div>
           ) : (
             <form onSubmit={handleSubmit(onSubmit)} className="auth-form" noValidate>
               <div className="form-group">
                 <label htmlFor="email" className="form-label">
-                  E-posta Adresi
+                  {t('auth:emailLabel')}
                 </label>
                 <div className="input-group">
                   <span className="input-icon">
@@ -86,7 +93,7 @@ const ForgotPasswordPage: React.FC = () => {
                     type="email"
                     id="email"
                     className={`form-control ${errors.email ? 'is-invalid' : ''}`}
-                    placeholder="ornek@sirket.com"
+                    placeholder={t('auth:emailPlaceholderCompany')}
                     autoComplete="email"
                     {...register('email')}
                   />
@@ -100,7 +107,7 @@ const ForgotPasswordPage: React.FC = () => {
                 disabled={isSubmitting}
                 style={{ width: '100%', marginTop: '0.5rem' }}
               >
-                {isSubmitting ? 'Gönderiliyor...' : 'Sıfırlama Linki Gönder'}
+                {isSubmitting ? t('auth:forgot.submitting') : t('auth:forgot.submit')}
               </button>
             </form>
           )}
@@ -109,7 +116,7 @@ const ForgotPasswordPage: React.FC = () => {
             <p>
               <Link to="/login">
                 <BsArrowLeft style={{ marginRight: 4 }} />
-                Girişe dön
+                {t('auth:backToLogin')}
               </Link>
             </p>
           </div>

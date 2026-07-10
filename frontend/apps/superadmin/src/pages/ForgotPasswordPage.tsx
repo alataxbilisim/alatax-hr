@@ -1,21 +1,30 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslation } from '@shared/i18n';
 import { authApi } from '@shared/services/api';
 import toast from 'react-hot-toast';
 import { BsEnvelope } from 'react-icons/bs';
 
-// TODO(i18n): hardcode Türkçe — i18n turunda t()'ye çevrilecek
-const forgotSchema = z.object({
-  email: z.string().min(1, 'E-posta adresi gerekli').email('Geçerli bir e-posta adresi girin'),
-});
-
-type ForgotForm = z.infer<typeof forgotSchema>;
+type ForgotForm = { email: string };
 
 const ForgotPasswordPage: React.FC = () => {
+  const { t } = useTranslation(['auth', 'validation']);
   const [sent, setSent] = useState(false);
+
+  const forgotSchema = useMemo(
+    () =>
+      z.object({
+        email: z
+          .string()
+          .min(1, t('validation:required_email'))
+          .email(t('validation:email')),
+      }),
+    [t]
+  );
+
   const {
     register,
     handleSubmit,
@@ -29,7 +38,7 @@ const ForgotPasswordPage: React.FC = () => {
     try {
       await authApi.forgotPassword({ email: data.email });
       setSent(true);
-      toast.success('Sıfırlama linki e-postanıza gönderildi');
+      toast.success(t('auth:forgot.sentToast'));
     } catch {
       // Hata interceptor tarafından gösterilir
     }
@@ -38,24 +47,24 @@ const ForgotPasswordPage: React.FC = () => {
   return (
     <div className="auth-card">
       <div className="auth-header">
-        <h2>Şifremi Unuttum</h2>
-        <p>E-posta adresinize şifre sıfırlama bağlantısı göndereceğiz</p>
+        <h2>{t('auth:forgot.title')}</h2>
+        <p>{t('auth:forgot.subtitle')}</p>
       </div>
 
       {sent ? (
         <div>
           <p style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>
-            Sıfırlama linki e-postanıza gönderildi. Gelen kutunuzu (ve spam klasörünü) kontrol edin.
+            {t('auth:forgot.sentBody')}
           </p>
           <Link to="/login" className="btn btn-primary btn-block">
-            Giriş sayfasına dön
+            {t('auth:backToLoginPage')}
           </Link>
         </div>
       ) : (
         <form onSubmit={handleSubmit(onSubmit)} className="auth-form" noValidate>
           <div className="form-group">
             <label htmlFor="email" className="form-label">
-              E-posta
+              {t('auth:email')}
             </label>
             <div className="input-group">
               <span className="input-icon">
@@ -65,7 +74,7 @@ const ForgotPasswordPage: React.FC = () => {
                 type="email"
                 id="email"
                 className={`form-control ${errors.email ? 'is-invalid' : ''}`}
-                placeholder="admin@alataxbilisim.com"
+                placeholder={t('auth:emailPlaceholderSuperadmin')}
                 autoComplete="email"
                 {...register('email')}
               />
@@ -74,13 +83,13 @@ const ForgotPasswordPage: React.FC = () => {
           </div>
 
           <button type="submit" className="btn btn-primary btn-block" disabled={isSubmitting}>
-            {isSubmitting ? 'Gönderiliyor...' : 'Sıfırlama Linki Gönder'}
+            {isSubmitting ? t('auth:forgot.submitting') : t('auth:forgot.submit')}
           </button>
         </form>
       )}
 
       <div className="auth-footer" style={{ marginTop: '1rem', textAlign: 'center' }}>
-        <Link to="/login">Girişe dön</Link>
+        <Link to="/login">{t('auth:backToLogin')}</Link>
       </div>
     </div>
   );

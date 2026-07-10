@@ -81,8 +81,9 @@ Fark yaratacak 4 şey:
 - [x] Davet e-postası + şifre sıfırlama bildirimi Mailable'ları (EmployeeController:320/450, UserController:412 TODO'ları)
 - [ ] Docker Compose (dev): nginx + php-fpm + postgres + redis + worker + scheduler + 3 vite dev server — on-prem paketinin de temeli
 - [ ] CI (GitHub Actions): Pint + ESLint + PHPUnit her push'ta
-- [ ] CORS temizliği (hardcoded IP kaldırılır, env'den okunur); throttle 500/dk → endpoint grubu bazlı makul limitler (auth: 10/dk, genel: 120/dk, export: 10/dk)
-- [ ] i18n altyapısı: react-i18next + Laravel lang dosyaları kurulur; **kural:** bu commit'ten sonra yazılan her yeni UI metni t() ile
+- [x] CORS temizliği (hardcoded IP kaldırılır, env'den okunur); throttle 500/dk → endpoint grubu bazlı makul limitler (auth: 10/dk, genel: 120/dk, export: 20/dk, public: 20/dk)
+- [x] i18n altyapısı: react-i18next + Laravel lang dosyaları kurulur; **kural:** bu commit'ten sonra yazılan her yeni UI metni t() ile
+  - Detay: `docs/I18N.md` · TODO(i18n) forgot/reset sayfaları `t()` ile taşındı; diğer eski string'ler backlog
 - [ ] Kullanılmayan bağımlılık kararı: react-hook-form + zod **benimsenir** (Form Engine'in temeli olacak), @hookform/resolvers kalır; kullanılmayanlar temizlenir
 - [ ] `_archive_old_app/` repo'dan çıkarılır (ayrı branch/arşiv)
 
