@@ -1,0 +1,37 @@
+# Docker build context — backend/Dockerfile context = repo root
+.git
+.github
+.cursor
+**/.DS_Store
+
+# Bağımlılıklar (image içinde kurulur / host'ta kalır)
+**/node_modules
+**/vendor
+backend/vendor
+
+# Env / secrets
+.env
+.env.*
+!.env.docker.example
+!**/.env.example
+
+# Frontend (Docker dışı)
+frontend
+
+# Laravel runtime / build artifaktları
+backend/storage/logs/*
+backend/storage/framework/cache/data/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/bootstrap/cache/*.php
+backend/public/build
+backend/public/hot
+backend/database/*.sqlite
+backend/database/*.sqlite-journal
+
+# Docs / IDE (build için gerekmez)
+docs
+.idea
+.vscode
+*.md
+!README.md

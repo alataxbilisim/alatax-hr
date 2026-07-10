@@ -1,0 +1,198 @@
+# ALATAX HR — Docker Compose (dev)
+# Frontend (SPA) Docker DIŞINDA: host'ta `pnpm --filter ... dev` (port 3001/3002/3003)
+#
+# Kullanım:
+#   cp .env.docker.example .env
+#   docker compose up -d --build
+#   docker compose exec app php artisan key:generate   # APP_KEY yoksa
+#   docker compose exec app php artisan migrate:fresh --seed
+
+name: alatax-hr
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: alatax-hr-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./backend:/var/www/html
+    env_file:
+      - .env
+    environment:
+      # Laravel: container env, mevcut backend/.env üzerine yazılmaz (immutable Dotenv)
+      APP_ENV: ${APP_ENV:-local}
+      APP_DEBUG: ${APP_DEBUG:-true}
+      APP_URL: ${APP_URL:-http://localhost:8000}
+      DB_CONNECTION: ${DB_CONNECTION:-mysql}
+      DB_HOST: mysql
+      DB_PORT: ${DB_PORT:-3306}
+      DB_DATABASE: ${MYSQL_DATABASE:-alatax_hr}
+      DB_USERNAME: ${MYSQL_USER:-alatax}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-secret}
+      REDIS_CLIENT: ${REDIS_CLIENT:-phpredis}
+      REDIS_HOST: redis
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-null}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      CACHE_STORE: ${CACHE_STORE:-redis}
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-redis}
+      SESSION_DRIVER: ${SESSION_DRIVER:-redis}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - alatax
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: alatax-hr-nginx
+    restart: unless-stopped
+    ports:
+      - "${APP_HTTP_PORT:-8000}:80"
+    volumes:
+      - ./backend:/var/www/html:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+    networks:
+      - alatax
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/up"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # --- Veritabanı (Faz 1'de PostgreSQL ile değiştirilecek izole blok) ---
+  mysql:
+    image: mysql:8.0
+    container_name: alatax-hr-mysql
+    restart: unless-stopped
+    ports:
+      - "${MYSQL_HOST_PORT:-3306}:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-secret}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-alatax_hr}
+      MYSQL_USER: ${MYSQL_USER:-alatax}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-secret}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command:
+      - --default-authentication-plugin=caching_sha2_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 40s
+    networks:
+      - alatax
+  # --- /mysql ---
+
+  redis:
+    image: redis:7-alpine
+    container_name: alatax-hr-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_HOST_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - alatax
+
+  queue:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: alatax-hr-queue
+    restart: unless-stopped
+    working_dir: /var/www/html
+    command: php artisan queue:listen --tries=1 --timeout=90
+    volumes:
+      - ./backend:/var/www/html
+    env_file:
+      - .env
+    environment:
+      APP_ENV: ${APP_ENV:-local}
+      APP_DEBUG: ${APP_DEBUG:-true}
+      APP_URL: ${APP_URL:-http://localhost:8000}
+      DB_CONNECTION: ${DB_CONNECTION:-mysql}
+      DB_HOST: mysql
+      DB_PORT: ${DB_PORT:-3306}
+      DB_DATABASE: ${MYSQL_DATABASE:-alatax_hr}
+      DB_USERNAME: ${MYSQL_USER:-alatax}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-secret}
+      REDIS_CLIENT: ${REDIS_CLIENT:-phpredis}
+      REDIS_HOST: redis
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-null}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      CACHE_STORE: ${CACHE_STORE:-redis}
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-redis}
+      SESSION_DRIVER: ${SESSION_DRIVER:-redis}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      app:
+        condition: service_started
+    networks:
+      - alatax
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: alatax-hr-scheduler
+    restart: unless-stopped
+    working_dir: /var/www/html
+    command: php artisan schedule:work
+    volumes:
+      - ./backend:/var/www/html
+    env_file:
+      - .env
+    environment:
+      APP_ENV: ${APP_ENV:-local}
+      APP_DEBUG: ${APP_DEBUG:-true}
+      APP_URL: ${APP_URL:-http://localhost:8000}
+      DB_CONNECTION: ${DB_CONNECTION:-mysql}
+      DB_HOST: mysql
+      DB_PORT: ${DB_PORT:-3306}
+      DB_DATABASE: ${MYSQL_DATABASE:-alatax_hr}
+      DB_USERNAME: ${MYSQL_USER:-alatax}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-secret}
+      REDIS_CLIENT: ${REDIS_CLIENT:-phpredis}
+      REDIS_HOST: redis
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-null}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      CACHE_STORE: ${CACHE_STORE:-redis}
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-redis}
+      SESSION_DRIVER: ${SESSION_DRIVER:-redis}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      app:
+        condition: service_started
+    networks:
+      - alatax
+
+networks:
+  alatax:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  redis_data:
