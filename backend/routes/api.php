@@ -16,8 +16,8 @@ use Illuminate\Support\Facades\Route;
 // API Version 1
 Route::prefix('v1')->group(function () {
 
-    // Public routes (authentication required olmayan)
-    Route::prefix('auth')->group(function () {
+    // Public routes (authentication required olmayan) — brute-force: 10/dk per IP
+    Route::prefix('auth')->middleware('throttle:auth')->group(function () {
         Route::post('/login', [\App\Http\Controllers\Api\V1\AuthController::class, 'login']);
         Route::post('/register', [\App\Http\Controllers\Api\V1\AuthController::class, 'register']);
         Route::post('/forgot-password', [\App\Http\Controllers\Api\V1\AuthController::class, 'forgotPassword']);
@@ -40,9 +40,11 @@ Route::prefix('v1')->group(function () {
 
         // Users (Company Admin only)
         Route::middleware('company_admin')->group(function () {
-            // Export/Import routes (must be before apiResource to avoid conflicts)
-            Route::get('/users/export', [\App\Http\Controllers\Api\V1\UserController::class, 'export']);
-            Route::post('/users/import', [\App\Http\Controllers\Api\V1\UserController::class, 'import']);
+            // Export/Import routes (must be before apiResource to avoid conflicts) — 20/dk
+            Route::middleware('throttle:exports')->group(function () {
+                Route::get('/users/export', [\App\Http\Controllers\Api\V1\UserController::class, 'export']);
+                Route::post('/users/import', [\App\Http\Controllers\Api\V1\UserController::class, 'import']);
+            });
             Route::post('/users/invite', [\App\Http\Controllers\Api\V1\UserController::class, 'invite']);
             Route::post('/users/bulk-update', [\App\Http\Controllers\Api\V1\UserController::class, 'bulkUpdate']);
 
@@ -115,9 +117,11 @@ Route::prefix('v1')->group(function () {
         Route::middleware('company_admin')->prefix('employees')->group(function () {
             Route::get('/', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'index']);
             Route::post('/', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'store']);
-            Route::get('/export', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'export']);
-            Route::post('/import', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'import']);
-            Route::get('/import/template', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'importTemplate']);
+            Route::middleware('throttle:exports')->group(function () {
+                Route::get('/export', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'export']);
+                Route::post('/import', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'import']);
+                Route::get('/import/template', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'importTemplate']);
+            });
             Route::post('/bulk-update', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'bulkUpdate']);
             Route::post('/bulk-delete', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'bulkDelete']);
             Route::get('/departments', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'departments']);
@@ -129,13 +133,15 @@ Route::prefix('v1')->group(function () {
             // BI Raporlama (MUST be before /{id} routes)
             Route::prefix('reports')->group(function () {
                 Route::get('/metadata', [\App\Http\Controllers\Api\V1\EmployeeReportController::class, 'metadata']);
-                Route::post('/data', [\App\Http\Controllers\Api\V1\EmployeeReportController::class, 'getData']);
+                Route::post('/data', [\App\Http\Controllers\Api\V1\EmployeeReportController::class, 'getData'])
+                    ->middleware('throttle:exports');
                 Route::get('/saved', [\App\Http\Controllers\Api\V1\EmployeeReportController::class, 'savedReports']);
                 Route::post('/saved', [\App\Http\Controllers\Api\V1\EmployeeReportController::class, 'saveReport']);
                 Route::put('/saved/{id}', [\App\Http\Controllers\Api\V1\EmployeeReportController::class, 'updateReport']);
                 Route::delete('/saved/{id}', [\App\Http\Controllers\Api\V1\EmployeeReportController::class, 'deleteReport']);
                 Route::post('/saved/{id}/favorite', [\App\Http\Controllers\Api\V1\EmployeeReportController::class, 'toggleFavorite']);
-                Route::post('/export/excel', [\App\Http\Controllers\Api\V1\EmployeeReportController::class, 'exportExcel']);
+                Route::post('/export/excel', [\App\Http\Controllers\Api\V1\EmployeeReportController::class, 'exportExcel'])
+                    ->middleware('throttle:exports');
             });
 
             // Dashboard (Çoklu Widget BI Dashboard - MUST be before /{id} routes)
@@ -147,7 +153,8 @@ Route::prefix('v1')->group(function () {
                 Route::put('/{dashboardId}', [\App\Http\Controllers\Api\V1\EmployeeDashboardController::class, 'update']);
                 Route::delete('/{dashboardId}', [\App\Http\Controllers\Api\V1\EmployeeDashboardController::class, 'destroy']);
                 Route::post('/{dashboardId}/favorite', [\App\Http\Controllers\Api\V1\EmployeeDashboardController::class, 'toggleFavorite']);
-                Route::get('/{dashboardId}/export/excel', [\App\Http\Controllers\Api\V1\EmployeeDashboardController::class, 'exportExcel']);
+                Route::get('/{dashboardId}/export/excel', [\App\Http\Controllers\Api\V1\EmployeeDashboardController::class, 'exportExcel'])
+                    ->middleware('throttle:exports');
             });
 
             // Employee CRUD (/{id} routes MUST be AFTER specific routes)
@@ -204,7 +211,8 @@ Route::prefix('v1')->group(function () {
 
         // Activity Logs
         Route::get('/activity-logs', [\App\Http\Controllers\Api\V1\ActivityLogController::class, 'index']);
-        Route::get('/activity-logs/export', [\App\Http\Controllers\Api\V1\ActivityLogController::class, 'export']);
+        Route::get('/activity-logs/export', [\App\Http\Controllers\Api\V1\ActivityLogController::class, 'export'])
+            ->middleware('throttle:exports');
         Route::get('/activity-logs/{id}', [\App\Http\Controllers\Api\V1\ActivityLogController::class, 'show']);
 
         // Notifications
@@ -652,9 +660,9 @@ Route::prefix('v1')->group(function () {
     });
 
     // ===========================================
-    // PUBLIC ROUTES (Başvuru formları vb.)
+    // PUBLIC ROUTES (Başvuru formları vb.) — 20/dk per IP
     // ===========================================
-    Route::prefix('public')->group(function () {
+    Route::prefix('public')->middleware('throttle:public')->group(function () {
         // Firma bazlı açık pozisyonlar
         Route::get('/companies/{companySlug}/jobs', [\App\Http\Controllers\Api\V1\Public\JobController::class, 'index']);
 

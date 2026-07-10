@@ -34,8 +34,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
 
-        // CORS ve throttle - development için yüksek limit
-        $middleware->throttleApi('500,1');
+        // Named limiter: AppServiceProvider → RateLimiter::for('api') = 120/dk
+        $middleware->throttleApi('api');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // API exception handling
