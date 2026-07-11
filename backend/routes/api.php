@@ -209,11 +209,14 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{id}', [\App\Http\Controllers\Api\V1\CustomFieldController::class, 'destroy']);
         });
 
-        // Activity Logs
-        Route::get('/activity-logs', [\App\Http\Controllers\Api\V1\ActivityLogController::class, 'index']);
+        // Activity Logs — management.audit_logs (PermissionSeeder: underscore)
+        // /export MUST be before /{id}
+        Route::get('/activity-logs', [\App\Http\Controllers\Api\V1\ActivityLogController::class, 'index'])
+            ->middleware('permission:management.audit_logs.view');
         Route::get('/activity-logs/export', [\App\Http\Controllers\Api\V1\ActivityLogController::class, 'export'])
-            ->middleware('throttle:exports');
-        Route::get('/activity-logs/{id}', [\App\Http\Controllers\Api\V1\ActivityLogController::class, 'show']);
+            ->middleware(['permission:management.audit_logs.export', 'throttle:exports']);
+        Route::get('/activity-logs/{id}', [\App\Http\Controllers\Api\V1\ActivityLogController::class, 'show'])
+            ->middleware('permission:management.audit_logs.view');
 
         // Notifications
         Route::prefix('notifications')->group(function () {
@@ -492,15 +495,23 @@ Route::prefix('v1')->group(function () {
             Route::get('/training', [\App\Http\Controllers\Api\V1\Analytics\HrAnalyticsController::class, 'training']);
         });
 
-        // Timesheet / Attendance (Company Admin)
+        // Timesheet / Attendance (HR) — timesheet.attendance.*
+        // Statik path'ler {id}'den önce
         Route::prefix('attendance')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Api\V1\Timesheet\AttendanceController::class, 'index']);
-            Route::get('/daily-summary', [\App\Http\Controllers\Api\V1\Timesheet\AttendanceController::class, 'dailySummary']);
-            Route::get('/{id}', [\App\Http\Controllers\Api\V1\Timesheet\AttendanceController::class, 'show']);
-            Route::post('/', [\App\Http\Controllers\Api\V1\Timesheet\AttendanceController::class, 'store']);
-            Route::put('/{id}', [\App\Http\Controllers\Api\V1\Timesheet\AttendanceController::class, 'update']);
-            Route::post('/{id}/approve', [\App\Http\Controllers\Api\V1\Timesheet\AttendanceController::class, 'approve']);
-            Route::post('/bulk-approve', [\App\Http\Controllers\Api\V1\Timesheet\AttendanceController::class, 'bulkApprove']);
+            Route::get('/', [\App\Http\Controllers\Api\V1\Timesheet\AttendanceController::class, 'index'])
+                ->middleware('permission:timesheet.attendance.view');
+            Route::get('/daily-summary', [\App\Http\Controllers\Api\V1\Timesheet\AttendanceController::class, 'dailySummary'])
+                ->middleware('permission:timesheet.attendance.view');
+            Route::post('/', [\App\Http\Controllers\Api\V1\Timesheet\AttendanceController::class, 'store'])
+                ->middleware('permission:timesheet.attendance.create');
+            Route::post('/bulk-approve', [\App\Http\Controllers\Api\V1\Timesheet\AttendanceController::class, 'bulkApprove'])
+                ->middleware('permission:timesheet.attendance.approve');
+            Route::get('/{id}', [\App\Http\Controllers\Api\V1\Timesheet\AttendanceController::class, 'show'])
+                ->middleware('permission:timesheet.attendance.view');
+            Route::put('/{id}', [\App\Http\Controllers\Api\V1\Timesheet\AttendanceController::class, 'update'])
+                ->middleware('permission:timesheet.attendance.edit');
+            Route::post('/{id}/approve', [\App\Http\Controllers\Api\V1\Timesheet\AttendanceController::class, 'approve'])
+                ->middleware('permission:timesheet.attendance.approve');
         });
     });
 
