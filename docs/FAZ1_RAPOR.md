@@ -1,19 +1,21 @@
 # FAZ 1 — PostgreSQL Geçişi Raporu
 
 **Branch:** `faz1-postgresql` (main'e dokunulmaz)  
-**Başlangıç:** 2026-07-11  
-**Kural:** Her adım ayrı commit; belirsizlikte DUR + buraya yaz.
+**Güncelleme:** 2026-07-11 (A/B/C karar uygulaması)
 
 ---
 
-## ★★★ KALİTİ SONUÇ ★★★
+## ★★★ ÖZET ★★★
 
-# `migrate:fresh --seed` POSTGRES'TE YEŞİL
-
-- 64 migration DONE + tüm seeder'lar DONE (pgsql)
-- Aynı komut **MySQL'de de YEŞİL** (geriye uyumluluk doğrulandı)
-- App default hâlâ **mysql** (main/docker kurulum bozulmadı)
-- Postgres container mysql'in **yanında** çalışıyor
+| Kontrol | Sonuç |
+|---------|--------|
+| `migrate:fresh --seed` **pgsql** | ✅ YEŞİL |
+| `migrate:fresh --seed` **mysql** (legacy) | ✅ YEŞİL |
+| Default connection | ✅ **pgsql** |
+| Docker app → postgres | ✅ `/up` 200 + login OK |
+| CI postgres | 🔄 push sonrası |
+| Squash | ⏸️ **Faz 2'ye ertelendi** |
+| mysql silme | ⏸️ **YAPILMADI** — legacy kalır (Faz 1 sonu/Faz 2) |
 
 ---
 
@@ -21,122 +23,63 @@
 
 | Adım | Durum | Not |
 |------|-------|-----|
-| 0 Hazırlık | ✅ | `faz1-postgresql` + tarama |
-| 1 Docker postgres | ✅ | postgres:16 + pdo_pgsql; mysql healthy kaldı |
-| 2 Teşhis migrate | ✅ | 1 blocker kategorize edildi |
-| 3 Uyumluluk fix | ✅ | blocker düzeltildi; pgsql+mysql seed yeşil |
-| 4 Squash | ⏸️ | **ATLANDI** — riskli; karar bekliyor |
-| 5 config/CI default pgsql | ⏸️ | **ATLANDI** — Adım 4 şartı; karar bekliyor |
-| 6 mysql kaldır | ⏸️ | **YAPILMADI** — mysql bırakıldı (kural) |
+| 0 Hazırlık | ✅ | |
+| 1 Docker postgres | ✅ | mysql yanında |
+| 2 Teşhis | ✅ | |
+| 3 Blocker fix | ✅ | employees nullable |
+| **A** json→jsonb + enum→string+CHECK | ✅ | iki DB yeşil |
+| **B** default pgsql | ✅ | mysql legacy |
+| **C** CI pgsql | ✅ kod | run push’ta |
+| 4 Squash | ⏸️ | **Faz 2'ye ertelendi** |
+| 6 mysql sil | ⏸️ | **silinmedi** — Faz 1 sonu/Faz 2 |
 
 ---
 
-## ADIM 0 — Hazırlık
+## ADIM A — enum / jsonb
 
-**Ne yaptım:** `git checkout -b faz1-postgresql`; config/database.php, docker-compose, 64 migration, phpunit.xml okundu.
+**Ne yapıldı:**
+- Tüm `->json(` → `->jsonb(` (pgsql native jsonb; mysql’de Laravel `json` map)
+- Tüm `->enum(` → `PortableEnum::column` (string + CHECK); reserved word quote (`condition`)
+- `App\Support\PortableEnum` + `flushChecks()` up() sonunda
+- PHP backed enums: çekirdek (`UserType`, `CompanyStatus`, …) + kalan setler auto
+- Model cast: User, Company, LeaveRequest, LeaveType, JobPosition, JobApplication, Asset, CompanyLedger (+ karşılaştırma güncellemeleri)
 
-**Bulgular:** default sqlite/mysql env; pgsql connection tanımlı; Dockerfile'da yalnızca `pdo_mysql` vardı; phpunit sqlite `:memory:`.
+**Doğrulama:** pgsql `preferences=jsonb`, `type=varchar`, `users_type_check=yes`  
+**pgsql + mysql** `migrate:fresh --seed` ✅
 
-**Karar?** Hayır.
-
----
-
-## ADIM 1 — Docker'a PostgreSQL (mysql kalır)
-
-**Ne yaptım:**
-- `postgres:16-alpine`, volume `postgres_data`, `pg_isready`, host **5432**
-- `.env.docker.example`: `POSTGRES_*` (mysql default)
-- Dockerfile: `libpq-dev` + `pdo_pgsql`
-- Rebuild + `docker compose up -d postgres app`
-
-**Sonuç:** postgres healthy + mysql healthy yan yana; `pdo_pgsql` yüklü.
-
-**Karar?** Hayır.
+**Not:** Tüm status kolonlarına cast yok (string `===` kırılmasın diye); kalan Enum sınıfları hazır, cast kademeli.
 
 ---
 
-## ADIM 2 — Teşhis (squash öncesi)
+## ADIM B — default pgsql
 
-**Ne yaptım:** pgsql'de `migrate:fresh`; FAIL sonrası dosyayı geçici atlayıp probe (geri yüklendi).
+- `config/database.php` default → `pgsql`
+- `.env.example` / `.env.docker.example` → `DB_CONNECTION=pgsql` (mysql yorumlu)
+- `docker-compose.yml`: app/queue/scheduler → `DB_HOST=postgres`; mysql servisi **kalır**
+- README güncellendi
 
-**Runtime:**
-- 58 migration ilk denemede DONE (enum/json dahil)
-- **FAIL:** `2025_01_25_000000_update_employees_table_make_user_id_nullable.php`
-  - `DATABASE()` / `SHOW INDEXES` (MySQL SQL)
-- Dosya atlanınca kalan migration'ların hepsi DONE
-
-**Kategori:**
-
-| Kategori | Runtime | Not |
-|----------|---------|-----|
-| MySQL ham SQL | BLOCKER (1 dosya) | yukarıdaki alter |
-| `->enum` (~67) | Geçiyor | Laravel pgsql → varchar+check |
-| `->json` (~56) | Geçiyor | pgsql `json` (jsonb değil) |
-| mediumText/longText/unsignedTinyInteger | Geçiyor | Laravel map |
-
-**⏸️ KARAR BEKLENİYOR (opsiyonel):** Toplu `enum`→`string`+CHECK ve `json`→`jsonb` (mysql için driver dalı gerekir). Runtime için **şart değil**.
+**Doğrulama:** `config=pgsql @ postgres:5432` · migrate+seed ✅ · `/up` 200 · login `admin@alataxbilisim.com` ✅  
+**Dikkat:** root `.env` içinde `DB_PORT=5432` olmalı (eski 3306 postgres’e bağlanmayı bozar).
 
 ---
 
-## ADIM 3 — Uyumluluk düzeltmesi
+## ADIM C — CI pgsql
 
-**Ne yaptım:**
-- `2025_01_25_000000_...` yeniden yazıldı: driver-aware; `Schema::getColumns` / `getForeignKeys` / `getIndexes`; fresh'te zaten nullable ise **no-op**
-- Ham `DATABASE()` / `SHOW INDEXES` kaldırıldı
-
-**Doğrulama:**
-| Ortam | Komut | Sonuç |
-|-------|-------|-------|
-| PostgreSQL | `migrate:fresh --seed --force` | ✅ YEŞİL |
-| MySQL (compose default) | `migrate:fresh --seed --force` | ✅ YEŞİL |
-
-**Karar?** Toplu enum/jsonb dönüşümü hâlâ opsiyonel (yukarıda).
+- `.github/workflows/ci.yml`: `postgres:16` service + `pdo_pgsql`
+- migrate + PHPUnit env → pgsql
+- PHPUnit `continue-on-error: true` **korundu** (Faz 2)
+- `phpunit.xml` sqlite → pgsql test DB
+- push trigger: `main` + `faz1-postgresql`
 
 ---
 
-## ADIM 4 — Migration squash
+## Ertelemeler
 
-**Durum:** ⏸️ **ATLANDI**
-
-**Neden:** Squash “olsa iyi”; şart olan postgres uyumu sağlandı. 64→baseline birleştirme + `pg_dump` şema diff doğrulaması gece otonomunda veri/şema kaybı riski yüksek. Emin değilim → kural gereği DUR.
-
-**⏸️ KARAR BEKLENİYOR:** Squash yapılsın mı? Yapılacaksa hangi modül grupları (`0001_core`, `0002_hr`, …)?
+- **Migration squash:** Faz 2’ye ertelendi (dokunulmadı).
+- **mysql servis silme:** Yapılmadı; legacy. Faz 1 sonu / Faz 2’de silinecek.
 
 ---
 
-## ADIM 5 — config / env / CI → pgsql default
+## Gece / önceki adımlar (özet)
 
-**Durum:** ⏸️ **ATLANDI** (kural: “SADECE 3-4 yeşilse”; 4 atlandı)
-
-**⏸️ KARAR BEKLENİYOR:**
-1. Squash olmadan default'u `pgsql` yapmak OK mi?
-2. CI'yı sqlite → postgres service container'a çevirmek (PHPUnit hâlâ kırık / Faz 2 borcu — CI'yı pgsql'e almak ayrı iş)
-
----
-
-## ADIM 6 — mysql kaldır
-
-**Durum:** ⏸️ **YAPILMADI** — mysql bırakıldı; default mysql. Kural: emin değilsen bırak.
-
----
-
-## Branch / commit'ler (bu gece)
-
-| Commit | Konu |
-|--------|------|
-| (adım 0) | `docs/FAZ1_RAPOR.md` başlangıç |
-| (adım 1) | docker postgres + Dockerfile pdo_pgsql |
-| (adım 2+3) | teşhis raporu + employees nullable migration fix |
-
-`main`'e merge/push yok. Push: `origin/faz1-postgresql`.
-
----
-
-## Sabah için net sonraki adımlar
-
-1. Onay: opsiyonel enum/jsonb toplu dönüşüm?
-2. Onay: migration squash + şema diff?
-3. Onay: default/CI → pgsql (mysql legacy kalsın)?
-4. Onay sonrası: mysql servisini kaldırma / legacy yorum.
-
----
+Adım 0–3: branch, postgres container, teşhis (1 MySQL SQL blocker), fix, seed yeşil. Detay yukarıdaki commit geçmişinde.
