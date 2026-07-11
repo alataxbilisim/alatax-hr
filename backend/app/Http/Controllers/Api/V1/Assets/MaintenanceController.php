@@ -154,8 +154,8 @@ class MaintenanceController extends BaseController
         ]);
 
         // Varlığı tekrar kullanılabilir yap
-        if ($maintenance->asset->status === 'maintenance') {
-            $maintenance->asset->update(['status' => 'available']);
+        if ($maintenance->asset->status === \App\Enums\AssetStatus::Maintenance) {
+            $maintenance->asset->update(['status' => \App\Enums\AssetStatus::Available]);
         }
 
         ActivityLog::log('update', $maintenance, 'Bakım tamamlandı: '.$maintenance->title);

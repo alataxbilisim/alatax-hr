@@ -14,7 +14,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->cascadeOnDelete();
             $table->string('name'); // e.g. "Standart Mesai", "Vardiyalı"
             $table->string('type')->default('fixed'); // fixed, flexible, shift
-            $table->json('working_days')->nullable(); // [1,2,3,4,5] = Mon-Fri
+            $table->jsonb('working_days')->nullable(); // [1,2,3,4,5] = Mon-Fri
             $table->time('default_start_time')->nullable();
             $table->time('default_end_time')->nullable();
             $table->time('break_start')->nullable();

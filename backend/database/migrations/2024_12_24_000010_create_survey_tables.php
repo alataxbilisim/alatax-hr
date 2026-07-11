@@ -18,15 +18,7 @@ return new class extends Migration
 
             $table->string('title');
             $table->text('description')->nullable();
-            $table->enum('type', [
-                'engagement',    // Çalışan bağlılığı
-                'satisfaction',  // Memnuniyet
-                'pulse',         // Kısa nabız yoklaması
-                'enps',          // Employee NPS
-                'onboarding',    // Onboarding deneyimi
-                'exit',          // Çıkış mülakatı
-                'custom',         // Özel
-            ])->default('custom');
+            \App\Support\PortableEnum::column($table, 'type', ['engagement', 'satisfaction', 'pulse', 'enps', 'onboarding', 'exit', 'custom'], 'custom', false, 64, null);
 
             $table->boolean('is_anonymous')->default(true);
             $table->boolean('is_active')->default(true);
@@ -34,11 +26,11 @@ return new class extends Migration
             // Zamanlama
             $table->datetime('start_date')->nullable();
             $table->datetime('end_date')->nullable();
-            $table->enum('recurrence', ['none', 'weekly', 'monthly', 'quarterly', 'yearly'])->default('none');
+            \App\Support\PortableEnum::column($table, 'recurrence', ['none', 'weekly', 'monthly', 'quarterly', 'yearly'], 'none', false, 64, null);
 
             // Hedef kitle
-            $table->enum('audience', ['all', 'department', 'position', 'custom'])->default('all');
-            $table->json('audience_filter')->nullable();
+            \App\Support\PortableEnum::column($table, 'audience', ['all', 'department', 'position', 'custom'], 'all', false, 64, null);
+            $table->jsonb('audience_filter')->nullable();
 
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
             $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('set null');
@@ -53,17 +45,9 @@ return new class extends Migration
 
             $table->integer('order_number');
             $table->text('question_text');
-            $table->enum('question_type', [
-                'single_choice',   // Tek seçim
-                'multiple_choice', // Çoklu seçim
-                'rating',          // Puanlama (1-5, 1-10)
-                'nps',             // NPS (0-10)
-                'text',            // Açık uçlu
-                'scale',           // Ölçek (Kesinlikle katılmıyorum - Kesinlikle katılıyorum)
-                'matrix',           // Matris soru
-            ]);
+            \App\Support\PortableEnum::column($table, 'question_type', ['single_choice', 'multiple_choice', 'rating', 'nps', 'text', 'scale', 'matrix'], null, false, 64, null);
 
-            $table->json('options')->nullable(); // Seçenekler
+            $table->jsonb('options')->nullable(); // Seçenekler
             $table->integer('min_value')->nullable(); // Rating/NPS için
             $table->integer('max_value')->nullable();
             $table->boolean('is_required')->default(true);
@@ -79,7 +63,7 @@ return new class extends Migration
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null'); // Anonim için null
 
             $table->string('anonymous_id')->nullable(); // Anonim takip için
-            $table->enum('status', ['started', 'completed', 'abandoned'])->default('started');
+            \App\Support\PortableEnum::column($table, 'status', ['started', 'completed', 'abandoned'], 'started', false, 64, null);
             $table->datetime('started_at');
             $table->datetime('completed_at')->nullable();
 
@@ -100,7 +84,7 @@ return new class extends Migration
 
             $table->text('answer_text')->nullable();
             $table->integer('answer_numeric')->nullable();
-            $table->json('answer_array')->nullable(); // Çoklu seçim için
+            $table->jsonb('answer_array')->nullable(); // Çoklu seçim için
 
             $table->timestamps();
         });
@@ -122,6 +106,7 @@ return new class extends Migration
 
             $table->unique(['company_id', 'period_date']);
         });
+        \App\Support\PortableEnum::flushChecks();
     }
 
     /**

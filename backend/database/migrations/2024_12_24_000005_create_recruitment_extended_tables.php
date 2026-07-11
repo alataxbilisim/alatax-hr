@@ -19,18 +19,18 @@ return new class extends Migration
             $table->foreignId('job_position_id')->constrained()->onDelete('cascade');
 
             $table->string('title'); // "Teknik Mülakat", "HR Görüşmesi"
-            $table->enum('type', ['phone', 'video', 'onsite', 'technical', 'hr', 'panel'])->default('onsite');
+            \App\Support\PortableEnum::column($table, 'type', ['phone', 'video', 'onsite', 'technical', 'hr', 'panel'], 'onsite', false, 64, null);
             $table->datetime('scheduled_at');
             $table->integer('duration_minutes')->default(60);
             $table->string('location')->nullable();
             $table->string('meeting_link')->nullable();
 
-            $table->enum('status', ['scheduled', 'completed', 'cancelled', 'no_show', 'rescheduled'])->default('scheduled');
+            \App\Support\PortableEnum::column($table, 'status', ['scheduled', 'completed', 'cancelled', 'no_show', 'rescheduled'], 'scheduled', false, 64, null);
             $table->text('notes')->nullable();
 
             // Değerlendirme
             $table->integer('overall_rating')->nullable(); // 1-5
-            $table->enum('recommendation', ['strong_hire', 'hire', 'no_decision', 'no_hire', 'strong_no_hire'])->nullable();
+            \App\Support\PortableEnum::column($table, 'recommendation', ['strong_hire', 'hire', 'no_decision', 'no_hire', 'strong_no_hire'], null, true, 64, null);
             $table->text('feedback')->nullable();
 
             $table->foreignId('interviewer_id')->constrained('users')->onDelete('cascade');
@@ -63,11 +63,11 @@ return new class extends Migration
             $table->date('start_date');
             $table->date('valid_until'); // Teklif geçerlilik
 
-            $table->json('benefits')->nullable(); // Yan haklar
+            $table->jsonb('benefits')->nullable(); // Yan haklar
             $table->text('additional_terms')->nullable();
             $table->string('document_path')->nullable(); // Teklif dokümanı
 
-            $table->enum('status', ['draft', 'sent', 'accepted', 'rejected', 'expired', 'withdrawn'])->default('draft');
+            \App\Support\PortableEnum::column($table, 'status', ['draft', 'sent', 'accepted', 'rejected', 'expired', 'withdrawn'], 'draft', false, 64, null);
             $table->datetime('sent_at')->nullable();
             $table->datetime('responded_at')->nullable();
             $table->text('rejection_reason')->nullable();
@@ -87,10 +87,10 @@ return new class extends Migration
             $table->foreignId('job_position_id')->constrained()->onDelete('cascade');
 
             $table->decimal('overall_score', 5, 2); // 0-100
-            $table->json('skill_matches')->nullable(); // Yetenek eşleşmeleri
-            $table->json('experience_score')->nullable(); // Deneyim puanı
-            $table->json('education_score')->nullable(); // Eğitim puanı
-            $table->json('keyword_matches')->nullable(); // Anahtar kelime eşleşmeleri
+            $table->jsonb('skill_matches')->nullable(); // Yetenek eşleşmeleri
+            $table->jsonb('experience_score')->nullable(); // Deneyim puanı
+            $table->jsonb('education_score')->nullable(); // Eğitim puanı
+            $table->jsonb('keyword_matches')->nullable(); // Anahtar kelime eşleşmeleri
 
             $table->text('summary')->nullable(); // AI özeti
             $table->timestamps();
@@ -104,7 +104,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->string('name'); // LinkedIn, Kariyer.net, Referans
             $table->string('code')->unique();
-            $table->enum('type', ['job_board', 'social', 'referral', 'career_site', 'agency', 'other'])->default('other');
+            \App\Support\PortableEnum::column($table, 'type', ['job_board', 'social', 'referral', 'career_site', 'agency', 'other'], 'other', false, 64, null);
             $table->decimal('cost_per_application', 10, 2)->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
@@ -114,9 +114,10 @@ return new class extends Migration
         Schema::table('job_applications', function (Blueprint $table) {
             $table->foreignId('source_id')->nullable()->after('status')->constrained('application_sources')->nullOnDelete();
             $table->decimal('match_score', 5, 2)->nullable()->after('source_id');
-            $table->json('parsed_cv_data')->nullable()->after('match_score'); // CV'den çıkarılan veriler
+            $table->jsonb('parsed_cv_data')->nullable()->after('match_score'); // CV'den çıkarılan veriler
             $table->datetime('last_contacted_at')->nullable()->after('parsed_cv_data');
         });
+        \App\Support\PortableEnum::flushChecks();
     }
 
     /**

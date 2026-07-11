@@ -26,11 +26,11 @@ return new class extends Migration
             $table->decimal('net_salary', 12, 2)->default(0);
 
             // Kesintiler (JSON)
-            $table->json('deductions')->nullable();
+            $table->jsonb('deductions')->nullable();
             // Örnek: {"sgk_employee": 1000, "income_tax": 500, "stamp_tax": 50, "other": []}
 
             // Ek ödemeler (JSON)
-            $table->json('bonuses')->nullable();
+            $table->jsonb('bonuses')->nullable();
             // Örnek: {"overtime": 500, "meal_allowance": 300, "transport": 200, "other": []}
 
             // Toplam değerler

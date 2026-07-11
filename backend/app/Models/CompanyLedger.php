@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\CompanyLedgerType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -34,6 +35,7 @@ class CompanyLedger extends Model
         'balance_after' => 'decimal:2',
         'payment_date' => 'date',
         'due_date' => 'date',
+        'type' => CompanyLedgerType::class,
     ];
 
     /**
@@ -88,7 +90,7 @@ class CompanyLedger extends Model
      */
     public function isDebit(): bool
     {
-        return $this->type === self::TYPE_DEBIT;
+        return $this->type === CompanyLedgerType::Debit;
     }
 
     /**
@@ -96,7 +98,7 @@ class CompanyLedger extends Model
      */
     public function isCredit(): bool
     {
-        return $this->type === self::TYPE_CREDIT;
+        return $this->type === CompanyLedgerType::Credit;
     }
 
     /**

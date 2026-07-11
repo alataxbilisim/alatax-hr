@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('period_id')->constrained('performance_periods')->cascadeOnDelete();
             $table->foreignId('employee_id')->constrained('users')->cascadeOnDelete(); // Değerlendirilen
             $table->foreignId('reviewer_id')->constrained('users')->cascadeOnDelete(); // Değerlendiren
-            $table->enum('status', ['draft', 'submitted', 'approved', 'rejected'])->default('draft');
+            \App\Support\PortableEnum::column($table, 'status', ['draft', 'submitted', 'approved', 'rejected'], 'draft', false, 64, null);
             $table->decimal('overall_score', 5, 2)->nullable(); // Genel puan
             $table->text('strengths')->nullable(); // Güçlü yönler
             $table->text('improvements')->nullable(); // Gelişim alanları
@@ -30,6 +30,7 @@ return new class extends Migration
             $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
+        \App\Support\PortableEnum::flushChecks();
     }
 
     /**

@@ -17,22 +17,14 @@ return new class extends Migration
             $table->foreignId('process_id')->constrained('onboarding_processes')->onDelete('cascade');
             $table->string('title');
             $table->text('description')->nullable();
-            $table->enum('type', [
-                'document_upload', // Evrak yükleme
-                'document_fill',   // Form doldurma
-                'training',        // Eğitim
-                'meeting',         // Toplantı
-                'system_setup',    // Sistem kurulumu
-                'quiz',            // Quiz/Anket
-                'custom',           // Özel görev
-            ])->default('custom');
+            \App\Support\PortableEnum::column($table, 'type', ['document_upload', 'document_fill', 'training', 'meeting', 'system_setup', 'quiz', 'custom'], 'custom', false, 64, null);
             $table->integer('order')->default(0);
             $table->boolean('is_required')->default(true);
             $table->date('due_date')->nullable();
-            $table->enum('status', ['pending', 'in_progress', 'completed', 'skipped'])->default('pending');
+            \App\Support\PortableEnum::column($table, 'status', ['pending', 'in_progress', 'completed', 'skipped'], 'pending', false, 64, null);
             $table->timestamp('completed_at')->nullable();
             $table->foreignId('completed_by')->nullable()->constrained('users')->onDelete('set null');
-            $table->json('data')->nullable(); // Ek veriler (form cevapları, yüklenen dosyalar vb.)
+            $table->jsonb('data')->nullable(); // Ek veriler (form cevapları, yüklenen dosyalar vb.)
             $table->text('notes')->nullable();
             $table->foreignId('assigned_to')->nullable()->constrained('users')->onDelete('set null');
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
@@ -42,6 +34,7 @@ return new class extends Migration
 
             $table->index(['process_id', 'order']);
         });
+        \App\Support\PortableEnum::flushChecks();
     }
 
     /**

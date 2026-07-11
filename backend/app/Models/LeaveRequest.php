@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\LeaveRequestStatus;
 use App\Traits\BelongsToCompany;
 use App\Traits\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -62,6 +63,7 @@ class LeaveRequest extends Model
         'approved_at' => 'datetime',
         'rejected_at' => 'datetime',
         'current_step' => 'integer',
+        'status' => LeaveRequestStatus::class,
     ];
 
     // Relationships
@@ -195,7 +197,7 @@ class LeaveRequest extends Model
 
     public function cancel(): void
     {
-        if ($this->status === self::STATUS_PENDING) {
+        if ($this->status === LeaveRequestStatus::Pending) {
             $balance = LeaveBalance::where('user_id', $this->user_id)
                 ->where('leave_type_id', $this->leave_type_id)
                 ->where('year', $this->start_date->year)

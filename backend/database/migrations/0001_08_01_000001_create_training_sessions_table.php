@@ -19,11 +19,12 @@ return new class extends Migration
             $table->datetime('end_date');
             $table->string('location')->nullable();
             $table->string('instructor')->nullable();
-            $table->enum('status', ['scheduled', 'in_progress', 'completed', 'cancelled'])->default('scheduled');
+            \App\Support\PortableEnum::column($table, 'status', ['scheduled', 'in_progress', 'completed', 'cancelled'], 'scheduled', false, 64, null);
             $table->text('notes')->nullable();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
+        \App\Support\PortableEnum::flushChecks();
     }
 
     /**

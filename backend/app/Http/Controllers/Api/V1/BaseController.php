@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Enums\UserType;
 use App\Http\Controllers\Controller;
 use App\Traits\ApiResponse;
 
@@ -26,7 +27,7 @@ class BaseController extends Controller
      */
     protected function isSuperAdmin(): bool
     {
-        return auth()->user()?->type === 'super_admin';
+        return auth()->user()?->type === UserType::SuperAdmin;
     }
 
     /**
@@ -34,6 +35,6 @@ class BaseController extends Controller
      */
     protected function isCompanyAdmin(): bool
     {
-        return auth()->user()?->type === 'company_admin';
+        return auth()->user()?->type === UserType::CompanyAdmin;
     }
 }

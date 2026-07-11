@@ -69,7 +69,7 @@ return new class extends Migration
 
             // Ek bilgiler
             $table->text('notes')->nullable();
-            $table->json('custom_fields')->nullable(); // Firmaların özel alanları için
+            $table->jsonb('custom_fields')->nullable(); // Firmaların özel alanları için
 
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
             $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('set null');

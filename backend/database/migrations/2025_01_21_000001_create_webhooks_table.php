@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('name');
             $table->text('url');
             $table->string('secret')->nullable();
-            $table->json('events')->nullable(); // ['user.created', 'leave.approved', etc.]
+            $table->jsonb('events')->nullable(); // ['user.created', 'leave.approved', etc.]
             $table->boolean('is_active')->default(true);
             $table->integer('timeout')->default(30); // seconds
             $table->integer('retry_count')->default(3);

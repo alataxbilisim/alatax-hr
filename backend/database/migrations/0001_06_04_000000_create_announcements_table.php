@@ -26,13 +26,13 @@ return new class extends Migration
 
             // Hedef kitle
             $table->boolean('is_for_all')->default(true); // Tüm personele mi?
-            $table->json('target_departments')->nullable(); // Belirli departmanlar
-            $table->json('target_positions')->nullable(); // Belirli pozisyonlar
-            $table->json('target_employees')->nullable(); // Belirli personeller
+            $table->jsonb('target_departments')->nullable(); // Belirli departmanlar
+            $table->jsonb('target_positions')->nullable(); // Belirli pozisyonlar
+            $table->jsonb('target_employees')->nullable(); // Belirli personeller
 
             // Görsel
             $table->string('image_path')->nullable();
-            $table->json('attachments')->nullable(); // Ekler
+            $table->jsonb('attachments')->nullable(); // Ekler
 
             // Yayın durumu
             $table->boolean('is_published')->default(false);

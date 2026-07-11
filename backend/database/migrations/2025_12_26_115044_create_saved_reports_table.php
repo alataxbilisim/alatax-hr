@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->text('description')->nullable();
-            $table->json('config'); // Rapor konfigürasyonu (dimension, measure, chartType, filters, options)
+            $table->jsonb('config'); // Rapor konfigürasyonu (dimension, measure, chartType, filters, options)
             $table->boolean('is_favorite')->default(false);
             $table->boolean('is_shared')->default(false); // Diğer kullanıcılarla paylaşım
             $table->integer('sort_order')->default(0);

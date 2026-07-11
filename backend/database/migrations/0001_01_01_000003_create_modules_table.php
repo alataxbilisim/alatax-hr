@@ -33,7 +33,7 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->date('activated_at')->nullable();
             $table->date('expires_at')->nullable();
-            $table->json('settings')->nullable(); // Modül bazlı firma ayarları
+            $table->jsonb('settings')->nullable(); // Modül bazlı firma ayarları
             $table->timestamps();
 
             $table->unique(['company_id', 'module_id']);

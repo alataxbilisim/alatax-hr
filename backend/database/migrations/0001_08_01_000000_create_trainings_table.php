@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('title'); // Eğitim adı
             $table->text('description')->nullable();
             $table->string('category')->nullable(); // Teknik, Yönetsel, Zorunlu vb.
-            $table->enum('type', ['online', 'classroom', 'hybrid'])->default('classroom');
+            \App\Support\PortableEnum::column($table, 'type', ['online', 'classroom', 'hybrid'], 'classroom', false, 64, null);
             $table->string('instructor')->nullable(); // Eğitmen
             $table->string('location')->nullable(); // Mekan
             $table->integer('duration_hours')->nullable(); // Süre (saat)
@@ -29,6 +29,7 @@ return new class extends Migration
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
+        \App\Support\PortableEnum::flushChecks();
     }
 
     /**

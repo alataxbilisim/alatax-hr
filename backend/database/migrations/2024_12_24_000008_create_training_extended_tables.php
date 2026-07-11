@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('name');
             $table->text('description')->nullable();
             $table->string('thumbnail_path')->nullable();
-            $table->enum('level', ['beginner', 'intermediate', 'advanced'])->default('beginner');
+            \App\Support\PortableEnum::column($table, 'level', ['beginner', 'intermediate', 'advanced'], 'beginner', false, 64, null);
             $table->integer('estimated_hours')->default(0);
 
             $table->boolean('is_mandatory')->default(false);
@@ -53,7 +53,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('learning_path_id')->constrained()->onDelete('cascade');
 
-            $table->enum('status', ['not_started', 'in_progress', 'completed'])->default('not_started');
+            \App\Support\PortableEnum::column($table, 'status', ['not_started', 'in_progress', 'completed'], 'not_started', false, 64, null);
             $table->decimal('progress', 5, 2)->default(0);
             $table->datetime('started_at')->nullable();
             $table->datetime('completed_at')->nullable();
@@ -70,7 +70,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->foreignId('training_id')->constrained()->onDelete('cascade');
 
-            $table->enum('scope', ['all', 'department', 'position', 'new_hires'])->default('all');
+            \App\Support\PortableEnum::column($table, 'scope', ['all', 'department', 'position', 'new_hires'], 'all', false, 64, null);
             $table->string('scope_value')->nullable();
 
             $table->integer('completion_days')->default(30); // Kaç gün içinde tamamlanmalı
@@ -113,7 +113,7 @@ return new class extends Migration
             $table->decimal('estimated_cost', 10, 2)->nullable();
             $table->string('currency', 3)->default('TRY');
 
-            $table->enum('status', ['pending', 'approved', 'rejected', 'completed'])->default('pending');
+            \App\Support\PortableEnum::column($table, 'status', ['pending', 'approved', 'rejected', 'completed'], 'pending', false, 64, null);
             $table->text('approval_notes')->nullable();
 
             $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('set null');
@@ -121,6 +121,7 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
         });
+        \App\Support\PortableEnum::flushChecks();
     }
 
     /**

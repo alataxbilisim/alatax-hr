@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\AssetCondition;
+use App\Enums\AssetStatus;
 use App\Models\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -37,6 +39,8 @@ class Asset extends Model
         'warranty_end_date' => 'date',
         'purchase_price' => 'decimal:2',
         'specifications' => 'array',
+        'condition' => AssetCondition::class,
+        'status' => AssetStatus::class,
     ];
 
     /**

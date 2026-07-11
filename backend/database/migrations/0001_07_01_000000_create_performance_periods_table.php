@@ -18,11 +18,12 @@ return new class extends Migration
             $table->string('name'); // Q1 2024, Yıllık 2024, vb.
             $table->date('start_date');
             $table->date('end_date');
-            $table->enum('status', ['draft', 'active', 'closed'])->default('draft');
+            \App\Support\PortableEnum::column($table, 'status', ['draft', 'active', 'closed'], 'draft', false, 64, null);
             $table->text('description')->nullable();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
+        \App\Support\PortableEnum::flushChecks();
     }
 
     /**

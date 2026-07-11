@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->text('description')->nullable();
-            $table->json('fields'); // Form builder field definitions
+            $table->jsonb('fields'); // Form builder field definitions
             $table->boolean('is_default')->default(false);
             $table->boolean('is_active')->default(true);
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();

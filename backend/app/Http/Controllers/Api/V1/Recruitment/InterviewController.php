@@ -148,8 +148,8 @@ class InterviewController extends BaseController
         ]);
 
         // Başvuru durumunu güncelle
-        if ($application->status === 'new' || $application->status === 'reviewing') {
-            $application->update(['status' => 'interview_scheduled']);
+        if ($application->status === \App\Enums\JobApplicationStatus::New || $application->status === \App\Enums\JobApplicationStatus::Reviewing) {
+            $application->update(['status' => \App\Enums\JobApplicationStatus::InterviewScheduled]);
         }
 
         ActivityLog::log('create', $interview, 'Mülakat planlandı: '.$interview->title);

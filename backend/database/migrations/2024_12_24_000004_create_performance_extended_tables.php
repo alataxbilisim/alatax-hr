@@ -19,7 +19,7 @@ return new class extends Migration
 
             // Hiyerarşi
             $table->foreignId('parent_id')->nullable()->constrained('objectives')->onDelete('cascade');
-            $table->enum('level', ['company', 'department', 'team', 'individual'])->default('individual');
+            \App\Support\PortableEnum::column($table, 'level', ['company', 'department', 'team', 'individual'], 'individual', false, 64, null);
             $table->foreignId('department_id')->nullable()->constrained()->onDelete('set null');
             $table->foreignId('owner_id')->constrained('users')->onDelete('cascade'); // Hedef sahibi
 
@@ -29,7 +29,7 @@ return new class extends Migration
             $table->date('start_date');
             $table->date('end_date');
             $table->decimal('progress', 5, 2)->default(0); // 0-100
-            $table->enum('status', ['draft', 'active', 'completed', 'cancelled'])->default('draft');
+            \App\Support\PortableEnum::column($table, 'status', ['draft', 'active', 'completed', 'cancelled'], 'draft', false, 64, null);
             $table->decimal('weight', 5, 2)->default(100); // Ağırlık
 
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
@@ -49,13 +49,7 @@ return new class extends Migration
 
             $table->string('title');
             $table->text('description')->nullable();
-            $table->enum('metric_type', [
-                'number',       // Sayısal
-                'percentage',   // Yüzde
-                'currency',     // Para
-                'boolean',      // Evet/Hayır
-                'milestone',     // Kilometre taşı
-            ])->default('percentage');
+            \App\Support\PortableEnum::column($table, 'metric_type', ['number', 'percentage', 'currency', 'boolean', 'milestone'], 'percentage', false, 64, null);
 
             $table->decimal('start_value', 15, 2)->default(0);
             $table->decimal('target_value', 15, 2);
@@ -63,7 +57,7 @@ return new class extends Migration
             $table->decimal('progress', 5, 2)->default(0);
             $table->decimal('weight', 5, 2)->default(100);
 
-            $table->enum('status', ['not_started', 'on_track', 'at_risk', 'behind', 'completed'])->default('not_started');
+            \App\Support\PortableEnum::column($table, 'status', ['not_started', 'on_track', 'at_risk', 'behind', 'completed'], 'not_started', false, 64, null);
             $table->date('due_date')->nullable();
 
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
@@ -83,7 +77,7 @@ return new class extends Migration
             $table->decimal('previous_value', 15, 2);
             $table->decimal('new_value', 15, 2);
             $table->text('note')->nullable();
-            $table->enum('confidence', ['low', 'medium', 'high'])->default('medium');
+            \App\Support\PortableEnum::column($table, 'confidence', ['low', 'medium', 'high'], 'medium', false, 64, null);
 
             $table->timestamps();
         });
@@ -94,15 +88,9 @@ return new class extends Migration
             $table->foreignId('performance_review_id')->constrained()->onDelete('cascade');
             $table->foreignId('provider_id')->constrained('users')->onDelete('cascade'); // Geri bildirim veren
 
-            $table->enum('relationship', [
-                'self',             // Kendisi
-                'manager',          // Yönetici
-                'peer',             // İş arkadaşı
-                'direct_report',    // Ast
-                'external',          // Dış (müşteri, tedarikçi vb.)
-            ]);
+            \App\Support\PortableEnum::column($table, 'relationship', ['self', 'manager', 'peer', 'direct_report', 'external'], null, false, 64, null);
 
-            $table->enum('status', ['pending', 'in_progress', 'submitted', 'declined'])->default('pending');
+            \App\Support\PortableEnum::column($table, 'status', ['pending', 'in_progress', 'submitted', 'declined'], 'pending', false, 64, null);
             $table->datetime('invited_at')->nullable();
             $table->datetime('submitted_at')->nullable();
             $table->datetime('deadline')->nullable();
@@ -135,15 +123,10 @@ return new class extends Migration
             $table->foreignId('from_user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('to_user_id')->constrained('users')->onDelete('cascade');
 
-            $table->enum('type', [
-                'praise',       // Övgü/Takdir
-                'suggestion',   // Öneri
-                'concern',      // Endişe
-                'coaching',      // Koçluk
-            ])->default('praise');
+            \App\Support\PortableEnum::column($table, 'type', ['praise', 'suggestion', 'concern', 'coaching'], 'praise', false, 64, null);
 
             $table->text('content');
-            $table->json('tags')->nullable(); // Etiketler
+            $table->jsonb('tags')->nullable(); // Etiketler
             $table->boolean('is_public')->default(false); // Herkes görebilir mi?
             $table->boolean('is_anonymous')->default(false);
 
@@ -165,7 +148,7 @@ return new class extends Migration
             $table->string('name');
             $table->text('description')->nullable();
             $table->string('category')->nullable(); // Teknik, Liderlik, İletişim vb.
-            $table->json('levels')->nullable(); // Seviye tanımları [{level: 1, name: 'Başlangıç', description: '...'}]
+            $table->jsonb('levels')->nullable(); // Seviye tanımları [{level: 1, name: 'Başlangıç', description: '...'}]
             $table->integer('max_level')->default(5);
             $table->boolean('is_active')->default(true);
 
@@ -223,13 +206,13 @@ return new class extends Migration
             $table->string('location')->nullable();
             $table->string('meeting_link')->nullable(); // Video konferans linki
 
-            $table->enum('status', ['scheduled', 'completed', 'cancelled', 'rescheduled'])->default('scheduled');
+            \App\Support\PortableEnum::column($table, 'status', ['scheduled', 'completed', 'cancelled', 'rescheduled'], 'scheduled', false, 64, null);
             $table->text('agenda')->nullable();
             $table->text('notes')->nullable(); // Görüşme notları
-            $table->json('action_items')->nullable(); // Aksiyon öğeleri
-            $table->json('talking_points')->nullable(); // Konuşma noktaları
+            $table->jsonb('action_items')->nullable(); // Aksiyon öğeleri
+            $table->jsonb('talking_points')->nullable(); // Konuşma noktaları
 
-            $table->enum('mood', ['very_negative', 'negative', 'neutral', 'positive', 'very_positive'])->nullable();
+            \App\Support\PortableEnum::column($table, 'mood', ['very_negative', 'negative', 'neutral', 'positive', 'very_positive'], null, true, 64, null);
 
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
@@ -247,6 +230,7 @@ return new class extends Migration
             $table->decimal('report_score', 5, 2)->nullable()->after('peer_score');
             $table->decimal('final_score', 5, 2)->nullable()->after('report_score');
         });
+        \App\Support\PortableEnum::flushChecks();
     }
 
     /**

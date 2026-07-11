@@ -16,7 +16,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('session_id')->constrained('training_sessions')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->enum('status', ['registered', 'attended', 'absent', 'excused'])->default('registered');
+            \App\Support\PortableEnum::column($table, 'status', ['registered', 'attended', 'absent', 'excused'], 'registered', false, 64, null);
             $table->integer('score')->nullable(); // Sınav puanı
             $table->boolean('passed')->nullable(); // Başarılı mı?
             $table->text('feedback')->nullable(); // Geri bildirim
@@ -26,6 +26,7 @@ return new class extends Migration
 
             $table->unique(['session_id', 'user_id']);
         });
+        \App\Support\PortableEnum::flushChecks();
     }
 
     /**

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
 
             // İşlem tipi: debit = borç (firmaya), credit = alacak (firmadan ödeme)
-            $table->enum('type', ['debit', 'credit']);
+            \App\Support\PortableEnum::column($table, 'type', ['debit', 'credit'], null, false, 64, null);
             $table->decimal('amount', 12, 2); // İşlem tutarı
             $table->decimal('balance_after', 12, 2); // İşlem sonrası bakiye
 
@@ -47,6 +47,7 @@ return new class extends Migration
             $table->index('due_date');
             $table->index(['reference_type', 'reference_id']);
         });
+        \App\Support\PortableEnum::flushChecks();
     }
 
     /**

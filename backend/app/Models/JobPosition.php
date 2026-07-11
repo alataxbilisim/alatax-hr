@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Enums\EmploymentType;
+use App\Enums\ExperienceLevel;
+use App\Enums\JobPositionStatus;
 use App\Traits\BelongsToCompany;
 use App\Traits\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -43,6 +46,9 @@ class JobPosition extends Model
         'positions_count' => 'integer',
         'application_deadline' => 'date',
         'published_at' => 'datetime',
+        'employment_type' => EmploymentType::class,
+        'experience_level' => ExperienceLevel::class,
+        'status' => JobPositionStatus::class,
     ];
 
     protected static function boot()

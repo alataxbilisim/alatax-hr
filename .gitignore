@@ -92,3 +92,7 @@ composer-setup.php
 .cache/
 coverage/
 .turbo/
+
+# Faz1 local backup (not for commit)
+backend/database/migrations_backup_*/
+

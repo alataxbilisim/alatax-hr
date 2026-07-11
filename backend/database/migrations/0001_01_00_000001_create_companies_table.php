@@ -29,17 +29,17 @@ return new class extends Migration
             $table->string('sector')->nullable(); // Sektör
             $table->string('employee_count')->nullable(); // Çalışan sayı aralığı
             $table->string('logo')->nullable(); // Logo dosya yolu
-            $table->json('settings')->nullable(); // Firma ayarları (tema, dil vb.)
+            $table->jsonb('settings')->nullable(); // Firma ayarları (tema, dil vb.)
 
             // Lisans bilgileri
-            $table->enum('package_type', ['starter', 'professional', 'enterprise'])->default('starter');
+            \App\Support\PortableEnum::column($table, 'package_type', ['starter', 'professional', 'enterprise'], 'starter', false, 64, null);
             $table->integer('user_limit')->default(5); // Kullanıcı limiti
             $table->bigInteger('storage_limit')->default(1073741824); // Storage limiti (byte) - 1GB default
             $table->date('license_start_date')->nullable();
             $table->date('license_end_date')->nullable();
 
             // Durum
-            $table->enum('status', ['active', 'suspended', 'cancelled', 'trial'])->default('trial');
+            \App\Support\PortableEnum::column($table, 'status', ['active', 'suspended', 'cancelled', 'trial'], 'trial', false, 64, null);
             $table->timestamp('trial_ends_at')->nullable();
 
             // Audit
@@ -50,6 +50,7 @@ return new class extends Migration
             $table->index('status');
             $table->index('package_type');
         });
+        \App\Support\PortableEnum::flushChecks();
     }
 
     /**

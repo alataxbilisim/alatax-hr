@@ -20,14 +20,7 @@ return new class extends Migration
             $table->string('vendor'); // Microsoft, Adobe
             $table->string('version')->nullable();
 
-            $table->enum('license_type', [
-                'perpetual',      // Kalıcı
-                'subscription',   // Abonelik
-                'per_seat',       // Kullanıcı başı
-                'concurrent',     // Eşzamanlı kullanıcı
-                'site',           // Site lisansı
-                'open_source',     // Açık kaynak
-            ])->default('subscription');
+            \App\Support\PortableEnum::column($table, 'license_type', ['perpetual', 'subscription', 'per_seat', 'concurrent', 'site', 'open_source'], 'subscription', false, 64, null);
 
             $table->integer('total_seats')->nullable();
             $table->integer('used_seats')->default(0);
@@ -76,10 +69,10 @@ return new class extends Migration
             $table->string('item_name');
             $table->text('description')->nullable();
             $table->text('justification'); // Neden gerekli
-            $table->enum('urgency', ['low', 'medium', 'high', 'critical'])->default('medium');
+            \App\Support\PortableEnum::column($table, 'urgency', ['low', 'medium', 'high', 'critical'], 'medium', false, 64, null);
             $table->date('needed_by')->nullable();
 
-            $table->enum('status', ['pending', 'approved', 'rejected', 'fulfilled', 'cancelled'])->default('pending');
+            \App\Support\PortableEnum::column($table, 'status', ['pending', 'approved', 'rejected', 'fulfilled', 'cancelled'], 'pending', false, 64, null);
             $table->text('approval_notes')->nullable();
 
             $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('set null');
@@ -98,7 +91,7 @@ return new class extends Migration
 
         // Assets tablosuna yeni alanlar ekle (Amortisman vb.)
         Schema::table('assets', function (Blueprint $table) {
-            $table->enum('depreciation_method', ['none', 'straight_line', 'declining_balance'])->default('none')->after('warranty_end_date');
+            \App\Support\PortableEnum::column($table, 'depreciation_method', ['none', 'straight_line', 'declining_balance'], 'none', false, 64, 'warranty_end_date');
             $table->integer('useful_life_years')->nullable()->after('depreciation_method');
             $table->decimal('residual_value', 15, 2)->nullable()->after('useful_life_years');
             $table->decimal('current_value', 15, 2)->nullable()->after('residual_value');
@@ -107,10 +100,11 @@ return new class extends Migration
             $table->string('barcode')->nullable()->after('qr_code');
 
             // Lifecycle
-            $table->enum('lifecycle_stage', ['new', 'active', 'maintenance', 'retired', 'disposed'])->default('new')->after('barcode');
+            \App\Support\PortableEnum::column($table, 'lifecycle_stage', ['new', 'active', 'maintenance', 'retired', 'disposed'], 'new', false, 64, 'barcode');
             $table->date('disposed_at')->nullable()->after('lifecycle_stage');
             $table->text('disposal_notes')->nullable()->after('disposed_at');
         });
+        \App\Support\PortableEnum::flushChecks();
     }
 
     /**

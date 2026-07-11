@@ -24,8 +24,8 @@ return new class extends Migration
             $table->string('description')->nullable();
 
             // Değişiklik kaydı
-            $table->json('old_values')->nullable();
-            $table->json('new_values')->nullable();
+            $table->jsonb('old_values')->nullable();
+            $table->jsonb('new_values')->nullable();
 
             // Request bilgileri
             $table->string('ip_address', 45)->nullable();
