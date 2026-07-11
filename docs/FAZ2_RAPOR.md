@@ -436,7 +436,8 @@ Modül slug'ları: `onboarding` / `performance` / `training` / `asset-management
 | 6 grup: 401 / lisanssız 403 / izinsiz user 403 / izinli 200 / bypass 200 | ✅ |
 | Tenant izolasyonu (onboarding…surveys + analytics company scope) | ✅ |
 | SurveyTest (company_admin bypass) | ✅ kırılmadı |
-| Tam suite | **95 passed**, 1 risky (aşağıda CI sonrası güncellenir) |
+| Tam suite | **95 passed**, 1 risky, 0 failed |
+| CI (`faz2-rbac-audit`) | ✅ https://github.com/alataxbilisim/alatax-hr/actions/runs/29150149532 |
 
 Dosya: `tests/Feature/PermissionEnforcementWave3Test.php`
 
