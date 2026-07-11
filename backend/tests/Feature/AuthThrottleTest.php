@@ -15,7 +15,7 @@ class AuthThrottleTest extends TestCase
 
     public function test_login_returns_429_after_auth_rate_limit(): void
     {
-        RateLimiter::clear('auth:'.request()->ip());
+        RateLimiter::clear(md5('auth'.request()->ip()));
 
         $payload = [
             'email' => 'nobody@example.com',

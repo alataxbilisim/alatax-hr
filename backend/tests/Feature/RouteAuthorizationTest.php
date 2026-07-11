@@ -32,6 +32,11 @@ class RouteAuthorizationTest extends TestCase
     {
         parent::setUp();
 
+        // AuthThrottleTest / önceki istekler aynı IP limiter'ını kirletebilir
+        foreach (['127.0.0.1', '::1'] as $ip) {
+            \Illuminate\Support\Facades\RateLimiter::clear(md5('auth'.$ip));
+        }
+
         $this->superAdmin = User::factory()->superAdmin()->create([
             'name' => 'Super Admin',
             'email' => 'superadmin@test.com',
@@ -95,6 +100,10 @@ class RouteAuthorizationTest extends TestCase
      */
     public function test_public_auth_routes(): void
     {
+        foreach (['127.0.0.1', '::1'] as $ip) {
+            \Illuminate\Support\Facades\RateLimiter::clear(md5('auth'.$ip));
+        }
+
         // Login route
         $response = $this->postJson('/api/v1/auth/login', [
             'email' => 'superadmin@test.com',
@@ -391,8 +400,11 @@ class RouteAuthorizationTest extends TestCase
         $response = $this->getJson('/api/v1/leaves/requests');
         $response->assertStatus(200);
 
-        // Calendar
-        $response = $this->getJson('/api/v1/leaves/calendar');
+        // Calendar — start_date / end_date zorunlu (API sözleşmesi)
+        $response = $this->getJson('/api/v1/leaves/calendar?'.http_build_query([
+            'start_date' => now()->startOfMonth()->toDateString(),
+            'end_date' => now()->endOfMonth()->toDateString(),
+        ]));
         $response->assertStatus(200);
 
         // Balance

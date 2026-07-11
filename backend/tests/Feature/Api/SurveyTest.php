@@ -111,9 +111,7 @@ class SurveyTest extends TestCase
         $response->assertOk()
             ->assertJsonStructure([
                 'data' => [
-                    'data' => [
-                        '*' => ['id', 'title', 'type', 'is_active'],
-                    ],
+                    '*' => ['id', 'title', 'type', 'is_active'],
                 ],
             ]);
     }
@@ -155,7 +153,7 @@ class SurveyTest extends TestCase
 
         $response->assertOk();
 
-        $this->assertDatabaseMissing('surveys', [
+        $this->assertSoftDeleted('surveys', [
             'id' => $survey->id,
         ]);
     }
@@ -168,6 +166,9 @@ class SurveyTest extends TestCase
         Survey::factory()->create([
             'company_id' => $this->company->id,
             'is_active' => true,
+            'is_anonymous' => false,
+            'start_date' => now()->subDay(),
+            'end_date' => now()->addMonth(),
         ]);
 
         $response = $this->getJson('/api/v1/portal/surveys');
@@ -175,9 +176,7 @@ class SurveyTest extends TestCase
         $response->assertOk()
             ->assertJsonStructure([
                 'data' => [
-                    'data' => [
-                        '*' => ['id', 'title', 'type', 'is_anonymous'],
-                    ],
+                    '*' => ['id', 'title', 'type', 'is_anonymous'],
                 ],
             ]);
     }
@@ -190,6 +189,9 @@ class SurveyTest extends TestCase
         $survey = Survey::factory()->create([
             'company_id' => $this->company->id,
             'is_active' => true,
+            'is_anonymous' => false,
+            'start_date' => now()->subDay(),
+            'end_date' => now()->addMonth(),
         ]);
 
         SurveyQuestion::factory()->count(3)->create([
@@ -201,8 +203,7 @@ class SurveyTest extends TestCase
         $response->assertOk()
             ->assertJsonStructure([
                 'data' => [
-                    'id',
-                    'title',
+                    'survey' => ['id', 'title'],
                     'questions' => [
                         '*' => ['id', 'question_text', 'question_type', 'is_required'],
                     ],
@@ -218,6 +219,9 @@ class SurveyTest extends TestCase
         $survey = Survey::factory()->create([
             'company_id' => $this->company->id,
             'is_active' => true,
+            'is_anonymous' => false,
+            'start_date' => now()->subDay(),
+            'end_date' => now()->addMonth(),
         ]);
 
         $question = SurveyQuestion::factory()->create([
@@ -226,7 +230,13 @@ class SurveyTest extends TestCase
             'is_required' => true,
         ]);
 
+        // Portal submit submission_id ister
+        $start = $this->postJson("/api/v1/portal/surveys/{$survey->id}/start");
+        $start->assertCreated();
+        $submissionId = $start->json('data.id');
+
         $response = $this->postJson("/api/v1/portal/surveys/{$survey->id}/submit", [
+            'submission_id' => $submissionId,
             'responses' => [
                 [
                     'question_id' => $question->id,
@@ -237,9 +247,10 @@ class SurveyTest extends TestCase
 
         $response->assertOk();
 
-        $this->assertDatabaseHas('survey_responses', [
+        $this->assertDatabaseHas('survey_submissions', [
             'survey_id' => $survey->id,
             'user_id' => $this->portalUser->id,
+            'status' => 'completed',
         ]);
     }
 }

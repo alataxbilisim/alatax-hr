@@ -106,9 +106,7 @@ class ExpenseTest extends TestCase
         $response->assertOk()
             ->assertJsonStructure([
                 'data' => [
-                    'data' => [
-                        '*' => ['id', 'title', 'status', 'total_amount'],
-                    ],
+                    '*' => ['id', 'title', 'status', 'total_amount'],
                 ],
             ]);
     }

@@ -245,7 +245,7 @@ class RouteComprehensiveTest extends TestCase
         ];
 
         foreach ($testCases as $testCase) {
-            $result = $this->testRouteAuthorization($testCase);
+            $result = $this->runRouteAuthorizationCheck($testCase);
             $results['details'][] = $result;
 
             if ($result['status'] === 'passed') {
@@ -267,7 +267,7 @@ class RouteComprehensiveTest extends TestCase
     /**
      * Tek bir route için yetkilendirme testi
      */
-    protected function test_route_authorization(array $testCase): array
+    protected function runRouteAuthorizationCheck(array $testCase): array
     {
         $result = [
             'route' => $testCase['route'],
@@ -278,6 +278,11 @@ class RouteComprehensiveTest extends TestCase
 
         try {
             // Authentication gerektirmeyen route'lar
+            // Public login — rate limit önceki testlerden dolmuş olabilir
+            foreach (['127.0.0.1', '::1'] as $ip) {
+                \Illuminate\Support\Facades\RateLimiter::clear(md5('auth'.$ip));
+            }
+
             if (! $testCase['requiresAuth']) {
                 $response = $this->json($testCase['method'], $testCase['uri'], $testCase['testData'] ?? []);
                 $result['tests'][] = [
@@ -358,7 +363,7 @@ class RouteComprehensiveTest extends TestCase
             }
 
             // Authentication olmadan test
-            Sanctum::actingAs(null);
+            $this->app['auth']->forgetGuards();
             $response = $this->json($testCase['method'], $testCase['uri'], $testCase['testData'] ?? []);
             $result['tests'][] = [
                 'test' => 'Unauthenticated access',
