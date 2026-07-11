@@ -87,10 +87,7 @@ jobs:
       - name: Pint (style check)
         run: ./vendor/bin/pint --test
 
-      # Non-blocking: eksik factory + users.type uyumsuzluğu (Faz 2 borcu).
-      # Yeşile çekilince continue-on-error KALDIRILACAK.
-      - name: PHPUnit (non-blocking, Faz 2'de düzeltilecek)
-        continue-on-error: true
+      - name: PHPUnit
         run: php artisan test
         env:
           DB_CONNECTION: pgsql

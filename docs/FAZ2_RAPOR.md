@@ -1,8 +1,8 @@
 # Faz 2 — PHPUnit Factory Temeli (İlerleme Raporu)
 
 **Branch:** `faz2-rbac-audit`  
-**Başlangıç:** 11 Temmuz 2026  
-**Kapsam (bu adım):** Faz 0/1 PHPUnit borcu — factory + `users.type` hizalama; CI `continue-on-error` kaldırma.
+**Başlangıç / kapanış (bu adım):** 11 Temmuz 2026  
+**Kapsam:** Faz 0/1 PHPUnit borcu — factory + `users.type` hizalama; CI `continue-on-error` kaldırma.
 
 ---
 
@@ -14,53 +14,66 @@
 
 | Model | Belirti | Etkilenen testler |
 |-------|---------|-------------------|
-| `Company` → `CompanyFactory` yok | `Class "Database\Factories\CompanyFactory" not found` | ExpenseTest (7), SurveyTest (7), TimesheetTest (9) ≈ **23** |
+| `Company` → `CompanyFactory` yok | `Class "Database\Factories\CompanyFactory" not found` | Expense / Survey / Timesheet ≈ **23** |
 
-Diğer factory'ler mevcut ama `Company::factory()` zincirine bağımlı: `ExpenseCategoryFactory`, `ExpenseClaimFactory`, `SurveyFactory`, `AttendanceRecordFactory`.
-
-### (b) Enum / `users.type` uyumsuzluğu
+### (b) Enum / `users.type`
 
 | Kaynak | Değer | Gerçek şema |
 |--------|-------|-------------|
-| `RouteAuthorizationTest` / `RouteComprehensiveTest` setUp | `type => 'employee'` | `UserType`: `super_admin \| company_admin \| user` |
-| Hata | `ValueError: "employee" is not a valid backing value for enum App\Enums\UserType` | ≈ **18** test |
+| Route*Test setUp | `type => 'employee'` | `UserType`: `super_admin \| company_admin \| user` |
+| Hata | `ValueError` | ≈ **18** |
 
-**Karar (backend gerçeği):** Enum'a `employee` **eklenmeyecek**. Personel = `UserType::User` (`user`) + `employees` satırı (`PortalAccess` middleware `user->employee` ister). Testler enum'a hizalanır: `employee` → `user`.
+**Karar:** Enum'a `employee` **eklenmedi**. Personel = `UserType::User` + `employees` satırı. Testler hizalandı.
 
-### (c) Diğer altyapı (beklenen, factory sonrası)
+### (c) Diğer (factory sonrası ortaya çıkan)
 
-| Konu | Açıklama |
-|------|----------|
-| Portal | `PortalAccess` → aktif `Employee` kaydı zorunlu; portal test setUp'larına `EmployeeFactory` |
-| Surveys modülü | `module.access:surveys` → firmaya modül atanmalı |
-| `Company.is_active` | Kolon yok; `status` (`CompanyStatus`) kullanılır — testlerde `is_active` düzeltilmeli |
-| Test DB | Docker'da `alatax_hr_testing` oluşturulmalı; suite `DB_DATABASE=alatax_hr_testing` ile koşulmalı (dev DB'yi ezmemek) |
-
-### Başlangıçta geçenler
-
-- `Tests\Unit\ExampleTest`
-- `Tests\Feature\ExampleTest` (veya AuthThrottle — ortamına göre)
-- Kısmi: factory/enum'a takılmayan smoke testler
+| Konu | Tür | Çözüm |
+|------|-----|--------|
+| PortalAccess → Employee | altyapı | `EmployeeFactory` + test setUp |
+| Surveys modülü | altyapı | firmaya `surveys` modülü |
+| `SuperAdminOnly` / `CompanyAdminOnly` string vs enum | **gerçek bug (Faz 1 cast)** | `UserType` karşılaştırması |
+| `ApiResponse::paginated` 3. arg | **gerçek bug** | metaSource desteği |
+| `AttendanceRecord::calculateTotalHours` çift tarih | **gerçek bug** | `H:i` format |
+| `CvPoolController` `applicant_*` kolonları | **gerçek bug** | şema: `email`/`first_name`/`last_name` |
+| PortalSurvey `$request` use eksik | **gerçek bug** | closure `use ($user, $request)` |
+| RateLimiter clear key | test altyapı | `md5('auth'.$ip)` (Laravel hash) |
+| `Sanctum::actingAs(null)` | test | `auth()->forgetGuards()` |
 
 ---
 
-## ADIM 2–4 — Uygulama (güncellenir)
+## ADIM 2 — Eklenen factory'ler
 
-*(Aşağıdaki bölümler düzeltmeler sonrası doldurulur.)*
+- `CompanyFactory` — `CompanyStatus` / `CompanyPackageType`
+- `EmployeeFactory` — `forUser()`, `company_id` tenant-aware
+- `UserFactory` — `superAdmin()`, `companyAdmin()`, `regularUser()` + `UserType`
+- Modellere `HasFactory`: `ExpenseCategory`, `ExpenseClaim`, `AttendanceRecord`
+- `SurveyQuestionFactory`: `order` → `order_number`
 
-### Eklenen factory'ler
+---
 
-- (bekleniyor) `CompanyFactory`, `EmployeeFactory`; `UserFactory` enum state'leri
-
-### `users.type` kararı
-
-- Testler → `UserType::User` (`user`); enum değişmedi.
-
-### Sonuç skor kartı
+## ADIM 3–4 — Sonuç skor kartı
 
 | Metrik | Önce | Sonra |
 |--------|------|-------|
-| Failed | 41 | _TBD_ |
-| Passed | 3 | _TBD_ |
-| `continue-on-error` kaldırıldı mı? | hayır | _TBD_ |
-| CI tam yeşil mi? | — | _TBD_ |
+| Failed | 41 | **0** |
+| Passed | 3 | **43** (+1 risky: `RouteComprehensiveTest` çıktı üretir, fail değil) |
+| Assertions | 13 | **173** |
+| `users.type` kararı | — | testler → `user`; enum değişmedi |
+| `continue-on-error` kaldırıldı mı? | hayır | **evet** (CI PHPUnit blocking) |
+| CI tam yeşil mi? | — | push sonrası doğrulanacak |
+
+### Commit özeti (bloklar)
+
+1. `docs(faz2):` teşhis raporu  
+2. `test(faz2):` factory'ler  
+3. `test(faz2):` enum/portal hizalama  
+4. `fix(faz2):` middleware enum + ApiResponse + clock hours + CvPool + survey submit  
+5. `ci(faz2):` continue-on-error kaldır  
+
+---
+
+## Notlar / Faz 2 devamı
+
+- Migration squash hâlâ Faz 2 borcu (bu adımda yok).
+- RBAC v2 + Audit v2 asıl Faz 2 kapsamı bundan sonra.
+- `job_positions.deadline` vb. şema sapmaları logda görüldü; CvPool dışı — ayrı takip.
