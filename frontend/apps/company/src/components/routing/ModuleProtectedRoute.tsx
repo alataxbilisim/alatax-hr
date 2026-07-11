@@ -24,8 +24,8 @@ const ModuleProtectedRoute: React.FC<ModuleProtectedRouteProps> = ({
   const location = useLocation();
   const { user, isAuthenticated, isLoading } = useSelector((state: RootState) => state.auth);
   
-  // Auth loading state
-  if (isLoading) {
+  // Auth: sadece ilk yüklemede loading; arka plan tazelemede unmount yok
+  if (isLoading && !isAuthenticated) {
     return (
       <div className="page-loading">
         <div className="loading-spinner"></div>

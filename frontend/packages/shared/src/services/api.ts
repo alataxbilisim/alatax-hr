@@ -98,8 +98,8 @@ export const authApi = {
     api.post('/auth/register', data),
   logout: () => 
     api.post('/auth/logout'),
-  me: () => 
-    api.get('/auth/me'),
+  me: (opts?: { light?: boolean }) =>
+    api.get('/auth/me', { params: opts?.light ? { light: 1 } : undefined }),
   updateProfile: (data: FormData | Record<string, unknown>) => 
     api.put('/auth/profile', data, {
       headers: data instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : {},

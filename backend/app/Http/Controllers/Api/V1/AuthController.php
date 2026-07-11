@@ -221,13 +221,17 @@ class AuthController extends BaseController
 
     /**
      * Mevcut kullanıcı bilgisi
+     *
+     * ?light=1 — profil/status tazeleme; permissions + active_modules dump edilmez
+     * (login / tam checkAuth tam payload döner; silent FE yenileme light kullanır)
      */
     public function me(Request $request): JsonResponse
     {
         $user = $request->user()->load('company');
+        $light = $request->boolean('light');
 
         return $this->success([
-            'user' => $this->formatUser($user),
+            'user' => $this->formatUser($user, $light),
         ]);
     }
 
@@ -441,8 +445,10 @@ class AuthController extends BaseController
 
     /**
      * Kullanıcı bilgilerini formatla
+     *
+     * @param  bool  $light  true ise ~360 izin + active_modules sorgusu atlanır (periyodik /me)
      */
-    private function formatUser(User $user): array
+    private function formatUser(User $user, bool $light = false): array
     {
         $data = [
             'id' => $user->id,
@@ -456,23 +462,36 @@ class AuthController extends BaseController
             'is_active' => $user->is_active,
             'two_factor_enabled' => (bool) $user->two_factor_enabled,
             'preferences' => $user->preferences ?? ['theme' => 'dark', 'locale' => 'tr'],
-            'permissions' => $user->getAllPermissions()->pluck('name'),
+            'permissions' => $light ? [] : $user->getAllPermissions()->pluck('name'),
             'roles' => $user->getRoleNames(),
         ];
 
         if ($user->company) {
-            // Her zaman güncel company bilgilerini çek (cached değil)
-            $company = $user->company->fresh();
-            $activeModules = $company->activeModules()->pluck('slug')->toArray();
-            $data['company'] = [
-                'id' => $company->id,
-                'name' => $company->name,
-                'slug' => $company->slug,
-                'logo' => $company->logo ? asset('storage/'.$company->logo) : null,
-                'status' => $company->status,
-                'package_type' => $company->package_type,
-                'active_modules' => $activeModules,
-            ];
+            if ($light) {
+                // fresh()/activeModules() yok — FE mevcut authz'ı korur
+                $company = $user->company;
+                $data['company'] = [
+                    'id' => $company->id,
+                    'name' => $company->name,
+                    'slug' => $company->slug,
+                    'logo' => $company->logo ? asset('storage/'.$company->logo) : null,
+                    'status' => $company->status,
+                    'package_type' => $company->package_type,
+                    'active_modules' => [],
+                ];
+            } else {
+                $company = $user->company->fresh();
+                $activeModules = $company->activeModules()->pluck('slug')->toArray();
+                $data['company'] = [
+                    'id' => $company->id,
+                    'name' => $company->name,
+                    'slug' => $company->slug,
+                    'logo' => $company->logo ? asset('storage/'.$company->logo) : null,
+                    'status' => $company->status,
+                    'package_type' => $company->package_type,
+                    'active_modules' => $activeModules,
+                ];
+            }
         }
 
         return $data;

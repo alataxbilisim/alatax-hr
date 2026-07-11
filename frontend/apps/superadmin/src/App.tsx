@@ -34,7 +34,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     }
   }, [isAuthenticated, user, isLoading, navigate]);
 
-  if (isLoading) {
+  if (isLoading && !isAuthenticated) {
     return (
       <div className="loading-screen">
         <div className="loading-spinner"></div>

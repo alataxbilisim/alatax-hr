@@ -45,7 +45,7 @@ const queryClient = new QueryClient({
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useSelector((state: RootState) => state.auth);
 
-  if (isLoading) {
+  if (isLoading && !isAuthenticated) {
     return (
       <div className="page-loading" style={{ height: '100vh' }}>
         <div className="loading-spinner"></div>
@@ -64,7 +64,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useSelector((state: RootState) => state.auth);
 
-  if (isLoading) {
+  if (isLoading && !isAuthenticated) {
     return (
       <div className="page-loading" style={{ height: '100vh' }}>
         <div className="loading-spinner"></div>

@@ -11,6 +11,11 @@ interface AuthState {
   error: string | null;
 }
 
+export type CheckAuthArg = { silent?: boolean } | undefined;
+
+const isSilentCheck = (arg: CheckAuthArg): boolean =>
+  Boolean(arg && typeof arg === 'object' && arg.silent === true);
+
 const initialState: AuthState = {
   user: JSON.parse(localStorage.getItem('user') || 'null'),
   token: localStorage.getItem('token'),
@@ -19,6 +24,38 @@ const initialState: AuthState = {
   error: null,
 };
 
+/** Light /me yanıtında permissions/modules eksikse mevcut state ile birleştir */
+function mergeUserPreservingAuthz(incoming: User, previous: User | null): User {
+  if (!previous) {
+    return incoming;
+  }
+
+  const permissions =
+    incoming.permissions && incoming.permissions.length > 0
+      ? incoming.permissions
+      : previous.permissions;
+
+  const previousModules = previous.company?.active_modules;
+  const incomingModules = incoming.company?.active_modules;
+  const active_modules =
+    incomingModules && incomingModules.length > 0
+      ? incomingModules
+      : previousModules;
+
+  return {
+    ...previous,
+    ...incoming,
+    permissions,
+    company: incoming.company
+      ? {
+          ...previous.company,
+          ...incoming.company,
+          active_modules: active_modules ?? incoming.company.active_modules ?? [],
+        }
+      : previous.company,
+  };
+}
+
 // Login thunk
 export const login = createAsyncThunk<AuthResponse, LoginCredentials & { portal_login?: boolean }>(
   'auth/login',
@@ -26,14 +63,14 @@ export const login = createAsyncThunk<AuthResponse, LoginCredentials & { portal_
     try {
       const response = await authApi.login(credentials);
       const { user, token, employee } = response.data.data;
-      
+
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
-      
+
       if (employee) {
         localStorage.setItem('employee', JSON.stringify(employee));
       }
-      
+
       return { user, token };
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
@@ -49,10 +86,10 @@ export const register = createAsyncThunk<AuthResponse, RegisterData>(
     try {
       const response = await authApi.register(data);
       const { user, token } = response.data.data;
-      
+
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
-      
+
       return { user, token };
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
@@ -94,26 +131,42 @@ export const fetchCurrentUser = createAsyncThunk<User, void>(
   }
 );
 
-// Check auth thunk (sayfa yüklendiğinde token varsa kullanıcıyı doğrula)
-export const checkAuth = createAsyncThunk<User | null, void>(
+/**
+ * Token doğrula.
+ * silent: isLoading dokunulmaz; /me?light=1 (izin dump yok); mevcut permissions korunur.
+ */
+export const checkAuth = createAsyncThunk<User | null, CheckAuthArg>(
   'auth/checkAuth',
-  async () => {
+  async (arg, { getState }) => {
     const token = localStorage.getItem('token');
     if (!token) {
       return null;
     }
-    
+
+    const silent = isSilentCheck(arg);
+
     try {
-      const response = await authApi.me();
-      const user = response.data.data.user;
+      const response = await authApi.me({ light: silent });
+      let user = response.data.data.user as User;
+
+      if (silent) {
+        const prev = (getState() as { auth: AuthState }).auth.user
+          ?? (JSON.parse(localStorage.getItem('user') || 'null') as User | null);
+        user = mergeUserPreservingAuthz(user, prev);
+      }
+
       localStorage.setItem('user', JSON.stringify(user));
       return user;
     } catch (error: unknown) {
       const status = (error as { response?: { status?: number } })?.response?.status;
-      // Sadece yetkisiz oturumda token temizle; sunucu hatalarında oturumu düşürme
       if (status === 401 || status === 403) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        return null;
+      }
+      // Silent ağ hatası oturumu düşürmesin
+      if (silent) {
+        throw error;
       }
       return null;
     }
@@ -140,7 +193,6 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Login
       .addCase(login.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -155,7 +207,6 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload as string;
       })
-      // Register
       .addCase(register.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -171,23 +222,24 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload as string;
       })
-      // Logout
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
         state.token = null;
         state.isAuthenticated = false;
         toast.success('Çıkış yapıldı');
       })
-      // Fetch current user
       .addCase(fetchCurrentUser.fulfilled, (state, action) => {
         state.user = action.payload;
       })
-      // Check auth
-      .addCase(checkAuth.pending, (state) => {
-        state.isLoading = true;
+      .addCase(checkAuth.pending, (state, action) => {
+        if (!isSilentCheck(action.meta.arg)) {
+          state.isLoading = true;
+        }
       })
       .addCase(checkAuth.fulfilled, (state, action) => {
-        state.isLoading = false;
+        if (!isSilentCheck(action.meta.arg)) {
+          state.isLoading = false;
+        }
         if (action.payload) {
           state.user = action.payload;
           state.isAuthenticated = true;
@@ -197,15 +249,17 @@ const authSlice = createSlice({
           state.isAuthenticated = false;
         }
       })
-      .addCase(checkAuth.rejected, (state) => {
-        state.isLoading = false;
-        state.user = null;
-        state.token = null;
-        state.isAuthenticated = false;
+      .addCase(checkAuth.rejected, (state, action) => {
+        if (!isSilentCheck(action.meta.arg)) {
+          state.isLoading = false;
+          state.user = null;
+          state.token = null;
+          state.isAuthenticated = false;
+        }
+        // silent reject: oturum ve isLoading aynen kalır
       });
   },
 });
 
 export const { setUser, clearError, updateUserPreferences } = authSlice.actions;
 export default authSlice.reducer;
-

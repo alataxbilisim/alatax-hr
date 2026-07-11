@@ -111,7 +111,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     }
   }, [isAuthenticated, user, isLoading, navigate]);
 
-  if (isLoading) {
+  // İlk auth belirlenene kadar loading; arka plan tazelemede unmount yok
+  if (isLoading && !isAuthenticated) {
     return (
       <div className="loading-screen">
         <div className="loading-spinner" style={{ width: 40, height: 40 }}></div>
@@ -137,30 +138,30 @@ const App: React.FC = () => {
   const { mode, density } = useSelector((state: RootState) => state.theme);
   const { isAuthenticated: authIsAuthenticated } = useSelector((state: RootState) => state.auth);
 
-  // İlk yüklemede checkAuth çağır
+  // İlk yüklemede tam checkAuth (izin dump dahil)
   useEffect(() => {
     dispatch(checkAuth());
   }, [dispatch]);
 
-  // Sayfa focus olduğunda (başka sekmeye geçip geri dönüldüğünde) fresh data çek
+  // Pencere focus: sessiz profil tazeleme (izin dump yok, unmount yok)
   useEffect(() => {
     if (!authIsAuthenticated) return;
 
     const handleFocus = () => {
-      dispatch(checkAuth());
+      dispatch(checkAuth({ silent: true }));
     };
 
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
   }, [dispatch, authIsAuthenticated]);
 
-  // Periyodik olarak (30 saniyede bir) fresh data çek
+  // Periyodik sessiz yenileme — 5 dk (önceki 30 sn agresifti + remount döngüsü)
   useEffect(() => {
     if (!authIsAuthenticated) return;
 
     const interval = setInterval(() => {
-      dispatch(checkAuth());
-    }, 30000); // 30 saniye
+      dispatch(checkAuth({ silent: true }));
+    }, 5 * 60 * 1000);
 
     return () => clearInterval(interval);
   }, [dispatch, authIsAuthenticated]);
