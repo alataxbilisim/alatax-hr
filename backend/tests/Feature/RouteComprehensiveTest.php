@@ -2,7 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Enums\CompanyStatus;
+use App\Enums\UserType;
 use App\Models\Company;
+use App\Models\Employee;
 use App\Models\Module;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -22,6 +25,7 @@ class RouteComprehensiveTest extends TestCase
 
     protected $companyAdmin;
 
+    /** Portal personeli — UserType::User + Employee kaydı */
     protected $employee;
 
     protected $company;
@@ -32,46 +36,40 @@ class RouteComprehensiveTest extends TestCase
     {
         parent::setUp();
 
-        // SuperAdmin oluştur
-        $this->superAdmin = User::create([
+        $this->superAdmin = User::factory()->superAdmin()->create([
             'name' => 'Super Admin',
             'email' => 'superadmin@test.com',
-            'password' => bcrypt('password'),
-            'type' => 'super_admin',
-            'company_id' => null,
-            'is_active' => true,
+            'password' => 'password',
         ]);
 
-        // Firma oluştur
-        $this->company = Company::create([
+        $this->company = Company::factory()->create([
             'name' => 'Test Company',
             'slug' => 'test-company',
-            'status' => 'active',
+            'status' => CompanyStatus::Active,
             'email' => 'test@company.com',
             'phone' => '5551234567',
         ]);
 
-        // Company Admin oluştur
-        $this->companyAdmin = User::create([
+        $this->companyAdmin = User::factory()->create([
             'name' => 'Company Admin',
             'email' => 'admin@company.com',
-            'password' => bcrypt('password'),
-            'type' => 'company_admin',
+            'password' => 'password',
+            'type' => UserType::CompanyAdmin,
             'company_id' => $this->company->id,
             'is_active' => true,
         ]);
 
-        // Employee oluştur
-        $this->employee = User::create([
+        $this->employee = User::factory()->create([
             'name' => 'Employee',
             'email' => 'employee@company.com',
-            'password' => bcrypt('password'),
-            'type' => 'employee',
+            'password' => 'password',
+            'type' => UserType::User,
             'company_id' => $this->company->id,
             'is_active' => true,
         ]);
+        Employee::factory()->forUser($this->employee)->create();
+        Employee::factory()->forUser($this->companyAdmin)->create();
 
-        // Core modülleri ata
         $coreModules = Module::where('is_core', true)->get();
         foreach ($coreModules as $module) {
             $this->company->modules()->syncWithoutDetaching([
@@ -144,7 +142,7 @@ class RouteComprehensiveTest extends TestCase
                 'method' => 'GET',
                 'uri' => '/api/v1/dashboard',
                 'requiresAuth' => true,
-                'allowedUsers' => ['super_admin', 'company_admin', 'employee'],
+                'allowedUsers' => ['super_admin', 'company_admin', 'user'],
             ],
             [
                 'route' => 'GET /api/v1/users',
@@ -152,7 +150,7 @@ class RouteComprehensiveTest extends TestCase
                 'uri' => '/api/v1/users',
                 'requiresAuth' => true,
                 'allowedUsers' => ['company_admin'],
-                'forbiddenUsers' => ['employee'],
+                'forbiddenUsers' => ['user'],
             ],
             [
                 'route' => 'GET /api/v1/roles',
@@ -160,7 +158,7 @@ class RouteComprehensiveTest extends TestCase
                 'uri' => '/api/v1/roles',
                 'requiresAuth' => true,
                 'allowedUsers' => ['company_admin'],
-                'forbiddenUsers' => ['employee'],
+                'forbiddenUsers' => ['user'],
             ],
             [
                 'route' => 'GET /api/v1/company',
@@ -168,7 +166,7 @@ class RouteComprehensiveTest extends TestCase
                 'uri' => '/api/v1/company',
                 'requiresAuth' => true,
                 'allowedUsers' => ['company_admin'],
-                'forbiddenUsers' => ['employee'],
+                'forbiddenUsers' => ['user'],
             ],
 
             // SuperAdmin Routes
@@ -178,7 +176,7 @@ class RouteComprehensiveTest extends TestCase
                 'uri' => '/api/v1/admin/dashboard',
                 'requiresAuth' => true,
                 'allowedUsers' => ['super_admin'],
-                'forbiddenUsers' => ['company_admin', 'employee'],
+                'forbiddenUsers' => ['company_admin', 'user'],
             ],
             [
                 'route' => 'GET /api/v1/admin/companies',
@@ -186,7 +184,7 @@ class RouteComprehensiveTest extends TestCase
                 'uri' => '/api/v1/admin/companies',
                 'requiresAuth' => true,
                 'allowedUsers' => ['super_admin'],
-                'forbiddenUsers' => ['company_admin', 'employee'],
+                'forbiddenUsers' => ['company_admin', 'user'],
             ],
 
             // Module Routes - Job Applications
@@ -235,7 +233,7 @@ class RouteComprehensiveTest extends TestCase
                 'method' => 'GET',
                 'uri' => '/api/v1/portal/dashboard',
                 'requiresAuth' => true,
-                'allowedUsers' => ['employee', 'company_admin'],
+                'allowedUsers' => ['user', 'company_admin'],
             ],
         ];
 
@@ -391,7 +389,7 @@ class RouteComprehensiveTest extends TestCase
         return match ($type) {
             'super_admin' => $this->superAdmin,
             'company_admin' => $this->companyAdmin,
-            'employee' => $this->employee,
+            'user', 'employee' => $this->employee, // 'employee' alias (eski test adı)
             default => null,
         };
     }

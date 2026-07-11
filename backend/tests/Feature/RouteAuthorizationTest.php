@@ -2,7 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Enums\CompanyStatus;
+use App\Enums\UserType;
 use App\Models\Company;
+use App\Models\Employee;
 use App\Models\Module;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -18,6 +21,7 @@ class RouteAuthorizationTest extends TestCase
 
     protected $companyAdmin;
 
+    /** Portal personeli — UserType::User + Employee kaydı */
     protected $employee;
 
     protected $company;
@@ -28,50 +32,46 @@ class RouteAuthorizationTest extends TestCase
     {
         parent::setUp();
 
-        // SuperAdmin oluştur
-        $this->superAdmin = User::create([
+        $this->superAdmin = User::factory()->superAdmin()->create([
             'name' => 'Super Admin',
             'email' => 'superadmin@test.com',
-            'password' => bcrypt('password'),
-            'type' => 'super_admin',
-            'company_id' => null,
-            'is_active' => true,
+            'password' => 'password',
         ]);
 
-        // Firma oluştur
-        $this->company = Company::create([
+        $this->company = Company::factory()->create([
             'name' => 'Test Company',
             'slug' => 'test-company',
-            'status' => 'active',
+            'status' => CompanyStatus::Active,
             'email' => 'test@company.com',
             'phone' => '5551234567',
         ]);
 
-        // Company Admin oluştur
-        $this->companyAdmin = User::create([
+        $this->companyAdmin = User::factory()->create([
             'name' => 'Company Admin',
             'email' => 'admin@company.com',
-            'password' => bcrypt('password'),
-            'type' => 'company_admin',
+            'password' => 'password',
+            'type' => UserType::CompanyAdmin,
             'company_id' => $this->company->id,
             'is_active' => true,
         ]);
 
-        // Employee oluştur
-        $this->employee = User::create([
+        // Şema: type=user (eski testlerdeki 'employee' geçersizdi)
+        $this->employee = User::factory()->create([
             'name' => 'Employee',
             'email' => 'employee@company.com',
-            'password' => bcrypt('password'),
-            'type' => 'employee',
+            'password' => 'password',
+            'type' => UserType::User,
             'company_id' => $this->company->id,
             'is_active' => true,
         ]);
+        Employee::factory()->forUser($this->employee)->create();
+        // Portal testlerinde company_admin da erişebilsin diye personel kaydı
+        Employee::factory()->forUser($this->companyAdmin)->create();
 
-        // Modül olmadan firma oluştur
-        $this->companyWithoutModule = Company::create([
+        $this->companyWithoutModule = Company::factory()->create([
             'name' => 'No Module Company',
             'slug' => 'no-module-company',
-            'status' => 'active',
+            'status' => CompanyStatus::Active,
             'email' => 'nomodule@company.com',
             'phone' => '5551234568',
         ]);
@@ -230,11 +230,11 @@ class RouteAuthorizationTest extends TestCase
         $response->assertStatus(200);
 
         // Modülü olmayan firma erişememeli
-        $userWithoutModule = User::create([
+        $userWithoutModule = User::factory()->create([
             'name' => 'No Module User',
             'email' => 'nomodule@company.com',
-            'password' => bcrypt('password'),
-            'type' => 'company_admin',
+            'password' => 'password',
+            'type' => UserType::CompanyAdmin,
             'company_id' => $this->companyWithoutModule->id,
             'is_active' => true,
         ]);
@@ -439,20 +439,20 @@ class RouteAuthorizationTest extends TestCase
      */
     public function test_company_active_middleware(): void
     {
-        // Pasif firma oluştur
-        $inactiveCompany = Company::create([
+        // Pasif / askıya alınmış firma (şema: suspended — 'inactive' yok)
+        $inactiveCompany = Company::factory()->create([
             'name' => 'Inactive Company',
             'slug' => 'inactive-company',
-            'status' => 'inactive',
+            'status' => CompanyStatus::Suspended,
             'email' => 'inactive@company.com',
             'phone' => '5551234569',
         ]);
 
-        $inactiveUser = User::create([
+        $inactiveUser = User::factory()->create([
             'name' => 'Inactive User',
             'email' => 'inactive@user.com',
-            'password' => bcrypt('password'),
-            'type' => 'company_admin',
+            'password' => 'password',
+            'type' => UserType::CompanyAdmin,
             'company_id' => $inactiveCompany->id,
             'is_active' => true,
         ]);

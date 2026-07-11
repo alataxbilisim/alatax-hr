@@ -2,7 +2,11 @@
 
 namespace Tests\Feature\Api;
 
+use App\Enums\CompanyStatus;
+use App\Enums\UserType;
 use App\Models\Company;
+use App\Models\Employee;
+use App\Models\Module;
 use App\Models\Survey;
 use App\Models\SurveyQuestion;
 use App\Models\User;
@@ -24,14 +28,32 @@ class SurveyTest extends TestCase
     {
         parent::setUp();
 
-        $this->company = Company::factory()->create(['is_active' => true]);
+        $this->company = Company::factory()->create([
+            'status' => CompanyStatus::Active,
+        ]);
         $this->adminUser = User::factory()->create([
             'company_id' => $this->company->id,
-            'type' => 'company_admin',
+            'type' => UserType::CompanyAdmin,
         ]);
         $this->portalUser = User::factory()->create([
             'company_id' => $this->company->id,
-            'type' => 'user',
+            'type' => UserType::User,
+        ]);
+        Employee::factory()->forUser($this->portalUser)->create();
+
+        $surveysModule = Module::firstOrCreate(
+            ['slug' => 'surveys'],
+            [
+                'name' => 'Anketler',
+                'is_core' => false,
+                'is_active' => true,
+            ]
+        );
+        $this->company->modules()->syncWithoutDetaching([
+            $surveysModule->id => [
+                'is_active' => true,
+                'activated_at' => now(),
+            ],
         ]);
     }
 
