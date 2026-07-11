@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, faz1-postgresql, faz2-rbac-audit]
+    branches: [main, 'faz*']
   pull_request:
     branches: [main]
 
