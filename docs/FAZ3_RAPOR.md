@@ -128,6 +128,41 @@ Fark gözle ~8px/satır — önceki ~77→73’e göre belirgin.
 
 **DUR:** Kullanıcı Personel Listesi'nde density toggle ile farkı onaylayacak; sonra diğer ekranlara yayılır.
 
+---
+
+## Dalga 2 — Grup 1: Liste ekranları (12 Temmuz 2026)
+
+**Kapsam hedefi:** İzinler, Kullanıcılar, Roller, Departmanlar, Masraflar, Dokümanlar, Duyurular, Varlıklar, Talepler.
+
+### Atlanan (route/page yok — Company app)
+| Ekran | Not |
+|-------|-----|
+| Masraflar (expense claims) | Company route yok (portal `/expenses`) |
+| Duyurular | Company yönetim listesi yok (portal) |
+| Talepler (employee requests) | Company route yok (portal `/requests`) |
+
+### Hizalanan (6 ekran)
+| Ekran | Şablon | DataTable | Not |
+|-------|--------|-----------|-----|
+| İzinler (`/leaves`) | ✅ header + `list-filter-bar` (status) | ✅ requests | Multi-tab korundu; türler hâlâ `.table` (token’lı) |
+| Kullanıcılar (`/users`) | ✅ | ✅ | Arama filtre şeridine taşındı |
+| Roller (`/roles`) | ✅ | ✅ **yeni** | Kart grid → DataTable |
+| Departmanlar | ✅ | ✅ **yeni** | Custom HTML table → DataTable |
+| Evraklar (`/documents`) | ✅ | ✅ | Filtre şeridi + advanced panel |
+| Varlıklar (`/assets`) | ✅ | ✅ assets; kategoriler `.table` | `data-table` sınıfı kaldırıldı |
+
+### company.css override temizliği (bu tur)
+- `.page-header` / `h1` / `p` sabit rem → token (`--fs-page-title`, `--card-gap`, …)
+- Responsive page-header ikinci blok (1.5rem h1 ezmesi) kaldırıldı/uyumlu hale getirildi
+- `.card-header` / `.card-body` / `.card-footer` → `--card-padding` / `--sp-*`
+- (Önceki density turunda zaten: table/btn/badge/form/tab/modal)
+
+### Doğrulama
+- 3 SPA lint + build: **0** (company lint temiz)
+- Fonksiyonellik: CRUD/filtre/sayfalama yapı korundu; Roller & Departmanlar DataTable’a geçti
+
+**DUR:** Kullanıcı görsel kontrol (birkaç liste ekranı + density). Form/detay/dashboard sonraki dalga.
+
 ## Kritik Bug Teşhisi (11 Temmuz 2026 — düzeltme YOK)
 
 **Branch:** `faz3-tasarim` · **Kapsam:** yalnızca kök neden + kanıt + öneri · **Düzeltme bu turda yapılmadı.**

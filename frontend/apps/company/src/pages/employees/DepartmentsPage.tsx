@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   BsPlus,
@@ -13,7 +13,8 @@ import {
 import { departmentsApi } from '@shared/services/api';
 import { getErrorMessage } from '@shared/services/apiHelpers';
 import toast from 'react-hot-toast';
-import { Modal, ConfirmDialog } from '../../components/ui';
+import { Modal, ConfirmDialog, DataTable } from '../../components/ui';
+import type { Column } from '../../components/ui/DataTable';
 
 interface Manager {
   id: number;
@@ -185,163 +186,152 @@ const DepartmentsPage: React.FC = () => {
     }
   };
 
+  const columns: Column<Department>[] = useMemo(
+    () => [
+      {
+        key: 'name',
+        title: 'Departman',
+        render: (department) => (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
+            <BsBuilding style={{ color: 'var(--primary)', flexShrink: 0 }} />
+            <span style={{ fontWeight: 500 }}>{department.name}</span>
+          </div>
+        ),
+      },
+      {
+        key: 'code',
+        title: 'Kod',
+        width: '88px',
+        render: (d) => <span className="badge badge-secondary">{d.code || '-'}</span>,
+      },
+      {
+        key: 'parent',
+        title: 'Üst Departman',
+        render: (d) => d.parent?.name || '-',
+      },
+      {
+        key: 'manager',
+        title: 'Yönetici',
+        render: (d) =>
+          d.manager?.user?.name ? (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--sp-1)' }}>
+              <BsPersonBadge style={{ color: 'var(--primary)' }} />
+              {d.manager.user.name}
+            </span>
+          ) : (
+            '-'
+          ),
+      },
+      {
+        key: 'employees',
+        title: 'Personel',
+        width: '88px',
+        render: (d) => (
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--sp-1)' }}>
+            <BsPeople style={{ color: 'var(--text-tertiary)' }} />
+            {d.employee_count || 0}
+          </span>
+        ),
+      },
+      {
+        key: 'status',
+        title: 'Durum',
+        width: '88px',
+        render: (d) =>
+          d.is_active ? (
+            <span className="badge badge-success">Aktif</span>
+          ) : (
+            <span className="badge badge-secondary">Pasif</span>
+          ),
+      },
+      {
+        key: 'actions',
+        title: 'İşlemler',
+        align: 'right',
+        width: '96px',
+        render: (department) => (
+          <div className="table-actions">
+            <button
+              type="button"
+              className="btn btn-ghost btn-icon"
+              onClick={() => handleOpenForm(department)}
+              title="Düzenle"
+              aria-label="Düzenle"
+            >
+              <BsPencil />
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost btn-icon"
+              onClick={() => {
+                setSelectedDepartment(department);
+                setDeleteDialogOpen(true);
+              }}
+              title="Sil"
+              aria-label="Sil"
+              disabled={!!(department.employee_count && department.employee_count > 0)}
+              style={{ color: 'var(--danger)' }}
+            >
+              <BsTrash />
+            </button>
+          </div>
+        ),
+      },
+    ],
+    []
+  );
+
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in list-page">
       <div className="page-header">
         <div className="page-header-content">
           <button
-            className="btn btn-ghost btn-sm"
+            type="button"
+            className="btn btn-ghost btn-icon"
             onClick={() => navigate('/employees')}
-            style={{ marginBottom: '0.5rem' }}
+            title="Personel Listesi"
+            aria-label="Personel Listesi"
           >
-            <BsArrowLeft /> Personel Listesi
+            <BsArrowLeft />
           </button>
-          <h1 className="page-title">Departman Yönetimi</h1>
-          <p className="page-subtitle">
-            {departments.length > 0 ? `${departments.length} departman kayıtlı` : 'Şirket departmanlarını yönetin'}
-          </p>
+          <h1 className="page-title">Departmanlar</h1>
+          {departments.length > 0 && (
+            <span className="page-subtitle">{departments.length} kayıt</span>
+          )}
         </div>
         <div className="page-header-actions">
-          <button className="btn btn-primary" onClick={() => handleOpenForm()}>
+          <button type="button" className="btn btn-primary btn-sm" onClick={() => handleOpenForm()}>
             <BsPlus /> Yeni Departman
           </button>
         </div>
       </div>
 
-      {/* Arama */}
-      <div className="card mb-3">
-        <div className="card-body">
-          <div className="input-group">
-            <span className="input-icon"><BsSearch /></span>
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Departman ara (ad, kod...)"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
+      <div className="list-filter-bar">
+        <div className="list-filter-search input-group">
+          <span className="input-icon"><BsSearch /></span>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Departman ara (ad, kod...)"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ paddingLeft: '2.25rem' }}
+          />
         </div>
       </div>
 
-      {/* Tablo */}
-      <div className="card">
-        <div className="table-responsive">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Departman Adı</th>
-                <th>Kod</th>
-                <th>Üst Departman</th>
-                <th>Yönetici</th>
-                <th>Personel Sayısı</th>
-                <th>Durum</th>
-                <th className="text-end">İşlemler</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={7} className="text-center py-4">
-                    <div className="spinner-border spinner-border-sm" role="status" />
-                  </td>
-                </tr>
-              ) : filteredDepartments.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="text-center py-4">
-                    <BsBuilding size={48} className="text-muted mb-2" style={{ display: 'block', margin: '0 auto' }} />
-                    <p className="text-muted mb-2">Henüz departman tanımlanmamış</p>
-                    <button className="btn btn-primary btn-sm" onClick={() => handleOpenForm()}>
-                      <BsPlus /> İlk Departmanı Ekle
-                    </button>
-                  </td>
-                </tr>
-              ) : (
-                filteredDepartments.map((department) => (
-                  <tr key={department.id}>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <div
-                          style={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: 'var(--radius-md)',
-                            background: 'var(--primary-soft)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: 'var(--primary)',
-                          }}
-                        >
-                          <BsBuilding />
-                        </div>
-                        <div>
-                          <strong>{department.name}</strong>
-                          {department.description && (
-                            <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
-                              {department.description.slice(0, 50)}
-                              {department.description.length > 50 ? '...' : ''}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <span className="badge badge-secondary">{department.code || '-'}</span>
-                    </td>
-                    <td>{department.parent?.name || '-'}</td>
-                    <td>
-                      {department.manager?.user?.name ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <BsPersonBadge style={{ color: 'var(--primary)' }} />
-                          {department.manager.user.name}
-                        </div>
-                      ) : (
-                        <span className="text-muted">-</span>
-                      )}
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <BsPeople style={{ color: 'var(--text-tertiary)' }} />
-                        {department.employee_count || 0}
-                      </div>
-                    </td>
-                    <td>
-                      {department.is_active ? (
-                        <span className="badge badge-success">Aktif</span>
-                      ) : (
-                        <span className="badge badge-secondary">Pasif</span>
-                      )}
-                    </td>
-                    <td>
-                      <div className="btn-group btn-group-sm">
-                        <button
-                          className="btn btn-primary"
-                          onClick={() => handleOpenForm(department)}
-                          title="Düzenle"
-                        >
-                          <BsPencil />
-                        </button>
-                        <button
-                          className="btn btn-danger"
-                          onClick={() => {
-                            setSelectedDepartment(department);
-                            setDeleteDialogOpen(true);
-                          }}
-                          title="Sil"
-                          disabled={!!(department.employee_count && department.employee_count > 0)}
-                        >
-                          <BsTrash />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <DataTable
+        columns={columns}
+        data={filteredDepartments}
+        loading={loading}
+        emptyMessage="Henüz departman tanımlanmamış"
+        emptyIcon={<BsBuilding size={32} />}
+        emptyAction={
+          <button type="button" className="btn btn-primary btn-sm" onClick={() => handleOpenForm()}>
+            <BsPlus /> İlk Departmanı Ekle
+          </button>
+        }
+      />
 
       {/* Form Modal */}
       <Modal

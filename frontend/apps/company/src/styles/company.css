@@ -566,33 +566,46 @@
   overflow: hidden;
 }
 
-/* Page Header */
+/* Page Header — layout.css token'ları kanonik; burada ezme */
 .page-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.25rem;
-  flex-wrap: wrap;
-  gap: 1rem;
+  margin-bottom: var(--card-gap);
+  flex-wrap: nowrap;
+  gap: var(--sp-3);
+  min-height: var(--control-height);
 }
 
-.page-header-content h1 {
-  font-size: 1.25rem;
-  font-weight: 600;
+.page-header-content {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.page-header-content h1,
+.page-title {
+  font-size: var(--fs-page-title);
+  font-weight: var(--fw-page-title);
   color: var(--text-primary);
   margin: 0;
+  line-height: 1.2;
 }
 
-.page-header-content p {
-  font-size: 0.8125rem;
+.page-header-content p,
+.page-subtitle {
+  font-size: var(--fs-caption);
   color: var(--text-tertiary);
-  margin: 0.25rem 0 0 0;
+  margin: 0;
 }
 
 .page-header-actions {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--sp-2);
+  flex-shrink: 0;
 }
 
 /* ====================================
@@ -694,7 +707,7 @@
 }
 
 .card-header {
-  padding: 0.875rem 1rem;
+  padding: var(--card-padding);
   border-bottom: 1px solid var(--border-primary);
   display: flex;
   align-items: center;
@@ -702,18 +715,18 @@
 }
 
 .card-title {
-  font-size: 0.875rem;
-  font-weight: 600;
+  font-size: var(--fs-section);
+  font-weight: var(--fw-section);
   color: var(--text-primary);
   margin: 0;
 }
 
 .card-body {
-  padding: 1rem;
+  padding: var(--card-padding);
 }
 
 .card-footer {
-  padding: 0.75rem 1rem;
+  padding: var(--sp-3) var(--card-padding);
   border-top: 1px solid var(--border-primary);
   background: var(--surface-glass);
 }
@@ -3014,36 +3027,20 @@ textarea.form-control {
 }
 
 /* ====================================
-   PAGE HEADER RESPONSIVE
+   PAGE HEADER RESPONSIVE — layout.css ile uyumlu
    ==================================== */
-.page-header {
-  margin-bottom: 1.5rem;
-}
-
-.page-header-content h1 {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.page-header-content p {
-  margin: 0.25rem 0 0;
-  font-size: 0.875rem;
-  color: var(--text-tertiary);
-}
-
 @media (max-width: 576px) {
-  .page-header-content h1 {
-    font-size: 1.25rem;
+  .page-header {
+    flex-wrap: wrap;
+    margin-bottom: var(--card-gap);
   }
-  
+
   .page-header-actions {
-    margin-top: 0.75rem;
-  }
-  
-  .page-header-actions .btn {
     width: 100%;
+  }
+
+  .page-header-actions .btn {
+    flex: 1;
     justify-content: center;
   }
 }

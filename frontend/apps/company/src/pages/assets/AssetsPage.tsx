@@ -323,21 +323,25 @@ const AssetsPage: React.FC = () => {
       key: 'actions',
       label: '',
       render: (c: Category) => (
-        <div style={{ display: 'flex', gap: '0.25rem' }}>
+        <div className="table-actions">
           <button
-            className="btn btn-ghost btn-icon btn-sm"
+            type="button"
+            className="btn btn-ghost btn-icon"
             onClick={() => { setSelectedCategory(c); setCategoryFormOpen(true); }}
             title="Düzenle"
+            aria-label="Düzenle"
           >
-            <BsPencil size={14} />
+            <BsPencil />
           </button>
           <button
-            className="btn btn-ghost btn-icon btn-sm"
+            type="button"
+            className="btn btn-ghost btn-icon"
             onClick={() => { setItemToDelete({ type: 'category', item: c }); setDeleteDialogOpen(true); }}
             title="Sil"
+            aria-label="Sil"
             style={{ color: 'var(--danger)' }}
           >
-            <BsTrash size={14} />
+            <BsTrash />
           </button>
         </div>
       ),
@@ -345,33 +349,34 @@ const AssetsPage: React.FC = () => {
   ];
 
   return (
-    <div className="animate-fade-in">
-      {/* Page Header */}
+    <div className="animate-fade-in list-page">
       <div className="page-header">
-        <div>
-          <h1 className="page-title">Varlık Yönetimi</h1>
-          <p className="page-subtitle">Demirbaş ve zimmet takibi</p>
+        <div className="page-header-content">
+          <h1 className="page-title">Varlıklar</h1>
         </div>
-        <button
-          className="btn btn-primary"
-          onClick={() => {
-            if (activeTab === 'assets') {
-              setSelectedAsset(null);
-              setAssetFormOpen(true);
-            } else {
-              setSelectedCategory(null);
-              setCategoryFormOpen(true);
-            }
-          }}
-        >
-          <BsPlus size={18} />
-          {activeTab === 'assets' ? 'Yeni Varlık' : 'Yeni Kategori'}
-        </button>
+        <div className="page-header-actions">
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            onClick={() => {
+              if (activeTab === 'assets') {
+                setSelectedAsset(null);
+                setAssetFormOpen(true);
+              } else {
+                setSelectedCategory(null);
+                setCategoryFormOpen(true);
+              }
+            }}
+          >
+            <BsPlus />
+            {activeTab === 'assets' ? 'Yeni Varlık' : 'Yeni Kategori'}
+          </button>
+        </div>
       </div>
 
-      {/* Tabs */}
-      <div className="tabs" style={{ marginBottom: '1.5rem' }}>
+      <div className="tabs">
         <button
+          type="button"
           className={`tab ${activeTab === 'assets' ? 'active' : ''}`}
           onClick={() => setActiveTab('assets')}
         >
@@ -379,6 +384,7 @@ const AssetsPage: React.FC = () => {
           Varlıklar
         </button>
         <button
+          type="button"
           className={`tab ${activeTab === 'categories' ? 'active' : ''}`}
           onClick={() => setActiveTab('categories')}
         >
@@ -387,18 +393,17 @@ const AssetsPage: React.FC = () => {
         </button>
       </div>
 
-      {/* Content */}
       {activeTab === 'assets' ? (
         assetsLoading ? (
-          <div className="loading-container"><div className="loading-spinner" /></div>
+          <div className="page-loading"><div className="loading-spinner" /></div>
         ) : assets.length === 0 ? (
           <EmptyState
             icon={<BsLaptop size={48} />}
             title="Henüz varlık yok"
             description="Yeni bir varlık ekleyerek başlayın."
             action={
-              <button className="btn btn-primary" onClick={() => { setSelectedAsset(null); setAssetFormOpen(true); }}>
-                <BsPlus size={18} />
+              <button type="button" className="btn btn-primary btn-sm" onClick={() => { setSelectedAsset(null); setAssetFormOpen(true); }}>
+                <BsPlus />
                 İlk Varlığı Ekle
               </button>
             }
@@ -413,23 +418,23 @@ const AssetsPage: React.FC = () => {
           />
         )
       ) : categoriesLoading ? (
-        <div className="loading-container"><div className="loading-spinner" /></div>
+        <div className="page-loading"><div className="loading-spinner" /></div>
       ) : categories.length === 0 ? (
         <EmptyState
           icon={<BsFolder size={48} />}
           title="Henüz kategori yok"
           description="Varlıkları gruplamak için kategoriler oluşturun."
           action={
-            <button className="btn btn-primary" onClick={() => { setSelectedCategory(null); setCategoryFormOpen(true); }}>
-              <BsPlus size={18} />
+            <button type="button" className="btn btn-primary btn-sm" onClick={() => { setSelectedCategory(null); setCategoryFormOpen(true); }}>
+              <BsPlus />
               İlk Kategoriyi Oluştur
             </button>
           }
         />
       ) : (
         <div className="card">
-          <div className="card-body" style={{ padding: 0 }}>
-            <table className="data-table">
+          <div className="table-container">
+            <table className="table">
               <thead>
                 <tr>
                   {categoryColumns.map(col => <th key={col.key}>{col.label}</th>)}

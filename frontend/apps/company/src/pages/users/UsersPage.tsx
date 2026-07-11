@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usersApi, rolesApi } from '@shared/services/api';
 import toast from 'react-hot-toast';
-import { DataTable, ConfirmDialog, Skeleton } from '../../components/ui';
+import { DataTable, ConfirmDialog } from '../../components/ui';
 import UserForm from '../../components/UserForm';
 import UserInviteForm from '../../components/UserInviteForm';
 import UserImportForm from '../../components/UserImportForm';
@@ -318,25 +318,31 @@ const UsersPage: React.FC = () => {
       width: '100px',
       align: 'right' as const,
       render: (user: User) => (
-        <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'flex-end' }}>
+        <div className="table-actions">
           <button
-            className="btn btn-ghost btn-icon btn-sm"
+            type="button"
+            className="btn btn-ghost btn-icon"
             onClick={() => navigate(`/users/${user.id}`)}
             title="Detay"
+            aria-label="Detay"
           >
             <BsEye />
           </button>
           <button
-            className="btn btn-ghost btn-icon btn-sm"
+            type="button"
+            className="btn btn-ghost btn-icon"
             onClick={() => handleEdit(user)}
             title="Düzenle"
+            aria-label="Düzenle"
           >
             <BsPencil />
           </button>
           <button
-            className="btn btn-ghost btn-icon btn-sm"
+            type="button"
+            className="btn btn-ghost btn-icon"
             onClick={() => handleDelete(user)}
             title="Sil"
+            aria-label="Sil"
             style={{ color: 'var(--danger)' }}
           >
             <BsTrash />
@@ -347,37 +353,30 @@ const UsersPage: React.FC = () => {
   ];
 
   return (
-    <div className="animate-fade-in">
-      {/* Page Header */}
+    <div className="animate-fade-in list-page">
       <div className="page-header">
         <div className="page-header-content">
-          <h1>Kullanıcılar</h1>
-          <p>Sistem kullanıcılarını yönetin</p>
+          <h1 className="page-title">Kullanıcılar</h1>
+          {total > 0 && <span className="page-subtitle">{total} kayıt</span>}
         </div>
-        <div className="page-header-actions" style={{ display: 'flex', gap: '0.5rem' }}>
+        <div className="page-header-actions">
           <button
-            className="btn btn-primary"
+            type="button"
+            className="btn btn-secondary btn-sm"
             onClick={() => setInviteFormOpen(true)}
           >
             <BsEnvelope /> Davet Et
           </button>
           <button
-            className="btn btn-primary"
+            type="button"
+            className="btn btn-secondary btn-sm"
             onClick={() => setImportFormOpen(true)}
           >
             <BsUpload /> Import
           </button>
           <button
-            className="btn btn-primary"
-            onClick={() => {
-              setSelectedUser(undefined);
-              setFormOpen(true);
-            }}
-          >
-            <BsPlus /> Yeni Kullanıcı
-          </button>
-          <button
-            className="btn btn-ghost"
+            type="button"
+            className="btn btn-ghost btn-sm"
             onClick={async () => {
               try {
                 const params: Record<string, unknown> = {};
@@ -397,108 +396,110 @@ const UsersPage: React.FC = () => {
               }
             }}
           >
-            <BsDownload size={18} />
-            Export
+            <BsDownload /> Export
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            onClick={() => {
+              setSelectedUser(undefined);
+              setFormOpen(true);
+            }}
+          >
+            <BsPlus /> Yeni Kullanıcı
           </button>
         </div>
       </div>
 
-      {/* Bulk Actions Toolbar */}
       {selectedUsers.length > 0 && (
-        <div className="card mb-4" style={{ background: 'var(--primary-soft)', border: '1px solid var(--primary)' }}>
-          <div className="card-body">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-              <span style={{ fontWeight: 500 }}>
-                {selectedUsers.length} kullanıcı seçildi
-              </span>
-              <select
-                className="form-control"
-                value={bulkAction}
-                onChange={(e) => setBulkAction(e.target.value)}
-                style={{ minWidth: 150 }}
-              >
-                <option value="">İşlem Seçin</option>
-                <option value="activate">Aktifleştir</option>
-                <option value="deactivate">Pasifleştir</option>
-                <option value="assign_role">Rol Ata</option>
-                <option value="remove_role">Rol Kaldır</option>
-                <option value="delete">Sil</option>
-              </select>
-              {(bulkAction === 'assign_role' || bulkAction === 'remove_role') && (
-                <select
-                  className="form-control"
-                  value={bulkRoleId || ''}
-                  onChange={(e) => setBulkRoleId(e.target.value ? parseInt(e.target.value) : null)}
-                  style={{ minWidth: 150 }}
-                >
-                  <option value="">Rol Seçin</option>
-                  {allRoles.map((role) => (
-                    <option key={role.id} value={role.id}>
-                      {role.name}
-                    </option>
-                  ))}
-                </select>
-              )}
-              <button
-                className="btn btn-primary btn-sm"
-                onClick={handleBulkAction}
-                disabled={!bulkAction || (bulkAction.includes('role') && !bulkRoleId)}
-              >
-                Uygula
-              </button>
-              <button
-                className="btn btn-ghost btn-sm"
-                onClick={() => {
-                  setSelectedUsers([]);
-                  setBulkAction('');
-                  setBulkRoleId(null);
-                }}
-              >
-                İptal
-              </button>
-            </div>
-          </div>
+        <div
+          className="list-filter-bar"
+          style={{
+            background: 'var(--primary-soft)',
+            borderColor: 'var(--primary)',
+            marginBottom: 'var(--sp-2)',
+          }}
+        >
+          <span style={{ fontWeight: 500, fontSize: 'var(--fs-body)' }}>
+            {selectedUsers.length} kullanıcı seçildi
+          </span>
+          <select
+            className="form-control"
+            value={bulkAction}
+            onChange={(e) => setBulkAction(e.target.value)}
+            style={{ minWidth: 140, width: 'auto' }}
+          >
+            <option value="">İşlem Seçin</option>
+            <option value="activate">Aktifleştir</option>
+            <option value="deactivate">Pasifleştir</option>
+            <option value="assign_role">Rol Ata</option>
+            <option value="remove_role">Rol Kaldır</option>
+            <option value="delete">Sil</option>
+          </select>
+          {(bulkAction === 'assign_role' || bulkAction === 'remove_role') && (
+            <select
+              className="form-control"
+              value={bulkRoleId || ''}
+              onChange={(e) => setBulkRoleId(e.target.value ? parseInt(e.target.value) : null)}
+              style={{ minWidth: 140, width: 'auto' }}
+            >
+              <option value="">Rol Seçin</option>
+              {allRoles.map((role) => (
+                <option key={role.id} value={role.id}>
+                  {role.name}
+                </option>
+              ))}
+            </select>
+          )}
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            onClick={handleBulkAction}
+            disabled={!bulkAction || (bulkAction.includes('role') && !bulkRoleId)}
+          >
+            Uygula
+          </button>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={() => {
+              setSelectedUsers([]);
+              setBulkAction('');
+              setBulkRoleId(null);
+            }}
+            style={{ marginLeft: 'auto' }}
+          >
+            İptal
+          </button>
         </div>
       )}
 
-      {/* Data Table */}
-      {loading ? (
-        <div className="card">
-          <div className="card-body">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {[...Array(5)].map((_, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <Skeleton circle width={40} height={40} />
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    <Skeleton width="30%" height={16} />
-                    <Skeleton width="50%" height={12} />
-                  </div>
-                  <Skeleton width={80} height={24} />
-                  <Skeleton width={100} height={24} />
-                </div>
-              ))}
-            </div>
-          </div>
+      <div className="list-filter-bar">
+        <div className="list-filter-search input-group">
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Kullanıcı ara..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+          />
         </div>
-      ) : (
-        <DataTable
-          columns={columns}
-          data={users}
-          loading={false}
-          emptyMessage="Kullanıcı bulunamadı"
-          emptyIcon={<BsPeople size={32} />}
-          currentPage={page}
-          totalPages={totalPages}
-          total={total}
-          onPageChange={setPage}
-          searchValue={search}
-          onSearchChange={(val) => {
-            setSearch(val);
-            setPage(1);
-          }}
-          searchPlaceholder="Kullanıcı ara..."
-        />
-      )}
+      </div>
+
+      <DataTable
+        columns={columns}
+        data={users}
+        loading={loading}
+        emptyMessage="Kullanıcı bulunamadı"
+        emptyIcon={<BsPeople size={32} />}
+        currentPage={page}
+        totalPages={totalPages}
+        total={total}
+        onPageChange={setPage}
+      />
 
       {/* User Form Modal */}
       <UserForm

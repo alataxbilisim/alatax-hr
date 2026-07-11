@@ -410,16 +410,15 @@ const DocumentsPage: React.FC = () => {
   ];
 
   return (
-    <div className="animate-fade-in">
-      {/* Page Header */}
+    <div className="animate-fade-in list-page">
       <div className="page-header">
         <div className="page-header-content">
-          <h1>Evrak Yönetimi</h1>
-          <p>Firma evraklarını yönetin</p>
+          <h1 className="page-title">Evraklar</h1>
         </div>
         <div className="page-header-actions">
           <button
-            className="btn btn-primary"
+            type="button"
+            className="btn btn-primary btn-sm"
             onClick={() => {
               if (activeTab === 'documents') {
                 setUploadOpen(true);
@@ -429,21 +428,22 @@ const DocumentsPage: React.FC = () => {
               }
             }}
           >
-            <BsPlus size={18} />
+            <BsPlus />
             {activeTab === 'documents' ? 'Evrak Yükle' : 'Yeni Kategori'}
           </button>
         </div>
       </div>
 
-      {/* Tabs */}
       <div className="tabs">
         <button
+          type="button"
           className={`tab ${activeTab === 'documents' ? 'active' : ''}`}
           onClick={() => setActiveTab('documents')}
         >
           Evraklar
         </button>
         <button
+          type="button"
           className={`tab ${activeTab === 'categories' ? 'active' : ''}`}
           onClick={() => setActiveTab('categories')}
         >
@@ -451,13 +451,24 @@ const DocumentsPage: React.FC = () => {
         </button>
       </div>
 
-      {/* Content */}
       {activeTab === 'documents' ? (
         <>
-          {/* Filter Bar */}
-          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+          <div className="list-filter-bar">
+            <div className="list-filter-search input-group">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Evrak ara..."
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setDocsPage(1);
+                }}
+              />
+            </div>
             <button
-              className={`btn btn-secondary ${hasActiveFilters ? 'btn-primary' : ''}`}
+              type="button"
+              className={`btn btn-sm ${hasActiveFilters || showFilters ? 'btn-primary' : 'btn-secondary'}`}
               onClick={() => setShowFilters(!showFilters)}
             >
               <BsFilter /> Filtrele
@@ -468,67 +479,62 @@ const DocumentsPage: React.FC = () => {
               )}
             </button>
             {hasActiveFilters && (
-              <button className="btn btn-ghost btn-sm" onClick={clearFilters}>
+              <button type="button" className="btn btn-ghost btn-sm" onClick={clearFilters}>
                 <BsX /> Temizle
               </button>
             )}
           </div>
 
-          {/* Filter Panel */}
           {showFilters && (
-            <div className="card mb-3">
-              <div className="card-body">
-                <div className="row" style={{ gap: '1rem' }}>
-                  <div className="col-md-3">
-                    <label className="form-label">Kategori</label>
-                    <select
-                      className="form-control"
-                      value={filters.category_id}
-                      onChange={(e) => setFilters({ ...filters, category_id: e.target.value })}
-                    >
-                      <option value="">Tümü</option>
-                      {categories.map((cat) => (
-                        <option key={cat.id} value={cat.id}>{cat.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="col-md-3">
-                    <label className="form-label">Dosya Tipi</label>
-                    <select
-                      className="form-control"
-                      value={filters.file_type}
-                      onChange={(e) => setFilters({ ...filters, file_type: e.target.value })}
-                    >
-                      <option value="">Tümü</option>
-                      {fileTypeOptions.map((opt) => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="col-md-2">
-                    <label className="form-label">Başlangıç</label>
-                    <input
-                      type="date"
-                      className="form-control"
-                      value={filters.date_from}
-                      onChange={(e) => setFilters({ ...filters, date_from: e.target.value })}
-                    />
-                  </div>
-                  <div className="col-md-2">
-                    <label className="form-label">Bitiş</label>
-                    <input
-                      type="date"
-                      className="form-control"
-                      value={filters.date_to}
-                      onChange={(e) => setFilters({ ...filters, date_to: e.target.value })}
-                    />
-                  </div>
-                  <div className="col-md-2" style={{ display: 'flex', alignItems: 'flex-end' }}>
-                    <button className="btn btn-primary" onClick={applyFilters}>
-                      Uygula
-                    </button>
-                  </div>
+            <div className="list-filter-bar list-filter-advanced" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-2)', alignItems: 'flex-end' }}>
+                <div style={{ minWidth: 140, flex: '1 1 140px' }}>
+                  <label className="form-label">Kategori</label>
+                  <select
+                    className="form-control"
+                    value={filters.category_id}
+                    onChange={(e) => setFilters({ ...filters, category_id: e.target.value })}
+                  >
+                    <option value="">Tümü</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </select>
                 </div>
+                <div style={{ minWidth: 140, flex: '1 1 140px' }}>
+                  <label className="form-label">Dosya Tipi</label>
+                  <select
+                    className="form-control"
+                    value={filters.file_type}
+                    onChange={(e) => setFilters({ ...filters, file_type: e.target.value })}
+                  >
+                    <option value="">Tümü</option>
+                    {fileTypeOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div style={{ minWidth: 130, flex: '1 1 130px' }}>
+                  <label className="form-label">Başlangıç</label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={filters.date_from}
+                    onChange={(e) => setFilters({ ...filters, date_from: e.target.value })}
+                  />
+                </div>
+                <div style={{ minWidth: 130, flex: '1 1 130px' }}>
+                  <label className="form-label">Bitiş</label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={filters.date_to}
+                    onChange={(e) => setFilters({ ...filters, date_to: e.target.value })}
+                  />
+                </div>
+                <button type="button" className="btn btn-primary btn-sm" onClick={applyFilters}>
+                  Uygula
+                </button>
               </div>
             </div>
           )}
@@ -543,12 +549,6 @@ const DocumentsPage: React.FC = () => {
             totalPages={docsTotalPages}
             total={docsTotal}
             onPageChange={setDocsPage}
-            searchValue={search}
-            onSearchChange={(val) => {
-              setSearch(val);
-              setDocsPage(1);
-            }}
-            searchPlaceholder="Evrak ara..."
           />
         </>
       ) : (

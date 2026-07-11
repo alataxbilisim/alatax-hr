@@ -256,31 +256,34 @@ const LeavesPage: React.FC = () => {
       width: '140px',
       align: 'right' as const,
       render: (r: LeaveRequest) => (
-        <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'flex-end' }}>
+        <div className="table-actions">
           {r.status === 'pending' && (
             <>
               <button
-                className="btn btn-ghost btn-icon btn-sm"
+                type="button"
+                className="btn btn-ghost btn-icon"
                 onClick={() => handleApprove(r)}
                 disabled={actionLoading === r.id}
                 title="Onayla"
                 style={{ color: 'var(--success)' }}
               >
-                <BsCheck size={18} />
+                <BsCheck />
               </button>
               <button
-                className="btn btn-ghost btn-icon btn-sm"
+                type="button"
+                className="btn btn-ghost btn-icon"
                 onClick={() => handleReject(r)}
                 disabled={actionLoading === r.id}
                 title="Reddet"
                 style={{ color: 'var(--danger)' }}
               >
-                <BsX size={18} />
+                <BsX />
               </button>
             </>
           )}
           <button
-            className="btn btn-ghost btn-icon btn-sm"
+            type="button"
+            className="btn btn-ghost btn-icon"
             title="Detay"
             onClick={() => {
               setSelectedRequest(r);
@@ -298,15 +301,15 @@ const LeavesPage: React.FC = () => {
     switch (activeTab) {
       case 'requests':
         return (
-          <button className="btn btn-primary" onClick={() => setRequestFormOpen(true)}>
-            <BsPlus size={18} />
+          <button type="button" className="btn btn-primary btn-sm" onClick={() => setRequestFormOpen(true)}>
+            <BsPlus />
             Yeni Talep
           </button>
         );
       case 'types':
         return (
-          <button className="btn btn-primary" onClick={() => { setSelectedType(undefined); setTypeFormOpen(true); }}>
-            <BsPlus size={18} />
+          <button type="button" className="btn btn-primary btn-sm" onClick={() => { setSelectedType(undefined); setTypeFormOpen(true); }}>
+            <BsPlus />
             Yeni Tür
           </button>
         );
@@ -320,25 +323,20 @@ const LeavesPage: React.FC = () => {
       case 'requests':
         return (
           <>
-            {/* Filters */}
-            <div className="card mb-3">
-              <div className="card-body" style={{ padding: '0.75rem 1rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <BsFilter size={16} style={{ color: 'var(--text-tertiary)' }} />
-                  <select
-                    className="form-select"
-                    style={{ width: 'auto', minWidth: '150px' }}
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                  >
-                    <option value="">Tüm Durumlar</option>
-                    <option value="pending">Bekleyen</option>
-                    <option value="approved">Onaylanan</option>
-                    <option value="rejected">Reddedilen</option>
-                    <option value="cancelled">İptal</option>
-                  </select>
-                </div>
-              </div>
+            <div className="list-filter-bar">
+              <BsFilter size={16} style={{ color: 'var(--text-tertiary)', flexShrink: 0 }} />
+              <select
+                className="form-control"
+                style={{ width: 'auto', minWidth: 150 }}
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <option value="">Tüm Durumlar</option>
+                <option value="pending">Bekleyen</option>
+                <option value="approved">Onaylanan</option>
+                <option value="rejected">Reddedilen</option>
+                <option value="cancelled">İptal</option>
+              </select>
             </div>
             <DataTable
               columns={requestColumns}
@@ -479,57 +477,61 @@ const LeavesPage: React.FC = () => {
   };
 
   return (
-    <div className="animate-fade-in">
-      {/* Page Header */}
+    <div className="animate-fade-in list-page">
       <div className="page-header">
         <div className="page-header-content">
-          <h1>İzin Yönetimi</h1>
-          <p>İzin taleplerini, türlerini ve bakiyeleri yönetin</p>
+          <h1 className="page-title">İzinler</h1>
         </div>
         <div className="page-header-actions">
           {getHeaderAction()}
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="tabs" style={{ overflowX: 'auto', flexWrap: 'nowrap' }}>
+      <div className="tabs">
         <button
+          type="button"
           className={`tab ${activeTab === 'requests' ? 'active' : ''}`}
           onClick={() => handleTabChange('requests')}
         >
           İzin Talepleri
         </button>
         <button
+          type="button"
           className={`tab ${activeTab === 'types' ? 'active' : ''}`}
           onClick={() => handleTabChange('types')}
         >
           İzin Türleri
         </button>
         <button
+          type="button"
           className={`tab ${activeTab === 'balances' ? 'active' : ''}`}
           onClick={() => handleTabChange('balances')}
         >
           Bakiyeler
         </button>
         <button
+          type="button"
           className={`tab ${activeTab === 'calendar' ? 'active' : ''}`}
           onClick={() => handleTabChange('calendar')}
         >
           Takvim
         </button>
         <button
+          type="button"
           className={`tab ${activeTab === 'holidays' ? 'active' : ''}`}
           onClick={() => handleTabChange('holidays')}
         >
           Tatiller
         </button>
         <button
+          type="button"
           className={`tab ${activeTab === 'policies' ? 'active' : ''}`}
           onClick={() => handleTabChange('policies')}
         >
           Hakediş Politikaları
         </button>
         <button
+          type="button"
           className={`tab ${activeTab === 'reports' ? 'active' : ''}`}
           onClick={() => handleTabChange('reports')}
         >
@@ -537,7 +539,6 @@ const LeavesPage: React.FC = () => {
         </button>
       </div>
 
-      {/* Content */}
       {renderContent()}
 
       {/* Modals */}
