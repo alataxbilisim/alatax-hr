@@ -72,6 +72,9 @@ class PermissionSeeder extends Seeder
                 'custom_fields' => ['view', 'create', 'edit', 'delete'],
                 'reports' => ['view', 'export'],
                 'documents' => ['view', 'create', 'edit', 'delete'],
+                // Alan seviyesi (Faz 2) — field_permissions tablosu Faz 4'e
+                'salary' => ['view', 'edit'],
+                'tckn' => ['view'],
             ],
 
             // İşe Alım Modülü

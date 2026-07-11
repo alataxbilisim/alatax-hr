@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\EmployeeDashboard;
+use App\Services\EmployeeSensitiveFieldService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,6 +16,10 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class EmployeeDashboardController extends Controller
 {
+    public function __construct(
+        protected EmployeeSensitiveFieldService $sensitiveFields,
+    ) {}
+
     /**
      * Dashboard listesi (kullanıcının kendi + paylaşılanlar)
      */
@@ -183,6 +188,14 @@ class EmployeeDashboardController extends Controller
         $type = $validated['type'];
         $config = $validated['config'];
 
+        if ($this->sensitiveFields->isSalaryMeasure($config['measure'] ?? '')
+            && ! $this->sensitiveFields->canViewSalary($user)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bu metrik için yetkiniz bulunmamaktadır',
+            ], 403);
+        }
+
         $query = Employee::where('company_id', $user->company_id);
 
         // Filtreleri uygula
@@ -245,6 +258,12 @@ class EmployeeDashboardController extends Controller
 
             // Widget verisini al
             $config = $widget['config'];
+
+            if ($this->sensitiveFields->isSalaryMeasure($config['measure'] ?? '')
+                && ! $this->sensitiveFields->canViewSalary($user)) {
+                continue;
+            }
+
             $query = Employee::where('company_id', $user->company_id);
 
             if ($widget['type'] === 'kpi') {

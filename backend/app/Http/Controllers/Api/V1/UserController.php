@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Http\Resources\EmployeeResource;
 use App\Mail\PasswordResetByAdmin;
 use App\Mail\UserInvitation;
 use App\Models\ActivityLog;
@@ -86,8 +87,15 @@ class UserController extends BaseController
             'active_sessions' => $user->tokens()->count(),
         ];
 
+        $employee = $user->employee;
+        $user->unsetRelation('employee');
+        $userPayload = $user->toArray();
+        if ($employee) {
+            $userPayload['employee'] = (new EmployeeResource($employee))->resolve();
+        }
+
         return $this->success([
-            'user' => $user,
+            'user' => $userPayload,
             'stats' => $stats,
         ]);
     }

@@ -70,13 +70,7 @@ class Employee extends Model
         'custom_fields' => 'array',
     ];
 
-    protected $hidden = [
-        'national_id',
-        'gross_salary',
-        'net_salary',
-        'iban',
-        'sgk_number',
-    ];
+    // Hassas alanlar: global $hidden KALDIRILDI — API çıkışı EmployeeResource + izin ile (Faz 2)
 
     /**
      * İlişkili kullanıcı hesabı

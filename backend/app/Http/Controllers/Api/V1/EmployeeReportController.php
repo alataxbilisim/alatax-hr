@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Enums\UserType;
 use App\Models\Department;
 use App\Models\Employee;
 use App\Models\SavedReport;
+use App\Services\EmployeeSensitiveFieldService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,6 +13,10 @@ use Illuminate\Support\Facades\Validator;
 
 class EmployeeReportController extends BaseController
 {
+    public function __construct(
+        protected EmployeeSensitiveFieldService $sensitiveFields,
+    ) {}
+
     /**
      * Desteklenen boyutlar (dimensions)
      */
@@ -75,10 +79,18 @@ class EmployeeReportController extends BaseController
                 'value' => $k,
                 'label' => $d['label'],
             ])->values(),
-            'measures' => collect($this->measures)->map(fn ($m, $k) => [
-                'value' => $k,
-                'label' => $m['label'],
-            ])->values(),
+            'measures' => collect($this->measures)
+                ->filter(function ($m) {
+                    if (! isset($m['requires_permission'])) {
+                        return true;
+                    }
+
+                    return $this->sensitiveFields->canViewSalary(auth()->user());
+                })
+                ->map(fn ($m, $k) => [
+                    'value' => $k,
+                    'label' => $m['label'],
+                ])->values(),
             'chart_types' => [
                 ['value' => 'bar', 'label' => 'Çubuk Grafik'],
                 ['value' => 'horizontal_bar', 'label' => 'Yatay Çubuk Grafik'],
@@ -169,13 +181,9 @@ class EmployeeReportController extends BaseController
 
         // Yetki kontrolü (maaş metrikleri için)
         $measureConfig = $this->measures[$measure];
-        if (isset($measureConfig['requires_permission'])) {
-            $user = auth()->user();
-            if (! $user->can($measureConfig['requires_permission']) &&
-                $user->type !== UserType::CompanyAdmin &&
-                $user->type !== UserType::SuperAdmin) {
-                return $this->error('Bu metrik için yetkiniz bulunmamaktadır', 403);
-            }
+        if (isset($measureConfig['requires_permission'])
+            && ! $this->sensitiveFields->canViewSalary(auth()->user())) {
+            return $this->error('Bu metrik için yetkiniz bulunmamaktadır', 403);
         }
 
         try {

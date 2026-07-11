@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Http\Resources\EmployeeResource;
 use App\Models\ActivityLog;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -82,7 +83,7 @@ class AuthController extends BaseController
 
             return $this->success([
                 'user' => $this->formatUser($user),
-                'employee' => $employee,
+                'employee' => new EmployeeResource($employee),
                 'token' => $token,
                 'type' => 'portal',
             ], 'Portal girişi başarılı');

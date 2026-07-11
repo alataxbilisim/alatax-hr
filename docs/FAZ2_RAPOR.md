@@ -987,3 +987,59 @@ Document görünürlük, ApprovalRecord tighten…
 7. **K7 — Audit:** maaş değişikliği ActivityLog’da maskeli mi, tam mı görünür olsun? (şu an `toArray()` `$hidden` yüzünden maaş diff yok)
 
 **Sonraki adım (onay sonrası):** ADIM 2 uygulama — önce Employee/maaş (sıra #1–4).
+
+---
+
+## Alan Seviyesi İzinler UYGULAMA — Dalga 1 (Employee)
+
+**Tarih:** 11 Temmuz 2026 · **Branch:** `faz2-rbac-audit`
+
+### Kararlar (kilitlendi)
+
+| # | Karar |
+|---|--------|
+| K1 | Spatie named permission; `field_permissions` → Faz 4 |
+| K2 | Yetkisiz write → sessiz strip + audit notu |
+| K3 | salary → hr_manager (`employees.*`) + company_admin (Gate); hr_specialist **yok** |
+| K4 | TCKN → own **veya** `employees.tckn.view`; manager subordinate göremez |
+| K5 | global `$hidden` kaldırıldı; çıkış `EmployeeResource` |
+| K6 | bank_name + iban + sgk → salary grubu |
+| K7 | audit old/new hassas değerler `***`; açıklamada “maaş güncellendi” |
+
+### Yapılanlar
+
+| Parça | Detay |
+|-------|--------|
+| Seed | `employees.salary.view/edit`, `employees.tckn.view` — admin=all; hr_manager=`employees.*`; hr_specialist açık liste (salary/tckn yok) |
+| Service | `EmployeeSensitiveFieldService` — view/edit/strip/mask |
+| Resource | `EmployeeResource` — when ile alan; yetkisizde anahtar yok |
+| Controller | Employee CRUD + Auth portal login + User show nested + Branch employees + Portal profile |
+| `$hidden` | Employee modelinden kaldırıldı |
+| Write | store/update strip + `yetkisiz alan güncellemesi yok sayıldı: …` |
+| Audit | maskForAudit + “maaş güncellendi” notu |
+| Bypass | Dashboard widget-data + Report getData/metadata maaş gate |
+
+### Çıkış tarama (sızıntı kontrolü)
+
+| Çıkış | Durum |
+|-------|--------|
+| EmployeeController index/show/store/update/portal | Resource ✅ |
+| Auth portal login | Resource ✅ |
+| UserController show nested | Resource ✅ |
+| BranchController employees | Resource ✅ |
+| PortalProfile show | Resource ✅ |
+| managers()/orgChart/getManagers | kolon whitelist (maaş yok) ✅ |
+| PerformanceReview `employee` | User FK (Employee modeli değil) ✅ |
+
+### Test
+
+| Suite | Sonuç |
+|-------|--------|
+| `EmployeeFieldPermissionTest` | **9 passed** (hr_manager VAR / hr_specialist YOK / own TCKN / manager yok / strip+audit / company_admin / mask / dashboard+report 403) |
+| Tam suite | **148 passed**, 1 risky |
+
+### Sonraki
+
+- Payslip / diğer modeller alan seviyesi (isteğe bağlı)
+- Rol Yönetimi UI’da salary/tckn checkbox
+- `field_permissions` tablosu (Faz 4)

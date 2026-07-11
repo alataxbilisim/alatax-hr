@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Http\Resources\EmployeeResource;
 use App\Mail\EmployeeInvitation;
 use App\Models\ActivityLog;
 use App\Models\AssetAssignment;
@@ -16,6 +17,7 @@ use App\Models\TrainingParticipant;
 use App\Models\User;
 use App\Services\DataScopeService;
 use App\Services\EmployeeImportService;
+use App\Services\EmployeeSensitiveFieldService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -28,6 +30,7 @@ class EmployeeController extends BaseController
 {
     public function __construct(
         protected DataScopeService $dataScope,
+        protected EmployeeSensitiveFieldService $sensitiveFields,
     ) {}
 
     /**
@@ -78,7 +81,11 @@ class EmployeeController extends BaseController
         $perPage = $request->get('per_page', 15);
         $employees = $query->paginate($perPage);
 
-        return $this->success($employees);
+        return $this->paginated(
+            EmployeeResource::collection($employees->getCollection())->resolve(),
+            'Personel listelendi',
+            $employees
+        );
     }
 
     /**
@@ -191,7 +198,7 @@ class EmployeeController extends BaseController
             ->get();
 
         return $this->success([
-            'employee' => $employee,
+            'employee' => new EmployeeResource($employee),
             'leaves' => $leaveData,
             'trainings' => $trainingData,
             'assets' => $assetData,
@@ -271,6 +278,16 @@ class EmployeeController extends BaseController
             'portal_email' => 'nullable|required_if:create_portal_access,true|email|unique:users,email',
         ]);
 
+        $strip = $this->sensitiveFields->stripUnauthorizedWrite($request->user(), $validated);
+        $validated = $strip['data'];
+        if ($strip['stripped'] !== []) {
+            ActivityLog::log(
+                'update',
+                null,
+                'yetkisiz alan güncellemesi yok sayıldı: '.implode(', ', $strip['stripped'])
+            );
+        }
+
         DB::beginTransaction();
         try {
             // Personel kaydı oluştur
@@ -342,11 +359,20 @@ class EmployeeController extends BaseController
                 );
             }
 
-            ActivityLog::log('create', $employee, 'Personel kaydı oluşturuldu: '.$validated['name'], null, $employee->toArray());
+            ActivityLog::log(
+                'create',
+                $employee,
+                'Personel kaydı oluşturuldu: '.$validated['name'],
+                null,
+                $this->sensitiveFields->maskForAudit($employee->toArray())
+            );
 
             DB::commit();
 
-            return $this->created($employee->load('user', 'department', 'manager'), 'Personel başarıyla oluşturuldu');
+            return $this->created(
+                new EmployeeResource($employee->load('user', 'department', 'manager')),
+                'Personel başarıyla oluşturuldu'
+            );
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -410,15 +436,42 @@ class EmployeeController extends BaseController
             'custom_fields' => 'nullable|array',
         ]);
 
+        $strip = $this->sensitiveFields->stripUnauthorizedWrite($request->user(), $validated);
+        $validated = $strip['data'];
+        if ($strip['stripped'] !== []) {
+            ActivityLog::log(
+                'update',
+                $employee,
+                'yetkisiz alan güncellemesi yok sayıldı: '.implode(', ', $strip['stripped'])
+            );
+        }
+
         $oldValues = $employee->toArray();
 
         $employee->update(array_merge($validated, [
             'updated_by' => auth()->id(),
         ]));
 
-        ActivityLog::log('update', $employee, 'Personel kaydı güncellendi', $oldValues, $employee->fresh()->toArray());
+        $fresh = $employee->fresh();
+        $newValues = $fresh->toArray();
+        $sensitiveNotes = $this->sensitiveFields->changedSensitiveLabels($oldValues, $newValues);
+        $description = 'Personel kaydı güncellendi';
+        if ($sensitiveNotes !== []) {
+            $description .= ' ('.implode(', ', $sensitiveNotes).')';
+        }
 
-        return $this->success($employee->load('user', 'department', 'manager'), 'Personel başarıyla güncellendi');
+        ActivityLog::log(
+            'update',
+            $employee,
+            $description,
+            $this->sensitiveFields->maskForAudit($oldValues),
+            $this->sensitiveFields->maskForAudit($newValues)
+        );
+
+        return $this->success(
+            new EmployeeResource($employee->load('user', 'department', 'manager')),
+            'Personel başarıyla güncellendi'
+        );
     }
 
     /**
@@ -432,7 +485,13 @@ class EmployeeController extends BaseController
 
         $oldValues = $employee->toArray();
 
-        ActivityLog::log('delete', $employee, 'Personel kaydı silindi', $oldValues, null);
+        ActivityLog::log(
+            'delete',
+            $employee,
+            'Personel kaydı silindi',
+            $this->sensitiveFields->maskForAudit($oldValues),
+            null
+        );
 
         $employee->delete();
 
@@ -484,7 +543,7 @@ class EmployeeController extends BaseController
             DB::commit();
 
             return $this->success([
-                'employee' => $employee->load('user'),
+                'employee' => new EmployeeResource($employee->load('user')),
                 'temporary_password' => $temporaryPassword,
             ], 'Portal erişimi başarıyla oluşturuldu');
         } catch (\Exception $e) {
@@ -519,7 +578,7 @@ class EmployeeController extends BaseController
 
             DB::commit();
 
-            return $this->success($employee, 'Portal erişimi başarıyla kaldırıldı');
+            return $this->success(new EmployeeResource($employee), 'Portal erişimi başarıyla kaldırıldı');
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -677,7 +736,13 @@ class EmployeeController extends BaseController
             foreach ($employees as $employee) {
                 $oldValues = $employee->toArray();
                 $employee->update($updateData);
-                ActivityLog::log('update', $employee, 'Toplu güncelleme yapıldı', $oldValues, $employee->fresh()->toArray());
+                ActivityLog::log(
+                    'update',
+                    $employee,
+                    'Toplu güncelleme yapıldı',
+                    $this->sensitiveFields->maskForAudit($oldValues),
+                    $this->sensitiveFields->maskForAudit($employee->fresh()->toArray())
+                );
             }
 
             DB::commit();
@@ -714,7 +779,13 @@ class EmployeeController extends BaseController
         try {
             foreach ($employees as $employee) {
                 $oldValues = $employee->toArray();
-                ActivityLog::log('delete', $employee, 'Toplu silme ile personel kaydı silindi', $oldValues, null);
+                ActivityLog::log(
+                    'delete',
+                    $employee,
+                    'Toplu silme ile personel kaydı silindi',
+                    $this->sensitiveFields->maskForAudit($oldValues),
+                    null
+                );
                 $employee->delete();
             }
 
