@@ -2,8 +2,12 @@
 
 namespace App\Providers;
 
+use App\Enums\UserType;
+use App\Models\User;
+use App\Support\HierarchicalPermission;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -23,6 +27,38 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureRateLimiting();
+        $this->configureAuthorizationGates();
+    }
+
+    /**
+     * Spatie permission: middleware için Gate::before —
+     * type bypass + hiyerarşik wildcard (employees.* → employees.list.view).
+     */
+    protected function configureAuthorizationGates(): void
+    {
+        Gate::before(function ($user, string $ability) {
+            if (! $user instanceof User) {
+                return null;
+            }
+
+            // GEÇİCİ: company_admin bypass — Faz 2 sonu/Faz 6'da otomatik admin rolü + kaldır
+            if ($user->type === UserType::SuperAdmin || $user->type === UserType::CompanyAdmin) {
+                return true;
+            }
+
+            // Hiyerarşik izin string'leri (module.page.action); diğer ability'ler Spatie/default'a bırakılır
+            if (! str_contains($ability, '.')) {
+                return null;
+            }
+
+            $permissionNames = $user->getAllPermissions()->pluck('name')->all();
+
+            if (HierarchicalPermission::matches($permissionNames, $ability)) {
+                return true;
+            }
+
+            return null;
+        });
     }
 
     /**
