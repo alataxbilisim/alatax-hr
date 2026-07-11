@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Enums\DataScopeLevel;
 use App\Models\ActivityLog;
 use App\Models\Employee;
 use App\Models\EmployeeDocument;
-use App\Enums\DataScopeLevel;
 use App\Services\DataScopeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

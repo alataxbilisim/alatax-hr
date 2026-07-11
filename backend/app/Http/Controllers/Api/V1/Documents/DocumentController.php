@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Api\V1\Documents;
 
-use App\Http\Controllers\Api\V1\BaseController;
 use App\Enums\DataScopeLevel;
+use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\ActivityLog;
 use App\Models\Document;
 use App\Models\DocumentVersion;
