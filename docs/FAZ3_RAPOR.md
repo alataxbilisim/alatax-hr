@@ -102,3 +102,108 @@ Hardcoded hover renkleri (`#dc2626` vb.) btn danger/success’te token + brightn
 - Portal Bootstrap ölçeği
 
 **DUR:** Pilot görsel kontrol için kullanıcı onayı bekleniyor.
+
+---
+
+## Kritik Bug Teşhisi (11 Temmuz 2026 — düzeltme YOK)
+
+**Branch:** `faz3-tasarim` · **Kapsam:** yalnızca kök neden + kanıt + öneri · **Düzeltme bu turda yapılmadı.**
+
+### Bağlantı özeti
+
+İki sorun **bağlantılı**. Company app her **30 sn** `checkAuth()` çağırıyor; bu `isLoading=true` yapıyor → `ProtectedRoute` / `ModuleProtectedRoute` tüm sayfayı **unmount** edip “Yükleniyor…” gösteriyor → `/auth/me` bitince sayfa **yeniden mount** → liste/API yeniden çekiliyor. Kullanıcı bunu “kendiliğinden refresh” olarak görüyor. `/auth/me` ~2 sn sürdüğü için her döngüde 2+ sn boş ekran + yeniden yükleme maliyeti birikiyor; yavaş API algısını da büyütüyor.
+
+Faz 3 density effect’i (`data-density` setAttribute) **döngü üretmiyor** — yalnızca `density` state değişince çalışıyor.
+
+---
+
+### SORUN 1 — Sürekli refresh (~20–30 sn)
+
+#### Kök neden (yüksek güven)
+
+1. **`App.tsx` 30 sn `setInterval` → `dispatch(checkAuth())`**  
+   ```157:166:frontend/apps/company/src/App.tsx
+   // Periyodik olarak (30 saniyede bir) fresh data çek
+   useEffect(() => {
+     if (!authIsAuthenticated) return;
+     const interval = setInterval(() => {
+       dispatch(checkAuth());
+     }, 30000);
+   ```
+2. **`checkAuth.pending` → `state.isLoading = true`** (`authSlice.ts`)
+3. **`ProtectedRoute` `isLoading` iken tüm children’ı kaldırıp loading screen render ediyor**  
+   ```114:120:frontend/apps/company/src/App.tsx
+   if (isLoading) {
+     return (
+       <div className="loading-screen">
+         ...
+   ```
+   Aynı pattern: `ModuleProtectedRoute.tsx`.
+4. Sonuç: **tam sayfa unmount/remount** — F5 değil ama kullanıcı için “refresh”. Süre interval ile birebir (~30 sn).
+
+#### Kanıt
+
+| Kanıt | Detay |
+|-------|--------|
+| Zaman eşleşmesi | Kullanıcı “20–30 sn” ↔ kod `30000` ms |
+| Network (beklenen) | Her ~30 sn tekrarlayan `GET /api/v1/auth/me` |
+| `window.location.reload` otomatik yok | ErrorBoundary’de yalnızca butonla; density/effect’te yok |
+| 401 hard redirect | `api.ts` interceptor: 401 → `window.location.href = '/login'` (oturum düşerse tam gezinme; asıl periyodik semptom bu değil) |
+| Density | `setAttribute('data-density')` — state değişmeden tekrar tetiklenmez |
+
+#### Önerilen çözüm (sonraki tur)
+
+- Periyodik `checkAuth`’te **`isLoading` set etme** (ayrı sessiz thunk veya `checkAuth`’e `{ silent: true }`).
+- Veya interval’i kaldır / çok uzat; focus’ta sessiz yenileme yeterli olabilir.
+- `ProtectedRoute`: zaten authenticated iken `isLoading` ile unmount etme.
+
+---
+
+### SORUN 2 — API yavaş (login/list 5–11 sn algısı)
+
+#### Ölçüm (Docker → `localhost:8000`, 8 personel, admin ~360 izin)
+
+| İstek | HTTP süre | Not |
+|-------|-----------|-----|
+| `GET /auth/me` | **~2.2 s** | Response ~9.5 KB (permissions dizisi şişik) |
+| `GET /employees?per_page=15` | **~0.75 s** | 8 kayıt |
+| Login (yanlış şifre denemesi) | **~2.8 s** | bcrypt yine çalışır |
+| CLI: list query sayısı | **3 query** | count + employees + users (eager) |
+| CLI: `can()` 20×2 (warm) | **0 ekstra query / ~10 ms** | Spatie model cache OK |
+| bcrypt tek başına | **~266 ms** | beklenen aralık |
+
+#### Kök nedenler (öncelik sırası)
+
+1. **Algılanan 5–11 sn çoğunlukla Sorun 1 ile birleşik:** her 30 sn unmount → `/me` (~2 s) + sayfa API’leri yeniden → üst üste biner. Tek başına list ~0.75 s; klasik N+1 (8 kayıt için 10+ query) **görülmedi**.
+2. **`/auth/me` ve login `formatUser()` her seferinde `getAllPermissions()` → ~360 izin adı JSON’a gömülüyor** (`AuthController::formatUser`). Ağır payload + Spatie rol/izin join’leri her me/login’de.
+3. **`company->fresh()` + `activeModules()`** her `formatUser` çağrısında ek sorgular.
+4. **Gate::before** her hiyerarşik `can()` için permission listesini pluck eder; warm request’te DB N+1 değil ama CPU + her Resource satırında `canViewSalary` / `canViewTckn` tekrarları var (8 kayıt × 2 — ucuz ama gereksiz).
+5. Ortam: Docker Desktop + Windows volume + `APP_DEBUG` — soğuk isteklerde ek gecikme; tek başına 5–11 sn’yi açıklamaz, birikimi büyütür.
+
+#### N+1 / DataScope / Gate — net karar
+
+| Hipotez | Sonuç |
+|---------|--------|
+| Employee list N+1 | **Çürütüldü** (3 query / 8 satır) |
+| DataScope pahalı join | company_admin → company scope, ek join yok |
+| Gate her can’da DB | Warm’da hayır; cold me’de permission join’ler var |
+| EmployeeResource satır başı `can()` | Evet ama cache’li; asıl maliyet `/me` permission dump + refresh döngüsü |
+
+#### Önerilen çözüm (sonraki tur)
+
+1. Önce Sorun 1’i kes (en yüksek ROI).
+2. `formatUser`: permissions’ı her me’de tam dump etme — özet/rol veya ayrı endpoint; Spatie permission cache ısındır.
+3. Login sonrası permissions’ı bir kez yükle; polling’de yalnızca hafif profil.
+4. İsteğe bağlı: Resource’ta salary/tckn flag’lerini request başına bir kez hesapla.
+
+---
+
+### Teşhis sonucu (karar)
+
+| # | Kök neden net mi? | Düzeltmeye hazır mı? |
+|---|-------------------|----------------------|
+| 1 Refresh | **Evet** — 30s checkAuth + isLoading unmount | Evet |
+| 2 Yavaşlık | **Evet (birleşik)** — /me ağır + döngü amplifikasyonu; list N+1 değil | Evet (1 önce) |
+
+**Belirsizlik:** Kullanıcının “refresh”inin tarayıcı hard-reload mu yoksa SPA remount mu olduğu Network’te `Document` yenilenmesi ile teyit edilmeli; kod kanıtı remount’u kesin gösteriyor. Hard-reload yalnızca 401→`/login` yolunda.
+
