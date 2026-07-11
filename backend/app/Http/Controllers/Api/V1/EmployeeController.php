@@ -45,8 +45,8 @@ class EmployeeController extends BaseController
 
         $this->dataScope->scopeForEmployee($query, $request->user());
 
-        // Arama
-        if ($request->has('search')) {
+        // Arama — filled: boş string ile tüm kayıtları filtreleme
+        if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('employee_code', 'like', "%{$search}%")
@@ -60,15 +60,15 @@ class EmployeeController extends BaseController
         }
 
         // Filtreleme
-        if ($request->has('department_id')) {
+        if ($request->filled('department_id')) {
             $query->where('department_id', $request->department_id);
         }
 
-        if ($request->has('status')) {
+        if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        if ($request->has('position')) {
+        if ($request->filled('position')) {
             $query->where('position', 'like', "%{$request->position}%");
         }
 

@@ -86,18 +86,22 @@ const EmployeesPage: React.FC = () => {
   const loadEmployees = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await employeesApi.getAll({
-        search,
-        status: statusFilter,
-        department_id: departmentFilter,
-        contract_type: contractTypeFilter,
+      // Boş string filtreleri gönderme — backend has() boş değerde de true döner
+      const params: Record<string, string | number> = {
         page: currentPage,
         per_page: 15,
-      });
+      };
+      if (search.trim()) params.search = search.trim();
+      if (statusFilter) params.status = statusFilter;
+      if (departmentFilter) params.department_id = departmentFilter;
+      if (contractTypeFilter) params.contract_type = contractTypeFilter;
 
-      setEmployees(response.data.data.data);
-      setTotalPages(response.data.data.last_page);
-      setTotalCount(response.data.data.total);
+      const response = await employeesApi.getAll(params);
+
+      // ApiResponse paginated: data = items[], meta = { last_page, total, ... }
+      setEmployees(Array.isArray(response.data.data) ? response.data.data : []);
+      setTotalPages(response.data.meta?.last_page ?? 1);
+      setTotalCount(response.data.meta?.total ?? 0);
       setSelectedIds([]);
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, 'Personeller yüklenirken hata oluştu'));
