@@ -855,3 +855,135 @@ Document görünürlük, ApprovalRecord tighten…
 | OneOnOne, Asset, Training, vb. | Permission + tenant; satır kapsamı ürün gerektirmedikçe sonraya |
 | Hassas alan (maaş) izinleri | Ayrı blok (alan seviyesi) |
 | Gate::before company_admin bypass kaldırma | Faz 2 sonu / Faz 6 |
+
+---
+
+## Alan Seviyesi İzinler Haritası — ADIM 1 TEŞHİS + STRATEJİ
+
+**Tarih:** 11 Temmuz 2026 · **Branch:** `faz2-rbac-audit`  
+**Kapsam:** Teşhis + strateji + saklama kararı önerisi. **Uygulama yok.**  
+**Katman ayrımı:** Enforcement = route · Policy = kayıt · **bu blok = ALAN seviyesi.**
+
+### Mevcut durum (özet)
+
+| Katman | Durum |
+|--------|-------|
+| `app/Http/Resources/` | **Yok** — API Resource sınıfı tanımlı değil |
+| `field_permissions` tablosu | **Yok** — yalnızca ROADMAP (`docs/ROADMAP.md` ~135, 188) |
+| Spatie alan izni (`employees.salary.view`) | Kodda **1 referans** (`EmployeeReportController`); PermissionSeeder’da **yok** |
+| Model `$hidden` | Employee/Payslip/ApiKey/User’da kısmi — **rolden bağımsız** (İK de göremez) |
+| Write path alan filtresi | **Yok** — `employees.list.edit` + Policy update → maaş/TCKN mass-assign |
+
+---
+
+### 1) Hassas alan haritası
+
+#### Employee (`backend/app/Models/Employee.php`)
+
+| Alan | `$hidden` | Kim görmeli (öneri) | Mevcut API durumu |
+|------|-----------|---------------------|-------------------|
+| `gross_salary`, `net_salary` | ✅ | `employees.salary.view` (hr_manager / bordro; company_admin) | JSON’da **yok** (herkese gizli — İK de göremez) |
+| `national_id` (TCKN) | ✅ | `employees.national_id.view` veya hr + kişinin kendisi | JSON’da yok |
+| `iban` | ✅ | `employees.bank.view` (bordro/İK) | JSON’da yok |
+| `sgk_number` | ✅ | `employees.sgk.view` (İK) | JSON’da yok |
+| `bank_name` | ❌ | banka grubu ile aynı | **Dönüyor** (kısmi sızıntı) |
+| `sgk_start_date`, `currency` | ❌ | sgk/salary ile hizala | Dönüyor |
+| `custom_fields` | ❌ | Form Engine + alan izni (Faz 4) | Dönüyor |
+| engel oranı | — | şemada kolon yok | — |
+
+**Dönüş yolları:** `EmployeeController` show/index/store/update → **ham Eloquent** (`$hidden` uygulanır). Portal profil: manuel whitelist (maaş/banka yok). Auth login nested employee: `$hidden` geçerli.
+
+**Write:** `update`/`store` validasyonunda `national_id`, `gross_salary`, `net_salary`, `iban`, `sgk_number`, `bank_name` serbest; Policy sadece satır/kapsam.
+
+#### Payslip
+
+| Alan | `$hidden` | Kim | Mevcut |
+|------|-----------|-----|--------|
+| `gross_salary`, `net_salary`, `deductions`, `bonuses` | model `$hidden` | kendi bordrosu (portal) / bordro rolü (ileride HR API) | Portal `show`: manuel dizi ile **tüm tutarlar kendi kaydında**; HR CRUD API yok |
+
+#### CompanyLedger (SuperAdmin cari)
+
+| Alan | `$hidden` | Kim | Mevcut |
+|------|-----------|-----|--------|
+| `amount`, `balance_after`, ödeme ref | Yok | SuperAdmin (route zaten kısıtlı) | **Tam model döner** — alan filtresi yok (P2) |
+
+#### ApiKey / Webhook / User
+
+| Model | Hassas | `$hidden` | Mevcut |
+|-------|--------|-----------|--------|
+| ApiKey | `key` | ✅ | store/regenerate’de kasıtlı açık; list/show gizli |
+| Webhook | `secret` | ✅ | regenerate’de açık |
+| User | `password`, `two_factor_secret`, `two_factor_recovery_codes` | ✅ | Auth `formatUser` whitelist; `invitation_token` **$hidden değil** (dikkat) |
+
+#### Rapor / Dashboard bypass (kritik)
+
+| Yer | Sorun |
+|-----|-------|
+| `EmployeeReportController` | `employees.salary.view` ister ama izin **seed edilmemiş**; company_admin tip bypass |
+| `EmployeeDashboardController` | `AVG(gross_salary)` ham SQL — **izin kontrolü yok** |
+
+---
+
+### 2) Saklama kararı (öneri — onay bekliyor)
+
+| Seçenek | Artı | Eksi |
+|---------|------|------|
+| **A) Spatie named permission** (`employees.salary.view`, `.edit` …) | Mevcut altyapı; seeder/role ataması hazır; EmployeeReport prototipiyle uyumlu; tablo yok | Firma-özel dinamik alan matrisi UI zayıf; Form Engine için yetersiz |
+| **B) `field_permissions` tablosu** | ROADMAP DoD; rol×entity×field view/edit; Form Engine | Migration + UI + seed; daha ağır |
+
+**Öneri (Faz 2 başlangıç):** **A — Spatie permission.**  
+`field_permissions` tablosu → **Faz 4 Form Engine** ile (dinamik custom_fields + UI sekmesi). ROADMAP maddesi “temel” için Spatie yeterli sayılır; tablo “v2 / Form Engine tüketimi”.
+
+**Karar noktası K1:** Spatie mi, yoksa hemen `field_permissions` tablosu mu?
+
+---
+
+### 3) Uygulama noktası (strateji — henüz kod yok)
+
+**Okuma (response):**
+1. `EmployeeResource` (ve diğer hassas modeller) ekle — controller ham model dönmesin.
+2. `$hidden`’daki maaş/TCKN/iban/sgk’yı **kaldır veya `makeVisible` ile yetkiye bağla**; Resource içinde:
+   - `$this->when($request->user()->can('employees.salary.view'), …)` / `mergeWhen`
+   - Yetkisizde anahtar **hiç olmamalı** (`null` değil).
+3. Ham SQL / aggregate (dashboard, rapor): aynı `can()` gate — Resource yetmez.
+
+**Yazma (request):**
+- FormRequest (veya controller öncesi): yetkisiz alan gelirse **reddet (422)** veya **sessizce strip**.
+- **Öneri:** güvenlik için strip + (opsiyonel) audit uyarısı; sessiz strip UX’te “kaydettim sandım” riski → tercihen **açık 422** veya strip + response’ta “ignored_fields”.
+
+**Karar noktası K2:** Yetkisiz write → **422 reddet** mi, **sessiz yoksay** mı?
+
+**Resource yoksa bugün:** Tüm hassas CRUD ham model. Strateji: **Resource’a geçiş** (zorunlu). Dinamik `$hidden` / `makeVisible` geçici yama olabilir ama `.cursorrules` + ROADMAP Resource diyor.
+
+---
+
+### 4) Uygulama sırası (önerilen)
+
+| # | İş | Neden |
+|---|-----|-------|
+| 1 | Seed: `employees.salary.view` (+ `.edit`); roller: hr_manager (+? company_admin) | Hayalet izni gerçek yap |
+| 2 | `EmployeeResource` + show/index/update dönüşleri | Okuma filtresi |
+| 3 | Update/store: salary alanlarını izne bağla | Write kilidi |
+| 4 | Dashboard + Report maaş metriklerini aynı gate | Bypass kapat |
+| 5 | `national_id` / `bank`+`iban` / `sgk` izin grupları | Genişletme |
+| 6 | Payslip HR yüzeyi gelince Resource | Şimdilik portal own OK |
+| 7 | ApiKey/User/Ledger | P2 — mevcut $hidden + route yeter / polish |
+
+**Test stratejisi (uygulama dalgasında):**
+- yetkili → response’ta `gross_salary` **VAR**
+- yetkisiz → anahtar **YOK**
+- yetkisiz PUT maaş → maaş **değişmez** (+ 422 veya strip kanıtı)
+
+---
+
+### 5) Karar noktaları — sorular
+
+1. **K1 — Saklama:** Spatie named permission ile başlayalım mı? (`field_permissions` → Faz 4)
+2. **K2 — Write:** yetkisiz alan gönderiminde 422 mi, sessiz strip mi?
+3. **K3 — Rol matrisi:** `employees.salary.view` kimlere? Öneri: `hr_manager` + `company_admin`; `hr_specialist` **hayır**; manager/employee **hayır**. Onay?
+4. **K4 — TCKN:** İK + kişinin kendisi (portal) mi, yoksa yalnızca İK mı?
+5. **K5 — `$hidden` stratejisi:** Resource gelince global `$hidden` kaldırılsın mı (Resource tek kaynak), yoksa `$hidden` kalsın + yetkiliye `makeVisible` mı?
+6. **K6 — `bank_name`:** hemen `iban` ile aynı gruba mı alınsın?
+7. **K7 — Audit:** maaş değişikliği ActivityLog’da maskeli mi, tam mı görünür olsun? (şu an `toArray()` `$hidden` yüzünden maaş diff yok)
+
+**Sonraki adım (onay sonrası):** ADIM 2 uygulama — önce Employee/maaş (sıra #1–4).
