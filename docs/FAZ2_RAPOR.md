@@ -297,3 +297,44 @@ Hedef matris (her grup için örnek endpoint):
 6. **`UserType::user` + Spatie `hr_manager`:** mümkün mü? (İzin middleware sonra type `company_admin` olmadan HR API açılır — istenen mi?)
 
 **Bu adımda route middleware EKLENMEDİ.** Onay + kararlar sonrası Dalga 0 (matcher) → Dalga 1.
+
+---
+
+## Permission Enforcement — Dalga 0 + 1 (UYGULANDI)
+
+**Tarih:** 11 Temmuz 2026 · **Kararlar kilitlendi** (Gate::before, company_admin bypass geçici, portal/approvals dokunulmadı, sadece hiyerarşik).
+
+### Dalga 0 — Altyapı
+
+| Madde | Durum |
+|-------|--------|
+| `HierarchicalPermission` matcher (tam / `page.*` / `module.*` / `*`) | ✅ `app/Support/HierarchicalPermission.php` |
+| `Gate::before` (AppServiceProvider) | ✅ super_admin + company_admin bypass; wildcard expand |
+| `User::$guard_name = 'sanctum'` | ✅ PermissionSeeder ile hizalı (aksi halde GuardDoesNotMatch) |
+| Unit: `HierarchicalPermissionGateTest` | ✅ bypass + wildcard + deny |
+
+### Dalga 1 — Açık kapı kapanışı
+
+| Route grubu | Middleware | Seed izin |
+|-------------|------------|-----------|
+| `GET activity-logs`, `GET activity-logs/{id}` | `permission:management.audit_logs.view` | Seeder'da var (`audit_logs` underscore — hyphen değil) |
+| `GET activity-logs/export` | `permission:management.audit_logs.export` | var |
+| `attendance` GET/POST/PUT/approve | `timesheet.attendance.{view,create,edit,approve}` | var |
+
+Portal / approvals / diğer modüller: **dokunulmadı**.
+
+### Test kanıtı
+
+| Kanıt | Sonuç |
+|-------|--------|
+| `UserType::user` + izin yok → activity-logs/attendance **403** | ✅ |
+| İzinli user / wildcard → **200** | ✅ |
+| super_admin / company_admin bypass → **200** | ✅ |
+| Tenant izolasyonu (başka firma satırı listede yok) | ✅ |
+| Tam suite | **62 passed**, 1 risky, 0 failed |
+
+Mevcut `RouteAuthorizationTest::test_activity_log_routes` company_admin ile → bypass sayesinde hâlâ 200 (doğru).
+
+### Sonraki dalgalar (bu turda yok)
+
+recruitment, leaves, documents, … — Dalga 2+
