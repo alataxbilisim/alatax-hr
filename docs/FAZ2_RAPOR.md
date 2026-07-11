@@ -391,6 +391,55 @@ Modül slug'ları (değişmedi): `job-applications` / `leave-management` / `docu
 
 Dosya: `tests/Feature/PermissionEnforcementWave2Test.php`
 
-### Sonraki dalgalar (bu turda yok)
+---
 
-onboarding, performance, training, assets, surveys, analytics + admin grupları (users/employees/roles) — **dokunulmadı**.
+## Permission Enforcement — Dalga 3 (UYGULANDI)
+
+**Tarih:** 11 Temmuz 2026 · **Kapsam:** onboarding, performance, training, assets, surveys, analytics. Portal route'lar (**dokunulmadı**).
+
+### Seed teyidi — eklenen izinler
+
+| Modül | Değişiklik | Not |
+|-------|------------|-----|
+| performance | `feedback.edit` eklendi | decline / addProviders |
+| onboarding, training, assets, surveys, analytics | sayfa seti zaten yeterli | — |
+
+Rol atamaları:
+- **hr_manager:** `training.*`, `performance.*`, `assets.*`, `surveys.*`, `analytics.*` (önceki kısmi listeler yerine)
+- **hr_specialist:** assets/surveys/analytics view + performance periods/criteria/feedback.view
+- **manager:** `performance.feedback.edit`, `performance.okr.view`
+
+Modül slug'ları: `onboarding` / `performance` / `training` / `asset-management` / `surveys` / `hr-analytics`.
+
+### Enforce edilen route grupları
+
+| Grup | Katman |
+|------|--------|
+| `onboarding/*` | module + `onboarding.{templates\|processes}.*` |
+| `performance/*` | module + periods/criteria/reviews/okr/feedback/competencies/one_on_one |
+| `training/*` | module + `training.list.*` + `training.sessions.*` |
+| `assets/*` | module + categories/list/assignments/maintenance |
+| `surveys/*` | module + `surveys.list.*` |
+| `analytics/*` | module + `analytics.reports.view` |
+| `portal/training|performance|surveys` | **permission yok** (KARAR 3) |
+
+### Yan düzeltmeler (gerçek bug)
+
+| Bug | Ayırım | Düzeltme |
+|-----|--------|----------|
+| 6 model `use App\Models\Traits\BelongsToCompany` (trait yok) | class load → fatal | `App\Traits\BelongsToCompany` |
+
+### Test kanıtı
+
+| Kanıt | Sonuç |
+|-------|--------|
+| 6 grup: 401 / lisanssız 403 / izinsiz user 403 / izinli 200 / bypass 200 | ✅ |
+| Tenant izolasyonu (onboarding…surveys + analytics company scope) | ✅ |
+| SurveyTest (company_admin bypass) | ✅ kırılmadı |
+| Tam suite | **95 passed**, 1 risky (aşağıda CI sonrası güncellenir) |
+
+Dosya: `tests/Feature/PermissionEnforcementWave3Test.php`
+
+### Sonraki (SON enforcement dalgası — bu turda yok)
+
+Admin grupları: users, employees, roles, webhooks, company, api-keys, branches, custom-fields, workflows, departments — **dokunulmadı**.

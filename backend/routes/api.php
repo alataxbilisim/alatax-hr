@@ -358,9 +358,33 @@ Route::prefix('v1')->group(function () {
         });
         // Onboarding Modülü
         Route::middleware('module.access:onboarding')->prefix('onboarding')->group(function () {
-            Route::apiResource('templates', \App\Http\Controllers\Api\V1\Onboarding\TemplateController::class);
-            Route::apiResource('processes', \App\Http\Controllers\Api\V1\Onboarding\ProcessController::class);
-            Route::post('/processes/{id}/tasks/{taskId}/complete', [\App\Http\Controllers\Api\V1\Onboarding\ProcessController::class, 'completeTask']);
+            Route::get('templates', [\App\Http\Controllers\Api\V1\Onboarding\TemplateController::class, 'index'])
+                ->middleware('permission:onboarding.templates.view');
+            Route::post('templates', [\App\Http\Controllers\Api\V1\Onboarding\TemplateController::class, 'store'])
+                ->middleware('permission:onboarding.templates.create');
+            Route::get('templates/{template}', [\App\Http\Controllers\Api\V1\Onboarding\TemplateController::class, 'show'])
+                ->middleware('permission:onboarding.templates.view');
+            Route::put('templates/{template}', [\App\Http\Controllers\Api\V1\Onboarding\TemplateController::class, 'update'])
+                ->middleware('permission:onboarding.templates.edit');
+            Route::patch('templates/{template}', [\App\Http\Controllers\Api\V1\Onboarding\TemplateController::class, 'update'])
+                ->middleware('permission:onboarding.templates.edit');
+            Route::delete('templates/{template}', [\App\Http\Controllers\Api\V1\Onboarding\TemplateController::class, 'destroy'])
+                ->middleware('permission:onboarding.templates.delete');
+
+            Route::get('processes', [\App\Http\Controllers\Api\V1\Onboarding\ProcessController::class, 'index'])
+                ->middleware('permission:onboarding.processes.view');
+            Route::post('processes', [\App\Http\Controllers\Api\V1\Onboarding\ProcessController::class, 'store'])
+                ->middleware('permission:onboarding.processes.create');
+            Route::get('processes/{process}', [\App\Http\Controllers\Api\V1\Onboarding\ProcessController::class, 'show'])
+                ->middleware('permission:onboarding.processes.view');
+            Route::put('processes/{process}', [\App\Http\Controllers\Api\V1\Onboarding\ProcessController::class, 'update'])
+                ->middleware('permission:onboarding.processes.edit');
+            Route::patch('processes/{process}', [\App\Http\Controllers\Api\V1\Onboarding\ProcessController::class, 'update'])
+                ->middleware('permission:onboarding.processes.edit');
+            Route::delete('processes/{process}', [\App\Http\Controllers\Api\V1\Onboarding\ProcessController::class, 'destroy'])
+                ->middleware('permission:onboarding.processes.delete');
+            Route::post('/processes/{process}/tasks/{task}/complete', [\App\Http\Controllers\Api\V1\Onboarding\ProcessController::class, 'completeTask'])
+                ->middleware('permission:onboarding.processes.edit');
         });
 
         // İzin Yönetimi Modülü
@@ -469,125 +493,275 @@ Route::prefix('v1')->group(function () {
 
         // Performans Değerlendirme Modülü
         Route::middleware('module.access:performance')->prefix('performance')->group(function () {
-            Route::apiResource('periods', \App\Http\Controllers\Api\V1\Performance\PeriodController::class);
-            Route::post('/periods/{id}/activate', [\App\Http\Controllers\Api\V1\Performance\PeriodController::class, 'activate']);
-            Route::post('/periods/{id}/close', [\App\Http\Controllers\Api\V1\Performance\PeriodController::class, 'close']);
+            // Periods
+            Route::get('periods', [\App\Http\Controllers\Api\V1\Performance\PeriodController::class, 'index'])
+                ->middleware('permission:performance.periods.view');
+            Route::post('periods', [\App\Http\Controllers\Api\V1\Performance\PeriodController::class, 'store'])
+                ->middleware('permission:performance.periods.create');
+            Route::get('periods/{id}', [\App\Http\Controllers\Api\V1\Performance\PeriodController::class, 'show'])
+                ->middleware('permission:performance.periods.view');
+            Route::put('periods/{id}', [\App\Http\Controllers\Api\V1\Performance\PeriodController::class, 'update'])
+                ->middleware('permission:performance.periods.edit');
+            Route::patch('periods/{id}', [\App\Http\Controllers\Api\V1\Performance\PeriodController::class, 'update'])
+                ->middleware('permission:performance.periods.edit');
+            Route::delete('periods/{id}', [\App\Http\Controllers\Api\V1\Performance\PeriodController::class, 'destroy'])
+                ->middleware('permission:performance.periods.delete');
+            Route::post('/periods/{id}/activate', [\App\Http\Controllers\Api\V1\Performance\PeriodController::class, 'activate'])
+                ->middleware('permission:performance.periods.edit');
+            Route::post('/periods/{id}/close', [\App\Http\Controllers\Api\V1\Performance\PeriodController::class, 'close'])
+                ->middleware('permission:performance.periods.edit');
 
-            Route::apiResource('criteria', \App\Http\Controllers\Api\V1\Performance\CriteriaController::class);
+            // Criteria
+            Route::get('criteria', [\App\Http\Controllers\Api\V1\Performance\CriteriaController::class, 'index'])
+                ->middleware('permission:performance.criteria.view');
+            Route::post('criteria', [\App\Http\Controllers\Api\V1\Performance\CriteriaController::class, 'store'])
+                ->middleware('permission:performance.criteria.create');
+            Route::get('criteria/{id}', [\App\Http\Controllers\Api\V1\Performance\CriteriaController::class, 'show'])
+                ->middleware('permission:performance.criteria.view');
+            Route::put('criteria/{id}', [\App\Http\Controllers\Api\V1\Performance\CriteriaController::class, 'update'])
+                ->middleware('permission:performance.criteria.edit');
+            Route::patch('criteria/{id}', [\App\Http\Controllers\Api\V1\Performance\CriteriaController::class, 'update'])
+                ->middleware('permission:performance.criteria.edit');
+            Route::delete('criteria/{id}', [\App\Http\Controllers\Api\V1\Performance\CriteriaController::class, 'destroy'])
+                ->middleware('permission:performance.criteria.delete');
 
-            Route::apiResource('reviews', \App\Http\Controllers\Api\V1\Performance\ReviewController::class);
-            Route::post('/reviews/{id}/submit', [\App\Http\Controllers\Api\V1\Performance\ReviewController::class, 'submit']);
-            Route::post('/reviews/{id}/approve', [\App\Http\Controllers\Api\V1\Performance\ReviewController::class, 'approve']);
-            Route::post('/reviews/{id}/reject', [\App\Http\Controllers\Api\V1\Performance\ReviewController::class, 'reject']);
+            // Reviews
+            Route::get('reviews', [\App\Http\Controllers\Api\V1\Performance\ReviewController::class, 'index'])
+                ->middleware('permission:performance.reviews.view');
+            Route::post('reviews', [\App\Http\Controllers\Api\V1\Performance\ReviewController::class, 'store'])
+                ->middleware('permission:performance.reviews.create');
+            Route::get('reviews/{id}', [\App\Http\Controllers\Api\V1\Performance\ReviewController::class, 'show'])
+                ->middleware('permission:performance.reviews.view');
+            Route::put('reviews/{id}', [\App\Http\Controllers\Api\V1\Performance\ReviewController::class, 'update'])
+                ->middleware('permission:performance.reviews.edit');
+            Route::patch('reviews/{id}', [\App\Http\Controllers\Api\V1\Performance\ReviewController::class, 'update'])
+                ->middleware('permission:performance.reviews.edit');
+            Route::delete('reviews/{id}', [\App\Http\Controllers\Api\V1\Performance\ReviewController::class, 'destroy'])
+                ->middleware('permission:performance.reviews.delete');
+            Route::post('/reviews/{id}/submit', [\App\Http\Controllers\Api\V1\Performance\ReviewController::class, 'submit'])
+                ->middleware('permission:performance.reviews.edit');
+            Route::post('/reviews/{id}/approve', [\App\Http\Controllers\Api\V1\Performance\ReviewController::class, 'approve'])
+                ->middleware('permission:performance.reviews.approve');
+            Route::post('/reviews/{id}/reject', [\App\Http\Controllers\Api\V1\Performance\ReviewController::class, 'reject'])
+                ->middleware('permission:performance.reviews.approve');
 
-            // OKR (Objectives & Key Results)
+            // OKR
             Route::prefix('okr')->group(function () {
-                Route::get('/labels', [\App\Http\Controllers\Api\V1\Performance\OkrController::class, 'getLabels']);
-                Route::get('/objectives', [\App\Http\Controllers\Api\V1\Performance\OkrController::class, 'index']);
-                Route::get('/objectives/{id}', [\App\Http\Controllers\Api\V1\Performance\OkrController::class, 'show']);
-                Route::post('/objectives', [\App\Http\Controllers\Api\V1\Performance\OkrController::class, 'store']);
-                Route::put('/objectives/{id}', [\App\Http\Controllers\Api\V1\Performance\OkrController::class, 'update']);
-                Route::delete('/objectives/{id}', [\App\Http\Controllers\Api\V1\Performance\OkrController::class, 'destroy']);
-                Route::post('/objectives/{id}/activate', [\App\Http\Controllers\Api\V1\Performance\OkrController::class, 'activate']);
-                Route::post('/objectives/{id}/key-results', [\App\Http\Controllers\Api\V1\Performance\OkrController::class, 'addKeyResult']);
-                Route::put('/key-results/{id}', [\App\Http\Controllers\Api\V1\Performance\OkrController::class, 'updateKeyResult']);
-                Route::delete('/key-results/{id}', [\App\Http\Controllers\Api\V1\Performance\OkrController::class, 'deleteKeyResult']);
+                Route::get('/labels', [\App\Http\Controllers\Api\V1\Performance\OkrController::class, 'getLabels'])
+                    ->middleware('permission:performance.okr.view');
+                Route::get('/objectives', [\App\Http\Controllers\Api\V1\Performance\OkrController::class, 'index'])
+                    ->middleware('permission:performance.okr.view');
+                Route::get('/objectives/{id}', [\App\Http\Controllers\Api\V1\Performance\OkrController::class, 'show'])
+                    ->middleware('permission:performance.okr.view');
+                Route::post('/objectives', [\App\Http\Controllers\Api\V1\Performance\OkrController::class, 'store'])
+                    ->middleware('permission:performance.okr.create');
+                Route::put('/objectives/{id}', [\App\Http\Controllers\Api\V1\Performance\OkrController::class, 'update'])
+                    ->middleware('permission:performance.okr.edit');
+                Route::delete('/objectives/{id}', [\App\Http\Controllers\Api\V1\Performance\OkrController::class, 'destroy'])
+                    ->middleware('permission:performance.okr.delete');
+                Route::post('/objectives/{id}/activate', [\App\Http\Controllers\Api\V1\Performance\OkrController::class, 'activate'])
+                    ->middleware('permission:performance.okr.edit');
+                Route::post('/objectives/{id}/key-results', [\App\Http\Controllers\Api\V1\Performance\OkrController::class, 'addKeyResult'])
+                    ->middleware('permission:performance.okr.create');
+                Route::put('/key-results/{id}', [\App\Http\Controllers\Api\V1\Performance\OkrController::class, 'updateKeyResult'])
+                    ->middleware('permission:performance.okr.edit');
+                Route::delete('/key-results/{id}', [\App\Http\Controllers\Api\V1\Performance\OkrController::class, 'deleteKeyResult'])
+                    ->middleware('permission:performance.okr.delete');
             });
 
-            // 360 Derece Geri Bildirim
+            // 360 / continuous feedback
             Route::prefix('feedback')->group(function () {
-                Route::get('/types', [\App\Http\Controllers\Api\V1\Performance\FeedbackController::class, 'getFeedbackTypes']);
-                Route::get('/pending', [\App\Http\Controllers\Api\V1\Performance\FeedbackController::class, 'pendingFeedbacks']);
-                Route::get('/form/{providerId}', [\App\Http\Controllers\Api\V1\Performance\FeedbackController::class, 'getFeedbackForm']);
-                Route::post('/submit/{providerId}', [\App\Http\Controllers\Api\V1\Performance\FeedbackController::class, 'submitFeedback']);
-                Route::post('/decline/{providerId}', [\App\Http\Controllers\Api\V1\Performance\FeedbackController::class, 'declineFeedback']);
-                Route::post('/reviews/{reviewId}/providers', [\App\Http\Controllers\Api\V1\Performance\FeedbackController::class, 'addProviders']);
-                Route::get('/reviews/{reviewId}/results', [\App\Http\Controllers\Api\V1\Performance\FeedbackController::class, 'getReviewFeedbacks']);
-
-                // Sürekli Geri Bildirim
-                Route::get('/continuous', [\App\Http\Controllers\Api\V1\Performance\FeedbackController::class, 'continuousFeedbacks']);
-                Route::post('/continuous', [\App\Http\Controllers\Api\V1\Performance\FeedbackController::class, 'sendContinuousFeedback']);
+                Route::get('/types', [\App\Http\Controllers\Api\V1\Performance\FeedbackController::class, 'getFeedbackTypes'])
+                    ->middleware('permission:performance.feedback.view');
+                Route::get('/pending', [\App\Http\Controllers\Api\V1\Performance\FeedbackController::class, 'pendingFeedbacks'])
+                    ->middleware('permission:performance.feedback.view');
+                Route::get('/form/{providerId}', [\App\Http\Controllers\Api\V1\Performance\FeedbackController::class, 'getFeedbackForm'])
+                    ->middleware('permission:performance.feedback.view');
+                Route::post('/submit/{providerId}', [\App\Http\Controllers\Api\V1\Performance\FeedbackController::class, 'submitFeedback'])
+                    ->middleware('permission:performance.feedback.create');
+                Route::post('/decline/{providerId}', [\App\Http\Controllers\Api\V1\Performance\FeedbackController::class, 'declineFeedback'])
+                    ->middleware('permission:performance.feedback.edit');
+                Route::post('/reviews/{reviewId}/providers', [\App\Http\Controllers\Api\V1\Performance\FeedbackController::class, 'addProviders'])
+                    ->middleware('permission:performance.feedback.edit');
+                Route::get('/reviews/{reviewId}/results', [\App\Http\Controllers\Api\V1\Performance\FeedbackController::class, 'getReviewFeedbacks'])
+                    ->middleware('permission:performance.feedback.view');
+                Route::get('/continuous', [\App\Http\Controllers\Api\V1\Performance\FeedbackController::class, 'continuousFeedbacks'])
+                    ->middleware('permission:performance.feedback.view');
+                Route::post('/continuous', [\App\Http\Controllers\Api\V1\Performance\FeedbackController::class, 'sendContinuousFeedback'])
+                    ->middleware('permission:performance.feedback.create');
             });
 
             // Yetkinlikler
             Route::prefix('competencies')->group(function () {
-                Route::get('/categories', [\App\Http\Controllers\Api\V1\Performance\CompetencyController::class, 'getCategories']);
-                Route::get('/', [\App\Http\Controllers\Api\V1\Performance\CompetencyController::class, 'index']);
-                Route::get('/{id}', [\App\Http\Controllers\Api\V1\Performance\CompetencyController::class, 'show']);
-                Route::post('/', [\App\Http\Controllers\Api\V1\Performance\CompetencyController::class, 'store']);
-                Route::put('/{id}', [\App\Http\Controllers\Api\V1\Performance\CompetencyController::class, 'update']);
-                Route::delete('/{id}', [\App\Http\Controllers\Api\V1\Performance\CompetencyController::class, 'destroy']);
-
-                // Kullanıcı Yetkinlikleri
-                Route::get('/user/{userId}', [\App\Http\Controllers\Api\V1\Performance\CompetencyController::class, 'getUserCompetencies']);
-                Route::post('/user/{userId}', [\App\Http\Controllers\Api\V1\Performance\CompetencyController::class, 'setUserCompetency']);
-
-                // Pozisyon Yetkinlikleri
-                Route::get('/position/{positionName}', [\App\Http\Controllers\Api\V1\Performance\CompetencyController::class, 'getPositionCompetencies']);
-                Route::post('/position', [\App\Http\Controllers\Api\V1\Performance\CompetencyController::class, 'setPositionCompetency']);
-                Route::delete('/position', [\App\Http\Controllers\Api\V1\Performance\CompetencyController::class, 'removePositionCompetency']);
-
-                // Skill Gap Analizi
-                Route::get('/skill-gap/{userId}/{positionName}', [\App\Http\Controllers\Api\V1\Performance\CompetencyController::class, 'getSkillGapAnalysis']);
+                Route::get('/categories', [\App\Http\Controllers\Api\V1\Performance\CompetencyController::class, 'getCategories'])
+                    ->middleware('permission:performance.competencies.view');
+                Route::get('/', [\App\Http\Controllers\Api\V1\Performance\CompetencyController::class, 'index'])
+                    ->middleware('permission:performance.competencies.view');
+                Route::get('/{id}', [\App\Http\Controllers\Api\V1\Performance\CompetencyController::class, 'show'])
+                    ->middleware('permission:performance.competencies.view');
+                Route::post('/', [\App\Http\Controllers\Api\V1\Performance\CompetencyController::class, 'store'])
+                    ->middleware('permission:performance.competencies.create');
+                Route::put('/{id}', [\App\Http\Controllers\Api\V1\Performance\CompetencyController::class, 'update'])
+                    ->middleware('permission:performance.competencies.edit');
+                Route::delete('/{id}', [\App\Http\Controllers\Api\V1\Performance\CompetencyController::class, 'destroy'])
+                    ->middleware('permission:performance.competencies.delete');
+                Route::get('/user/{userId}', [\App\Http\Controllers\Api\V1\Performance\CompetencyController::class, 'getUserCompetencies'])
+                    ->middleware('permission:performance.competencies.view');
+                Route::post('/user/{userId}', [\App\Http\Controllers\Api\V1\Performance\CompetencyController::class, 'setUserCompetency'])
+                    ->middleware('permission:performance.competencies.edit');
+                Route::get('/position/{positionName}', [\App\Http\Controllers\Api\V1\Performance\CompetencyController::class, 'getPositionCompetencies'])
+                    ->middleware('permission:performance.competencies.view');
+                Route::post('/position', [\App\Http\Controllers\Api\V1\Performance\CompetencyController::class, 'setPositionCompetency'])
+                    ->middleware('permission:performance.competencies.edit');
+                Route::delete('/position', [\App\Http\Controllers\Api\V1\Performance\CompetencyController::class, 'removePositionCompetency'])
+                    ->middleware('permission:performance.competencies.delete');
+                Route::get('/skill-gap/{userId}/{positionName}', [\App\Http\Controllers\Api\V1\Performance\CompetencyController::class, 'getSkillGapAnalysis'])
+                    ->middleware('permission:performance.competencies.view');
             });
 
-            // 1-on-1 Görüşmeleri
+            // 1-on-1
             Route::prefix('one-on-one')->group(function () {
-                Route::get('/labels', [\App\Http\Controllers\Api\V1\Performance\OneOnOneController::class, 'getLabels']);
-                Route::get('/upcoming', [\App\Http\Controllers\Api\V1\Performance\OneOnOneController::class, 'upcoming']);
-                Route::get('/', [\App\Http\Controllers\Api\V1\Performance\OneOnOneController::class, 'index']);
-                Route::get('/{id}', [\App\Http\Controllers\Api\V1\Performance\OneOnOneController::class, 'show']);
-                Route::post('/', [\App\Http\Controllers\Api\V1\Performance\OneOnOneController::class, 'store']);
-                Route::put('/{id}', [\App\Http\Controllers\Api\V1\Performance\OneOnOneController::class, 'update']);
-                Route::post('/{id}/complete', [\App\Http\Controllers\Api\V1\Performance\OneOnOneController::class, 'complete']);
-                Route::post('/{id}/cancel', [\App\Http\Controllers\Api\V1\Performance\OneOnOneController::class, 'cancel']);
-                Route::post('/{id}/reschedule', [\App\Http\Controllers\Api\V1\Performance\OneOnOneController::class, 'reschedule']);
+                Route::get('/labels', [\App\Http\Controllers\Api\V1\Performance\OneOnOneController::class, 'getLabels'])
+                    ->middleware('permission:performance.one_on_one.view');
+                Route::get('/upcoming', [\App\Http\Controllers\Api\V1\Performance\OneOnOneController::class, 'upcoming'])
+                    ->middleware('permission:performance.one_on_one.view');
+                Route::get('/', [\App\Http\Controllers\Api\V1\Performance\OneOnOneController::class, 'index'])
+                    ->middleware('permission:performance.one_on_one.view');
+                Route::get('/{id}', [\App\Http\Controllers\Api\V1\Performance\OneOnOneController::class, 'show'])
+                    ->middleware('permission:performance.one_on_one.view');
+                Route::post('/', [\App\Http\Controllers\Api\V1\Performance\OneOnOneController::class, 'store'])
+                    ->middleware('permission:performance.one_on_one.create');
+                Route::put('/{id}', [\App\Http\Controllers\Api\V1\Performance\OneOnOneController::class, 'update'])
+                    ->middleware('permission:performance.one_on_one.edit');
+                Route::post('/{id}/complete', [\App\Http\Controllers\Api\V1\Performance\OneOnOneController::class, 'complete'])
+                    ->middleware('permission:performance.one_on_one.edit');
+                Route::post('/{id}/cancel', [\App\Http\Controllers\Api\V1\Performance\OneOnOneController::class, 'cancel'])
+                    ->middleware('permission:performance.one_on_one.edit');
+                Route::post('/{id}/reschedule', [\App\Http\Controllers\Api\V1\Performance\OneOnOneController::class, 'reschedule'])
+                    ->middleware('permission:performance.one_on_one.edit');
             });
         });
 
         // Eğitim Yönetimi Modülü
         Route::middleware('module.access:training')->prefix('training')->group(function () {
-            Route::get('/categories', [\App\Http\Controllers\Api\V1\Training\TrainingController::class, 'categories']);
-            Route::apiResource('trainings', \App\Http\Controllers\Api\V1\Training\TrainingController::class);
+            Route::get('/categories', [\App\Http\Controllers\Api\V1\Training\TrainingController::class, 'categories'])
+                ->middleware('permission:training.list.view');
 
-            Route::apiResource('sessions', \App\Http\Controllers\Api\V1\Training\SessionController::class);
-            Route::post('/sessions/{id}/participants', [\App\Http\Controllers\Api\V1\Training\SessionController::class, 'addParticipant']);
-            Route::delete('/sessions/{id}/participants/{userId}', [\App\Http\Controllers\Api\V1\Training\SessionController::class, 'removeParticipant']);
-            Route::post('/sessions/{id}/attendance', [\App\Http\Controllers\Api\V1\Training\SessionController::class, 'updateAttendance']);
+            Route::get('trainings', [\App\Http\Controllers\Api\V1\Training\TrainingController::class, 'index'])
+                ->middleware('permission:training.list.view');
+            Route::post('trainings', [\App\Http\Controllers\Api\V1\Training\TrainingController::class, 'store'])
+                ->middleware('permission:training.list.create');
+            Route::get('trainings/{id}', [\App\Http\Controllers\Api\V1\Training\TrainingController::class, 'show'])
+                ->middleware('permission:training.list.view');
+            Route::put('trainings/{id}', [\App\Http\Controllers\Api\V1\Training\TrainingController::class, 'update'])
+                ->middleware('permission:training.list.edit');
+            Route::patch('trainings/{id}', [\App\Http\Controllers\Api\V1\Training\TrainingController::class, 'update'])
+                ->middleware('permission:training.list.edit');
+            Route::delete('trainings/{id}', [\App\Http\Controllers\Api\V1\Training\TrainingController::class, 'destroy'])
+                ->middleware('permission:training.list.delete');
+
+            Route::get('sessions', [\App\Http\Controllers\Api\V1\Training\SessionController::class, 'index'])
+                ->middleware('permission:training.sessions.view');
+            Route::post('sessions', [\App\Http\Controllers\Api\V1\Training\SessionController::class, 'store'])
+                ->middleware('permission:training.sessions.create');
+            Route::get('sessions/{id}', [\App\Http\Controllers\Api\V1\Training\SessionController::class, 'show'])
+                ->middleware('permission:training.sessions.view');
+            Route::put('sessions/{id}', [\App\Http\Controllers\Api\V1\Training\SessionController::class, 'update'])
+                ->middleware('permission:training.sessions.edit');
+            Route::patch('sessions/{id}', [\App\Http\Controllers\Api\V1\Training\SessionController::class, 'update'])
+                ->middleware('permission:training.sessions.edit');
+            Route::delete('sessions/{id}', [\App\Http\Controllers\Api\V1\Training\SessionController::class, 'destroy'])
+                ->middleware('permission:training.sessions.delete');
+            Route::post('/sessions/{id}/participants', [\App\Http\Controllers\Api\V1\Training\SessionController::class, 'addParticipant'])
+                ->middleware('permission:training.sessions.edit');
+            Route::delete('/sessions/{id}/participants/{userId}', [\App\Http\Controllers\Api\V1\Training\SessionController::class, 'removeParticipant'])
+                ->middleware('permission:training.sessions.edit');
+            Route::post('/sessions/{id}/attendance', [\App\Http\Controllers\Api\V1\Training\SessionController::class, 'updateAttendance'])
+                ->middleware('permission:training.sessions.edit');
         });
 
         // Varlık Yönetimi Modülü
         Route::middleware('module.access:asset-management')->prefix('assets')->group(function () {
-            Route::apiResource('categories', \App\Http\Controllers\Api\V1\Assets\CategoryController::class);
+            Route::get('categories', [\App\Http\Controllers\Api\V1\Assets\CategoryController::class, 'index'])
+                ->middleware('permission:assets.categories.view');
+            Route::post('categories', [\App\Http\Controllers\Api\V1\Assets\CategoryController::class, 'store'])
+                ->middleware('permission:assets.categories.create');
+            Route::get('categories/{id}', [\App\Http\Controllers\Api\V1\Assets\CategoryController::class, 'show'])
+                ->middleware('permission:assets.categories.view');
+            Route::put('categories/{id}', [\App\Http\Controllers\Api\V1\Assets\CategoryController::class, 'update'])
+                ->middleware('permission:assets.categories.edit');
+            Route::patch('categories/{id}', [\App\Http\Controllers\Api\V1\Assets\CategoryController::class, 'update'])
+                ->middleware('permission:assets.categories.edit');
+            Route::delete('categories/{id}', [\App\Http\Controllers\Api\V1\Assets\CategoryController::class, 'destroy'])
+                ->middleware('permission:assets.categories.delete');
 
-            Route::apiResource('items', \App\Http\Controllers\Api\V1\Assets\AssetController::class);
-            Route::post('/items/{id}/assign', [\App\Http\Controllers\Api\V1\Assets\AssetController::class, 'assign']);
-            Route::post('/items/{id}/return', [\App\Http\Controllers\Api\V1\Assets\AssetController::class, 'returnAsset']);
+            Route::get('items', [\App\Http\Controllers\Api\V1\Assets\AssetController::class, 'index'])
+                ->middleware('permission:assets.list.view');
+            Route::post('items', [\App\Http\Controllers\Api\V1\Assets\AssetController::class, 'store'])
+                ->middleware('permission:assets.list.create');
+            Route::get('items/{id}', [\App\Http\Controllers\Api\V1\Assets\AssetController::class, 'show'])
+                ->middleware('permission:assets.list.view');
+            Route::put('items/{id}', [\App\Http\Controllers\Api\V1\Assets\AssetController::class, 'update'])
+                ->middleware('permission:assets.list.edit');
+            Route::patch('items/{id}', [\App\Http\Controllers\Api\V1\Assets\AssetController::class, 'update'])
+                ->middleware('permission:assets.list.edit');
+            Route::delete('items/{id}', [\App\Http\Controllers\Api\V1\Assets\AssetController::class, 'destroy'])
+                ->middleware('permission:assets.list.delete');
+            Route::post('/items/{id}/assign', [\App\Http\Controllers\Api\V1\Assets\AssetController::class, 'assign'])
+                ->middleware('permission:assets.assignments.create');
+            Route::post('/items/{id}/return', [\App\Http\Controllers\Api\V1\Assets\AssetController::class, 'returnAsset'])
+                ->middleware('permission:assets.assignments.edit');
 
-            Route::apiResource('maintenance', \App\Http\Controllers\Api\V1\Assets\MaintenanceController::class);
-            Route::post('/maintenance/{id}/complete', [\App\Http\Controllers\Api\V1\Assets\MaintenanceController::class, 'complete']);
+            Route::get('maintenance', [\App\Http\Controllers\Api\V1\Assets\MaintenanceController::class, 'index'])
+                ->middleware('permission:assets.maintenance.view');
+            Route::post('maintenance', [\App\Http\Controllers\Api\V1\Assets\MaintenanceController::class, 'store'])
+                ->middleware('permission:assets.maintenance.create');
+            Route::get('maintenance/{id}', [\App\Http\Controllers\Api\V1\Assets\MaintenanceController::class, 'show'])
+                ->middleware('permission:assets.maintenance.view');
+            Route::put('maintenance/{id}', [\App\Http\Controllers\Api\V1\Assets\MaintenanceController::class, 'update'])
+                ->middleware('permission:assets.maintenance.edit');
+            Route::patch('maintenance/{id}', [\App\Http\Controllers\Api\V1\Assets\MaintenanceController::class, 'update'])
+                ->middleware('permission:assets.maintenance.edit');
+            Route::delete('maintenance/{id}', [\App\Http\Controllers\Api\V1\Assets\MaintenanceController::class, 'destroy'])
+                ->middleware('permission:assets.maintenance.delete');
+            Route::post('/maintenance/{id}/complete', [\App\Http\Controllers\Api\V1\Assets\MaintenanceController::class, 'complete'])
+                ->middleware('permission:assets.maintenance.edit');
         });
 
         // Anket & Geri Bildirim Modülü
         Route::middleware('module.access:surveys')->prefix('surveys')->group(function () {
-            Route::get('/types', [\App\Http\Controllers\Api\V1\Surveys\SurveyController::class, 'getTypes']);
-            Route::get('/', [\App\Http\Controllers\Api\V1\Surveys\SurveyController::class, 'index']);
-            Route::get('/{id}', [\App\Http\Controllers\Api\V1\Surveys\SurveyController::class, 'show']);
-            Route::post('/', [\App\Http\Controllers\Api\V1\Surveys\SurveyController::class, 'store']);
-            Route::put('/{id}', [\App\Http\Controllers\Api\V1\Surveys\SurveyController::class, 'update']);
-            Route::delete('/{id}', [\App\Http\Controllers\Api\V1\Surveys\SurveyController::class, 'destroy']);
-            Route::post('/{id}/submit', [\App\Http\Controllers\Api\V1\Surveys\SurveyController::class, 'submit']);
-            Route::get('/{id}/results', [\App\Http\Controllers\Api\V1\Surveys\SurveyController::class, 'results']);
+            Route::get('/types', [\App\Http\Controllers\Api\V1\Surveys\SurveyController::class, 'getTypes'])
+                ->middleware('permission:surveys.list.view');
+            Route::get('/', [\App\Http\Controllers\Api\V1\Surveys\SurveyController::class, 'index'])
+                ->middleware('permission:surveys.list.view');
+            Route::get('/{id}', [\App\Http\Controllers\Api\V1\Surveys\SurveyController::class, 'show'])
+                ->middleware('permission:surveys.list.view');
+            Route::post('/', [\App\Http\Controllers\Api\V1\Surveys\SurveyController::class, 'store'])
+                ->middleware('permission:surveys.list.create');
+            Route::put('/{id}', [\App\Http\Controllers\Api\V1\Surveys\SurveyController::class, 'update'])
+                ->middleware('permission:surveys.list.edit');
+            Route::delete('/{id}', [\App\Http\Controllers\Api\V1\Surveys\SurveyController::class, 'destroy'])
+                ->middleware('permission:surveys.list.delete');
+            Route::post('/{id}/submit', [\App\Http\Controllers\Api\V1\Surveys\SurveyController::class, 'submit'])
+                ->middleware('permission:surveys.list.create');
+            Route::get('/{id}/results', [\App\Http\Controllers\Api\V1\Surveys\SurveyController::class, 'results'])
+                ->middleware('permission:surveys.list.view');
         });
 
         // HR Analytics Modülü
         Route::middleware('module.access:hr-analytics')->prefix('analytics')->group(function () {
-            Route::get('/summary', [\App\Http\Controllers\Api\V1\Analytics\HrAnalyticsController::class, 'summary']);
-            Route::get('/workforce', [\App\Http\Controllers\Api\V1\Analytics\HrAnalyticsController::class, 'workforce']);
-            Route::get('/turnover', [\App\Http\Controllers\Api\V1\Analytics\HrAnalyticsController::class, 'turnover']);
-            Route::get('/recruitment', [\App\Http\Controllers\Api\V1\Analytics\HrAnalyticsController::class, 'recruitment']);
-            Route::get('/leaves', [\App\Http\Controllers\Api\V1\Analytics\HrAnalyticsController::class, 'leaves']);
-            Route::get('/training', [\App\Http\Controllers\Api\V1\Analytics\HrAnalyticsController::class, 'training']);
+            Route::get('/summary', [\App\Http\Controllers\Api\V1\Analytics\HrAnalyticsController::class, 'summary'])
+                ->middleware('permission:analytics.reports.view');
+            Route::get('/workforce', [\App\Http\Controllers\Api\V1\Analytics\HrAnalyticsController::class, 'workforce'])
+                ->middleware('permission:analytics.reports.view');
+            Route::get('/turnover', [\App\Http\Controllers\Api\V1\Analytics\HrAnalyticsController::class, 'turnover'])
+                ->middleware('permission:analytics.reports.view');
+            Route::get('/recruitment', [\App\Http\Controllers\Api\V1\Analytics\HrAnalyticsController::class, 'recruitment'])
+                ->middleware('permission:analytics.reports.view');
+            Route::get('/leaves', [\App\Http\Controllers\Api\V1\Analytics\HrAnalyticsController::class, 'leaves'])
+                ->middleware('permission:analytics.reports.view');
+            Route::get('/training', [\App\Http\Controllers\Api\V1\Analytics\HrAnalyticsController::class, 'training'])
+                ->middleware('permission:analytics.reports.view');
         });
 
         // Timesheet / Attendance (HR) — timesheet.attendance.*

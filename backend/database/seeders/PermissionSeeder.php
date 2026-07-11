@@ -113,7 +113,7 @@ class PermissionSeeder extends Seeder
                 'periods' => ['view', 'create', 'edit', 'delete'],
                 'criteria' => ['view', 'create', 'edit', 'delete'],
                 'okr' => ['view', 'create', 'edit', 'delete'],
-                'feedback' => ['view', 'create'],
+                'feedback' => ['view', 'create', 'edit'],
                 'competencies' => ['view', 'create', 'edit', 'delete'],
                 'one_on_one' => ['view', 'create', 'edit', 'delete'],
                 'custom_fields' => ['view', 'create', 'edit', 'delete'],
@@ -315,24 +315,20 @@ class PermissionSeeder extends Seeder
                     // Onboarding - Tam yetki
                     'onboarding.*',
 
-                    // Eğitim - Görüntüleme ve düzenleme
-                    'training.list.view', 'training.list.create', 'training.list.edit',
-                    'training.sessions.view', 'training.sessions.create', 'training.sessions.edit',
+                    // Eğitim - Tam yetki
+                    'training.*',
 
-                    // Performans - Görüntüleme ve düzenleme
-                    'performance.reviews.view', 'performance.reviews.create', 'performance.reviews.edit',
-                    'performance.periods.view',
-                    'performance.criteria.view',
+                    // Performans - Tam yetki
+                    'performance.*',
 
-                    // Varlıklar - Görüntüleme ve düzenleme
-                    'assets.list.view', 'assets.list.create', 'assets.list.edit',
-                    'assets.assignments.view', 'assets.assignments.create', 'assets.assignments.edit',
+                    // Varlıklar - Tam yetki
+                    'assets.*',
 
                     // Anketler
-                    'surveys.list.view', 'surveys.list.create', 'surveys.list.edit',
+                    'surveys.*',
 
                     // Analitik
-                    'analytics.reports.view', 'analytics.reports.export',
+                    'analytics.*',
 
                     // Geriye uyumluluk
                     'users.view', 'users.create', 'users.edit',
@@ -386,8 +382,22 @@ class PermissionSeeder extends Seeder
                     'training.list.view', 'training.list.create', 'training.list.edit',
                     'training.sessions.view', 'training.sessions.create', 'training.sessions.edit',
 
-                    // Performans - Sadece görüntüleme
+                    // Performans
                     'performance.reviews.view',
+                    'performance.periods.view',
+                    'performance.criteria.view',
+                    'performance.feedback.view',
+
+                    // Varlıklar
+                    'assets.list.view', 'assets.list.create', 'assets.list.edit',
+                    'assets.categories.view',
+                    'assets.maintenance.view',
+
+                    // Anketler
+                    'surveys.list.view', 'surveys.list.create', 'surveys.list.edit',
+
+                    // Analitik
+                    'analytics.reports.view',
 
                     // Geriye uyumluluk
                     'users.view',
@@ -416,8 +426,9 @@ class PermissionSeeder extends Seeder
 
                     // Performans - Değerlendirme yapabilir
                     'performance.reviews.view', 'performance.reviews.create', 'performance.reviews.edit',
-                    'performance.feedback.view', 'performance.feedback.create',
+                    'performance.feedback.view', 'performance.feedback.create', 'performance.feedback.edit',
                     'performance.one_on_one.view', 'performance.one_on_one.create', 'performance.one_on_one.edit',
+                    'performance.okr.view',
 
                     // Geriye uyumluluk
                     'users.view',
