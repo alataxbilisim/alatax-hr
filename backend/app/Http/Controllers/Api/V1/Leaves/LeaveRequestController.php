@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Api\V1\Leaves;
 
-use App\Http\Controllers\Api\V1\BaseController;
 use App\Enums\LeaveRequestStatus;
+use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\ActivityLog;
 use App\Models\LeaveBalance;
 use App\Models\LeaveRequest;

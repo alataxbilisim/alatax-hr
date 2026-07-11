@@ -112,7 +112,6 @@ class PermissionEnforcementWave2Test extends TestCase
     }
 
     /**
-     * @param  mixed  $payload
      * @return \Illuminate\Support\Collection<int, mixed>
      */
     private function extractIds(mixed $payload): \Illuminate\Support\Collection
