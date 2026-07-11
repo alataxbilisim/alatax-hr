@@ -75,7 +75,10 @@ class PermissionSeeder extends Seeder
             'recruitment' => [
                 'positions' => ['view', 'create', 'edit', 'delete'],
                 'applications' => ['view', 'edit', 'delete', 'approve'],
-                'cv_pool' => ['view', 'export'],
+                'cv_pool' => ['view', 'edit', 'export'],
+                'interviews' => ['view', 'create', 'edit', 'delete'],
+                'reports' => ['view', 'export'],
+                'forms' => ['view', 'create', 'edit', 'delete'],
                 'custom_fields' => ['view', 'create', 'edit', 'delete'],
             ],
 
@@ -94,6 +97,7 @@ class PermissionSeeder extends Seeder
             'documents' => [
                 'list' => ['view', 'create', 'edit', 'delete', 'approve'],
                 'categories' => ['view', 'create', 'edit', 'delete'],
+                'reports' => ['view', 'export'],
                 'custom_fields' => ['view', 'create', 'edit', 'delete'],
             ],
 
@@ -356,17 +360,23 @@ class PermissionSeeder extends Seeder
                     // İşe Alım
                     'recruitment.positions.view',
                     'recruitment.applications.view', 'recruitment.applications.edit',
-                    'recruitment.cv_pool.view',
+                    'recruitment.cv_pool.view', 'recruitment.cv_pool.edit',
+                    'recruitment.interviews.view', 'recruitment.interviews.create', 'recruitment.interviews.edit',
+                    'recruitment.reports.view',
+                    'recruitment.forms.view',
 
                     // Evrak
                     'documents.list.view', 'documents.list.create', 'documents.list.edit',
                     'documents.categories.view',
+                    'documents.reports.view',
 
                     // İzin
                     'leaves.requests.view', 'leaves.requests.create', 'leaves.requests.edit',
                     'leaves.types.view',
                     'leaves.balances.view',
                     'leaves.calendar.view',
+                    'leaves.holidays.view',
+                    'leaves.accrual_policies.view',
 
                     // Onboarding
                     'onboarding.processes.view', 'onboarding.processes.edit',

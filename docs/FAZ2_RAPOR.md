@@ -335,6 +335,61 @@ Portal / approvals / diğer modüller: **dokunulmadı**.
 
 Mevcut `RouteAuthorizationTest::test_activity_log_routes` company_admin ile → bypass sayesinde hâlâ 200 (doğru).
 
+---
+
+## Permission Enforcement — Dalga 2 (UYGULANDI)
+
+**Tarih:** 11 Temmuz 2026 · **Kapsam:** `recruitment`, `leaves`, `documents` (+ `public/jobs` korundu).
+
+### Seed teyidi — eklenen izinler
+
+| Modül | Eklenen sayfa/aksiyon | Not |
+|-------|----------------------|-----|
+| recruitment | `interviews.{view,create,edit,delete}` | Mülakat CRUD + complete/cancel→edit |
+| recruitment | `reports.{view,export}` | Rapor endpoint'leri |
+| recruitment | `forms.{view,create,edit,delete}` | Form builder |
+| recruitment | `cv_pool.edit` | bulk-tag / rate / removeTag |
+| documents | `reports.{view,export}` | Doküman raporları |
+| leaves | — | Seed zaten yeterli (`types`, `requests`, `balances`, `calendar`, `holidays`, `accrual_policies`) |
+
+`hr_specialist` rolüne yeni view/edit izinleri de eklendi (interviews, forms, reports, cv_pool.edit, documents.reports, holidays, accrual_policies).
+
+Modül slug'ları (değişmedi): `job-applications` / `leave-management` / `document-management`.
+
+### Enforce edilen route grupları
+
+| Grup | Katman | Örnek permission |
+|------|--------|------------------|
+| `recruitment/*` | `module.access:job-applications` + `permission:recruitment.{page}.{action}` | positions.view/create/edit/delete; applications.view/edit/approve; cv_pool.view/edit; interviews.*; reports.view; forms.* |
+| `leaves/*` | `module.access:leave-management` + `permission:leaves.{page}.{action}` | types.*; requests.view/create/approve; calendar.view; balances.view; holidays.*; accrual_policies.* |
+| `documents/*` (+ `/documents` CRUD) | `module.access:document-management` + `permission:documents.{page}.{action}` | categories.*; list.*; reports.view |
+| `public/jobs/*` | **permission yok** | auth'suz 200 korundu |
+
+### Yan düzeltmeler (testte ortaya çıkan gerçek bug)
+
+| Bug | Ayırım | Düzeltme |
+|-----|--------|----------|
+| Public JobController `status=published` + kolon `deadline` | şema uyumsuzluğu → 500 | `active` + `application_deadline` |
+| LeaveRequest approve/reject `status !== STATUS_PENDING` (string) | enum cast → karşılaştırma bozuk | `LeaveRequestStatus::Pending` |
+
+`leaves/requests` PUT/PATCH/DELETE route'ları kaldırıldı (controller'da update/destroy yoktu; apiResource kalıntısı).
+
+### Test kanıtı
+
+| Kanıt | Sonuç |
+|-------|--------|
+| auth yok → **401** (3 grup) | ✅ |
+| lisanssız firma (module.access yok) → **403** | ✅ |
+| `UserType::user` + izin yok → **403** (3 grup) | ✅ |
+| doğru Spatie izin → **200** | ✅ |
+| super_admin / company_admin bypass → **200** | ✅ |
+| tenant izolasyonu | ✅ |
+| public/jobs auth'suz → **200** | ✅ |
+| Mevcut RouteAuthorization recruitment/leaves/documents | ✅ (company_admin bypass) |
+| Tam suite | **83 passed**, 1 risky, 0 failed |
+
+Dosya: `tests/Feature/PermissionEnforcementWave2Test.php`
+
 ### Sonraki dalgalar (bu turda yok)
 
-recruitment, leaves, documents, … — Dalga 2+
+onboarding, performance, training, assets, surveys, analytics + admin grupları (users/employees/roles) — **dokunulmadı**.

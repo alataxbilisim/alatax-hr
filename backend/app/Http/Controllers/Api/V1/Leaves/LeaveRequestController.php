@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1\Leaves;
 
 use App\Http\Controllers\Api\V1\BaseController;
+use App\Enums\LeaveRequestStatus;
 use App\Models\ActivityLog;
 use App\Models\LeaveBalance;
 use App\Models\LeaveRequest;
@@ -131,7 +132,7 @@ class LeaveRequestController extends BaseController
      */
     public function approve(Request $request, LeaveRequest $leaveRequest): JsonResponse
     {
-        if ($leaveRequest->status !== LeaveRequest::STATUS_PENDING) {
+        if ($leaveRequest->status !== LeaveRequestStatus::Pending) {
             return $this->error('Bu talep zaten işlenmiş', null, 422);
         }
 
@@ -151,7 +152,7 @@ class LeaveRequestController extends BaseController
      */
     public function reject(Request $request, LeaveRequest $leaveRequest): JsonResponse
     {
-        if ($leaveRequest->status !== LeaveRequest::STATUS_PENDING) {
+        if ($leaveRequest->status !== LeaveRequestStatus::Pending) {
             return $this->error('Bu talep zaten işlenmiş', null, 422);
         }
 

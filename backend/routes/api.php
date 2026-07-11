@@ -229,25 +229,46 @@ Route::prefix('v1')->group(function () {
         // MODÜL BAZLI ROUTES
         // ===========================================
 
-        // İş Başvuru Modülü
+        // İş Başvuru Modülü (public/jobs dokunulmaz — aşağıda)
         Route::middleware('module.access:job-applications')->prefix('recruitment')->group(function () {
-            Route::apiResource('positions', \App\Http\Controllers\Api\V1\Recruitment\JobPositionController::class);
+            // Pozisyonlar
+            Route::get('positions', [\App\Http\Controllers\Api\V1\Recruitment\JobPositionController::class, 'index'])
+                ->middleware('permission:recruitment.positions.view');
+            Route::post('positions', [\App\Http\Controllers\Api\V1\Recruitment\JobPositionController::class, 'store'])
+                ->middleware('permission:recruitment.positions.create');
+            Route::get('positions/{position}', [\App\Http\Controllers\Api\V1\Recruitment\JobPositionController::class, 'show'])
+                ->middleware('permission:recruitment.positions.view');
+            Route::put('positions/{position}', [\App\Http\Controllers\Api\V1\Recruitment\JobPositionController::class, 'update'])
+                ->middleware('permission:recruitment.positions.edit');
+            Route::patch('positions/{position}', [\App\Http\Controllers\Api\V1\Recruitment\JobPositionController::class, 'update'])
+                ->middleware('permission:recruitment.positions.edit');
+            Route::delete('positions/{position}', [\App\Http\Controllers\Api\V1\Recruitment\JobPositionController::class, 'destroy'])
+                ->middleware('permission:recruitment.positions.delete');
 
             // Başvurular
-            Route::get('/applications', [\App\Http\Controllers\Api\V1\Recruitment\ApplicationController::class, 'index']);
-            Route::get('/applications/{id}', [\App\Http\Controllers\Api\V1\Recruitment\ApplicationController::class, 'show']);
-            Route::put('/applications/{id}/status', [\App\Http\Controllers\Api\V1\Recruitment\ApplicationController::class, 'updateStatus']);
-            Route::put('/applications/{id}/notes', [\App\Http\Controllers\Api\V1\Recruitment\ApplicationController::class, 'updateNotes']);
-            Route::put('/applications/{id}/rate', [\App\Http\Controllers\Api\V1\Recruitment\ApplicationController::class, 'rate']);
+            Route::get('/applications', [\App\Http\Controllers\Api\V1\Recruitment\ApplicationController::class, 'index'])
+                ->middleware('permission:recruitment.applications.view');
+            Route::get('/applications/{id}', [\App\Http\Controllers\Api\V1\Recruitment\ApplicationController::class, 'show'])
+                ->middleware('permission:recruitment.applications.view');
+            Route::put('/applications/{id}/status', [\App\Http\Controllers\Api\V1\Recruitment\ApplicationController::class, 'updateStatus'])
+                ->middleware('permission:recruitment.applications.approve');
+            Route::put('/applications/{id}/notes', [\App\Http\Controllers\Api\V1\Recruitment\ApplicationController::class, 'updateNotes'])
+                ->middleware('permission:recruitment.applications.edit');
+            Route::put('/applications/{id}/rate', [\App\Http\Controllers\Api\V1\Recruitment\ApplicationController::class, 'rate'])
+                ->middleware('permission:recruitment.applications.edit');
 
             // CV Havuzu
-            Route::get('/cv-pool', [\App\Http\Controllers\Api\V1\Recruitment\CvPoolController::class, 'index']);
-            Route::post('/cv-pool/bulk-tag', [\App\Http\Controllers\Api\V1\Recruitment\CvPoolController::class, 'bulkTag']);
-            Route::delete('/cv-pool/{id}/tag', [\App\Http\Controllers\Api\V1\Recruitment\CvPoolController::class, 'removeTag']);
-            Route::put('/cv-pool/{id}/rate', [\App\Http\Controllers\Api\V1\Recruitment\CvPoolController::class, 'rate']);
+            Route::get('/cv-pool', [\App\Http\Controllers\Api\V1\Recruitment\CvPoolController::class, 'index'])
+                ->middleware('permission:recruitment.cv_pool.view');
+            Route::post('/cv-pool/bulk-tag', [\App\Http\Controllers\Api\V1\Recruitment\CvPoolController::class, 'bulkTag'])
+                ->middleware('permission:recruitment.cv_pool.edit');
+            Route::delete('/cv-pool/{id}/tag', [\App\Http\Controllers\Api\V1\Recruitment\CvPoolController::class, 'removeTag'])
+                ->middleware('permission:recruitment.cv_pool.edit');
+            Route::put('/cv-pool/{id}/rate', [\App\Http\Controllers\Api\V1\Recruitment\CvPoolController::class, 'rate'])
+                ->middleware('permission:recruitment.cv_pool.edit');
 
             // Raporlar
-            Route::prefix('reports')->group(function () {
+            Route::prefix('reports')->middleware('permission:recruitment.reports.view')->group(function () {
                 Route::get('/summary', [\App\Http\Controllers\Api\V1\Recruitment\ReportController::class, 'summary']);
                 Route::get('/by-position', [\App\Http\Controllers\Api\V1\Recruitment\ReportController::class, 'byPosition']);
                 Route::get('/by-source', [\App\Http\Controllers\Api\V1\Recruitment\ReportController::class, 'bySource']);
@@ -257,31 +278,55 @@ Route::prefix('v1')->group(function () {
 
             // Mülakatlar
             Route::prefix('interviews')->group(function () {
-                Route::get('/', [\App\Http\Controllers\Api\V1\Recruitment\InterviewController::class, 'index']);
-                Route::get('/types', [\App\Http\Controllers\Api\V1\Recruitment\InterviewController::class, 'getTypes']);
-                Route::get('/calendar', [\App\Http\Controllers\Api\V1\Recruitment\InterviewController::class, 'calendar']);
-                Route::get('/{id}', [\App\Http\Controllers\Api\V1\Recruitment\InterviewController::class, 'show']);
-                Route::post('/', [\App\Http\Controllers\Api\V1\Recruitment\InterviewController::class, 'store']);
-                Route::put('/{id}', [\App\Http\Controllers\Api\V1\Recruitment\InterviewController::class, 'update']);
-                Route::delete('/{id}', [\App\Http\Controllers\Api\V1\Recruitment\InterviewController::class, 'destroy']);
-                Route::post('/{id}/complete', [\App\Http\Controllers\Api\V1\Recruitment\InterviewController::class, 'complete']);
-                Route::post('/{id}/cancel', [\App\Http\Controllers\Api\V1\Recruitment\InterviewController::class, 'cancel']);
+                Route::get('/', [\App\Http\Controllers\Api\V1\Recruitment\InterviewController::class, 'index'])
+                    ->middleware('permission:recruitment.interviews.view');
+                Route::get('/types', [\App\Http\Controllers\Api\V1\Recruitment\InterviewController::class, 'getTypes'])
+                    ->middleware('permission:recruitment.interviews.view');
+                Route::get('/calendar', [\App\Http\Controllers\Api\V1\Recruitment\InterviewController::class, 'calendar'])
+                    ->middleware('permission:recruitment.interviews.view');
+                Route::get('/{id}', [\App\Http\Controllers\Api\V1\Recruitment\InterviewController::class, 'show'])
+                    ->middleware('permission:recruitment.interviews.view');
+                Route::post('/', [\App\Http\Controllers\Api\V1\Recruitment\InterviewController::class, 'store'])
+                    ->middleware('permission:recruitment.interviews.create');
+                Route::put('/{id}', [\App\Http\Controllers\Api\V1\Recruitment\InterviewController::class, 'update'])
+                    ->middleware('permission:recruitment.interviews.edit');
+                Route::delete('/{id}', [\App\Http\Controllers\Api\V1\Recruitment\InterviewController::class, 'destroy'])
+                    ->middleware('permission:recruitment.interviews.delete');
+                Route::post('/{id}/complete', [\App\Http\Controllers\Api\V1\Recruitment\InterviewController::class, 'complete'])
+                    ->middleware('permission:recruitment.interviews.edit');
+                Route::post('/{id}/cancel', [\App\Http\Controllers\Api\V1\Recruitment\InterviewController::class, 'cancel'])
+                    ->middleware('permission:recruitment.interviews.edit');
             });
 
             // Form Builder
-            Route::apiResource('forms', \App\Http\Controllers\Api\V1\Recruitment\FormBuilderController::class);
+            Route::get('forms', [\App\Http\Controllers\Api\V1\Recruitment\FormBuilderController::class, 'index'])
+                ->middleware('permission:recruitment.forms.view');
+            Route::post('forms', [\App\Http\Controllers\Api\V1\Recruitment\FormBuilderController::class, 'store'])
+                ->middleware('permission:recruitment.forms.create');
+            Route::get('forms/{id}', [\App\Http\Controllers\Api\V1\Recruitment\FormBuilderController::class, 'show'])
+                ->middleware('permission:recruitment.forms.view');
+            Route::put('forms/{id}', [\App\Http\Controllers\Api\V1\Recruitment\FormBuilderController::class, 'update'])
+                ->middleware('permission:recruitment.forms.edit');
+            Route::patch('forms/{id}', [\App\Http\Controllers\Api\V1\Recruitment\FormBuilderController::class, 'update'])
+                ->middleware('permission:recruitment.forms.edit');
+            Route::delete('forms/{id}', [\App\Http\Controllers\Api\V1\Recruitment\FormBuilderController::class, 'destroy'])
+                ->middleware('permission:recruitment.forms.delete');
         });
 
         // Evrak Yönetimi Modülü
         Route::middleware('module.access:document-management')->prefix('documents')->group(function () {
             // Kategoriler
-            Route::get('/categories', [\App\Http\Controllers\Api\V1\Documents\CategoryController::class, 'index']);
-            Route::post('/categories', [\App\Http\Controllers\Api\V1\Documents\CategoryController::class, 'store']);
-            Route::put('/categories/{id}', [\App\Http\Controllers\Api\V1\Documents\CategoryController::class, 'update']);
-            Route::delete('/categories/{id}', [\App\Http\Controllers\Api\V1\Documents\CategoryController::class, 'destroy']);
+            Route::get('/categories', [\App\Http\Controllers\Api\V1\Documents\CategoryController::class, 'index'])
+                ->middleware('permission:documents.categories.view');
+            Route::post('/categories', [\App\Http\Controllers\Api\V1\Documents\CategoryController::class, 'store'])
+                ->middleware('permission:documents.categories.create');
+            Route::put('/categories/{id}', [\App\Http\Controllers\Api\V1\Documents\CategoryController::class, 'update'])
+                ->middleware('permission:documents.categories.edit');
+            Route::delete('/categories/{id}', [\App\Http\Controllers\Api\V1\Documents\CategoryController::class, 'destroy'])
+                ->middleware('permission:documents.categories.delete');
 
             // Raporlar (MUST be before /{id} routes)
-            Route::prefix('reports')->group(function () {
+            Route::prefix('reports')->middleware('permission:documents.reports.view')->group(function () {
                 Route::get('/metadata', [\App\Http\Controllers\Api\V1\Documents\ReportController::class, 'metadata']);
                 Route::post('/widget-data', [\App\Http\Controllers\Api\V1\Documents\ReportController::class, 'getWidgetData']);
                 Route::post('/kpi-data', [\App\Http\Controllers\Api\V1\Documents\ReportController::class, 'getKpiData']);
@@ -289,20 +334,28 @@ Route::prefix('v1')->group(function () {
             });
 
             // İstatistikler
-            Route::get('/stats', [\App\Http\Controllers\Api\V1\Documents\DocumentController::class, 'stats']);
+            Route::get('/stats', [\App\Http\Controllers\Api\V1\Documents\DocumentController::class, 'stats'])
+                ->middleware('permission:documents.list.view');
         });
 
         Route::middleware('module.access:document-management')->group(function () {
-            Route::get('/documents', [\App\Http\Controllers\Api\V1\Documents\DocumentController::class, 'index']);
-            Route::post('/documents', [\App\Http\Controllers\Api\V1\Documents\DocumentController::class, 'store']);
-            Route::get('/documents/{id}', [\App\Http\Controllers\Api\V1\Documents\DocumentController::class, 'show']);
-            Route::put('/documents/{id}', [\App\Http\Controllers\Api\V1\Documents\DocumentController::class, 'update']);
-            Route::delete('/documents/{id}', [\App\Http\Controllers\Api\V1\Documents\DocumentController::class, 'destroy']);
-            Route::get('/documents/{id}/download', [\App\Http\Controllers\Api\V1\Documents\DocumentController::class, 'download']);
-            Route::get('/documents/{id}/versions', [\App\Http\Controllers\Api\V1\Documents\DocumentController::class, 'versions']);
-            Route::get('/documents/{id}/versions/{versionId}/download', [\App\Http\Controllers\Api\V1\Documents\DocumentController::class, 'downloadVersion']);
+            Route::get('/documents', [\App\Http\Controllers\Api\V1\Documents\DocumentController::class, 'index'])
+                ->middleware('permission:documents.list.view');
+            Route::post('/documents', [\App\Http\Controllers\Api\V1\Documents\DocumentController::class, 'store'])
+                ->middleware('permission:documents.list.create');
+            Route::get('/documents/{id}', [\App\Http\Controllers\Api\V1\Documents\DocumentController::class, 'show'])
+                ->middleware('permission:documents.list.view');
+            Route::put('/documents/{id}', [\App\Http\Controllers\Api\V1\Documents\DocumentController::class, 'update'])
+                ->middleware('permission:documents.list.edit');
+            Route::delete('/documents/{id}', [\App\Http\Controllers\Api\V1\Documents\DocumentController::class, 'destroy'])
+                ->middleware('permission:documents.list.delete');
+            Route::get('/documents/{id}/download', [\App\Http\Controllers\Api\V1\Documents\DocumentController::class, 'download'])
+                ->middleware('permission:documents.list.view');
+            Route::get('/documents/{id}/versions', [\App\Http\Controllers\Api\V1\Documents\DocumentController::class, 'versions'])
+                ->middleware('permission:documents.list.view');
+            Route::get('/documents/{id}/versions/{versionId}/download', [\App\Http\Controllers\Api\V1\Documents\DocumentController::class, 'downloadVersion'])
+                ->middleware('permission:documents.list.view');
         });
-
         // Onboarding Modülü
         Route::middleware('module.access:onboarding')->prefix('onboarding')->group(function () {
             Route::apiResource('templates', \App\Http\Controllers\Api\V1\Onboarding\TemplateController::class);
@@ -312,40 +365,82 @@ Route::prefix('v1')->group(function () {
 
         // İzin Yönetimi Modülü
         Route::middleware('module.access:leave-management')->prefix('leaves')->group(function () {
-            Route::apiResource('types', \App\Http\Controllers\Api\V1\Leaves\LeaveTypeController::class);
-            Route::apiResource('requests', \App\Http\Controllers\Api\V1\Leaves\LeaveRequestController::class);
-            Route::post('/requests/{id}/approve', [\App\Http\Controllers\Api\V1\Leaves\LeaveRequestController::class, 'approve']);
-            Route::post('/requests/{id}/reject', [\App\Http\Controllers\Api\V1\Leaves\LeaveRequestController::class, 'reject']);
-            Route::get('/calendar', [\App\Http\Controllers\Api\V1\Leaves\LeaveCalendarController::class, 'index']);
-            Route::get('/balance', [\App\Http\Controllers\Api\V1\Leaves\LeaveBalanceController::class, 'index']);
+            // İzin tipleri
+            Route::get('types', [\App\Http\Controllers\Api\V1\Leaves\LeaveTypeController::class, 'index'])
+                ->middleware('permission:leaves.types.view');
+            Route::post('types', [\App\Http\Controllers\Api\V1\Leaves\LeaveTypeController::class, 'store'])
+                ->middleware('permission:leaves.types.create');
+            Route::get('types/{leave_type}', [\App\Http\Controllers\Api\V1\Leaves\LeaveTypeController::class, 'show'])
+                ->middleware('permission:leaves.types.view');
+            Route::put('types/{leave_type}', [\App\Http\Controllers\Api\V1\Leaves\LeaveTypeController::class, 'update'])
+                ->middleware('permission:leaves.types.edit');
+            Route::patch('types/{leave_type}', [\App\Http\Controllers\Api\V1\Leaves\LeaveTypeController::class, 'update'])
+                ->middleware('permission:leaves.types.edit');
+            Route::delete('types/{leave_type}', [\App\Http\Controllers\Api\V1\Leaves\LeaveTypeController::class, 'destroy'])
+                ->middleware('permission:leaves.types.delete');
+
+            // İzin talepleri
+            Route::get('requests', [\App\Http\Controllers\Api\V1\Leaves\LeaveRequestController::class, 'index'])
+                ->middleware('permission:leaves.requests.view');
+            Route::post('requests', [\App\Http\Controllers\Api\V1\Leaves\LeaveRequestController::class, 'store'])
+                ->middleware('permission:leaves.requests.create');
+            Route::get('requests/{leave_request}', [\App\Http\Controllers\Api\V1\Leaves\LeaveRequestController::class, 'show'])
+                ->middleware('permission:leaves.requests.view');
+            // update/destroy controller'da yok — apiResource kalıntısı eklenmedi
+            Route::post('/requests/{leave_request}/approve', [\App\Http\Controllers\Api\V1\Leaves\LeaveRequestController::class, 'approve'])
+                ->middleware('permission:leaves.requests.approve');
+            Route::post('/requests/{leave_request}/reject', [\App\Http\Controllers\Api\V1\Leaves\LeaveRequestController::class, 'reject'])
+                ->middleware('permission:leaves.requests.approve');
+
+            Route::get('/calendar', [\App\Http\Controllers\Api\V1\Leaves\LeaveCalendarController::class, 'index'])
+                ->middleware('permission:leaves.calendar.view');
+            Route::get('/balance', [\App\Http\Controllers\Api\V1\Leaves\LeaveBalanceController::class, 'index'])
+                ->middleware('permission:leaves.balances.view');
 
             // Tatil Takvimi
             Route::prefix('holidays')->group(function () {
-                Route::get('/', [\App\Http\Controllers\Api\V1\Leaves\HolidayController::class, 'index']);
-                Route::get('/types', [\App\Http\Controllers\Api\V1\Leaves\HolidayController::class, 'getTypes']);
-                Route::get('/range', [\App\Http\Controllers\Api\V1\Leaves\HolidayController::class, 'getHolidaysInRange']);
-                Route::post('/check-date', [\App\Http\Controllers\Api\V1\Leaves\HolidayController::class, 'checkDate']);
-                Route::get('/{id}', [\App\Http\Controllers\Api\V1\Leaves\HolidayController::class, 'show']);
-                Route::post('/', [\App\Http\Controllers\Api\V1\Leaves\HolidayController::class, 'store']);
-                Route::put('/{id}', [\App\Http\Controllers\Api\V1\Leaves\HolidayController::class, 'update']);
-                Route::delete('/{id}', [\App\Http\Controllers\Api\V1\Leaves\HolidayController::class, 'destroy']);
+                Route::get('/', [\App\Http\Controllers\Api\V1\Leaves\HolidayController::class, 'index'])
+                    ->middleware('permission:leaves.holidays.view');
+                Route::get('/types', [\App\Http\Controllers\Api\V1\Leaves\HolidayController::class, 'getTypes'])
+                    ->middleware('permission:leaves.holidays.view');
+                Route::get('/range', [\App\Http\Controllers\Api\V1\Leaves\HolidayController::class, 'getHolidaysInRange'])
+                    ->middleware('permission:leaves.holidays.view');
+                Route::post('/check-date', [\App\Http\Controllers\Api\V1\Leaves\HolidayController::class, 'checkDate'])
+                    ->middleware('permission:leaves.holidays.view');
+                Route::get('/{id}', [\App\Http\Controllers\Api\V1\Leaves\HolidayController::class, 'show'])
+                    ->middleware('permission:leaves.holidays.view');
+                Route::post('/', [\App\Http\Controllers\Api\V1\Leaves\HolidayController::class, 'store'])
+                    ->middleware('permission:leaves.holidays.create');
+                Route::put('/{id}', [\App\Http\Controllers\Api\V1\Leaves\HolidayController::class, 'update'])
+                    ->middleware('permission:leaves.holidays.edit');
+                Route::delete('/{id}', [\App\Http\Controllers\Api\V1\Leaves\HolidayController::class, 'destroy'])
+                    ->middleware('permission:leaves.holidays.delete');
             });
 
             // Hakediş Politikaları
             Route::prefix('accrual-policies')->group(function () {
-                Route::get('/', [\App\Http\Controllers\Api\V1\Leaves\AccrualPolicyController::class, 'index']);
-                Route::get('/types', [\App\Http\Controllers\Api\V1\Leaves\AccrualPolicyController::class, 'getAccrualTypes']);
-                Route::get('/log-types', [\App\Http\Controllers\Api\V1\Leaves\AccrualPolicyController::class, 'getLogTypes']);
-                Route::get('/{id}', [\App\Http\Controllers\Api\V1\Leaves\AccrualPolicyController::class, 'show']);
-                Route::post('/', [\App\Http\Controllers\Api\V1\Leaves\AccrualPolicyController::class, 'store']);
-                Route::put('/{id}', [\App\Http\Controllers\Api\V1\Leaves\AccrualPolicyController::class, 'update']);
-                Route::delete('/{id}', [\App\Http\Controllers\Api\V1\Leaves\AccrualPolicyController::class, 'destroy']);
-                Route::get('/user/{userId}/logs', [\App\Http\Controllers\Api\V1\Leaves\AccrualPolicyController::class, 'getUserAccrualLogs']);
-                Route::post('/process-monthly', [\App\Http\Controllers\Api\V1\Leaves\AccrualPolicyController::class, 'processMonthlyAccruals']);
-                Route::post('/process-carryover', [\App\Http\Controllers\Api\V1\Leaves\AccrualPolicyController::class, 'processYearEndCarryover']);
+                Route::get('/', [\App\Http\Controllers\Api\V1\Leaves\AccrualPolicyController::class, 'index'])
+                    ->middleware('permission:leaves.accrual_policies.view');
+                Route::get('/types', [\App\Http\Controllers\Api\V1\Leaves\AccrualPolicyController::class, 'getAccrualTypes'])
+                    ->middleware('permission:leaves.accrual_policies.view');
+                Route::get('/log-types', [\App\Http\Controllers\Api\V1\Leaves\AccrualPolicyController::class, 'getLogTypes'])
+                    ->middleware('permission:leaves.accrual_policies.view');
+                Route::get('/{id}', [\App\Http\Controllers\Api\V1\Leaves\AccrualPolicyController::class, 'show'])
+                    ->middleware('permission:leaves.accrual_policies.view');
+                Route::post('/', [\App\Http\Controllers\Api\V1\Leaves\AccrualPolicyController::class, 'store'])
+                    ->middleware('permission:leaves.accrual_policies.create');
+                Route::put('/{id}', [\App\Http\Controllers\Api\V1\Leaves\AccrualPolicyController::class, 'update'])
+                    ->middleware('permission:leaves.accrual_policies.edit');
+                Route::delete('/{id}', [\App\Http\Controllers\Api\V1\Leaves\AccrualPolicyController::class, 'destroy'])
+                    ->middleware('permission:leaves.accrual_policies.delete');
+                Route::get('/user/{userId}/logs', [\App\Http\Controllers\Api\V1\Leaves\AccrualPolicyController::class, 'getUserAccrualLogs'])
+                    ->middleware('permission:leaves.accrual_policies.view');
+                Route::post('/process-monthly', [\App\Http\Controllers\Api\V1\Leaves\AccrualPolicyController::class, 'processMonthlyAccruals'])
+                    ->middleware('permission:leaves.accrual_policies.edit');
+                Route::post('/process-carryover', [\App\Http\Controllers\Api\V1\Leaves\AccrualPolicyController::class, 'processYearEndCarryover'])
+                    ->middleware('permission:leaves.accrual_policies.edit');
             });
         });
-
         // Onay İş Akışları (Workflow Engine)
         Route::middleware('company_admin')->prefix('workflows')->group(function () {
             Route::get('/entity-types', [\App\Http\Controllers\Api\V1\Workflow\WorkflowController::class, 'getEntityTypes']);
