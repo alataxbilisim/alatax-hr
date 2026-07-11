@@ -52,7 +52,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
 const App: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { mode } = useSelector((state: RootState) => state.theme);
+  const { mode, density } = useSelector((state: RootState) => state.theme);
 
   useEffect(() => {
     // Check authentication on app load
@@ -60,9 +60,12 @@ const App: React.FC = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    // Apply theme
     document.documentElement.setAttribute('data-theme', mode);
   }, [mode]);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-density', density);
+  }, [density]);
 
   return (
     <div className="app admin-layout">

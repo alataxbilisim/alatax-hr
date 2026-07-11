@@ -35,6 +35,7 @@ export interface User extends BaseEntity {
   last_login_at?: string | null;
   preferences?: {
     theme?: 'light' | 'dark';
+    density?: 'comfortable' | 'compact';
     locale?: string;
     notifications?: boolean;
   };

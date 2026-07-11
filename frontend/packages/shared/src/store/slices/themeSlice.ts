@@ -1,20 +1,20 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 type ThemeMode = 'dark' | 'light';
+export type DensityMode = 'comfortable' | 'compact';
 
 interface ThemeState {
   mode: ThemeMode;
+  density: DensityMode;
   sidebarOpen: boolean;
 }
 
-// Tema tercihini localStorage'dan al veya sistem tercihini kullan
 const getInitialTheme = (): ThemeMode => {
   const savedTheme = localStorage.getItem('theme') as ThemeMode;
   if (savedTheme) {
     return savedTheme;
   }
-  
-  // Kullanıcı bilgisinden al
+
   const userStr = localStorage.getItem('user');
   if (userStr) {
     try {
@@ -26,19 +26,51 @@ const getInitialTheme = (): ThemeMode => {
       // JSON parse hatası
     }
   }
-  
-  // Sistem tercihini kontrol et
+
   if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
     return 'dark';
   }
-  
-  return 'dark'; // Varsayılan
+
+  return 'dark';
+};
+
+/** Tema ile aynı desen: localStorage → user.preferences → varsayılan comfortable */
+const getInitialDensity = (): DensityMode => {
+  const saved = localStorage.getItem('density') as DensityMode | null;
+  if (saved === 'comfortable' || saved === 'compact') {
+    return saved;
+  }
+
+  const userStr = localStorage.getItem('user');
+  if (userStr) {
+    try {
+      const user = JSON.parse(userStr);
+      if (user.preferences?.density === 'comfortable' || user.preferences?.density === 'compact') {
+        return user.preferences.density;
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  return 'comfortable';
+};
+
+const applyDensityToDom = (density: DensityMode) => {
+  document.documentElement.setAttribute('data-density', density);
 };
 
 const initialState: ThemeState = {
   mode: getInitialTheme(),
+  density: getInitialDensity(),
   sidebarOpen: true,
 };
+
+// İlk yüklemede density attribute (theme App useEffect ile de set edilir)
+if (typeof document !== 'undefined') {
+  applyDensityToDom(initialState.density);
+  document.documentElement.setAttribute('data-theme', initialState.mode);
+}
 
 const themeSlice = createSlice({
   name: 'theme',
@@ -54,6 +86,16 @@ const themeSlice = createSlice({
       localStorage.setItem('theme', action.payload);
       document.documentElement.setAttribute('data-theme', action.payload);
     },
+    setDensity: (state, action: PayloadAction<DensityMode>) => {
+      state.density = action.payload;
+      localStorage.setItem('density', action.payload);
+      applyDensityToDom(action.payload);
+    },
+    toggleDensity: (state) => {
+      state.density = state.density === 'comfortable' ? 'compact' : 'comfortable';
+      localStorage.setItem('density', state.density);
+      applyDensityToDom(state.density);
+    },
     toggleSidebar: (state) => {
       state.sidebarOpen = !state.sidebarOpen;
     },
@@ -63,6 +105,12 @@ const themeSlice = createSlice({
   },
 });
 
-export const { toggleTheme, setTheme, toggleSidebar, setSidebarOpen } = themeSlice.actions;
+export const {
+  toggleTheme,
+  setTheme,
+  setDensity,
+  toggleDensity,
+  toggleSidebar,
+  setSidebarOpen,
+} = themeSlice.actions;
 export default themeSlice.reducer;
-
