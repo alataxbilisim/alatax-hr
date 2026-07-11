@@ -768,7 +768,7 @@
 }
 
 /* ====================================
-   TABLES (Compact)
+   TABLES — density token (shared components.css kanonik; burada ezip büyüme)
    ==================================== */
 .table-container {
   overflow-x: auto;
@@ -777,31 +777,41 @@
 .table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.8125rem;
+  font-size: var(--fs-table);
 }
 
 .table th,
 .table td {
-  padding: 0.625rem 0.875rem;
+  padding: 0 var(--table-cell-padding-x);
   text-align: left;
   border-bottom: 1px solid var(--border-primary);
+  vertical-align: middle;
+  box-sizing: border-box;
 }
 
 .table th {
-  font-size: 0.6875rem;
-  font-weight: 600;
+  height: var(--table-header-height);
+  font-size: var(--fs-label);
+  font-weight: var(--fw-label);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--text-tertiary);
-  background: var(--surface-glass);
+  background: var(--bg-elevated);
+}
+
+.table td {
+  height: var(--table-row-height);
+  max-height: var(--table-row-height);
+  overflow: hidden;
 }
 
 .table tbody tr {
-  transition: background 0.1s ease;
+  height: var(--table-row-height);
+  transition: background var(--transition-fast);
 }
 
 .table tbody tr:hover {
-  background: var(--bg-hover);
+  background: var(--table-row-hover);
 }
 
 .table tbody tr:last-child td {
@@ -809,29 +819,31 @@
 }
 
 /* ====================================
-   FORMS (Compact)
+   FORMS — density token
    ==================================== */
 .form-group {
-  margin-bottom: 1rem;
+  margin-bottom: var(--form-field-gap);
 }
 
 .form-label {
   display: block;
-  font-size: 0.8125rem;
-  font-weight: 500;
+  font-size: var(--fs-label);
+  font-weight: var(--fw-label);
   color: var(--text-primary);
-  margin-bottom: 0.375rem;
+  margin-bottom: var(--sp-1);
 }
 
 .form-control {
   width: 100%;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.8125rem;
+  height: var(--control-height);
+  padding: 0 var(--sp-3);
+  font-size: var(--fs-body);
   color: var(--text-primary);
   background: var(--input-bg);
   border: 1px solid var(--input-border);
   border-radius: var(--radius-md);
-  transition: all 0.15s ease;
+  transition: all var(--transition-fast);
+  box-sizing: border-box;
 }
 
 .form-control:focus {
@@ -844,23 +856,32 @@
   color: var(--text-muted);
 }
 
+textarea.form-control {
+  height: auto;
+  min-height: calc(var(--control-height) * 2.5);
+  padding: var(--sp-2) var(--sp-3);
+}
+
 /* ====================================
-   BUTTONS (Compact)
+   BUTTONS — density token
    ==================================== */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.375rem;
-  padding: 0.5rem 1rem;
-  font-size: 0.8125rem;
+  gap: var(--sp-2);
+  height: var(--btn-height-md);
+  padding: 0 var(--sp-4);
+  font-size: var(--fs-body);
   font-weight: 500;
+  line-height: 1;
   border-radius: var(--radius-md);
   border: none;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--transition-fast);
   text-decoration: none;
   white-space: nowrap;
+  box-sizing: border-box;
 }
 
 .btn:disabled {
@@ -909,32 +930,46 @@
 }
 
 .btn-sm {
-  padding: 0.375rem 0.75rem;
-  font-size: 0.75rem;
+  height: var(--btn-height-sm);
+  padding: 0 var(--sp-3);
+  font-size: var(--fs-label);
 }
 
 .btn-lg {
-  padding: 0.625rem 1.25rem;
-  font-size: 0.875rem;
+  height: calc(var(--btn-height-md) + 8px);
+  padding: 0 var(--sp-5);
+  font-size: var(--fs-body);
 }
 
 .btn-icon {
-  padding: 0.5rem;
-  width: 32px;
-  height: 32px;
+  padding: 0;
+  width: var(--icon-btn-size);
+  height: var(--icon-btn-size);
+  min-width: var(--icon-btn-size);
+  font-size: var(--icon-size);
+}
+
+.btn-icon.btn-sm {
+  width: var(--icon-btn-size);
+  height: var(--icon-btn-size);
+  min-width: var(--icon-btn-size);
+  padding: 0;
 }
 
 /* ====================================
-   BADGES (Compact)
+   BADGES — density token
    ==================================== */
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.125rem 0.5rem;
-  font-size: 0.6875rem;
-  font-weight: 500;
+  gap: var(--sp-1);
+  height: var(--badge-height);
+  padding: 0 var(--sp-2);
+  font-size: var(--fs-badge);
+  font-weight: var(--fw-badge);
+  line-height: 1;
   border-radius: var(--radius-full);
+  box-sizing: border-box;
 }
 
 .badge-primary {
@@ -963,25 +998,30 @@
 }
 
 /* ====================================
-   TABS (Compact)
+   TABS — density token
    ==================================== */
 .tabs {
   display: flex;
-  gap: 0.25rem;
+  gap: var(--sp-1);
   border-bottom: 1px solid var(--border-primary);
-  margin-bottom: 1rem;
+  margin-bottom: var(--section-gap);
   overflow-x: auto;
   flex-wrap: wrap;
+  min-height: var(--tab-height);
+  align-items: stretch;
 }
 
 .tab {
-  padding: 0.625rem 1rem;
-  font-size: 0.8125rem;
-  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  height: var(--tab-height);
+  padding: 0 var(--sp-3);
+  font-size: var(--fs-label);
+  font-weight: var(--fw-label);
   color: var(--text-tertiary);
   border-bottom: 2px solid transparent;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--transition-fast);
   margin-bottom: -1px;
   white-space: nowrap;
   background: none;
@@ -1103,29 +1143,30 @@
 }
 
 .modal-header {
-  padding: 1rem 1.25rem;
+  padding: var(--card-padding);
   border-bottom: 1px solid var(--border-primary);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  min-height: var(--tab-height);
 }
 
 .modal-title {
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: var(--fs-section);
+  font-weight: var(--fw-section);
   color: var(--text-primary);
 }
 
 .modal-close {
-  width: 28px;
-  height: 28px;
+  width: var(--icon-btn-size);
+  height: var(--icon-btn-size);
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-md);
   color: var(--text-tertiary);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--transition-fast);
   background: none;
   border: none;
 }
@@ -1136,17 +1177,17 @@
 }
 
 .modal-body {
-  padding: 1.25rem;
+  padding: var(--card-padding);
   overflow-y: auto;
-  max-height: calc(90vh - 120px);
+  max-height: calc(var(--modal-max-height) - 120px);
 }
 
 .modal-footer {
-  padding: 0.875rem 1.25rem;
+  padding: var(--sp-3) var(--card-padding);
   border-top: 1px solid var(--border-primary);
   display: flex;
   justify-content: flex-end;
-  gap: 0.5rem;
+  gap: var(--sp-2);
   background: var(--surface-glass);
 }
 
@@ -2925,27 +2966,29 @@
 }
 
 /* ====================================
-   TABS RESPONSIVE
+   TABS RESPONSIVE — yükseklik token'dan; padding şişirmesin
    ==================================== */
 .tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem;
+  gap: var(--sp-1);
+  min-height: var(--tab-height);
 }
 
 .tab {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
+  gap: var(--sp-2);
+  height: var(--tab-height);
+  padding: 0 var(--sp-3);
   background: transparent;
   border: none;
   border-radius: var(--radius-md);
   color: var(--text-secondary);
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-size: var(--fs-label);
+  font-weight: var(--fw-label);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--transition-fast);
   white-space: nowrap;
 }
 
@@ -2961,8 +3004,8 @@
 
 @media (max-width: 576px) {
   .tab {
-    padding: 0.4rem 0.75rem;
-    font-size: 0.8125rem;
+    padding: 0 var(--sp-2);
+    font-size: var(--fs-caption);
   }
   
   .tab span {
@@ -3016,8 +3059,8 @@
 @media (max-width: 768px) {
   .table th,
   .table td {
-    padding: 0.5rem;
-    font-size: 0.8125rem;
+    padding: 0 var(--sp-2);
+    font-size: var(--fs-table);
   }
   
   /* Hide non-essential columns on mobile */

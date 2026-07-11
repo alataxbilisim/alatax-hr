@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   BsPlus,
   BsSearch,
@@ -17,10 +18,12 @@ import {
 } from 'react-icons/bs';
 import { employeesApi } from '@shared/services/api';
 import { getErrorMessage } from '@shared/services/apiHelpers';
+import { toggleDensity } from '@shared/store/slices/themeSlice';
 import toast from 'react-hot-toast';
 import { ConfirmDialog, DataTable } from '../../components/ui';
 import type { Column } from '../../components/ui/DataTable';
 import EmployeeImportModal from '../../components/employees/EmployeeImportModal';
+import type { RootState, AppDispatch } from '../../store';
 
 interface Department {
   id: number;
@@ -54,6 +57,8 @@ interface Employee {
 
 const EmployeesPage: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
+  const density = useSelector((state: RootState) => state.theme.density);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
@@ -306,28 +311,32 @@ const EmployeesPage: React.FC = () => {
         align: 'right',
         width: '120px',
         render: (employee) => (
-          <div className="btn-group btn-group-sm">
+          <div className="table-actions">
             <button
               type="button"
-              className="btn btn-secondary btn-sm"
+              className="btn btn-ghost btn-icon"
               onClick={() => navigate(`/employees/${employee.id}`)}
               title="Detay"
+              aria-label="Detay"
             >
               <BsEye />
             </button>
             <button
               type="button"
-              className="btn btn-primary btn-sm"
+              className="btn btn-ghost btn-icon"
               onClick={() => navigate(`/employees/${employee.id}/edit`)}
               title="Düzenle"
+              aria-label="Düzenle"
             >
               <BsPencil />
             </button>
             <button
               type="button"
-              className="btn btn-danger btn-sm"
+              className="btn btn-ghost btn-icon"
               onClick={() => handleDelete(employee.id)}
               title="Sil"
+              aria-label="Sil"
+              style={{ color: 'var(--danger)' }}
             >
               <BsTrash />
             </button>
@@ -350,6 +359,15 @@ const EmployeesPage: React.FC = () => {
           )}
         </div>
         <div className="page-header-actions">
+          {/* FAZ3: density doğrulama toggle — görsel onay sonrası kalıcı UI'ya taşınır */}
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={() => dispatch(toggleDensity())}
+            title="Density değiştir (geçici doğrulama)"
+          >
+            Density: {density}
+          </button>
           <button type="button" className="btn btn-secondary btn-sm" onClick={() => setImportModalOpen(true)}>
             <BsUpload /> Import
           </button>

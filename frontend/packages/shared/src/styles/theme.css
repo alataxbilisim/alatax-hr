@@ -71,6 +71,9 @@
   --icon-btn-size: 30px;
   --table-row-height: 42px;
   --table-header-height: 38px;
+  --table-cell-padding-x: 12px;
+  --badge-height: 20px;
+  --avatar-table-size: 28px;
   --tab-height: 36px;
 
   /* Modal genişlikleri */
@@ -476,6 +479,9 @@ hr {
   --icon-btn-size: 26px;
   --table-row-height: 34px;
   --table-header-height: 32px;
+  --table-cell-padding-x: 8px;
+  --badge-height: 18px;
+  --avatar-table-size: 24px;
   --tab-height: 32px;
 }
 

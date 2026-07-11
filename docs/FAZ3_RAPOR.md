@@ -105,6 +105,29 @@ Hardcoded hover renkleri (`#dc2626` vb.) btn danger/success’te token + brightn
 
 ---
 
+## Density ince ayar (12 Temmuz 2026 — görsel onay bekleniyor)
+
+**Kök neden:** `company.css` shared token'ları eziyordu — tablo hücresi `padding: 0.625rem 0.875rem`, `.btn` sabit padding (height yok), `.btn-icon` 32×32. Token 42/34 iken satır ~77/73px kalıyordu.
+
+**Yapılan:**
+- Token: `--table-cell-padding-x`, `--badge-height`, `--avatar-table-size`
+- DataTable satır: `height/max-height: var(--table-row-height)`, dikey padding 0
+- `.table-actions` + ikon buton `--icon-btn-size` (30/26)
+- `company.css` table/btn/badge/form/tab/modal → token
+- Personel Listesi: aksiyonlar `btn-ghost btn-icon`; geçici **Density: …** toggle
+
+**Hedef ölçü:** comfortable **42px**, compact **34px** (TASARIM_REHBERI §4).
+
+**Ölçüm (Personel Listesi, DevTools/CDP):**
+| Density | Satır (tr) | İkon buton | Token |
+|---------|------------|------------|-------|
+| comfortable | **42px** | 30px | `--table-row-height: 42px` |
+| compact | **34px** | 26px | `--table-row-height: 34px` |
+
+Fark gözle ~8px/satır — önceki ~77→73’e göre belirgin.
+
+**DUR:** Kullanıcı Personel Listesi'nde density toggle ile farkı onaylayacak; sonra diğer ekranlara yayılır.
+
 ## Kritik Bug Teşhisi (11 Temmuz 2026 — düzeltme YOK)
 
 **Branch:** `faz3-tasarim` · **Kapsam:** yalnızca kök neden + kanıt + öneri · **Düzeltme bu turda yapılmadı.**

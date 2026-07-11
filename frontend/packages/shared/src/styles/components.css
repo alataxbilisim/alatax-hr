@@ -97,12 +97,16 @@
   width: var(--icon-btn-size);
   height: var(--icon-btn-size);
   min-width: var(--icon-btn-size);
+  font-size: var(--icon-size);
+  line-height: 1;
+  flex-shrink: 0;
 }
 
+/* Tablo içi ikon: rehber ikon-buton boyutu (30/26), btn-sm yüksekliğine düşürme */
 .btn-icon.btn-sm {
-  width: var(--btn-height-sm);
-  height: var(--btn-height-sm);
-  min-width: var(--btn-height-sm);
+  width: var(--icon-btn-size);
+  height: var(--icon-btn-size);
+  min-width: var(--icon-btn-size);
   padding: 0;
 }
 
@@ -346,10 +350,11 @@ textarea:focus {
 
 .table th,
 .table td {
-  padding: 0 var(--sp-3);
+  padding: 0 var(--table-cell-padding-x);
   text-align: left;
   border-bottom: 1px solid var(--table-border);
   vertical-align: middle;
+  box-sizing: border-box;
 }
 
 .table th {
@@ -357,6 +362,8 @@ textarea:focus {
   top: 0;
   z-index: 2;
   height: var(--table-header-height);
+  padding-top: 0;
+  padding-bottom: 0;
   background: var(--bg-elevated);
   font-size: var(--fs-label);
   font-weight: var(--fw-label);
@@ -364,14 +371,56 @@ textarea:focus {
   letter-spacing: 0.04em;
   color: var(--text-tertiary);
   box-shadow: 0 1px 0 var(--table-border);
+  line-height: 1.2;
 }
 
 .table td {
   height: var(--table-row-height);
+  max-height: var(--table-row-height);
+  padding-top: 0;
+  padding-bottom: 0;
+  line-height: 1.25;
+  overflow: hidden;
 }
 
 .table tbody tr {
+  height: var(--table-row-height);
   transition: background var(--transition-fast);
+}
+
+/* Satır içi aksiyonlar — satırı şişirmeden ortala */
+.table-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sp-1);
+  height: var(--icon-btn-size);
+  max-height: 100%;
+}
+
+.table-actions .btn,
+.table .btn-icon {
+  width: var(--icon-btn-size);
+  height: var(--icon-btn-size);
+  min-width: var(--icon-btn-size);
+  padding: 0;
+  font-size: calc(var(--icon-size) - 2px);
+}
+
+.table .badge {
+  height: var(--badge-height);
+  max-height: var(--badge-height);
+  padding: 0 var(--sp-2);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.table .avatar,
+.table .avatar-sm,
+.avatar-table {
+  width: var(--avatar-table-size);
+  height: var(--avatar-table-size);
+  font-size: var(--fs-caption);
 }
 
 .table tbody tr:hover {
@@ -409,11 +458,13 @@ textarea:focus {
   display: inline-flex;
   align-items: center;
   gap: var(--sp-1);
-  padding: 2px var(--sp-2);
+  height: var(--badge-height);
+  padding: 0 var(--sp-2);
   font-size: var(--fs-badge);
   font-weight: var(--fw-badge);
-  line-height: 1.3;
+  line-height: 1;
   border-radius: var(--radius-full);
+  box-sizing: border-box;
 }
 
 .badge-primary {
