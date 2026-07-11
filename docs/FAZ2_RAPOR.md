@@ -387,6 +387,7 @@ Modül slug'ları (değişmedi): `job-applications` / `leave-management` / `docu
 | public/jobs auth'suz → **200** | ✅ |
 | Mevcut RouteAuthorization recruitment/leaves/documents | ✅ (company_admin bypass) |
 | Tam suite | **83 passed**, 1 risky, 0 failed |
+| CI (`faz2-rbac-audit`) | ✅ https://github.com/alataxbilisim/alatax-hr/actions/runs/29149666669 |
 
 Dosya: `tests/Feature/PermissionEnforcementWave2Test.php`
 
