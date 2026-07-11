@@ -1337,6 +1337,6 @@ Kapsam dışı (bilinçli / sonraki): framework/log/pivot tabloları; Payslip ve
 | `Totp2faTest` | **11 passed** (yanlış kod engeli, challenge bypass yok, recovery tek kullanım, throttle 429) |
 | `AuthThrottleTest` | **geçti** (2FA'sız login kırılmadı) |
 | Tam suite | **177 passed**, 1 risky |
-| CI | (push sonrası) |
+| CI | **yeşil** — [run 29160057361](https://github.com/alataxbilisim/alatax-hr/actions/runs/29160057361) |
 
 
