@@ -225,6 +225,7 @@ Fark yaratacak 4 şey:
 - [ ] **Rapor Builder UI:** 3 panel (alan listesi / kanvas / canlı önizleme); tablo + pivot + Nivo grafikleri (bar, line, pie, heatmap, treemap zaten bağımlılıkta); rapor kaydetme, rol/kişi bazlı paylaşım
 - [ ] Export: mevcut ExcelJS/jsPDF hattı rapor motoruna bağlanır; **zamanlanmış raporlar** (scheduler + queue + e-posta ekli)
 - [ ] **Dashboard v2:** `employee_dashboards` + react-grid-layout altyapısı genelleştirilir → her kayıtlı rapor bir widget olarak dashboard'a eklenebilir; rol bazlı varsayılan dashboard'lar
+- [ ] **Rol bazlı kişiselleştirilebilir Dashboard (vizyon — Faz 3 sonrası netleşti):** Her kullanıcı kendi dashboard'unu düzenleyebilir (widget ekle/çıkar/sürükle). Rol bazlı varsayılan dashboard'lar: işe alım uzmanı → başvuru/onay KPI'ları; İK müdürü → tüm metrikler; departman müdürü → kendi departmanı (personel sayısı, izindeki personel). Widget'lar Faz 5 semantic layer + rapor motorundan beslenir (DataScope ile rol/kapsam filtreli). Dashboard v2 açılıp kapanabilen, tamamen özelleştirilebilir.
 - [ ] Varsayılan rapor paketi: her modülle gelen 5–10 hazır rapor (turnover, izin kullanım, time-to-hire, eğitim tamamlama, demografi...) — hepsi motorda tanımlı, yani firma kopyalayıp özelleştirebilir
 - [ ] `/analytics` (hr-analytics) sayfaları motorun üstüne taşınır (çift altyapı kalmaz)
 
@@ -246,6 +247,7 @@ Fark yaratacak 4 şey:
 **6B. İkinci halka:**
 - [ ] **Performans:** eksik frontend route'ları (periods, criteria); OKR/360 UI'larının tamamlanması; dönem sihirbazı
 - [ ] **İşe Alım:** public kariyer sayfası polish (firma slug'lı tema); Kanban aday panosu; teklif (job_offers) UI'ı
+- [ ] **Kanban kişiselleştirme (vizyon — Faz 3 sonrası netleşti):** Kanban aday panosu: (a) HTML5 sürükle-bırak (kolon arası kart taşıma — şu an hover butonuyla), (b) kullanıcı bazlı kolon/görünüm özelleştirme (kim hangi aşamaları/filtreleri görsün). Rol bazlı varsayılan görünümler.
 - [ ] **Onboarding:** templates sayfası; preboarding token akışının UI'ı; buddy sistemi
 - [ ] **Eğitim:** sessions yönetim sayfaları; zorunlu eğitim atama + hatırlatma (workflow ile)
 - [ ] **Varlık:** categories/assignments sayfaları; zimmet formu çıktısı (PDF, imza alanlı)
