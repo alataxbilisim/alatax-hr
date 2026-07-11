@@ -506,7 +506,7 @@ Tüm admin gruplarında `company_admin` **kaldırılmadı** + `permission:` ekle
 | **UserType::user + hr_manager → 200** (users/employees…); api-keys/webhooks/workflows → **403** | ✅ kritik |
 | company_admin Spatie’siz → **200** (bypass) | ✅ |
 | Tam suite | **103 passed**, 1 risky |
-| CI | (push sonrası) |
+| CI (`faz2-rbac-audit`) | ✅ https://github.com/alataxbilisim/alatax-hr/actions/runs/29150827816 |
 
 Dosya: `tests/Feature/PermissionEnforcementWave4Test.php`
 
