@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  BsPlus, 
-  BsSearch, 
-  BsPersonBadge, 
+import {
+  BsPlus,
+  BsSearch,
+  BsPersonBadge,
   BsDownload,
   BsUpload,
   BsFilter,
@@ -18,7 +18,8 @@ import {
 import { employeesApi } from '@shared/services/api';
 import { getErrorMessage } from '@shared/services/apiHelpers';
 import toast from 'react-hot-toast';
-import { ConfirmDialog } from '../../components/ui';
+import { ConfirmDialog, DataTable } from '../../components/ui';
+import type { Column } from '../../components/ui/DataTable';
 import EmployeeImportModal from '../../components/employees/EmployeeImportModal';
 
 interface Department {
@@ -64,12 +65,10 @@ const EmployeesPage: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
-  
-  // Seçim durumu
+
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [, setShowBulkMenu] = useState(false);
-  
-  // Modal durumları
+
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [bulkStatusDialogOpen, setBulkStatusDialogOpen] = useState(false);
@@ -95,7 +94,7 @@ const EmployeesPage: React.FC = () => {
         page: currentPage,
         per_page: 15,
       });
-      
+
       setEmployees(response.data.data.data);
       setTotalPages(response.data.data.last_page);
       setTotalCount(response.data.data.total);
@@ -114,10 +113,6 @@ const EmployeesPage: React.FC = () => {
   useEffect(() => {
     loadEmployees();
   }, [loadEmployees]);
-
-  
-
-  
 
   const handleDelete = async (id: number) => {
     if (!confirm('Bu personeli silmek istediğinizden emin misiniz?')) return;
@@ -154,13 +149,13 @@ const EmployeesPage: React.FC = () => {
     if (selectedIds.length === employees.length) {
       setSelectedIds([]);
     } else {
-      setSelectedIds(employees.map(e => e.id));
+      setSelectedIds(employees.map((e) => e.id));
     }
   };
 
   const handleSelectOne = (id: number) => {
     if (selectedIds.includes(id)) {
-      setSelectedIds(selectedIds.filter(i => i !== id));
+      setSelectedIds(selectedIds.filter((i) => i !== id));
     } else {
       setSelectedIds([...selectedIds, id]);
     }
@@ -179,7 +174,7 @@ const EmployeesPage: React.FC = () => {
 
   const handleBulkStatusUpdate = async () => {
     if (!newBulkStatus) return;
-    
+
     try {
       await employeesApi.bulkUpdate(selectedIds, { status: newBulkStatus });
       toast.success(`${selectedIds.length} personelin durumu güncellendi`);
@@ -199,7 +194,8 @@ const EmployeesPage: React.FC = () => {
     setCurrentPage(1);
   };
 
-  const hasActiveFilters = search || statusFilter || departmentFilter || contractTypeFilter;
+  const hasActiveFilters = Boolean(search || statusFilter || departmentFilter || contractTypeFilter);
+  const advancedFilterCount = [statusFilter, departmentFilter, contractTypeFilter].filter(Boolean).length;
 
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, { label: string; className: string }> = {
@@ -208,338 +204,309 @@ const EmployeesPage: React.FC = () => {
       suspended: { label: 'Askıda', className: 'badge-danger' },
       terminated: { label: 'İşten Çıkmış', className: 'badge-secondary' },
     };
-    
+
     const statusInfo = statusMap[status] || { label: status, className: 'badge-secondary' };
     return <span className={`badge ${statusInfo.className}`}>{statusInfo.label}</span>;
   };
 
-  if (loading && employees.length === 0) {
-    return (
-      <div className="animate-fade-in">
-        <div className="page-header">
-          <div className="page-header-content">
-            <h1 className="page-title">Personel Yönetimi</h1>
-            <p className="page-subtitle">Tüm personel kayıtlarını yönetin</p>
+  const columns: Column<Employee>[] = useMemo(
+    () => [
+      {
+        key: 'select',
+        width: '40px',
+        title: (
+          <button
+            type="button"
+            className="btn btn-ghost btn-icon btn-sm"
+            onClick={handleSelectAll}
+            title={selectedIds.length === employees.length ? 'Seçimi Kaldır' : 'Tümünü Seç'}
+          >
+            {selectedIds.length === employees.length && employees.length > 0 ? (
+              <BsCheckSquare />
+            ) : (
+              <BsSquare />
+            )}
+          </button>
+        ),
+        render: (employee) => (
+          <button
+            type="button"
+            className="btn btn-ghost btn-icon btn-sm"
+            onClick={() => handleSelectOne(employee.id)}
+          >
+            {selectedIds.includes(employee.id) ? (
+              <BsCheckSquare style={{ color: 'var(--primary)' }} />
+            ) : (
+              <BsSquare />
+            )}
+          </button>
+        ),
+      },
+      {
+        key: 'employee_code',
+        title: 'Sicil',
+        width: '88px',
+        render: (e) => <span className="badge badge-secondary">{e.employee_code}</span>,
+      },
+      {
+        key: 'name',
+        title: 'Ad Soyad',
+        render: (e) => <strong>{e.user?.name || '-'}</strong>,
+      },
+      {
+        key: 'email',
+        title: 'E-posta',
+        render: (e) => e.user?.email || '-',
+      },
+      {
+        key: 'department',
+        title: 'Departman',
+        render: (e) => e.department?.name || '-',
+      },
+      {
+        key: 'position',
+        title: 'Pozisyon',
+        render: (e) => e.position || '-',
+      },
+      {
+        key: 'hire_date',
+        title: 'İşe Giriş',
+        width: '96px',
+        render: (e) =>
+          e.hire_date ? new Date(e.hire_date).toLocaleDateString('tr-TR') : '-',
+      },
+      {
+        key: 'status',
+        title: 'Durum',
+        width: '100px',
+        render: (e) => getStatusBadge(e.status),
+      },
+      {
+        key: 'portal',
+        title: 'Portal',
+        width: '72px',
+        render: (e) =>
+          e.user ? (
+            <span className="badge badge-success">
+              <BsKeyFill /> Var
+            </span>
+          ) : (
+            <span className="badge badge-secondary">
+              <BsKey /> Yok
+            </span>
+          ),
+      },
+      {
+        key: 'actions',
+        title: 'İşlemler',
+        align: 'right',
+        width: '120px',
+        render: (employee) => (
+          <div className="btn-group btn-group-sm">
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => navigate(`/employees/${employee.id}`)}
+              title="Detay"
+            >
+              <BsEye />
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={() => navigate(`/employees/${employee.id}/edit`)}
+              title="Düzenle"
+            >
+              <BsPencil />
+            </button>
+            <button
+              type="button"
+              className="btn btn-danger btn-sm"
+              onClick={() => handleDelete(employee.id)}
+              title="Sil"
+            >
+              <BsTrash />
+            </button>
           </div>
-        </div>
-        <div className="card">
-          <div className="card-body">
-            <div className="text-center py-4">
-              <div className="spinner-border" role="status">
-                <span className="visually-hidden">Yükleniyor...</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+        ),
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- handlers stable enough for list render
+    [employees, selectedIds, navigate]
+  );
 
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in list-page">
+      {/* Tek satır başlık şeridi (TASARIM_REHBERI Bölüm 6) */}
       <div className="page-header">
         <div className="page-header-content">
-          <h1 className="page-title">Personel Yönetimi</h1>
-          <p className="page-subtitle">
-            {totalCount > 0 ? `${totalCount} personel kayıtlı` : 'Tüm personel kayıtlarını yönetin'}
-          </p>
+          <h1 className="page-title">Personel</h1>
+          {totalCount > 0 && (
+            <span className="page-subtitle">{totalCount} kayıt</span>
+          )}
         </div>
         <div className="page-header-actions">
-          <button className="btn btn-secondary" onClick={() => setImportModalOpen(true)}>
+          <button type="button" className="btn btn-secondary btn-sm" onClick={() => setImportModalOpen(true)}>
             <BsUpload /> Import
           </button>
-          <button className="btn btn-secondary" onClick={handleExport}>
+          <button type="button" className="btn btn-secondary btn-sm" onClick={handleExport}>
             <BsDownload /> Export
           </button>
-          <button className="btn btn-primary" onClick={() => navigate('/employees/new')}>
+          <button type="button" className="btn btn-primary btn-sm" onClick={() => navigate('/employees/new')}>
             <BsPlus /> Yeni Personel
           </button>
         </div>
       </div>
 
-      {/* Toplu İşlem Barı */}
       {selectedIds.length > 0 && (
         <div
-          className="card mb-3"
+          className="list-filter-bar"
           style={{
             background: 'var(--primary-soft)',
-            border: '1px solid var(--primary)',
+            borderColor: 'var(--primary)',
+            marginBottom: 'var(--sp-2)',
           }}
         >
-          <div className="card-body" style={{ padding: '0.75rem 1rem' }}>
-            <div className="d-flex justify-content-between align-items-center">
-              <span style={{ fontWeight: 500 }}>
-                {selectedIds.length} personel seçildi
-              </span>
-              <div className="d-flex gap-2">
-                <button
-                  className="btn btn-secondary btn-sm"
-                  onClick={() => {
-                    setBulkStatusDialogOpen(true);
-                    setShowBulkMenu(false);
-                  }}
-                >
-                  Durumu Değiştir
-                </button>
-                <button
-                  className="btn btn-danger btn-sm"
-                  onClick={() => {
-                    setBulkDeleteDialogOpen(true);
-                    setShowBulkMenu(false);
-                  }}
-                >
-                  <BsTrash /> Sil
-                </button>
-                <button
-                  className="btn btn-ghost btn-sm"
-                  onClick={() => setSelectedIds([])}
-                >
-                  İptal
-                </button>
-              </div>
-            </div>
+          <span style={{ fontWeight: 500, fontSize: 'var(--fs-body)' }}>
+            {selectedIds.length} personel seçildi
+          </span>
+          <div className="d-flex gap-2" style={{ marginLeft: 'auto' }}>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => {
+                setBulkStatusDialogOpen(true);
+                setShowBulkMenu(false);
+              }}
+            >
+              Durumu Değiştir
+            </button>
+            <button
+              type="button"
+              className="btn btn-danger btn-sm"
+              onClick={() => {
+                setBulkDeleteDialogOpen(true);
+                setShowBulkMenu(false);
+              }}
+            >
+              <BsTrash /> Sil
+            </button>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => setSelectedIds([])}>
+              İptal
+            </button>
           </div>
         </div>
       )}
 
-      {/* Filters */}
-      <div className="card mb-3">
-        <div className="card-body">
-          <div className="d-flex gap-2 align-items-center">
-            <div className="flex-grow-1">
-              <div className="input-group">
-                <span className="input-icon"><BsSearch /></span>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Personel ara (ad, sicil no, pozisyon...)"
-                  value={search}
-                  onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
-                />
-              </div>
-            </div>
-            <button 
-              className={`btn ${showFilters || hasActiveFilters ? 'btn-primary' : 'btn-secondary'}`}
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <BsFilter /> Filtreler {hasActiveFilters && `(${[statusFilter, departmentFilter, contractTypeFilter].filter(Boolean).length})`}
-            </button>
-            {hasActiveFilters && (
-              <button className="btn btn-ghost" onClick={clearFilters}>
-                Temizle
-              </button>
-            )}
-          </div>
-
-          {showFilters && (
-            <div className="mt-3 pt-3 border-top">
-              <div className="row g-3">
-                <div className="col-md-4">
-                  <label className="form-label">Durum</label>
-                  <select
-                    className="form-select"
-                    value={statusFilter}
-                    onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-                  >
-                    <option value="">Tümü</option>
-                    <option value="active">Aktif</option>
-                    <option value="on_leave">İzinli</option>
-                    <option value="suspended">Askıda</option>
-                    <option value="terminated">İşten Çıkmış</option>
-                  </select>
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label">Departman</label>
-                  <select
-                    className="form-select"
-                    value={departmentFilter}
-                    onChange={(e) => { setDepartmentFilter(e.target.value); setCurrentPage(1); }}
-                  >
-                    <option value="">Tümü</option>
-                    {departments.map((dept) => (
-                      <option key={dept.id} value={dept.id}>{dept.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label">Sözleşme Tipi</label>
-                  <select
-                    className="form-select"
-                    value={contractTypeFilter}
-                    onChange={(e) => { setContractTypeFilter(e.target.value); setCurrentPage(1); }}
-                  >
-                    <option value="">Tümü</option>
-                    <option value="permanent">Süresiz</option>
-                    <option value="temporary">Süreli</option>
-                    <option value="intern">Stajyer</option>
-                    <option value="contract">Sözleşmeli</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          )}
+      {/* Yatay filtre şeridi */}
+      <div className="list-filter-bar">
+        <div className="list-filter-search input-group">
+          <span className="input-icon"><BsSearch /></span>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Ara (ad, sicil, pozisyon...)"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }}
+            style={{ paddingLeft: '2.25rem' }}
+          />
         </div>
-      </div>
+        <button
+          type="button"
+          className={`btn btn-sm ${showFilters || hasActiveFilters ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setShowFilters(!showFilters)}
+        >
+          <BsFilter /> Filtreler{advancedFilterCount > 0 ? ` (${advancedFilterCount})` : ''}
+        </button>
+        {hasActiveFilters && (
+          <button type="button" className="btn btn-ghost btn-sm" onClick={clearFilters}>
+            Temizle
+          </button>
+        )}
 
-      {/* Table */}
-      <div className="card">
-        <div className="table-responsive">
-          <table className="table">
-            <thead>
-              <tr>
-                <th style={{ width: 40 }}>
-                  <button
-                    className="btn btn-ghost btn-icon btn-sm"
-                    onClick={handleSelectAll}
-                    title={selectedIds.length === employees.length ? 'Seçimi Kaldır' : 'Tümünü Seç'}
-                  >
-                    {selectedIds.length === employees.length && employees.length > 0 ? (
-                      <BsCheckSquare />
-                    ) : (
-                      <BsSquare />
-                    )}
-                  </button>
-                </th>
-                <th>Sicil No</th>
-                <th>Ad Soyad</th>
-                <th>Email</th>
-                <th>Departman</th>
-                <th>Pozisyon</th>
-                <th>İşe Giriş</th>
-                <th>Durum</th>
-                <th>Portal</th>
-                <th className="text-end">İşlemler</th>
-              </tr>
-            </thead>
-            <tbody>
-              {employees.length === 0 ? (
-                <tr>
-                  <td colSpan={10} className="text-center py-4">
-                    <BsPersonBadge size={48} className="text-muted mb-2" />
-                    <p className="text-muted">Henüz personel kaydı bulunmuyor</p>
-                    <button 
-                      className="btn btn-primary btn-sm"
-                      onClick={() => navigate('/employees/new')}
-                    >
-                      <BsPlus /> İlk Personeli Ekle
-                    </button>
-                  </td>
-                </tr>
-              ) : (
-                employees.map((employee) => (
-                  <tr 
-                    key={employee.id}
-                    style={{
-                      background: selectedIds.includes(employee.id) ? 'var(--primary-soft)' : undefined,
-                    }}
-                  >
-                    <td>
-                      <button
-                        className="btn btn-ghost btn-icon btn-sm"
-                        onClick={() => handleSelectOne(employee.id)}
-                      >
-                        {selectedIds.includes(employee.id) ? (
-                          <BsCheckSquare style={{ color: 'var(--primary)' }} />
-                        ) : (
-                          <BsSquare />
-                        )}
-                      </button>
-                    </td>
-                    <td>
-                      <span className="badge badge-secondary">{employee.employee_code}</span>
-                    </td>
-                    <td>
-                      <strong>{employee.user?.name || '-'}</strong>
-                    </td>
-                    <td>{employee.user?.email || '-'}</td>
-                    <td>{employee.department?.name || '-'}</td>
-                    <td>{employee.position || '-'}</td>
-                    <td>
-                      {employee.hire_date 
-                        ? new Date(employee.hire_date).toLocaleDateString('tr-TR')
-                        : '-'
-                      }
-                    </td>
-                    <td>{getStatusBadge(employee.status)}</td>
-                    <td>
-                      {employee.user ? (
-                        <span className="badge badge-success">
-                          <BsKeyFill /> Var
-                        </span>
-                      ) : (
-                        <span className="badge badge-secondary">
-                          <BsKey /> Yok
-                        </span>
-                      )}
-                    </td>
-                    <td>
-                      <div className="btn-group btn-group-sm">
-                        <button
-                          className="btn btn-secondary"
-                          onClick={() => navigate(`/employees/${employee.id}`)}
-                          title="Detay"
-                        >
-                          <BsEye />
-                        </button>
-                        <button
-                          className="btn btn-primary"
-                          onClick={() => navigate(`/employees/${employee.id}/edit`)}
-                          title="Düzenle"
-                        >
-                          <BsPencil />
-                        </button>
-                        <button
-                          className="btn btn-danger"
-                          onClick={() => handleDelete(employee.id)}
-                          title="Sil"
-                        >
-                          <BsTrash />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="card-footer">
-            <div className="d-flex justify-content-between align-items-center">
-              <div>
-                Sayfa {currentPage} / {totalPages} ({totalCount} kayıt)
-              </div>
-              <div className="btn-group">
-                <button
-                  className="btn btn-secondary btn-sm"
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage(currentPage - 1)}
-                >
-                  Önceki
-                </button>
-                <button
-                  className="btn btn-secondary btn-sm"
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage(currentPage + 1)}
-                >
-                  Sonraki
-                </button>
-              </div>
+        {showFilters && (
+          <div className="list-filter-advanced">
+            <div>
+              <label className="form-label">Durum</label>
+              <select
+                className="form-select"
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+              >
+                <option value="">Tümü</option>
+                <option value="active">Aktif</option>
+                <option value="on_leave">İzinli</option>
+                <option value="suspended">Askıda</option>
+                <option value="terminated">İşten Çıkmış</option>
+              </select>
+            </div>
+            <div>
+              <label className="form-label">Departman</label>
+              <select
+                className="form-select"
+                value={departmentFilter}
+                onChange={(e) => {
+                  setDepartmentFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+              >
+                <option value="">Tümü</option>
+                {departments.map((dept) => (
+                  <option key={dept.id} value={dept.id}>{dept.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="form-label">Sözleşme Tipi</label>
+              <select
+                className="form-select"
+                value={contractTypeFilter}
+                onChange={(e) => {
+                  setContractTypeFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+              >
+                <option value="">Tümü</option>
+                <option value="permanent">Süresiz</option>
+                <option value="temporary">Süreli</option>
+                <option value="intern">Stajyer</option>
+                <option value="contract">Sözleşmeli</option>
+              </select>
             </div>
           </div>
         )}
       </div>
 
-      {/* Import Modal */}
+      <DataTable
+        columns={columns}
+        data={employees}
+        loading={loading}
+        emptyMessage="Henüz personel kaydı bulunmuyor"
+        emptyIcon={<BsPersonBadge size={40} className="text-muted" />}
+        emptyAction={(
+          <button type="button" className="btn btn-primary btn-sm" onClick={() => navigate('/employees/new')}>
+            <BsPlus /> İlk Personeli Ekle
+          </button>
+        )}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        total={totalCount}
+        onPageChange={setCurrentPage}
+        isRowSelected={(e) => selectedIds.includes(e.id)}
+      />
+
       <EmployeeImportModal
         isOpen={importModalOpen}
         onClose={() => setImportModalOpen(false)}
         onSuccess={loadEmployees}
       />
 
-      {/* Toplu Silme Dialog */}
       <ConfirmDialog
         isOpen={bulkDeleteDialogOpen}
         onClose={() => setBulkDeleteDialogOpen(false)}
@@ -550,18 +517,24 @@ const EmployeesPage: React.FC = () => {
         variant="danger"
       />
 
-      {/* Toplu Durum Güncelleme Modal */}
       {bulkStatusDialogOpen && (
         <div className="modal-overlay" onClick={() => setBulkStatusDialogOpen(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 400 }}>
+          <div
+            className="modal modal-sm"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="modal-header">
-              <h3>Durum Güncelle</h3>
-              <button className="btn btn-ghost btn-icon" onClick={() => setBulkStatusDialogOpen(false)}>
+              <h3 className="modal-title">Durum Güncelle</h3>
+              <button
+                type="button"
+                className="modal-close"
+                onClick={() => setBulkStatusDialogOpen(false)}
+              >
                 ×
               </button>
             </div>
             <div className="modal-body">
-              <p style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>
+              <p style={{ marginBottom: 'var(--sp-3)', color: 'var(--text-secondary)', fontSize: 'var(--fs-body)' }}>
                 {selectedIds.length} personelin durumunu güncelleyin
               </p>
               <div className="form-group">
@@ -580,10 +553,11 @@ const EmployeesPage: React.FC = () => {
               </div>
             </div>
             <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={() => setBulkStatusDialogOpen(false)}>
+              <button type="button" className="btn btn-secondary" onClick={() => setBulkStatusDialogOpen(false)}>
                 İptal
               </button>
               <button
+                type="button"
                 className="btn btn-primary"
                 onClick={handleBulkStatusUpdate}
                 disabled={!newBulkStatus}
