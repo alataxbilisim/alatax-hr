@@ -79,32 +79,36 @@ class PortalExpenseController extends BaseController
 
         $user = auth()->user();
 
-        $claim = ExpenseClaim::create([
-            'company_id' => $user->company_id,
-            'user_id' => $user->id,
-            'title' => $validated['title'],
-            'description' => $validated['description'] ?? null,
-            'expense_date' => $validated['expense_date'],
-            'claim_number' => ExpenseClaim::generateClaimNumber($user->company_id),
-            'total_amount' => 0,
-            'status' => ExpenseClaim::STATUS_DRAFT,
-        ]);
-
-        foreach ($validated['items'] as $itemData) {
-            ExpenseItem::create([
-                'expense_claim_id' => $claim->id,
-                'expense_category_id' => $itemData['expense_category_id'],
-                'description' => $itemData['description'],
-                'item_date' => $itemData['item_date'],
-                'amount' => $itemData['amount'],
-                'vendor_name' => $itemData['vendor_name'] ?? null,
-                'receipt_number' => $itemData['receipt_number'] ?? null,
-                'notes' => $itemData['notes'] ?? null,
+        $claim = ExpenseClaim::withoutAuditing(function () use ($user, $validated) {
+            $claim = ExpenseClaim::create([
+                'company_id' => $user->company_id,
+                'user_id' => $user->id,
+                'title' => $validated['title'],
+                'description' => $validated['description'] ?? null,
+                'expense_date' => $validated['expense_date'],
+                'claim_number' => ExpenseClaim::generateClaimNumber($user->company_id),
+                'total_amount' => 0,
+                'status' => ExpenseClaim::STATUS_DRAFT,
             ]);
-        }
 
-        $claim->calculateTotal();
-        $claim->save();
+            foreach ($validated['items'] as $itemData) {
+                ExpenseItem::create([
+                    'expense_claim_id' => $claim->id,
+                    'expense_category_id' => $itemData['expense_category_id'],
+                    'description' => $itemData['description'],
+                    'item_date' => $itemData['item_date'],
+                    'amount' => $itemData['amount'],
+                    'vendor_name' => $itemData['vendor_name'] ?? null,
+                    'receipt_number' => $itemData['receipt_number'] ?? null,
+                    'notes' => $itemData['notes'] ?? null,
+                ]);
+            }
+
+            $claim->calculateTotal();
+            $claim->save();
+
+            return $claim;
+        });
 
         ActivityLog::log('expense_claim_created', $claim, 'Masraf talebi oluşturuldu');
 
@@ -132,8 +136,6 @@ class PortalExpenseController extends BaseController
 
         $claim->update($validated);
 
-        ActivityLog::log('expense_claim_updated', $claim, 'Masraf talebi güncellendi');
-
         return $this->success($claim, 'Masraf talebi güncellendi');
     }
 
@@ -150,11 +152,11 @@ class PortalExpenseController extends BaseController
             return $this->error('En az bir masraf kalemi eklemelisiniz', 422);
         }
 
-        $claim->update([
+        ExpenseClaim::withoutAuditing(fn () => $claim->update([
             'status' => ExpenseClaim::STATUS_SUBMITTED,
             'submitted_by' => auth()->id(),
             'submitted_at' => now(),
-        ]);
+        ]));
 
         ActivityLog::log('expense_claim_submitted', $claim, 'Masraf talebi gönderildi');
 
@@ -174,7 +176,7 @@ class PortalExpenseController extends BaseController
             return $this->error('Bu masraf talebi iptal edilemez', 422);
         }
 
-        $claim->delete();
+        ExpenseClaim::withoutAuditing(fn () => $claim->delete());
 
         ActivityLog::log('expense_claim_cancelled', $claim, 'Masraf talebi iptal edildi');
 

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use App\Traits\BelongsToCompany;
 use App\Traits\HasAuditColumns;
 use Illuminate\Database\Eloquent\Model;
@@ -10,7 +11,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Document extends Model
 {
-    use BelongsToCompany, HasAuditColumns, SoftDeletes;
+    use Auditable, BelongsToCompany, HasAuditColumns, SoftDeletes;
+
+    /** @var list<string> */
+    protected array $auditIgnore = [
+        'file_path',
+        'metadata',
+    ];
 
     protected $fillable = [
         'company_id',

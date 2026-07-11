@@ -1237,3 +1237,66 @@ Observer + mevcut manuel `ActivityLog::log` = **çift kayıt**.
 ### Sonraki dalga
 
 User, LeaveRequest, Document, ExpenseClaim… Auditable yayılımı.
+
+---
+
+## Audit v2 UYGULAMA — Dalga 2 (Auditable yayılımı)
+
+**Tarih:** 11 Temmuz 2026 · **Branch:** `faz2-rbac-audit`
+
+### Auditable yapılan modeller
+
+| Model | Maskeli alanlar | Model-özel ignore | Not |
+|-------|-----------------|-------------------|-----|
+| User | password, two_factor_secret, two_factor_recovery_codes, remember_token, invitation_token | — | |
+| LeaveRequest | — | document_path, document_name | |
+| ExpenseClaim | payment_reference | — | |
+| Document | — | file_path, metadata | |
+| EmployeeDocument | — | file_path, file_name, file_type, file_size | |
+| Role | — | — | `App\Models\Role` extends Spatie + Auditable; `config/permission.php` |
+| Department | — | — | |
+| Company | — (tax_number maskelenmez) | — | `transformAuditAttributes`: settings içi password/api_key/secret/token/private_key → `*** güncellendi` |
+| Employee | (Dalga 1) | — | |
+
+### Korunan özel olaylar (observer dışı)
+
+| Alan | Action |
+|------|--------|
+| Leave approve/reject/cancel | `approved` / `rejected` / `cancelled` (+ portal `leave_requested` / `leave_cancelled`) |
+| Expense approve/reject | `approved` / `rejected` (+ portal submitted/cancelled/created) |
+| User invite / role sync / status / 2FA / password | `invite` / `role_sync` / `status_change` / `two_factor_*` / `password_*` |
+| Document / EmployeeDocument upload | `upload` (+ download korundu) |
+| Role permission sync | `permission_sync` |
+| Company logo / modules / license / status | `logo_update` / `modules_sync` / `license_*` / `status_change` |
+| SMTP/SMS test | `test_smtp` / `test_sms` |
+
+Saf create/update/delete manuel loglar kaldırıldı; özel olaylarda `withoutAuditing()` ile çift kayıt engellendi.
+
+### Spatie pivot audit
+
+| Olay | Çalışıyor mu? | Nasıl |
+|------|---------------|--------|
+| Rol izin sync | **Evet** | `RoleController` → `permission_sync` |
+| Kullanıcı rol ata/kaldır | **Evet** | `UserController` → `role_sync` |
+
+### Bug düzeltmeleri (bu dalga)
+
+| Bug | Düzeltme |
+|-----|----------|
+| `ActivityLog::log` company_id | `property_exists` Eloquent attribute'u görmüyordu → model `company_id` attribute / Company→id |
+| Company settings JSON diff | string JSON decode + nested secret mask |
+
+### Test / CI
+
+| Suite | Sonuç |
+|-------|--------|
+| `AuditWave2Test` | **10 passed** |
+| Tam suite | **166 passed**, 1 risky |
+| CI | push sonrası |
+
+### AUDIT v2 TAMAMLANDI mı?
+
+**P0 iş modelleri (talep listesi + Employee):** **Evet — kapsandı.**
+
+Kapsam dışı (bilinçli / sonraki): framework/log/pivot tabloları; Payslip ve diğer P1 modüller (Branch, Asset, Survey, Recruitment…) henüz Auditable değil — Audit haritası P1 dalgası.
+

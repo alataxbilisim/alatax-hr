@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\CompanyPackageType;
 use App\Enums\CompanyStatus;
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,7 +15,65 @@ use Illuminate\Support\Str;
 
 class Company extends Model
 {
-    use HasFactory, SoftDeletes;
+    use Auditable, HasFactory, SoftDeletes;
+
+    /**
+     * tax_number kurumsal — maskelenmez.
+     * settings içi secret'lar transformAuditAttributes ile maskelenir.
+     *
+     * @var list<string>
+     */
+    protected array $auditMasked = [];
+
+    /**
+     * Audit diff için settings içindeki secret alanları maskele (yapı okunabilir kalır).
+     *
+     * @param  array<string, mixed>  $attributes
+     * @return array<string, mixed>
+     */
+    public function transformAuditAttributes(array $attributes): array
+    {
+        if (! array_key_exists('settings', $attributes)) {
+            return $attributes;
+        }
+
+        $settings = $attributes['settings'];
+        if (is_string($settings)) {
+            $decoded = json_decode($settings, true);
+            $settings = is_array($decoded) ? $decoded : null;
+        }
+
+        if (! is_array($settings)) {
+            return $attributes;
+        }
+
+        $attributes['settings'] = $this->maskSettingsSecrets($settings);
+
+        return $attributes;
+    }
+
+    /**
+     * @param  array<string, mixed>  $settings
+     * @return array<string, mixed>
+     */
+    protected function maskSettingsSecrets(array $settings): array
+    {
+        $secretKeys = ['password', 'api_key', 'secret', 'token', 'private_key'];
+
+        foreach ($settings as $key => $value) {
+            if (is_array($value)) {
+                $settings[$key] = $this->maskSettingsSecrets($value);
+
+                continue;
+            }
+
+            if (in_array(strtolower((string) $key), $secretKeys, true) && $value !== null && $value !== '') {
+                $settings[$key] = '*** güncellendi';
+            }
+        }
+
+        return $settings;
+    }
 
     protected $fillable = [
         'name',

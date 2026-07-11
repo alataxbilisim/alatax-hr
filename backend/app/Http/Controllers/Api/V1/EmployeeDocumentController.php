@@ -103,26 +103,28 @@ class EmployeeDocumentController extends BaseController
         $fileName = $file->getClientOriginalName();
         $filePath = $file->store("employees/{$employeeId}/documents", 'private');
 
-        $document = EmployeeDocument::create([
-            'company_id' => $this->getCompanyId(),
-            'employee_id' => $employeeId,
-            'title' => $validated['title'],
-            'description' => $validated['description'] ?? null,
-            'category' => $validated['category'],
-            'file_path' => $filePath,
-            'file_name' => $fileName,
-            'file_type' => $file->getMimeType(),
-            'file_size' => $file->getSize(),
-            'issue_date' => $validated['issue_date'] ?? null,
-            'expiry_date' => $validated['expiry_date'] ?? null,
-            'is_visible_to_employee' => $validated['is_visible_to_employee'] ?? true,
-            'status' => 'active',
-            'notes' => $validated['notes'] ?? null,
-            'uploaded_by' => auth()->id(),
-            'created_by' => auth()->id(),
-        ]);
+        $document = EmployeeDocument::withoutAuditing(function () use ($validated, $employeeId, $filePath, $fileName, $file) {
+            return EmployeeDocument::create([
+                'company_id' => $this->getCompanyId(),
+                'employee_id' => $employeeId,
+                'title' => $validated['title'],
+                'description' => $validated['description'] ?? null,
+                'category' => $validated['category'],
+                'file_path' => $filePath,
+                'file_name' => $fileName,
+                'file_type' => $file->getMimeType(),
+                'file_size' => $file->getSize(),
+                'issue_date' => $validated['issue_date'] ?? null,
+                'expiry_date' => $validated['expiry_date'] ?? null,
+                'is_visible_to_employee' => $validated['is_visible_to_employee'] ?? true,
+                'status' => 'active',
+                'notes' => $validated['notes'] ?? null,
+                'uploaded_by' => auth()->id(),
+                'created_by' => auth()->id(),
+            ]);
+        });
 
-        ActivityLog::log('create', $document, "Personel belgesi yüklendi: {$validated['title']}");
+        ActivityLog::log('upload', $document, "Personel belgesi yüklendi: {$validated['title']}");
 
         return $this->created($document->load('uploadedBy:id,name'), 'Belge başarıyla yüklendi');
     }
@@ -161,8 +163,6 @@ class EmployeeDocumentController extends BaseController
 
         $document->checkExpiry();
 
-        ActivityLog::log('update', $document, 'Personel belgesi güncellendi', $oldValues, $document->fresh()->toArray());
-
         return $this->success($document->load('uploadedBy:id,name'), 'Belge başarıyla güncellendi');
     }
 
@@ -178,13 +178,9 @@ class EmployeeDocumentController extends BaseController
 
         $this->authorize('delete', $document);
 
-        $oldValues = $document->toArray();
-
         if (Storage::disk('private')->exists($document->file_path)) {
             Storage::disk('private')->delete($document->file_path);
         }
-
-        ActivityLog::log('delete', $document, "Personel belgesi silindi: {$document->title}", $oldValues, null);
 
         $document->delete();
 

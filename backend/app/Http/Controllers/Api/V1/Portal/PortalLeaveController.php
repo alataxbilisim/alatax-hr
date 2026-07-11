@@ -132,17 +132,19 @@ class PortalLeaveController extends BaseController
                 $documentPath = $request->file('document')->store('leave_documents/'.$user->company_id, 'public');
             }
 
-            $leaveRequest = LeaveRequest::create([
-                'company_id' => $user->company_id,
-                'user_id' => $user->id,
-                'leave_type_id' => $validated['leave_type_id'],
-                'start_date' => $validated['start_date'],
-                'end_date' => $validated['end_date'],
-                'total_days' => $totalDays,
-                'reason' => $validated['reason'] ?? null,
-                'document_path' => $documentPath,
-                'status' => 'pending',
-            ]);
+            $leaveRequest = LeaveRequest::withoutAuditing(function () use ($validated, $user, $totalDays, $documentPath) {
+                return LeaveRequest::create([
+                    'company_id' => $user->company_id,
+                    'user_id' => $user->id,
+                    'leave_type_id' => $validated['leave_type_id'],
+                    'start_date' => $validated['start_date'],
+                    'end_date' => $validated['end_date'],
+                    'total_days' => $totalDays,
+                    'reason' => $validated['reason'] ?? null,
+                    'document_path' => $documentPath,
+                    'status' => 'pending',
+                ]);
+            });
 
             ActivityLog::log('leave_requested', $leaveRequest, 'İzin talebi oluşturuldu: '.$leaveRequest->leaveType->name.' - '.$totalDays.' gün');
 
@@ -192,8 +194,6 @@ class PortalLeaveController extends BaseController
 
         $leaveRequest->update($validated);
 
-        ActivityLog::log('update', $leaveRequest, 'İzin talebi güncellendi');
-
         return $this->success($leaveRequest, 'İzin talebi güncellendi');
     }
 
@@ -218,7 +218,7 @@ class PortalLeaveController extends BaseController
             return $this->error('Geçmiş tarihli izinler iptal edilemez', null, 422);
         }
 
-        $leaveRequest->update(['status' => 'cancelled']);
+        LeaveRequest::withoutAuditing(fn () => $leaveRequest->update(['status' => 'cancelled']));
 
         ActivityLog::log('leave_cancelled', $leaveRequest, 'İzin talebi iptal edildi');
 

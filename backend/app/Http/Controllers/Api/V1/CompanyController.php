@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Models\ActivityLog;
+use App\Models\Company;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -97,14 +98,6 @@ class CompanyController extends BaseController
         $oldValues = $company->toArray();
         $company->update($validated);
 
-        ActivityLog::log(
-            'update',
-            $company,
-            'Firma bilgileri güncellendi',
-            $oldValues,
-            $company->fresh()->toArray()
-        );
-
         return $this->success($company->fresh(), 'Firma bilgileri güncellendi');
     }
 
@@ -146,10 +139,10 @@ class CompanyController extends BaseController
             $image->save(storage_path('app/public/'.$filename), 85);
 
             $oldValues = $company->toArray();
-            $company->update(['logo' => $filename]);
+            Company::withoutAuditing(fn () => $company->update(['logo' => $filename]));
 
             ActivityLog::log(
-                'update',
+                'logo_update',
                 $company,
                 'Firma logosu güncellendi',
                 $oldValues,
@@ -187,10 +180,10 @@ class CompanyController extends BaseController
             }
 
             $oldValues = $company->toArray();
-            $company->update(['logo' => null]);
+            Company::withoutAuditing(fn () => $company->update(['logo' => null]));
 
             ActivityLog::log(
-                'update',
+                'logo_update',
                 $company,
                 'Firma logosu silindi',
                 $oldValues,

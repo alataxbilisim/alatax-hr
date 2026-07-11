@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Models\ActivityLog;
 use App\Models\Department;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -100,8 +99,6 @@ class DepartmentController extends BaseController
             'created_by' => auth()->id(),
         ]);
 
-        ActivityLog::log('create', $department, 'Departman oluşturuldu: '.$department->name);
-
         return $this->created($department->load('parent:id,name'), 'Departman başarıyla oluşturuldu');
     }
 
@@ -147,8 +144,6 @@ class DepartmentController extends BaseController
             'updated_by' => auth()->id(),
         ]));
 
-        ActivityLog::log('update', $department, 'Departman güncellendi', $oldValues, $department->fresh()->toArray());
-
         return $this->success($department->load('parent:id,name'), 'Departman başarıyla güncellendi');
     }
 
@@ -173,7 +168,6 @@ class DepartmentController extends BaseController
         }
 
         $oldValues = $department->toArray();
-        ActivityLog::log('delete', $department, 'Departman silindi: '.$department->name, $oldValues);
 
         $department->delete();
 

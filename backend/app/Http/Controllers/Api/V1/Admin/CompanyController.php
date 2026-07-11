@@ -8,13 +8,13 @@ use App\Models\Company;
 use App\Models\CompanyLedger;
 use App\Models\LicensePackage;
 use App\Models\Module;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use Spatie\Permission\Models\Role;
 
 class CompanyController extends BaseController
 {
@@ -202,8 +202,13 @@ class CompanyController extends BaseController
             );
             $admin->assignRole($role);
 
-            ActivityLog::log('create', $company, 'Firma oluşturuldu: '.$company->name);
-            ActivityLog::log('create', $admin, 'Firma admin kullanıcısı oluşturuldu: '.$admin->email);
+            ActivityLog::log(
+                'role_sync',
+                $admin,
+                'Firma admin rolü atandı: '.$admin->email,
+                null,
+                ['roles' => ['company_admin']]
+            );
 
             return $this->created([
                 'company' => $company->load('modules'),
@@ -289,8 +294,6 @@ class CompanyController extends BaseController
             $company->update($validated);
         }
 
-        ActivityLog::log('update', $company, 'Firma güncellendi: '.$company->name, $oldValues, $company->fresh()->toArray());
-
         return $this->success($company->fresh(), 'Firma güncellendi');
     }
 
@@ -307,8 +310,6 @@ class CompanyController extends BaseController
         $companyName = $company->name;
         $company->delete();
 
-        ActivityLog::log('delete', null, 'Firma silindi: '.$companyName);
-
         return $this->success(null, 'Firma silindi');
     }
 
@@ -322,9 +323,9 @@ class CompanyController extends BaseController
         ]);
 
         $oldStatus = $company->status;
-        $company->update(['status' => $validated['status']]);
+        Company::withoutAuditing(fn () => $company->update(['status' => $validated['status']]));
 
-        ActivityLog::log('update', $company, "Firma durumu değiştirildi: {$oldStatus} -> {$validated['status']}");
+        ActivityLog::log('status_change', $company, "Firma durumu değiştirildi: {$oldStatus} -> {$validated['status']}");
 
         return $this->success($company, 'Firma durumu güncellendi');
     }
@@ -358,7 +359,7 @@ class CompanyController extends BaseController
             ]);
         }
 
-        ActivityLog::log('update', $company, 'Firma modülleri güncellendi');
+        ActivityLog::log('modules_sync', $company, 'Firma modülleri güncellendi');
 
         return $this->success(
             $company->fresh()->load('modules'),
@@ -401,7 +402,7 @@ class CompanyController extends BaseController
                 );
             }
 
-            ActivityLog::log('update', $company, "Lisans paketi atandı: {$package->name}");
+            ActivityLog::log('license_assign', $company, "Lisans paketi atandı: {$package->name}");
 
             $company->refresh();
 
@@ -439,7 +440,7 @@ class CompanyController extends BaseController
                 );
             }
 
-            ActivityLog::log('update', $company, "Lisans süresi uzatıldı: {$validated['months']} ay");
+            ActivityLog::log('license_extend', $company, "Lisans süresi uzatıldı: {$validated['months']} ay");
 
             $company->refresh();
 

@@ -135,6 +135,10 @@ class AuditObserver
             $result[$key] = $value;
         }
 
+        if (method_exists($model, 'transformAuditAttributes')) {
+            $result = $model->transformAuditAttributes($result);
+        }
+
         return $result;
     }
 
@@ -156,6 +160,11 @@ class AuditObserver
                     $newValues[$field] = '*** güncellendi';
                 }
             }
+        }
+
+        if (method_exists($model, 'transformAuditAttributes')) {
+            $oldValues = $model->transformAuditAttributes($oldValues);
+            $newValues = $model->transformAuditAttributes($newValues);
         }
 
         return [$oldValues, $newValues];

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use App\Traits\BelongsToCompany;
 use App\Traits\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,7 +13,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Department extends Model
 {
-    use BelongsToCompany, HasAuditColumns, HasFactory, SoftDeletes;
+    use Auditable, BelongsToCompany, HasAuditColumns, HasFactory, SoftDeletes;
+
+    /** @var list<string> */
+    protected array $auditMasked = [];
 
     protected $fillable = [
         'company_id',

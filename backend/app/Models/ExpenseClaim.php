@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,7 +12,12 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class ExpenseClaim extends Model
 {
-    use BelongsToCompany, HasFactory;
+    use Auditable, BelongsToCompany, HasFactory;
+
+    /** @var list<string> */
+    protected array $auditMasked = [
+        'payment_reference',
+    ];
 
     protected $fillable = [
         'company_id',

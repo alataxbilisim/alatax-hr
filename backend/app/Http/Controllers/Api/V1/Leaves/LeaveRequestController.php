@@ -121,8 +121,6 @@ class LeaveRequestController extends BaseController
         // Update balance pending
         $balance->addPending($totalDays);
 
-        ActivityLog::log('create', $leaveRequest, 'İzin talebi oluşturuldu: '.$leaveRequest->leaveType->name.' - '.$totalDays.' gün');
-
         return $this->success($leaveRequest->load(['leaveType', 'user']), 'İzin talebi oluşturuldu', 201);
     }
 
@@ -155,7 +153,9 @@ class LeaveRequestController extends BaseController
             'note' => 'nullable|string|max:500',
         ]);
 
-        $leaveRequest->approve(auth()->id(), $validated['note'] ?? null);
+        LeaveRequest::withoutAuditing(
+            fn () => $leaveRequest->approve(auth()->id(), $validated['note'] ?? null)
+        );
 
         ActivityLog::log('approved', $leaveRequest, 'İzin talebi onaylandı: '.$leaveRequest->leaveType->name);
 
@@ -177,7 +177,9 @@ class LeaveRequestController extends BaseController
             'reason' => 'required|string|max:500',
         ]);
 
-        $leaveRequest->reject(auth()->id(), $validated['reason']);
+        LeaveRequest::withoutAuditing(
+            fn () => $leaveRequest->reject(auth()->id(), $validated['reason'])
+        );
 
         ActivityLog::log('rejected', $leaveRequest, 'İzin talebi reddedildi: '.$leaveRequest->leaveType->name.' - Sebep: '.$validated['reason']);
 
@@ -199,7 +201,7 @@ class LeaveRequestController extends BaseController
             return $this->error('Sadece bekleyen talepler iptal edilebilir', null, 422);
         }
 
-        $leaveRequest->cancel();
+        LeaveRequest::withoutAuditing(fn () => $leaveRequest->cancel());
 
         ActivityLog::log('cancelled', $leaveRequest, 'İzin talebi iptal edildi: '.$leaveRequest->leaveType->name);
 

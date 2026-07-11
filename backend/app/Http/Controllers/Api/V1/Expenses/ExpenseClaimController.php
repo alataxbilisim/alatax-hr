@@ -63,12 +63,12 @@ class ExpenseClaimController extends BaseController
             'note' => 'nullable|string|max:500',
         ]);
 
-        $expenseClaim->update([
+        ExpenseClaim::withoutAuditing(fn () => $expenseClaim->update([
             'status' => ExpenseClaim::STATUS_APPROVED,
             'approved_by' => auth()->id(),
             'approved_at' => now(),
             'rejection_reason' => null,
-        ]);
+        ]));
 
         ActivityLog::log(
             'approved',
@@ -91,12 +91,12 @@ class ExpenseClaimController extends BaseController
             'reason' => 'required|string|max:500',
         ]);
 
-        $expenseClaim->update([
+        ExpenseClaim::withoutAuditing(fn () => $expenseClaim->update([
             'status' => ExpenseClaim::STATUS_REJECTED,
             'rejection_reason' => $validated['reason'],
             'approved_by' => auth()->id(),
             'approved_at' => now(),
-        ]);
+        ]));
 
         ActivityLog::log('rejected', $expenseClaim, 'Masraf talebi reddedildi: '.$validated['reason']);
 

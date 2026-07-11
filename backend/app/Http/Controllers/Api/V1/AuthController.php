@@ -166,8 +166,6 @@ class AuthController extends BaseController
 
         $user->update($validated);
 
-        ActivityLog::log('update', $user, 'Profil güncellendi');
-
         return $this->success([
             'user' => $this->formatUser($user->fresh()),
         ], 'Profil güncellendi');
@@ -199,9 +197,9 @@ class AuthController extends BaseController
             ]);
         }
 
-        $user->update([
+        User::withoutAuditing(fn () => $user->update([
             'password' => Hash::make($request->password),
-        ]);
+        ]));
 
         // Diğer cihazlardaki token'ları sil
         $user->tokens()->where('id', '!=', $request->user()->currentAccessToken()->id)->delete();

@@ -158,20 +158,23 @@ class UserController extends BaseController
             'preferences' => ['theme' => 'dark', 'locale' => 'tr'],
         ]);
 
-        // Rolleri ata (ID'lerden role isimlerini al)
+        // Rolleri ata (ID'lerden)
+        $assignedRoles = [];
         if (! empty($validated['roles'])) {
-            $roleIds = $validated['roles'];
-            $user->roles()->sync($roleIds);
+            $user->roles()->sync($validated['roles']);
+            $assignedRoles = $user->fresh()->roles->pluck('name')->values()->all();
         } else {
             $user->assignRole('employee');
+            $assignedRoles = ['employee'];
         }
 
+        // Observer create log yazar; rol pivot'u özel log
         ActivityLog::log(
-            'create',
+            'role_sync',
             $user,
-            'Kullanıcı oluşturuldu: '.$user->name,
+            'Kullanıcı rolleri atandı: '.$user->name,
             null,
-            $user->toArray()
+            ['roles' => $assignedRoles]
         );
 
         return $this->created($user->load('roles'), 'Kullanıcı başarıyla oluşturuldu');
@@ -223,15 +226,23 @@ class UserController extends BaseController
 
         $validated['updated_by'] = auth()->id();
 
-        $oldValues = $user->toArray();
+        $oldRoles = $user->roles->pluck('name')->sort()->values()->all();
         $user->update($validated);
 
-        // Rolleri güncelle (ID'lerle)
+        // Rolleri güncelle (ID'lerle) — pivot; observer yakalamaz
         if (isset($validated['roles'])) {
             $user->roles()->sync($validated['roles']);
+            $newRoles = $user->fresh()->roles->pluck('name')->sort()->values()->all();
+            if ($oldRoles !== $newRoles) {
+                ActivityLog::log(
+                    'role_sync',
+                    $user,
+                    'Kullanıcı rolleri güncellendi: '.$user->name,
+                    ['roles' => $oldRoles],
+                    ['roles' => $newRoles]
+                );
+            }
         }
-
-        ActivityLog::log('update', $user, 'Kullanıcı güncellendi: '.$user->name, $oldValues, $user->fresh()->toArray());
 
         return $this->success($user->fresh()->load('roles'), 'Kullanıcı güncellendi');
     }
@@ -252,10 +263,7 @@ class UserController extends BaseController
         }
 
         $userName = $user->name;
-        $oldValues = $user->toArray();
         $user->delete();
-
-        ActivityLog::log('delete', null, 'Kullanıcı silindi: '.$userName, $oldValues, null);
 
         return $this->success(null, 'Kullanıcı silindi');
     }
@@ -275,10 +283,12 @@ class UserController extends BaseController
             return $this->error('Kendi durumunuzu değiştiremezsiniz', 400);
         }
 
-        $user->update(['is_active' => ! $user->is_active]);
+        User::withoutAuditing(function () use ($user) {
+            $user->update(['is_active' => ! $user->is_active]);
+        });
 
         $status = $user->is_active ? 'aktifleştirildi' : 'pasifleştirildi';
-        ActivityLog::log('update', $user, "Kullanıcı {$status}: ".$user->name);
+        ActivityLog::log('status_change', $user, "Kullanıcı {$status}: ".$user->name);
 
         return $this->success($user, "Kullanıcı {$status}");
     }
@@ -304,9 +314,11 @@ class UserController extends BaseController
 
         // Yeni avatar'ı yükle
         $path = $request->file('avatar')->store('users/avatars', 'public');
-        $user->update(['avatar' => $path]);
+        User::withoutAuditing(function () use ($user, $path) {
+            $user->update(['avatar' => $path]);
+        });
 
-        ActivityLog::log('update', $user, "Kullanıcı avatar'ı güncellendi: {$user->name}");
+        ActivityLog::log('avatar_update', $user, "Kullanıcı avatar'ı güncellendi: {$user->name}");
 
         return $this->success([
             'avatar_url' => asset('storage/'.$path),
@@ -325,9 +337,9 @@ class UserController extends BaseController
 
         if ($user->avatar) {
             Storage::disk('public')->delete($user->avatar);
-            $user->update(['avatar' => null]);
+            User::withoutAuditing(fn () => $user->update(['avatar' => null]));
 
-            ActivityLog::log('update', $user, "Kullanıcı avatar'ı silindi: {$user->name}");
+            ActivityLog::log('avatar_update', $user, "Kullanıcı avatar'ı silindi: {$user->name}");
         }
 
         return $this->success(null, 'Avatar başarıyla silindi');
@@ -355,22 +367,31 @@ class UserController extends BaseController
         // Davet token oluştur
         $token = Str::random(64);
 
-        // Kullanıcı oluştur (henüz aktif değil, şifre yok)
-        $user = User::create([
-            'company_id' => $company->id,
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make(Str::random(32)), // Geçici şifre
-            'type' => 'user',
-            'is_active' => false, // Davet kabul edilene kadar pasif
-            'invitation_token' => Hash::make($token),
-            'invited_at' => now(),
-            'created_by' => auth()->id(),
-        ]);
+        // Kullanıcı oluştur (henüz aktif değil, şifre yok) — invite özel log; CRUD observer kapalı
+        $user = User::withoutAuditing(function () use ($company, $validated, $token) {
+            return User::create([
+                'company_id' => $company->id,
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => Hash::make(Str::random(32)), // Geçici şifre
+                'type' => 'user',
+                'is_active' => false, // Davet kabul edilene kadar pasif
+                'invitation_token' => Hash::make($token),
+                'invited_at' => now(),
+                'created_by' => auth()->id(),
+            ]);
+        });
 
         // Roller atanırsa
         if (! empty($validated['roles'])) {
             $user->roles()->sync($validated['roles']);
+            ActivityLog::log(
+                'role_sync',
+                $user,
+                'Davet kullanıcısına rol atandı: '.$user->name,
+                null,
+                ['roles' => $user->roles->pluck('name')->values()->all()]
+            );
         }
 
         // E-posta gönder (queued)
@@ -385,7 +406,7 @@ class UserController extends BaseController
             return $this->error('Davet e-postası kuyruğa alınamadı. Lütfen SMTP/queue ayarlarınızı kontrol edin.', 500);
         }
 
-        ActivityLog::log('create', $user, "Kullanıcı davet edildi: {$user->name} ({$user->email})");
+        ActivityLog::log('invite', $user, "Kullanıcı davet edildi: {$user->name} ({$user->email})");
 
         return $this->success([
             'user' => $user,
@@ -408,14 +429,14 @@ class UserController extends BaseController
             'notify_user' => 'nullable|boolean', // Kullanıcıya bildirim gönder
         ]);
 
-        $user->update([
+        User::withoutAuditing(fn () => $user->update([
             'password' => Hash::make($validated['password']),
-        ]);
+        ]));
 
         // Kullanıcının tüm token'larını iptal et (güvenlik için)
         $user->tokens()->delete();
 
-        ActivityLog::log('update', $user, "Kullanıcı şifresi sıfırlandı: {$user->name}");
+        ActivityLog::log('password_reset', $user, "Kullanıcı şifresi sıfırlandı: {$user->name}");
 
         // Kullanıcıya bildirim gönderilmesi istenirse
         if ($request->boolean('notify_user')) {
@@ -520,31 +541,30 @@ class UserController extends BaseController
 
             switch ($action) {
                 case 'activate':
-                    $user->update(['is_active' => true]);
-                    ActivityLog::log('update', $user, "Kullanıcı aktifleştirildi: {$user->name}");
+                    User::withoutAuditing(fn () => $user->update(['is_active' => true]));
+                    ActivityLog::log('status_change', $user, "Kullanıcı aktifleştirildi: {$user->name}");
                     $count++;
                     break;
                 case 'deactivate':
-                    $user->update(['is_active' => false]);
-                    ActivityLog::log('update', $user, "Kullanıcı pasifleştirildi: {$user->name}");
+                    User::withoutAuditing(fn () => $user->update(['is_active' => false]));
+                    ActivityLog::log('status_change', $user, "Kullanıcı pasifleştirildi: {$user->name}");
                     $count++;
                     break;
                 case 'delete':
-                    ActivityLog::log('delete', $user, "Kullanıcı silindi: {$user->name}");
                     $user->delete();
                     $count++;
                     break;
                 case 'assign_role':
                     if (! $user->roles->contains($validated['role_id'])) {
                         $user->roles()->attach($validated['role_id']);
-                        ActivityLog::log('update', $user, "Kullanıcıya rol atandı: {$user->name}");
+                        ActivityLog::log('role_sync', $user, "Kullanıcıya rol atandı: {$user->name}");
                         $count++;
                     }
                     break;
                 case 'remove_role':
                     if ($user->roles->contains($validated['role_id'])) {
                         $user->roles()->detach($validated['role_id']);
-                        ActivityLog::log('update', $user, "Kullanıcıdan rol kaldırıldı: {$user->name}");
+                        ActivityLog::log('role_sync', $user, "Kullanıcıdan rol kaldırıldı: {$user->name}");
                         $count++;
                     }
                     break;
@@ -714,11 +734,11 @@ class UserController extends BaseController
             $recoveryCodes[] = strtoupper(substr(md5(uniqid(rand(), true)), 0, 8));
         }
 
-        $user->update([
+        User::withoutAuditing(fn () => $user->update([
             'two_factor_secret' => encrypt($secret),
             'two_factor_recovery_codes' => encrypt(json_encode($recoveryCodes)),
             'two_factor_enabled' => false, // Kullanıcı doğrulamayı tamamlayana kadar false
-        ]);
+        ]));
 
         // QR Code URL oluştur (Google Authenticator format)
         $qrCodeUrl = sprintf(
@@ -729,7 +749,7 @@ class UserController extends BaseController
             urlencode($user->company->name ?? 'HR System')
         );
 
-        ActivityLog::log('update', $user, "2FA etkinleştirme başlatıldı: {$user->name}");
+        ActivityLog::log('two_factor_setup', $user, "2FA etkinleştirme başlatıldı: {$user->name}");
 
         return $this->success([
             'secret' => $secret,
@@ -768,11 +788,11 @@ class UserController extends BaseController
             return $this->error('Geçersiz doğrulama kodu', 400);
         }
 
-        $user->update([
+        User::withoutAuditing(fn () => $user->update([
             'two_factor_enabled' => true,
-        ]);
+        ]));
 
-        ActivityLog::log('update', $user, "2FA etkinleştirildi: {$user->name}");
+        ActivityLog::log('two_factor_enable', $user, "2FA etkinleştirildi: {$user->name}");
 
         return $this->success(null, '2FA başarıyla etkinleştirildi');
     }
@@ -786,13 +806,13 @@ class UserController extends BaseController
             return $this->error('Yetkisiz erişim', 403);
         }
 
-        $user->update([
+        User::withoutAuditing(fn () => $user->update([
             'two_factor_enabled' => false,
             'two_factor_secret' => null,
             'two_factor_recovery_codes' => null,
-        ]);
+        ]));
 
-        ActivityLog::log('update', $user, "2FA devre dışı bırakıldı: {$user->name}");
+        ActivityLog::log('two_factor_disable', $user, "2FA devre dışı bırakıldı: {$user->name}");
 
         return $this->success(null, '2FA devre dışı bırakıldı');
     }
@@ -835,11 +855,11 @@ class UserController extends BaseController
             $recoveryCodes[] = strtoupper(substr(md5(uniqid(rand(), true)), 0, 8));
         }
 
-        $user->update([
+        User::withoutAuditing(fn () => $user->update([
             'two_factor_recovery_codes' => encrypt(json_encode($recoveryCodes)),
-        ]);
+        ]));
 
-        ActivityLog::log('update', $user, "2FA recovery code'ları yenilendi: {$user->name}");
+        ActivityLog::log('two_factor_recovery_regen', $user, "2FA recovery code'ları yenilendi: {$user->name}");
 
         return $this->success([
             'recovery_codes' => $recoveryCodes,

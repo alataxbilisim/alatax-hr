@@ -146,20 +146,22 @@ class DocumentController extends BaseController
         $file = $request->file('file');
         $path = $file->store('documents/'.$this->getCompanyId(), 'public');
 
-        $document = Document::create([
-            'company_id' => $this->getCompanyId(),
-            'name' => $validated['name'] ?? pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
-            'file_name' => $file->getClientOriginalName(),
-            'file_path' => $path,
-            'file_size' => $file->getSize(),
-            'file_type' => $file->getMimeType(),
-            'category_id' => $validated['category_id'] ?? null,
-            'description' => $validated['description'] ?? null,
-            'version' => 1,
-            'uploaded_by' => auth()->id(),
-        ]);
+        $document = Document::withoutAuditing(function () use ($validated, $file, $path) {
+            return Document::create([
+                'company_id' => $this->getCompanyId(),
+                'name' => $validated['name'] ?? pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
+                'file_name' => $file->getClientOriginalName(),
+                'file_path' => $path,
+                'file_size' => $file->getSize(),
+                'file_type' => $file->getMimeType(),
+                'category_id' => $validated['category_id'] ?? null,
+                'description' => $validated['description'] ?? null,
+                'version' => 1,
+                'uploaded_by' => auth()->id(),
+            ]);
+        });
 
-        ActivityLog::log('create', $document, 'Doküman yüklendi: '.$document->name);
+        ActivityLog::log('upload', $document, 'Doküman yüklendi: '.$document->name);
 
         return $this->success([
             'id' => $document->id,
@@ -412,8 +414,6 @@ class DocumentController extends BaseController
         $oldValues = $document->getOriginal();
         $document->update($validated);
 
-        ActivityLog::log('update', $document, 'Doküman güncellendi: '.$document->name, $oldValues, $document->fresh()->toArray());
-
         return $this->success($document, 'Doküman güncellendi');
     }
 
@@ -434,8 +434,6 @@ class DocumentController extends BaseController
         if ($document->file_path) {
             Storage::disk('public')->delete($document->file_path);
         }
-
-        ActivityLog::log('delete', $document, 'Doküman silindi: '.$document->name);
 
         $document->delete();
 
