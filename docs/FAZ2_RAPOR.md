@@ -1300,3 +1300,43 @@ Saf create/update/delete manuel loglar kaldırıldı; özel olaylarda `withoutAu
 
 Kapsam dışı (bilinçli / sonraki): framework/log/pivot tabloları; Payslip ve diğer P1 modüller (Branch, Asset, Survey, Recruitment…) henüz Auditable değil — Audit haritası P1 dalgası.
 
+---
+
+## TOTP 2FA — gerçek doğrulama (stub kaldırıldı)
+
+**Tarih:** 11 Temmuz 2026 · **Branch:** `faz2-rbac-audit`
+
+### Kütüphane
+
+| Paket | Rol |
+|-------|-----|
+| `pragmarx/google2fa` ^9 | Base32 secret, TOTP verify (±1 pencere) |
+| `bacon/bacon-qr-code` ^3 | otpauth URL → SVG (Imagick yok; Docker'da gd+bcmath mevcut) |
+
+### Düzeltilen bug'lar
+
+| Bug | Önce | Sonra |
+|-----|------|-------|
+| Secret | `bin2hex` (authenticator uyumsuz) | `generateSecretKey()` Base32 + `encrypt()`; kolon `text` migration |
+| Verify stub | `$isValid = true` | `verifyKey` gerçek |
+| Recovery | düz metin encrypt | bcrypt hash listesi (encrypt JSON); tek kullanım invalidate |
+| Login | 2FA yok sayılıyordu | 2FA aktif → token yok, 5 dk `2fa-challenge` ability |
+
+### Akışlar
+
+1. **Enable:** secret+QR+recovery → `enabled=false` → ilk TOTP → `enabled=true`
+2. **Login challenge:** `requires_2fa` + challenge token → `POST /auth/2fa/verify` (throttle:auth 10/dk)
+3. **Ability:** `deny.2fa.challenge` middleware — challenge token `/auth/me` vb. **403**
+4. **Disable:** TOTP veya actor şifresi zorunlu
+5. **Audit:** `two_factor_setup` / `two_factor_enable` / `two_factor_disable` / `two_factor_failed`
+
+### Test / CI
+
+| Suite | Sonuç |
+|-------|--------|
+| `Totp2faTest` | **11 passed** (yanlış kod engeli, challenge bypass yok, recovery tek kullanım, throttle 429) |
+| `AuthThrottleTest` | **geçti** (2FA'sız login kırılmadı) |
+| Tam suite | **177 passed**, 1 risky |
+| CI | (push sonrası) |
+
+

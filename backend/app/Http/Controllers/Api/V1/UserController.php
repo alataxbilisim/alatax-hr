@@ -7,6 +7,7 @@ use App\Mail\PasswordResetByAdmin;
 use App\Mail\UserInvitation;
 use App\Models\ActivityLog;
 use App\Models\User;
+use App\Services\TwoFactorService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -19,6 +20,10 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class UserController extends BaseController
 {
+    public function __construct(
+        protected TwoFactorService $twoFactor,
+    ) {}
+
     /**
      * Kullanıcı listesi
      */
@@ -717,7 +722,7 @@ class UserController extends BaseController
     }
 
     /**
-     * 2FA'yı etkinleştir (QR code ve secret oluştur)
+     * 2FA kurulum başlat (secret + QR + recovery — henüz aktif değil)
      */
     public function enable2FA(Request $request, User $user): JsonResponse
     {
@@ -725,41 +730,34 @@ class UserController extends BaseController
             return $this->error('Yetkisiz erişim', 403);
         }
 
-        // Secret oluştur (basit bir implementasyon - production'da google2fa paketi kullanılmalı)
-        $secret = bin2hex(random_bytes(16));
-
-        // Recovery codes oluştur
-        $recoveryCodes = [];
-        for ($i = 0; $i < 8; $i++) {
-            $recoveryCodes[] = strtoupper(substr(md5(uniqid(rand(), true)), 0, 8));
+        if ($user->two_factor_enabled) {
+            return $this->error('2FA zaten etkin. Önce devre dışı bırakın.', 400);
         }
 
-        User::withoutAuditing(fn () => $user->update([
-            'two_factor_secret' => encrypt($secret),
-            'two_factor_recovery_codes' => encrypt(json_encode($recoveryCodes)),
-            'two_factor_enabled' => false, // Kullanıcı doğrulamayı tamamlayana kadar false
-        ]));
+        $secret = $this->twoFactor->generateSecret();
+        $plainRecovery = $this->twoFactor->generateRecoveryCodes();
+        $hashedRecovery = $this->twoFactor->hashRecoveryCodes($plainRecovery);
+        $otpAuthUrl = $this->twoFactor->getOtpAuthUrl($user, $secret);
 
-        // QR Code URL oluştur (Google Authenticator format)
-        $qrCodeUrl = sprintf(
-            'otpauth://totp/%s:%s?secret=%s&issuer=%s',
-            urlencode($user->company->name ?? 'HR System'),
-            urlencode($user->email),
-            $secret,
-            urlencode($user->company->name ?? 'HR System')
-        );
+        User::withoutAuditing(fn () => $user->update([
+            'two_factor_secret' => $this->twoFactor->encryptSecret($secret),
+            'two_factor_recovery_codes' => $this->twoFactor->storeEncryptedRecoveryHashes($hashedRecovery),
+            'two_factor_enabled' => false,
+        ]));
 
         ActivityLog::log('two_factor_setup', $user, "2FA etkinleştirme başlatıldı: {$user->name}");
 
         return $this->success([
             'secret' => $secret,
-            'qr_code_url' => $qrCodeUrl,
-            'recovery_codes' => $recoveryCodes, // Sadece ilk gösterimde
-        ], '2FA etkinleştirme başlatıldı. Lütfen QR kodu tarayın ve doğrulama kodunu girin.');
+            'qr_code_url' => $otpAuthUrl,
+            'qr_code_svg' => $this->twoFactor->generateQrSvg($otpAuthUrl),
+            'recovery_codes' => $plainRecovery,
+            'two_factor_enabled' => false,
+        ], '2FA etkinleştirme başlatıldı. Authenticator uygulamasına ekleyip doğrulama kodunu girin.');
     }
 
     /**
-     * 2FA'yı doğrula ve etkinleştir
+     * İlk TOTP doğrulaması → 2FA aktif
      */
     public function verify2FA(Request $request, User $user): JsonResponse
     {
@@ -771,20 +769,27 @@ class UserController extends BaseController
             return $this->error('Yetkisiz erişim', 403);
         }
 
-        // Basit doğrulama (production'da TOTP algoritması kullanılmalı)
-        // Şimdilik sadece secret'ın varlığını kontrol ediyoruz
         if (! $user->two_factor_secret) {
-            return $this->error('2FA secret bulunamadı', 400);
+            return $this->error('2FA secret bulunamadı. Önce enable çağırın.', 400);
         }
 
-        // TODO: Gerçek TOTP doğrulaması yapılmalı
-        // $secret = decrypt($user->two_factor_secret);
-        // $isValid = Google2FA::verifyKey($secret, $request->code);
+        if ($user->two_factor_enabled) {
+            return $this->error('2FA zaten etkin', 400);
+        }
 
-        // Şimdilik her zaman true döndürüyoruz (geliştirme için)
-        $isValid = true;
+        $secret = $this->twoFactor->decryptSecret($user->two_factor_secret);
 
-        if (! $isValid) {
+        if (! $this->twoFactor->verifyTotp($secret, $request->code)) {
+            ActivityLog::log(
+                'two_factor_failed',
+                $user,
+                "2FA etkinleştirme doğrulaması başarısız: {$user->name}",
+                null,
+                null,
+                false,
+                'Geçersiz TOTP'
+            );
+
             return $this->error('Geçersiz doğrulama kodu', 400);
         }
 
@@ -794,16 +799,47 @@ class UserController extends BaseController
 
         ActivityLog::log('two_factor_enable', $user, "2FA etkinleştirildi: {$user->name}");
 
-        return $this->success(null, '2FA başarıyla etkinleştirildi');
+        return $this->success([
+            'two_factor_enabled' => true,
+        ], '2FA başarıyla etkinleştirildi');
     }
 
     /**
-     * 2FA'yı devre dışı bırak
+     * 2FA kapat — hedef kullanıcının TOTP kodu VEYA işlem yapanın şifresi
      */
-    public function disable2FA(User $user): JsonResponse
+    public function disable2FA(Request $request, User $user): JsonResponse
     {
         if ($user->company_id !== $this->getCompanyId()) {
             return $this->error('Yetkisiz erişim', 403);
+        }
+
+        $validated = $request->validate([
+            'code' => 'required_without:password|nullable|string',
+            'password' => 'required_without:code|nullable|string',
+        ]);
+
+        $actor = $request->user();
+        $confirmed = false;
+
+        if (! empty($validated['password'])) {
+            $confirmed = Hash::check($validated['password'], $actor->password);
+        } elseif (! empty($validated['code']) && $user->two_factor_secret) {
+            $secret = $this->twoFactor->decryptSecret($user->two_factor_secret);
+            $confirmed = $this->twoFactor->verifyTotp($secret, $validated['code']);
+        }
+
+        if (! $confirmed) {
+            ActivityLog::log(
+                'two_factor_failed',
+                $user,
+                "2FA kapatma doğrulaması başarısız: {$user->name}",
+                null,
+                null,
+                false,
+                'Geçersiz kod veya şifre'
+            );
+
+            return $this->error('Geçersiz doğrulama kodu veya şifre', 403);
         }
 
         User::withoutAuditing(fn () => $user->update([
@@ -818,29 +854,9 @@ class UserController extends BaseController
     }
 
     /**
-     * Recovery code'ları görüntüle
+     * Recovery kodları düz metin olarak döndürülemez (hash'li).
      */
     public function getRecoveryCodes(User $user): JsonResponse
-    {
-        if ($user->company_id !== $this->getCompanyId()) {
-            return $this->error('Yetkisiz erişim', 403);
-        }
-
-        if (! $user->two_factor_recovery_codes) {
-            return $this->error('Recovery code bulunamadı', 404);
-        }
-
-        $recoveryCodes = json_decode(decrypt($user->two_factor_recovery_codes), true);
-
-        return $this->success([
-            'recovery_codes' => $recoveryCodes,
-        ]);
-    }
-
-    /**
-     * Recovery code'ları yenile
-     */
-    public function regenerateRecoveryCodes(User $user): JsonResponse
     {
         if ($user->company_id !== $this->getCompanyId()) {
             return $this->error('Yetkisiz erişim', 403);
@@ -850,20 +866,58 @@ class UserController extends BaseController
             return $this->error('2FA etkin değil', 400);
         }
 
-        $recoveryCodes = [];
-        for ($i = 0; $i < 8; $i++) {
-            $recoveryCodes[] = strtoupper(substr(md5(uniqid(rand(), true)), 0, 8));
+        $hashes = $this->twoFactor->decryptRecoveryHashes($user->two_factor_recovery_codes);
+
+        return $this->success([
+            'remaining_count' => $hashes ? count($hashes) : 0,
+            'message' => 'Recovery kodları yalnızca üretim anında gösterilir. Yenilemek için regenerate kullanın.',
+        ]);
+    }
+
+    /**
+     * Recovery code'ları yenile (düz metin bir kez döner; hash saklanır)
+     */
+    public function regenerateRecoveryCodes(Request $request, User $user): JsonResponse
+    {
+        if ($user->company_id !== $this->getCompanyId()) {
+            return $this->error('Yetkisiz erişim', 403);
         }
 
+        if (! $user->two_factor_enabled || ! $user->two_factor_secret) {
+            return $this->error('2FA etkin değil', 400);
+        }
+
+        $validated = $request->validate([
+            'code' => 'required_without:password|nullable|string',
+            'password' => 'required_without:code|nullable|string',
+        ]);
+
+        $actor = $request->user();
+        $confirmed = false;
+
+        if (! empty($validated['password'])) {
+            $confirmed = Hash::check($validated['password'], $actor->password);
+        } elseif (! empty($validated['code'])) {
+            $secret = $this->twoFactor->decryptSecret($user->two_factor_secret);
+            $confirmed = $this->twoFactor->verifyTotp($secret, $validated['code']);
+        }
+
+        if (! $confirmed) {
+            return $this->error('Geçersiz doğrulama kodu veya şifre', 403);
+        }
+
+        $plainRecovery = $this->twoFactor->generateRecoveryCodes();
+        $hashedRecovery = $this->twoFactor->hashRecoveryCodes($plainRecovery);
+
         User::withoutAuditing(fn () => $user->update([
-            'two_factor_recovery_codes' => encrypt(json_encode($recoveryCodes)),
+            'two_factor_recovery_codes' => $this->twoFactor->storeEncryptedRecoveryHashes($hashedRecovery),
         ]));
 
         ActivityLog::log('two_factor_recovery_regen', $user, "2FA recovery code'ları yenilendi: {$user->name}");
 
         return $this->success([
-            'recovery_codes' => $recoveryCodes,
-        ], 'Recovery code\'lar yenilendi');
+            'recovery_codes' => $plainRecovery,
+        ], 'Recovery code\'lar yenilendi. Bu kodları güvenli yerde saklayın.');
     }
 
     /**

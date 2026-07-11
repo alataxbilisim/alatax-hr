@@ -24,8 +24,12 @@ Route::prefix('v1')->group(function () {
         Route::post('/reset-password', [\App\Http\Controllers\Api\V1\AuthController::class, 'resetPassword']);
     });
 
+    // 2FA challenge tamamla — yalnızca 2fa-challenge ability; normal API yok
+    Route::post('/auth/2fa/verify', [\App\Http\Controllers\Api\V1\AuthController::class, 'verifyTwoFactor'])
+        ->middleware(['auth:sanctum', 'throttle:auth', 'ability:2fa-challenge']);
+
     // Protected routes (authentication required)
-    Route::middleware(['auth:sanctum', 'company.active'])->group(function () {
+    Route::middleware(['auth:sanctum', 'deny.2fa.challenge', 'company.active'])->group(function () {
 
         // Auth endpoints
         Route::prefix('auth')->group(function () {
