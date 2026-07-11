@@ -1043,3 +1043,154 @@ Document görünürlük, ApprovalRecord tighten…
 - Payslip / diğer modeller alan seviyesi (isteğe bağlı)
 - Rol Yönetimi UI’da salary/tckn checkbox
 - `field_permissions` tablosu (Faz 4)
+
+---
+
+## Audit v2 Haritası — ADIM 1 TEŞHİS + STRATEJİ
+
+**Tarih:** 11 Temmuz 2026 · **Branch:** `faz2-rbac-audit`  
+**Kapsam:** Teşhis + strateji. **Uygulama yok.**  
+**Hedef:** Manuel controller log → `Auditable` trait + observer ile otomatik create/update/delete.
+
+---
+
+### 1) Mevcut durum
+
+#### `activity_logs` şeması (`0001_01_01_000004_create_activity_logs_table.php`)
+
+| Alan | Tip | Not |
+|------|-----|-----|
+| `company_id`, `user_id`, `user_name` | FK / string | Tenant + aktör (isim kopyası) |
+| `action` | string | create/update/delete/login/… |
+| `model_type`, `model_id` | string + bigint | İlişkili kayıt |
+| `description` | string | |
+| `old_values`, `new_values` | jsonb | Diff |
+| `ip_address`, `user_agent`, `url`, `method` | request meta | |
+| `is_successful`, `error_message` | sonuç | |
+| `created_at` | timestamp | **`updated_at` yok** |
+
+Soft delete yok. Bileşik indeks `(model_type, model_id)` **yok**. Partisyon / retention **yok**.
+
+#### ActivityLog modeli / API
+
+| Parça | Durum |
+|-------|--------|
+| `ActivityLog::log()` | Helper — auth + request meta; **`model_type = class_basename`** |
+| `BelongsToCompany` | Evet — tenant izolasyonu |
+| Route | Yalnızca **GET** list/show/export — update/delete endpoint **yok** (immutable API pratikte var) |
+| Policy | Yok — permission middleware |
+| `Auditable` trait / Observer | **Yok** — audit tamamen manuel |
+
+`HasAuditColumns` ≠ audit trail: yalnızca entity’de `created_by` / `updated_by`.
+
+#### Manuel yazım
+
+- **~70** controller/service `ActivityLog::log` kullanıyor (User, Employee, Role, Leave, Document, Performance, Admin, Auth…).
+- **Boşluklar:** `PortalPayslip` (okuma/indirme), `EmployeeController::export`, `EmployeeReportController` export/maaş, çoğu portal read-only, HR ExpenseClaim create/update (portal’da var), Notification/Dashboard.
+- Auth: login/logout `log()` ile; **login_failed** `ActivityLog::create` ile — `company_id` / url / method **eksik**.
+
+#### Kayıt geçmişi (Geçmiş sekmesi) — **kırık**
+
+| Yer | Sorun |
+|-----|--------|
+| `EmployeeController::show` → `activity_log` | `model_type = Employee::class` (FQCN) sorgusu; loglar `"Employee"` basename → **boş sonuç riski** |
+| `GET .../employees/{id}/activity` | `subject_type` / `subject_id` / `causer` — **şemada/ilişkide yok** |
+| Frontend `HistoryTab` | UI var; backend uyumsuzluğu yüzünden boş gelebilir |
+| Branch/Role detay filtre | `subject_type`+`subject_id` bekliyor — API desteklemiyor |
+
+#### Hassas maskeleme (bugün)
+
+Yalnızca **Employee** (`EmployeeSensitiveFieldService::maskForAudit`) — controller manuel çağrı. Merkezi trait yok.
+
+---
+
+### 2) Auditable strateji (öneri)
+
+#### Hangi modeller?
+
+**P0 (Dalga 1–2):** Employee, User, LeaveRequest, ExpenseClaim, Document, EmployeeDocument, Department, Branch, Role (Spatie Role veya sarmalayıcı), Company / CompanySettings.
+
+**P1:** Payslip, JobApplication, JobPosition, Asset, PerformanceReview, Training, AttendanceRecord, ApprovalWorkflow, ApiKey, Webhook, CustomFieldDefinition, AccrualPolicy, LeaveType, Onboarding*.
+
+**HARİÇ:** ActivityLog (kendini loglamasın), pivot/framework (`sessions`, `cache`, `jobs`, `personal_access_tokens`), WebhookLog / ApplicationStatusLog / AccrualLog (zaten log tablosu), AnnouncementRead benzeri okuma-iz tabloları.
+
+#### Observer davranışı
+
+| Event | Log |
+|-------|-----|
+| `created` | action=create; `new_values` = (ignore + mask sonrası) tüm alanlar veya fillable |
+| `updated` | action=update; **yalnızca değişen** alanlar old→new |
+| `deleted` / softDeleted | action=delete; `old_values` = maskeli snapshot; model_id korunur |
+
+**Ignore listesi (gürültü):** `updated_at`, `created_at`, `deleted_at`, `remember_token`, `password` (User’da ayrı: “şifre güncellendi” + değer yok), isteğe bağlı `updated_by` (HasAuditColumns zaten yazar — karar A8).
+
+#### Maskeli alanlar (model tanımlı liste → trait)
+
+| Model | Maskeli alanlar (öneri) |
+|-------|-------------------------|
+| **Employee** | national_id, gross/net_salary, bank_name, iban, sgk_* (mevcut K7) |
+| **User** | password, two_factor_secret, two_factor_recovery_codes, invitation_token |
+| **Payslip** | gross/net_salary, deductions, bonuses, total_* |
+| **ApiKey** | key |
+| **Webhook** | secret |
+| **CompanyLedger** | (opsiyonel) amount — SuperAdmin; genelde loglanabilir |
+
+Desen: `public static function auditSensitiveFields(): array` veya trait property; Employee’deki maskeyi **trait’e taşı**.
+
+#### Çift log riski
+
+Observer + mevcut manuel `ActivityLog::log` = **çift kayıt**.  
+**Öneri:** Dalga N’de modele Auditable eklenince o controller’daki CRUD log çağrılarını **kaldır**; aksiyon logları (approve, login, export, download) manuel kalsın.
+
+---
+
+### 3) Ek olaylar + immutable + görüntüleme
+
+| Olay | Bugün | v2 |
+|------|-------|-----|
+| login / logout | Var | Koru; hepsi `log()` |
+| login_failed | Var (eksik meta) | `log()` ile hizala |
+| Hassas **okuma** (bordro show/download, salary.view response?) | Yok | Ekle — `view_sensitive` / `download` action |
+| Export | Kısmi (User var; Employee/Report yok) | Zorunlu |
+| Rol/izin değişikliği | RoleController kısmi | Koru + observer Role |
+| Ayar / lisans | Kısmi | Koru |
+| Permission 403 | Yok | **Öneri: şimdilik HAYIR** (gürültü) |
+
+**Immutable:** API’de update/delete yok ✅. DB trigger / model `updating` engeli **yok** — isteğe bağlı sertleştirme (A6). Retention + partisyon: ROADMAP’te var; **Faz 2’de hazırlık notu yeter, uygulama sonra** (A7).
+
+**Görüntüleme:**
+
+| Parça | Öneri |
+|-------|--------|
+| Generic API | `GET /activity-logs?model_type=&model_id=` (+ Employee history endpoint düzelt) |
+| Frontend Geçmiş sekmesi | **Backend şimdi düzelt**; UI polish / tüm detay sayfalarına yayılım → **Faz 6** (Employee sekmesi zaten var — çalışır hale getir) |
+| Tenant | `BelongsToCompany` korunur; başka firma logu görünmez |
+
+**model_type standardı (kritik bug fix):** Tek format seç — **öneri: basename (`Employee`)** + sorguları buna çevir **veya** FQCN + morph map. Mevcut `log()` basename; show/getActivity FQCN/subject_* → **uyumsuz**.
+
+---
+
+### 4) Performans + sıra
+
+| Konu | Öneri |
+|------|--------|
+| Sync vs queue | **Başlangıç senkron** (basit, test kolay). Yük olursa `ShouldQueue` job’a taşı (Faz sonrası) |
+| Sıra | 1) `model_type` + Employee history bug fix · 2) `Auditable` trait + ignore/mask · 3) **Employee** (maske kanıtı) · 4) User / LeaveRequest · 5) Document / ExpenseClaim / Department · 6) Ek olaylar (export, payslip view) · 7) Manual CRUD log temizliği · 8) Retention notu |
+
+**Test stratejisi:** update → 1 log; diff sadece değişen; hassas `***`; tenant izolasyon; deleted → log; ignore alanlar logda yok; (geçiş sonrası) çift log yok.
+
+---
+
+### 5) Karar noktaları — sorular
+
+1. **A1 — Sync mi queue mu?** Öneri: senkron. Onay?
+2. **A2 — Frontend Geçmiş:** Backend+Employee sekmesi şimdi; diğer modül sekmeleri Faz 6. Onay?
+3. **A3 — `model_type` formatı:** basename mi FQCN mi? (bug fix bunu seçer)
+4. **A4 — Çift log:** Auditable gelen modelde manuel CRUD logları silinsin mi?
+5. **A5 — 403 audit:** şimdilik yok — onay?
+6. **A6 — Immutable DB sertleştirme:** yalnızca API yeter mi, yoksa model/DB engeli?
+7. **A7 — Retention/partisyon:** Faz 2 dışı bırakılsın mı?
+8. **A8 — `updated_by` / `created_by`:** ignore listesinde mi, diff’te mi?
+9. **A9 — Hassas okuma:** Payslip show/download + Employee show salary.view yetkisiyle mi, yoksa yalnızca bordro/export?
+
+**Sonraki adım (onay sonrası):** Auditable trait + Employee pilot (uygulama dalgası).
