@@ -441,6 +441,76 @@ Modül slug'ları: `onboarding` / `performance` / `training` / `asset-management
 
 Dosya: `tests/Feature/PermissionEnforcementWave3Test.php`
 
-### Sonraki (SON enforcement dalgası — bu turda yok)
+---
 
-Admin grupları: users, employees, roles, webhooks, company, api-keys, branches, custom-fields, workflows, departments — **dokunulmadı**.
+## Permission Enforcement — Dalga 4 SON (UYGULANDI)
+
+**Tarih:** 11 Temmuz 2026 · **Kapsam:** admin grupları (users, roles, company, branches, api-keys, webhooks, custom-fields, workflows, employees, departments).
+
+### Seed — eklenenler
+
+| İzin sayfası | Aksiyonlar |
+|--------------|------------|
+| `management.company` | view, edit |
+| `management.workflows` | view, create, edit, delete |
+| `management.custom_fields` | view, create, edit, delete |
+
+`admin` rolü = `$allPermissions` (full). `hr_manager`: company/settings/custom_fields + employees.* — **api_keys / webhooks / workflows yok**.
+
+### Uygulama notu — company_admin soft-pass
+
+`CompanyAdminOnly` UserType::user'ı artık engellemez (Dalga 4 geçiş). Asıl kapı `permission:`.  
+company_admin / super_admin type → Gate::before bypass.  
+Böylece **UserType::user + hr_manager Spatie rolü → 200** (type-only değil).
+
+### Enforce
+
+Tüm admin gruplarında `company_admin` **kaldırılmadı** + `permission:` eklendi.
+
+| Grup | Permission |
+|------|------------|
+| users | management.users.* |
+| roles / permissions | management.roles.* |
+| company / settings | management.company.* / settings.* |
+| branches | management.branches.* |
+| api-keys | management.api_keys.* |
+| webhooks | management.webhooks.* |
+| custom-fields | management.custom_fields.* |
+| workflows | management.workflows.* |
+| employees (+ reports/dashboards/docs) | employees.{list,reports,documents,custom_fields,organization}.* |
+| departments | employees.departments.* |
+
+### `permission:` sayımı
+
+| Önce (Dalga 0 öncesi) | Şimdi |
+|----------------------|--------|
+| **0** | **~343** `permission:` kullanımı (`routes/api.php`) |
+
+### Bilinçli permission-dışı kalanlar (açık kapı DEĞİL / kararlı istisna)
+
+| Route | Neden |
+|-------|--------|
+| `auth/*` (login, me, profile…) | public / self |
+| `public/jobs/*` | public başvuru |
+| `portal/*` | KARAR 3 — portal.access + self |
+| `approvals/*` | KARAR 4 — self kuyruk |
+| `notifications/*` | self bildirim |
+| `GET /dashboard` | auth’lu ana sayfa (ince permission yok — soft) |
+| `admin/*` (superadmin platform) | `super_admin` type middleware |
+
+### Test kanıtı
+
+| Kanıt | Sonuç |
+|-------|--------|
+| izinsiz user → **403** (admin grupları) | ✅ |
+| **UserType::user + hr_manager → 200** (users/employees…); api-keys/webhooks/workflows → **403** | ✅ kritik |
+| company_admin Spatie’siz → **200** (bypass) | ✅ |
+| Tam suite | **103 passed**, 1 risky |
+| CI | (push sonrası) |
+
+Dosya: `tests/Feature/PermissionEnforcementWave4Test.php`
+
+### ENFORCEMENT TAMAMLANDI
+
+Modül + admin route grupları permission-korumalı. Kalanlar yukarıdaki bilinçli istisnalar.  
+Sonraki iş (Faz 2 devamı): Policy Adım 3, company_admin Gate bypass kaldırma + otomatik admin rolü.

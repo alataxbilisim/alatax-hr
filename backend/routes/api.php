@@ -38,175 +38,301 @@ Route::prefix('v1')->group(function () {
         // Dashboard
         Route::get('/dashboard', [\App\Http\Controllers\Api\V1\DashboardController::class, 'index']);
 
-        // Users (Company Admin only)
+        // Users — company_admin (soft) + management.users.*
         Route::middleware('company_admin')->group(function () {
-            // Export/Import routes (must be before apiResource to avoid conflicts) — 20/dk
             Route::middleware('throttle:exports')->group(function () {
-                Route::get('/users/export', [\App\Http\Controllers\Api\V1\UserController::class, 'export']);
-                Route::post('/users/import', [\App\Http\Controllers\Api\V1\UserController::class, 'import']);
+                Route::get('/users/export', [\App\Http\Controllers\Api\V1\UserController::class, 'export'])
+                    ->middleware('permission:management.users.export');
+                Route::post('/users/import', [\App\Http\Controllers\Api\V1\UserController::class, 'import'])
+                    ->middleware('permission:management.users.import');
             });
-            Route::post('/users/invite', [\App\Http\Controllers\Api\V1\UserController::class, 'invite']);
-            Route::post('/users/bulk-update', [\App\Http\Controllers\Api\V1\UserController::class, 'bulkUpdate']);
+            Route::post('/users/invite', [\App\Http\Controllers\Api\V1\UserController::class, 'invite'])
+                ->middleware('permission:management.users.create');
+            Route::post('/users/bulk-update', [\App\Http\Controllers\Api\V1\UserController::class, 'bulkUpdate'])
+                ->middleware('permission:management.users.edit');
 
-            Route::apiResource('users', \App\Http\Controllers\Api\V1\UserController::class);
-            Route::post('/users/{user}/reset-password', [\App\Http\Controllers\Api\V1\UserController::class, 'resetPassword']);
-            Route::post('/users/{user}/toggle-status', [\App\Http\Controllers\Api\V1\UserController::class, 'toggleStatus']);
-            Route::post('/users/{user}/avatar', [\App\Http\Controllers\Api\V1\UserController::class, 'uploadAvatar']);
-            Route::delete('/users/{user}/avatar', [\App\Http\Controllers\Api\V1\UserController::class, 'deleteAvatar']);
-            Route::post('/users/{user}/2fa/enable', [\App\Http\Controllers\Api\V1\UserController::class, 'enable2FA']);
-            Route::post('/users/{user}/2fa/verify', [\App\Http\Controllers\Api\V1\UserController::class, 'verify2FA']);
-            Route::post('/users/{user}/2fa/disable', [\App\Http\Controllers\Api\V1\UserController::class, 'disable2FA']);
-            Route::get('/users/{user}/2fa/recovery-codes', [\App\Http\Controllers\Api\V1\UserController::class, 'getRecoveryCodes']);
-            Route::post('/users/{user}/2fa/recovery-codes/regenerate', [\App\Http\Controllers\Api\V1\UserController::class, 'regenerateRecoveryCodes']);
-            Route::get('/users/{user}/sessions', [\App\Http\Controllers\Api\V1\UserController::class, 'sessions']);
-            Route::delete('/users/{user}/sessions/{tokenId}', [\App\Http\Controllers\Api\V1\UserController::class, 'revokeSession']);
-            Route::delete('/users/{user}/sessions', [\App\Http\Controllers\Api\V1\UserController::class, 'revokeAllSessions']);
+            Route::get('users', [\App\Http\Controllers\Api\V1\UserController::class, 'index'])
+                ->middleware('permission:management.users.view');
+            Route::post('users', [\App\Http\Controllers\Api\V1\UserController::class, 'store'])
+                ->middleware('permission:management.users.create');
+            Route::get('users/{user}', [\App\Http\Controllers\Api\V1\UserController::class, 'show'])
+                ->middleware('permission:management.users.view');
+            Route::put('users/{user}', [\App\Http\Controllers\Api\V1\UserController::class, 'update'])
+                ->middleware('permission:management.users.edit');
+            Route::patch('users/{user}', [\App\Http\Controllers\Api\V1\UserController::class, 'update'])
+                ->middleware('permission:management.users.edit');
+            Route::delete('users/{user}', [\App\Http\Controllers\Api\V1\UserController::class, 'destroy'])
+                ->middleware('permission:management.users.delete');
+
+            Route::post('/users/{user}/reset-password', [\App\Http\Controllers\Api\V1\UserController::class, 'resetPassword'])
+                ->middleware('permission:management.users.edit');
+            Route::post('/users/{user}/toggle-status', [\App\Http\Controllers\Api\V1\UserController::class, 'toggleStatus'])
+                ->middleware('permission:management.users.edit');
+            Route::post('/users/{user}/avatar', [\App\Http\Controllers\Api\V1\UserController::class, 'uploadAvatar'])
+                ->middleware('permission:management.users.edit');
+            Route::delete('/users/{user}/avatar', [\App\Http\Controllers\Api\V1\UserController::class, 'deleteAvatar'])
+                ->middleware('permission:management.users.edit');
+            Route::post('/users/{user}/2fa/enable', [\App\Http\Controllers\Api\V1\UserController::class, 'enable2FA'])
+                ->middleware('permission:management.users.edit');
+            Route::post('/users/{user}/2fa/verify', [\App\Http\Controllers\Api\V1\UserController::class, 'verify2FA'])
+                ->middleware('permission:management.users.edit');
+            Route::post('/users/{user}/2fa/disable', [\App\Http\Controllers\Api\V1\UserController::class, 'disable2FA'])
+                ->middleware('permission:management.users.edit');
+            Route::get('/users/{user}/2fa/recovery-codes', [\App\Http\Controllers\Api\V1\UserController::class, 'getRecoveryCodes'])
+                ->middleware('permission:management.users.view');
+            Route::post('/users/{user}/2fa/recovery-codes/regenerate', [\App\Http\Controllers\Api\V1\UserController::class, 'regenerateRecoveryCodes'])
+                ->middleware('permission:management.users.edit');
+            Route::get('/users/{user}/sessions', [\App\Http\Controllers\Api\V1\UserController::class, 'sessions'])
+                ->middleware('permission:management.users.view');
+            Route::delete('/users/{user}/sessions/{tokenId}', [\App\Http\Controllers\Api\V1\UserController::class, 'revokeSession'])
+                ->middleware('permission:management.users.edit');
+            Route::delete('/users/{user}/sessions', [\App\Http\Controllers\Api\V1\UserController::class, 'revokeAllSessions'])
+                ->middleware('permission:management.users.edit');
         });
 
         // Roles & Permissions
         Route::middleware('company_admin')->group(function () {
-            Route::apiResource('roles', \App\Http\Controllers\Api\V1\RoleController::class);
-            Route::get('/permissions', [\App\Http\Controllers\Api\V1\RoleController::class, 'permissions']);
+            Route::get('roles', [\App\Http\Controllers\Api\V1\RoleController::class, 'index'])
+                ->middleware('permission:management.roles.view');
+            Route::post('roles', [\App\Http\Controllers\Api\V1\RoleController::class, 'store'])
+                ->middleware('permission:management.roles.create');
+            Route::get('roles/{role}', [\App\Http\Controllers\Api\V1\RoleController::class, 'show'])
+                ->middleware('permission:management.roles.view');
+            Route::put('roles/{role}', [\App\Http\Controllers\Api\V1\RoleController::class, 'update'])
+                ->middleware('permission:management.roles.edit');
+            Route::patch('roles/{role}', [\App\Http\Controllers\Api\V1\RoleController::class, 'update'])
+                ->middleware('permission:management.roles.edit');
+            Route::delete('roles/{role}', [\App\Http\Controllers\Api\V1\RoleController::class, 'destroy'])
+                ->middleware('permission:management.roles.delete');
+            Route::get('/permissions', [\App\Http\Controllers\Api\V1\RoleController::class, 'permissions'])
+                ->middleware('permission:management.roles.view');
         });
 
-        // Webhooks (Company Admin only)
+        // Webhooks
         Route::middleware('company_admin')->prefix('webhooks')->group(function () {
-            Route::apiResource('', \App\Http\Controllers\Api\V1\WebhookController::class)->parameters(['' => 'webhook']);
-            Route::get('/{webhook}/logs', [\App\Http\Controllers\Api\V1\WebhookController::class, 'logs']);
-            Route::post('/{webhook}/test', [\App\Http\Controllers\Api\V1\WebhookController::class, 'test']);
-            Route::post('/{webhook}/regenerate-secret', [\App\Http\Controllers\Api\V1\WebhookController::class, 'regenerateSecret']);
+            Route::get('/', [\App\Http\Controllers\Api\V1\WebhookController::class, 'index'])
+                ->middleware('permission:management.webhooks.view');
+            Route::post('/', [\App\Http\Controllers\Api\V1\WebhookController::class, 'store'])
+                ->middleware('permission:management.webhooks.create');
+            Route::get('/{webhook}', [\App\Http\Controllers\Api\V1\WebhookController::class, 'show'])
+                ->middleware('permission:management.webhooks.view');
+            Route::put('/{webhook}', [\App\Http\Controllers\Api\V1\WebhookController::class, 'update'])
+                ->middleware('permission:management.webhooks.edit');
+            Route::patch('/{webhook}', [\App\Http\Controllers\Api\V1\WebhookController::class, 'update'])
+                ->middleware('permission:management.webhooks.edit');
+            Route::delete('/{webhook}', [\App\Http\Controllers\Api\V1\WebhookController::class, 'destroy'])
+                ->middleware('permission:management.webhooks.delete');
+            Route::get('/{webhook}/logs', [\App\Http\Controllers\Api\V1\WebhookController::class, 'logs'])
+                ->middleware('permission:management.webhooks.view');
+            Route::post('/{webhook}/test', [\App\Http\Controllers\Api\V1\WebhookController::class, 'test'])
+                ->middleware('permission:management.webhooks.edit');
+            Route::post('/{webhook}/regenerate-secret', [\App\Http\Controllers\Api\V1\WebhookController::class, 'regenerateSecret'])
+                ->middleware('permission:management.webhooks.edit');
         });
 
-        // Company Settings (Company Admin only)
+        // Company Settings
         Route::middleware('company_admin')->prefix('company')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Api\V1\CompanyController::class, 'show']);
-            Route::put('/', [\App\Http\Controllers\Api\V1\CompanyController::class, 'update']);
-            Route::get('/modules', [\App\Http\Controllers\Api\V1\CompanyController::class, 'modules']);
-            Route::post('/logo', [\App\Http\Controllers\Api\V1\CompanyController::class, 'uploadLogo']);
-            Route::delete('/logo', [\App\Http\Controllers\Api\V1\CompanyController::class, 'deleteLogo']);
+            Route::get('/', [\App\Http\Controllers\Api\V1\CompanyController::class, 'show'])
+                ->middleware('permission:management.company.view');
+            Route::put('/', [\App\Http\Controllers\Api\V1\CompanyController::class, 'update'])
+                ->middleware('permission:management.company.edit');
+            Route::get('/modules', [\App\Http\Controllers\Api\V1\CompanyController::class, 'modules'])
+                ->middleware('permission:management.company.view');
+            Route::post('/logo', [\App\Http\Controllers\Api\V1\CompanyController::class, 'uploadLogo'])
+                ->middleware('permission:management.company.edit');
+            Route::delete('/logo', [\App\Http\Controllers\Api\V1\CompanyController::class, 'deleteLogo'])
+                ->middleware('permission:management.company.edit');
 
-            // Settings
-            Route::get('/settings', [\App\Http\Controllers\Api\V1\CompanySettingsController::class, 'index']);
-            Route::put('/settings', [\App\Http\Controllers\Api\V1\CompanySettingsController::class, 'update']);
-            Route::post('/settings/smtp/test', [\App\Http\Controllers\Api\V1\CompanySettingsController::class, 'testSmtp']);
-            Route::post('/settings/sms/test', [\App\Http\Controllers\Api\V1\CompanySettingsController::class, 'testSms']);
+            Route::get('/settings', [\App\Http\Controllers\Api\V1\CompanySettingsController::class, 'index'])
+                ->middleware('permission:management.settings.view');
+            Route::put('/settings', [\App\Http\Controllers\Api\V1\CompanySettingsController::class, 'update'])
+                ->middleware('permission:management.settings.edit');
+            Route::post('/settings/smtp/test', [\App\Http\Controllers\Api\V1\CompanySettingsController::class, 'testSmtp'])
+                ->middleware('permission:management.settings.edit');
+            Route::post('/settings/sms/test', [\App\Http\Controllers\Api\V1\CompanySettingsController::class, 'testSms'])
+                ->middleware('permission:management.settings.edit');
         });
 
         // API Keys
         Route::middleware('company_admin')->prefix('api-keys')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Api\V1\ApiKeyController::class, 'index']);
-            Route::post('/', [\App\Http\Controllers\Api\V1\ApiKeyController::class, 'store']);
-            Route::get('/{id}', [\App\Http\Controllers\Api\V1\ApiKeyController::class, 'show']);
-            Route::put('/{id}', [\App\Http\Controllers\Api\V1\ApiKeyController::class, 'update']);
-            Route::delete('/{id}', [\App\Http\Controllers\Api\V1\ApiKeyController::class, 'destroy']);
-            Route::post('/{id}/regenerate', [\App\Http\Controllers\Api\V1\ApiKeyController::class, 'regenerate']);
+            Route::get('/', [\App\Http\Controllers\Api\V1\ApiKeyController::class, 'index'])
+                ->middleware('permission:management.api_keys.view');
+            Route::post('/', [\App\Http\Controllers\Api\V1\ApiKeyController::class, 'store'])
+                ->middleware('permission:management.api_keys.create');
+            Route::get('/{id}', [\App\Http\Controllers\Api\V1\ApiKeyController::class, 'show'])
+                ->middleware('permission:management.api_keys.view');
+            Route::put('/{id}', [\App\Http\Controllers\Api\V1\ApiKeyController::class, 'update'])
+                ->middleware('permission:management.api_keys.edit');
+            Route::delete('/{id}', [\App\Http\Controllers\Api\V1\ApiKeyController::class, 'destroy'])
+                ->middleware('permission:management.api_keys.delete');
+            Route::post('/{id}/regenerate', [\App\Http\Controllers\Api\V1\ApiKeyController::class, 'regenerate'])
+                ->middleware('permission:management.api_keys.edit');
         });
 
-        // Branches (Company Admin only)
+        // Branches
         Route::middleware('company_admin')->prefix('branches')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Api\V1\BranchController::class, 'index']);
-            Route::post('/', [\App\Http\Controllers\Api\V1\BranchController::class, 'store']);
-            Route::get('/{id}', [\App\Http\Controllers\Api\V1\BranchController::class, 'show']);
-            Route::put('/{id}', [\App\Http\Controllers\Api\V1\BranchController::class, 'update']);
-            Route::delete('/{id}', [\App\Http\Controllers\Api\V1\BranchController::class, 'destroy']);
-            Route::post('/{id}/set-headquarters', [\App\Http\Controllers\Api\V1\BranchController::class, 'setHeadquarters']);
-            Route::get('/{id}/employees', [\App\Http\Controllers\Api\V1\BranchController::class, 'employees']);
+            Route::get('/', [\App\Http\Controllers\Api\V1\BranchController::class, 'index'])
+                ->middleware('permission:management.branches.view');
+            Route::post('/', [\App\Http\Controllers\Api\V1\BranchController::class, 'store'])
+                ->middleware('permission:management.branches.create');
+            Route::get('/{id}', [\App\Http\Controllers\Api\V1\BranchController::class, 'show'])
+                ->middleware('permission:management.branches.view');
+            Route::put('/{id}', [\App\Http\Controllers\Api\V1\BranchController::class, 'update'])
+                ->middleware('permission:management.branches.edit');
+            Route::delete('/{id}', [\App\Http\Controllers\Api\V1\BranchController::class, 'destroy'])
+                ->middleware('permission:management.branches.delete');
+            Route::post('/{id}/set-headquarters', [\App\Http\Controllers\Api\V1\BranchController::class, 'setHeadquarters'])
+                ->middleware('permission:management.branches.edit');
+            Route::get('/{id}/employees', [\App\Http\Controllers\Api\V1\BranchController::class, 'employees'])
+                ->middleware('permission:management.branches.view');
         });
 
-        // Employees (Company Admin only)
+        // Employees
         Route::middleware('company_admin')->prefix('employees')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'index']);
-            Route::post('/', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'store']);
+            Route::get('/', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'index'])
+                ->middleware('permission:employees.list.view');
+            Route::post('/', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'store'])
+                ->middleware('permission:employees.list.create');
             Route::middleware('throttle:exports')->group(function () {
-                Route::get('/export', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'export']);
-                Route::post('/import', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'import']);
-                Route::get('/import/template', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'importTemplate']);
+                Route::get('/export', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'export'])
+                    ->middleware('permission:employees.list.export');
+                Route::post('/import', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'import'])
+                    ->middleware('permission:employees.list.import');
+                Route::get('/import/template', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'importTemplate'])
+                    ->middleware('permission:employees.list.import');
             });
-            Route::post('/bulk-update', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'bulkUpdate']);
-            Route::post('/bulk-delete', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'bulkDelete']);
-            Route::get('/departments', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'departments']);
-            Route::get('/managers', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'managers']);
-            Route::get('/custom-fields', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'getCustomFields']);
-            Route::get('/organization-chart', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'getOrganizationChart']);
-            Route::get('/stats', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'getStats']);
+            Route::post('/bulk-update', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'bulkUpdate'])
+                ->middleware('permission:employees.list.edit');
+            Route::post('/bulk-delete', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'bulkDelete'])
+                ->middleware('permission:employees.list.delete');
+            Route::get('/departments', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'departments'])
+                ->middleware('permission:employees.departments.view');
+            Route::get('/managers', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'managers'])
+                ->middleware('permission:employees.list.view');
+            Route::get('/custom-fields', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'getCustomFields'])
+                ->middleware('permission:employees.custom_fields.view');
+            Route::get('/organization-chart', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'getOrganizationChart'])
+                ->middleware('permission:employees.organization.view');
+            Route::get('/stats', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'getStats'])
+                ->middleware('permission:employees.list.view');
 
-            // BI Raporlama (MUST be before /{id} routes)
             Route::prefix('reports')->group(function () {
-                Route::get('/metadata', [\App\Http\Controllers\Api\V1\EmployeeReportController::class, 'metadata']);
+                Route::get('/metadata', [\App\Http\Controllers\Api\V1\EmployeeReportController::class, 'metadata'])
+                    ->middleware('permission:employees.reports.view');
                 Route::post('/data', [\App\Http\Controllers\Api\V1\EmployeeReportController::class, 'getData'])
-                    ->middleware('throttle:exports');
-                Route::get('/saved', [\App\Http\Controllers\Api\V1\EmployeeReportController::class, 'savedReports']);
-                Route::post('/saved', [\App\Http\Controllers\Api\V1\EmployeeReportController::class, 'saveReport']);
-                Route::put('/saved/{id}', [\App\Http\Controllers\Api\V1\EmployeeReportController::class, 'updateReport']);
-                Route::delete('/saved/{id}', [\App\Http\Controllers\Api\V1\EmployeeReportController::class, 'deleteReport']);
-                Route::post('/saved/{id}/favorite', [\App\Http\Controllers\Api\V1\EmployeeReportController::class, 'toggleFavorite']);
+                    ->middleware(['permission:employees.reports.view', 'throttle:exports']);
+                Route::get('/saved', [\App\Http\Controllers\Api\V1\EmployeeReportController::class, 'savedReports'])
+                    ->middleware('permission:employees.reports.view');
+                Route::post('/saved', [\App\Http\Controllers\Api\V1\EmployeeReportController::class, 'saveReport'])
+                    ->middleware('permission:employees.reports.view');
+                Route::put('/saved/{id}', [\App\Http\Controllers\Api\V1\EmployeeReportController::class, 'updateReport'])
+                    ->middleware('permission:employees.reports.view');
+                Route::delete('/saved/{id}', [\App\Http\Controllers\Api\V1\EmployeeReportController::class, 'deleteReport'])
+                    ->middleware('permission:employees.reports.view');
+                Route::post('/saved/{id}/favorite', [\App\Http\Controllers\Api\V1\EmployeeReportController::class, 'toggleFavorite'])
+                    ->middleware('permission:employees.reports.view');
                 Route::post('/export/excel', [\App\Http\Controllers\Api\V1\EmployeeReportController::class, 'exportExcel'])
-                    ->middleware('throttle:exports');
+                    ->middleware(['permission:employees.reports.export', 'throttle:exports']);
             });
 
-            // Dashboard (Çoklu Widget BI Dashboard - MUST be before /{id} routes)
             Route::prefix('dashboards')->group(function () {
-                Route::get('/', [\App\Http\Controllers\Api\V1\EmployeeDashboardController::class, 'index']);
-                Route::post('/', [\App\Http\Controllers\Api\V1\EmployeeDashboardController::class, 'store']);
-                Route::post('/widget-data', [\App\Http\Controllers\Api\V1\EmployeeDashboardController::class, 'getWidgetData']);
-                Route::get('/{dashboardId}', [\App\Http\Controllers\Api\V1\EmployeeDashboardController::class, 'show']);
-                Route::put('/{dashboardId}', [\App\Http\Controllers\Api\V1\EmployeeDashboardController::class, 'update']);
-                Route::delete('/{dashboardId}', [\App\Http\Controllers\Api\V1\EmployeeDashboardController::class, 'destroy']);
-                Route::post('/{dashboardId}/favorite', [\App\Http\Controllers\Api\V1\EmployeeDashboardController::class, 'toggleFavorite']);
+                Route::get('/', [\App\Http\Controllers\Api\V1\EmployeeDashboardController::class, 'index'])
+                    ->middleware('permission:employees.reports.view');
+                Route::post('/', [\App\Http\Controllers\Api\V1\EmployeeDashboardController::class, 'store'])
+                    ->middleware('permission:employees.reports.view');
+                Route::post('/widget-data', [\App\Http\Controllers\Api\V1\EmployeeDashboardController::class, 'getWidgetData'])
+                    ->middleware('permission:employees.reports.view');
+                Route::get('/{dashboardId}', [\App\Http\Controllers\Api\V1\EmployeeDashboardController::class, 'show'])
+                    ->middleware('permission:employees.reports.view');
+                Route::put('/{dashboardId}', [\App\Http\Controllers\Api\V1\EmployeeDashboardController::class, 'update'])
+                    ->middleware('permission:employees.reports.view');
+                Route::delete('/{dashboardId}', [\App\Http\Controllers\Api\V1\EmployeeDashboardController::class, 'destroy'])
+                    ->middleware('permission:employees.reports.view');
+                Route::post('/{dashboardId}/favorite', [\App\Http\Controllers\Api\V1\EmployeeDashboardController::class, 'toggleFavorite'])
+                    ->middleware('permission:employees.reports.view');
                 Route::get('/{dashboardId}/export/excel', [\App\Http\Controllers\Api\V1\EmployeeDashboardController::class, 'exportExcel'])
-                    ->middleware('throttle:exports');
+                    ->middleware(['permission:employees.reports.export', 'throttle:exports']);
             });
 
-            // Employee CRUD (/{id} routes MUST be AFTER specific routes)
-            Route::get('/{id}', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'show']);
-            Route::put('/{id}', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'update']);
-            Route::delete('/{id}', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'destroy']);
-            Route::post('/{id}/portal-access', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'createPortalAccess']);
-            Route::delete('/{id}/portal-access', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'revokePortalAccess']);
+            Route::get('/{id}', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'show'])
+                ->middleware('permission:employees.list.view');
+            Route::put('/{id}', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'update'])
+                ->middleware('permission:employees.list.edit');
+            Route::delete('/{id}', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'destroy'])
+                ->middleware('permission:employees.list.delete');
+            Route::post('/{id}/portal-access', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'createPortalAccess'])
+                ->middleware('permission:employees.list.edit');
+            Route::delete('/{id}/portal-access', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'revokePortalAccess'])
+                ->middleware('permission:employees.list.edit');
 
-            // Personel alt verileri
-            Route::get('/{id}/leaves', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'getLeaves']);
-            Route::get('/{id}/trainings', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'getTrainings']);
-            Route::get('/{id}/assets', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'getAssets']);
-            Route::get('/{id}/performance', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'getPerformance']);
-            Route::get('/{id}/activity', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'getActivity']);
+            Route::get('/{id}/leaves', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'getLeaves'])
+                ->middleware('permission:employees.list.view');
+            Route::get('/{id}/trainings', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'getTrainings'])
+                ->middleware('permission:employees.list.view');
+            Route::get('/{id}/assets', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'getAssets'])
+                ->middleware('permission:employees.list.view');
+            Route::get('/{id}/performance', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'getPerformance'])
+                ->middleware('permission:employees.list.view');
+            Route::get('/{id}/activity', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'getActivity'])
+                ->middleware('permission:employees.list.view');
 
-            // Personel belgeleri
-            Route::get('/{id}/documents', [\App\Http\Controllers\Api\V1\EmployeeDocumentController::class, 'index']);
-            Route::post('/{id}/documents', [\App\Http\Controllers\Api\V1\EmployeeDocumentController::class, 'store']);
-            Route::get('/{id}/documents/{docId}', [\App\Http\Controllers\Api\V1\EmployeeDocumentController::class, 'show']);
-            Route::put('/{id}/documents/{docId}', [\App\Http\Controllers\Api\V1\EmployeeDocumentController::class, 'update']);
-            Route::delete('/{id}/documents/{docId}', [\App\Http\Controllers\Api\V1\EmployeeDocumentController::class, 'destroy']);
-            Route::get('/{id}/documents/{docId}/download', [\App\Http\Controllers\Api\V1\EmployeeDocumentController::class, 'download']);
+            Route::get('/{id}/documents', [\App\Http\Controllers\Api\V1\EmployeeDocumentController::class, 'index'])
+                ->middleware('permission:employees.documents.view');
+            Route::post('/{id}/documents', [\App\Http\Controllers\Api\V1\EmployeeDocumentController::class, 'store'])
+                ->middleware('permission:employees.documents.create');
+            Route::get('/{id}/documents/{docId}', [\App\Http\Controllers\Api\V1\EmployeeDocumentController::class, 'show'])
+                ->middleware('permission:employees.documents.view');
+            Route::put('/{id}/documents/{docId}', [\App\Http\Controllers\Api\V1\EmployeeDocumentController::class, 'update'])
+                ->middleware('permission:employees.documents.edit');
+            Route::delete('/{id}/documents/{docId}', [\App\Http\Controllers\Api\V1\EmployeeDocumentController::class, 'destroy'])
+                ->middleware('permission:employees.documents.delete');
+            Route::get('/{id}/documents/{docId}/download', [\App\Http\Controllers\Api\V1\EmployeeDocumentController::class, 'download'])
+                ->middleware('permission:employees.documents.view');
         });
 
-        // Personel belge kategorileri ve süresi dolacak belgeler
         Route::middleware('company_admin')->prefix('employee-documents')->group(function () {
-            Route::get('/categories', [\App\Http\Controllers\Api\V1\EmployeeDocumentController::class, 'categories']);
-            Route::get('/expiring-soon', [\App\Http\Controllers\Api\V1\EmployeeDocumentController::class, 'expiringSoon']);
+            Route::get('/categories', [\App\Http\Controllers\Api\V1\EmployeeDocumentController::class, 'categories'])
+                ->middleware('permission:employees.documents.view');
+            Route::get('/expiring-soon', [\App\Http\Controllers\Api\V1\EmployeeDocumentController::class, 'expiringSoon'])
+                ->middleware('permission:employees.documents.view');
         });
 
-        // Departments (Departman Yönetimi)
+        // Departments
         Route::middleware('company_admin')->prefix('departments')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Api\V1\DepartmentController::class, 'index']);
-            Route::post('/', [\App\Http\Controllers\Api\V1\DepartmentController::class, 'store']);
-            Route::get('/managers', [\App\Http\Controllers\Api\V1\DepartmentController::class, 'getManagers']);
-            Route::get('/hierarchy', [\App\Http\Controllers\Api\V1\DepartmentController::class, 'getHierarchy']);
-            Route::get('/{id}', [\App\Http\Controllers\Api\V1\DepartmentController::class, 'show']);
-            Route::put('/{id}', [\App\Http\Controllers\Api\V1\DepartmentController::class, 'update']);
-            Route::delete('/{id}', [\App\Http\Controllers\Api\V1\DepartmentController::class, 'destroy']);
+            Route::get('/', [\App\Http\Controllers\Api\V1\DepartmentController::class, 'index'])
+                ->middleware('permission:employees.departments.view');
+            Route::post('/', [\App\Http\Controllers\Api\V1\DepartmentController::class, 'store'])
+                ->middleware('permission:employees.departments.create');
+            Route::get('/managers', [\App\Http\Controllers\Api\V1\DepartmentController::class, 'getManagers'])
+                ->middleware('permission:employees.departments.view');
+            Route::get('/hierarchy', [\App\Http\Controllers\Api\V1\DepartmentController::class, 'getHierarchy'])
+                ->middleware('permission:employees.departments.view');
+            Route::get('/{id}', [\App\Http\Controllers\Api\V1\DepartmentController::class, 'show'])
+                ->middleware('permission:employees.departments.view');
+            Route::put('/{id}', [\App\Http\Controllers\Api\V1\DepartmentController::class, 'update'])
+                ->middleware('permission:employees.departments.edit');
+            Route::delete('/{id}', [\App\Http\Controllers\Api\V1\DepartmentController::class, 'destroy'])
+                ->middleware('permission:employees.departments.delete');
         });
 
-        // Custom Fields (Company Admin only)
+        // Custom Fields (global admin UI)
         Route::middleware('company_admin')->prefix('custom-fields')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Api\V1\CustomFieldController::class, 'index']);
-            Route::post('/', [\App\Http\Controllers\Api\V1\CustomFieldController::class, 'store']);
-            Route::get('/field-types', [\App\Http\Controllers\Api\V1\CustomFieldController::class, 'getFieldTypes']);
-            Route::get('/entity-types', [\App\Http\Controllers\Api\V1\CustomFieldController::class, 'getEntityTypes']);
-            Route::post('/reorder', [\App\Http\Controllers\Api\V1\CustomFieldController::class, 'reorder']);
-            Route::get('/{id}', [\App\Http\Controllers\Api\V1\CustomFieldController::class, 'show']);
-            Route::put('/{id}', [\App\Http\Controllers\Api\V1\CustomFieldController::class, 'update']);
-            Route::delete('/{id}', [\App\Http\Controllers\Api\V1\CustomFieldController::class, 'destroy']);
+            Route::get('/', [\App\Http\Controllers\Api\V1\CustomFieldController::class, 'index'])
+                ->middleware('permission:management.custom_fields.view');
+            Route::post('/', [\App\Http\Controllers\Api\V1\CustomFieldController::class, 'store'])
+                ->middleware('permission:management.custom_fields.create');
+            Route::get('/field-types', [\App\Http\Controllers\Api\V1\CustomFieldController::class, 'getFieldTypes'])
+                ->middleware('permission:management.custom_fields.view');
+            Route::get('/entity-types', [\App\Http\Controllers\Api\V1\CustomFieldController::class, 'getEntityTypes'])
+                ->middleware('permission:management.custom_fields.view');
+            Route::post('/reorder', [\App\Http\Controllers\Api\V1\CustomFieldController::class, 'reorder'])
+                ->middleware('permission:management.custom_fields.edit');
+            Route::get('/{id}', [\App\Http\Controllers\Api\V1\CustomFieldController::class, 'show'])
+                ->middleware('permission:management.custom_fields.view');
+            Route::put('/{id}', [\App\Http\Controllers\Api\V1\CustomFieldController::class, 'update'])
+                ->middleware('permission:management.custom_fields.edit');
+            Route::delete('/{id}', [\App\Http\Controllers\Api\V1\CustomFieldController::class, 'destroy'])
+                ->middleware('permission:management.custom_fields.delete');
         });
 
         // Activity Logs — management.audit_logs (PermissionSeeder: underscore)
@@ -467,10 +593,24 @@ Route::prefix('v1')->group(function () {
         });
         // Onay İş Akışları (Workflow Engine)
         Route::middleware('company_admin')->prefix('workflows')->group(function () {
-            Route::get('/entity-types', [\App\Http\Controllers\Api\V1\Workflow\WorkflowController::class, 'getEntityTypes']);
-            Route::get('/approver-types', [\App\Http\Controllers\Api\V1\Workflow\WorkflowController::class, 'getApproverTypes']);
-            Route::get('/by-entity/{entityType}', [\App\Http\Controllers\Api\V1\Workflow\WorkflowController::class, 'getByEntityType']);
-            Route::apiResource('/', \App\Http\Controllers\Api\V1\Workflow\WorkflowController::class)->parameters(['' => 'workflow']);
+            Route::get('/entity-types', [\App\Http\Controllers\Api\V1\Workflow\WorkflowController::class, 'getEntityTypes'])
+                ->middleware('permission:management.workflows.view');
+            Route::get('/approver-types', [\App\Http\Controllers\Api\V1\Workflow\WorkflowController::class, 'getApproverTypes'])
+                ->middleware('permission:management.workflows.view');
+            Route::get('/by-entity/{entityType}', [\App\Http\Controllers\Api\V1\Workflow\WorkflowController::class, 'getByEntityType'])
+                ->middleware('permission:management.workflows.view');
+            Route::get('/', [\App\Http\Controllers\Api\V1\Workflow\WorkflowController::class, 'index'])
+                ->middleware('permission:management.workflows.view');
+            Route::post('/', [\App\Http\Controllers\Api\V1\Workflow\WorkflowController::class, 'store'])
+                ->middleware('permission:management.workflows.create');
+            Route::get('/{id}', [\App\Http\Controllers\Api\V1\Workflow\WorkflowController::class, 'show'])
+                ->middleware('permission:management.workflows.view');
+            Route::put('/{id}', [\App\Http\Controllers\Api\V1\Workflow\WorkflowController::class, 'update'])
+                ->middleware('permission:management.workflows.edit');
+            Route::patch('/{id}', [\App\Http\Controllers\Api\V1\Workflow\WorkflowController::class, 'update'])
+                ->middleware('permission:management.workflows.edit');
+            Route::delete('/{id}', [\App\Http\Controllers\Api\V1\Workflow\WorkflowController::class, 'destroy'])
+                ->middleware('permission:management.workflows.delete');
         });
 
         // Onay İşlemleri

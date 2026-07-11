@@ -57,8 +57,11 @@ class PermissionSeeder extends Seeder
                 'branches' => ['view', 'create', 'edit', 'delete'],
                 'audit_logs' => ['view', 'export'],
                 'settings' => ['view', 'edit'],
+                'company' => ['view', 'edit'],
                 'webhooks' => ['view', 'create', 'edit', 'delete'],
                 'api_keys' => ['view', 'create', 'edit', 'delete'],
+                'custom_fields' => ['view', 'create', 'edit', 'delete'],
+                'workflows' => ['view', 'create', 'edit', 'delete'],
             ],
 
             // Personel Modülü
@@ -297,8 +300,11 @@ class PermissionSeeder extends Seeder
                     'management.users.view', 'management.users.create', 'management.users.edit',
                     'management.roles.view',
                     'management.branches.view', 'management.branches.create', 'management.branches.edit',
-                    'management.settings.view',
+                    'management.settings.view', 'management.settings.edit',
+                    'management.company.view', 'management.company.edit',
                     'management.audit_logs.view',
+                    'management.custom_fields.view', 'management.custom_fields.create', 'management.custom_fields.edit',
+                    // api_keys / webhooks / workflows → yalnızca admin (company_admin / admin rolü)
 
                     // Personel - Tam yetki
                     'employees.*',
