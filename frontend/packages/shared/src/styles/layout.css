@@ -353,40 +353,76 @@
 }
 
 /* ====================================
-   PAGE HEADER
+   PAGE HEADER (tek satır şablon)
    ==================================== */
 .page-header {
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--card-gap);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 1rem;
+  flex-wrap: nowrap;
+  gap: var(--sp-3);
+  min-height: var(--control-height);
 }
 
 .page-header-content {
   display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  flex-direction: row;
+  align-items: baseline;
+  gap: var(--sp-3);
+  min-width: 0;
 }
 
 .page-title {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: var(--fs-page-title);
+  font-weight: var(--fw-page-title);
   color: var(--text-primary);
   margin: 0;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 .page-subtitle {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
+  font-size: var(--fs-caption);
+  color: var(--text-tertiary);
   margin: 0;
+  white-space: nowrap;
 }
 
 .page-header-actions {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--sp-2);
+  flex-shrink: 0;
+}
+
+/* Liste sayfası: yatay filtre şeridi */
+.list-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--card-gap);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--surface-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+}
+
+.list-filter-bar .list-filter-search {
+  flex: 1 1 200px;
+  min-width: 160px;
+  max-width: 320px;
+}
+
+.list-filter-advanced {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--sp-3);
+  padding-top: var(--sp-3);
+  margin-top: var(--sp-2);
+  border-top: 1px solid var(--border-primary);
 }
 
 /* Breadcrumb */
