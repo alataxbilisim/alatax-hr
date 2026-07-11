@@ -512,5 +512,214 @@ Dosya: `tests/Feature/PermissionEnforcementWave4Test.php`
 
 ### ENFORCEMENT TAMAMLANDI
 
-Modül + admin route grupları permission-korumalı. Kalanlar yukarıdaki bilinçli istisnalar.  
-Sonraki iş (Faz 2 devamı): Policy Adım 3, company_admin Gate bypass kaldırma + otomatik admin rolü.
+Modül + admin route grupları permission-korumalı. Kalanlar yukarıdaki bilinçli istisnalar.
+
+---
+
+## Policy + Data Scope Haritası (ADIM 1 — teşhis + strateji)
+
+**Tarih:** 11 Temmuz 2026 · **Uygulama yok** — harita + kararlar.
+
+### Teşhis özeti
+
+| Katman | Durum |
+|--------|--------|
+| Route permission (endpoint) | ✅ Dalga 0–4 |
+| Tenant (`BelongsToCompany` / `company_id`) | ✅ firma izolasyonu |
+| Laravel Policy (`app/Policies`) | ❌ **0 sınıf** |
+| `$this->authorize()` / model Policy | ❌ yok |
+| Kayıt seviyesi (own/team/department) | ❌ **yok** (nadir manuel filtreler hariç) |
+
+**Sonuç:** İzni olan kullanıcı, firma içindeki **tüm** ilgili kayıtlara erişebilir. Örnek: `leaves.requests.approve` → herhangi bir pending talebi onaylar (ekip kontrolü yok).
+
+### İlişki altyapısı (kapsam hesabı için)
+
+| Kaynak | Durum | Not |
+|--------|--------|-----|
+| `Employee.manager_id` → `employees` (self-ref) | ✅ | `manager()` / `subordinates()` var; **hiçbir controller enforce etmiyor** |
+| `Department.manager_id` | ⚠️ tutarsız | Migration/Model → `users`; Controller validasyon → `exists:employees,id` |
+| `Branch.manager_id` → `users` | ✅ | branch scope için kullanılabilir |
+| Spatie `roles` tablosu `scope` kolonu | ❌ | standart Spatie; `teams=false` |
+
+### Model → aksiyon → kapsam → mevcut durum → öneri
+
+| Model / yüzey | Aksiyon | Önerilen kapsam | Mevcut | Öncelik |
+|----------------|---------|-----------------|--------|---------|
+| **LeaveRequest** | `view` (index/show) | own / team / company | Tenant + permission; **tüm firma listesi** | P0 |
+| **LeaveRequest** | `approve` / `reject` | team (manager) veya workflow ataması; company (hr) | Sadece `pending` + permission; **manager kontrolü YOK**. `cancel` → own (manuel) | P0 |
+| **LeaveRequest** | Portal | own | ✅ `user_id` filtresi | — |
+| **Employee** | `view` list/show | team / department / company | Tüm firma + filtreler | P1 |
+| **Employee** | `update` / `delete` | company (HR); manager sınırlı edit? | Permission only | P1 / karar |
+| **Department** | view/update | department (yöneticisi) / company | Permission only; manager_id tutarsız | P2 |
+| **PerformanceReview** | view | own (çalışan) / reviewer / company | Admin: tüm firma; Portal: own ✅ | P1 |
+| **PerformanceReview** | approve | reviewer veya company | Permission only; `reviewer_id` zorunlu değil | P1 |
+| **OneOnOne** | CRUD | own (manager veya employee) | ✅ kısmen manuel (`manager_id` / `employee_id`) | referans desen |
+| **Document** (şirket) | view/download | company (+ ileride visibility) | Tüm firma (izinli) | P2 |
+| **EmployeeDocument** | portal | own + `visibleToEmployee` | ✅ | — |
+| **ExpenseClaim** | view/update | own (portal); approve → team/company | Portal own ✅; **HR admin API yok**; modelde `BelongsToCompany` **YOK** | P2 + bug |
+| **ApprovalRecord** | approve/reject | atanan onaycı / vekil | ✅ `WorkflowService::canApprove` | koru |
+| **ApprovalRecord** | pending/history | own | ✅ | koru |
+| **ApprovalRecord** | `getApprovalHistory` / `delegations` | company veya tighten | Geniş yüzey (company_id only) | P2 |
+| **JobApplication / Recruitment** | view | company (HR) | Permission + tenant | düşük (genelde company) |
+
+### İki onay dünyası (önemli)
+
+1. **Legacy:** `LeaveRequestController::approve` — permission + status; **atama/ekip yok**.
+2. **Workflow:** `approvals/*` + `WorkflowService::canApprove` — **atanan approver / vekalet**.
+
+Policy tasarımında: workflow kayıtları için mevcut `canApprove` korunmalı; legacy leave approve ya Policy (`team`) ile kısıtlanmalı ya da workflow’a taşınmalı (**karar noktası**).
+
+### Data scope modeli (öneri)
+
+**Seviyeler:** `own` → `team` → `department` → `branch` → `company` (üst küme altı kapsar).
+
+**Katmanlama:**
+
+```
+SuperAdmin (tüm tenant'lar)
+  └─ BelongsToCompany (firma)
+       └─ DataScope (own/team/department/branch/company)  ← YENİ
+            └─ Policy (tekil kayıt) + Query scope (liste)
+```
+
+**Öneri mimari (uygulama yok):**
+
+| Parça | Rol |
+|-------|-----|
+| Laravel **Policy** | `view` / `update` / `delete` / `approve` tekil kayıt |
+| **Query scope / ScopeService** | `index` — sadece kapsamdaki ID’ler |
+| `BelongsToCompany` | değişmez; DataScope onun altında |
+
+### Scope nasıl saklanır? — KARAR GEREKLİ
+
+| Seçenek | Artı | Eksi |
+|---------|------|------|
+| **A) `roles.data_scope` kolonu** (string enum) | Basit; rol = kapsam | Aynı rol farklı firmada farklı scope istenirse zor; migration |
+| **B) Config map** (`config/data_scope.php`: `hr_manager => company`) | Kod review kolay; hızlı deneme | DB’den yönetilmez; tenant özelleştirmesi yok |
+| **C) Permission suffix** (`leaves.requests.approve.team`) | Çok esnek | Permission patlaması; frontend/RBAC karmaşık |
+| **D) Pivot `role_company` / company_user settings** | Multi-tenant özelleştirme | Erken aşama için ağır |
+
+**Öneri (rapor):** **A + B hibrit** — varsayılanlar config’te; Spatie role’a nullable `data_scope` kolonu (yoksa config fallback). Permission’a scope gömmeyelim (C).
+
+Örnek varsayılan map:
+
+| Rol | Scope |
+|-----|-------|
+| `employee` | own |
+| `manager` | team |
+| `hr_specialist` | company (veya department — karar) |
+| `hr_manager` / `admin` | company |
+| `company_admin` type | company (bypass dönemi) |
+
+### Uygulama sırası (onay sonrası)
+
+1. **Kararlar kilitlensin** (aşağıdaki sorular).
+2. **Altyapı:** `DataScope` enum + resolver (`User` → scope) + `scopesFor(User)` (employee ID listesi).
+3. **P0 — LeaveRequestPolicy** + index query filter + approve Policy; feature test: manager kendi ekibi 200 / başka ekip 403 / hr_manager company 200.
+4. **P1 — EmployeePolicy** (view scope) + PerformanceReviewPolicy.
+5. **P2 — Document visibility, ExpenseClaim BelongsToCompany + approve, Approval history tighten, Department.manager_id düzeltmesi.**
+6. Gate::before `company_admin` bypass’ın Policy’ye etkisi netleştirilsin (şu an tüm Gate ability true — Policy’yi de bypass eder).
+
+### Test stratejisi (LeaveRequest P0)
+
+| Senaryo | Beklenen |
+|---------|----------|
+| manager, kendi `subordinates` leave → view/approve | 200 |
+| manager, başka ekip leave → view/approve | 403 |
+| hr_manager / company scope → tüm firma | 200 |
+| employee, başkasının leave show | 403 |
+| auth yok | 401 |
+| tenant dışı kayıt | 404/boş (BelongsToCompany) |
+
+### Bilinen teknik borç (Policy dalgasında işaretle)
+
+- `Department.manager_id`: User vs Employee tutarsızlığı.
+- `ExpenseClaim`: `BelongsToCompany` eksik.
+- Leave `myRequests` / `pendingApprovals` controller metotları route’suz (ölü kod).
+- Legacy leave approve vs Workflow çakışması.
+
+---
+
+### KARAR NOKTALARI (uygulama öncesi cevap bekleniyor)
+
+1. **Scope saklama:** A (rol kolonu) / B (config) / A+B hibrit / başka?
+2. **İlk model:** LeaveRequest (P0) mi, Employee (P1) mi?
+3. **Leave approve:** Policy ile `team` mi, yoksa sadece Workflow `canApprove` mi (legacy approve kapatılsın mı)?
+4. **`hr_specialist` varsayılan scope:** `company` mi `department` mi?
+5. **Gate::before company_admin bypass:** Policy’lerde de geçerli kalsın mı (geçici), yoksa Policy’de kayıt seviyesi admin’e de mi uygulansın?
+6. **Manager tanımı:** yalnızca `Employee.manager_id` zinciri mi, yoksa `Department.manager_id` da “department scope” için mi (önce User/Employee tutarsızlığı düzeltilsin mi)?
+
+---
+
+## Policy + Data Scope UYGULAMA — Dalga 1 (LeaveRequest)
+
+**Tarih:** 11 Temmuz 2026 · **Branch:** `faz2-rbac-audit`  
+**Kapsam:** Adım 0 (manager) + DataScope altyapısı + LeaveRequestPolicy. Diğer modeller sonraki dalgalar.
+
+### Kilitlenen kararlar
+
+| # | Karar |
+|---|--------|
+| 1 | Scope: **A+B hibrit** — `config/data-scope.php` defaults + `roles.data_scope` override |
+| 2 | İlk model: **LeaveRequest** |
+| 3 | Approve: Policy **team** + Workflow `canApprove`; legacy serbest approve **KAPALI** |
+| 4 | Defaults: admin/hr_manager=`company`, hr_specialist=`department`, manager=`team`, employee=`own` |
+| 5 | `company_admin` bypass **Gate::before**’da kalır (Policy’de ayrı bypass yok) |
+| 6 | Team = **Employee.manager_id** subordinates |
+
+### Adım 0 — Manager ilişkisi
+
+| Kaynak | Şema (gerçek) | Kullanım |
+|--------|---------------|----------|
+| `Employee.manager_id` | → `employees` (self-ref) | **team scope** kaynağı |
+| `Department.manager_id` | → `users` | Departman yöneticisi User; **team hesabına girmez** |
+
+**Tutarsızlık:** Controller `exists:employees,id` + Employee lookup yazıyordu; FK `users`.  
+**Düzeltme (küçük):** validation → `exists:users,id`; index/show User eager load. FK değiştirilmedi (büyük şema yok).
+
+**Tanımlar:**
+- **team** = actor’ün `Employee` kaydı → `subordinates` → onların `user_id` (+ kendi)
+- **department** = aynı `Employee.department_id` personellerinin `user_id`
+- **branch** = CHECK’te var; Employee’de `branch_id` yok → LeaveRequest için boş küme (ileride)
+
+### Adım 1 — DataScope altyapısı
+
+| Parça | Dosya |
+|-------|--------|
+| Enum | `app/Enums/DataScopeLevel.php` (`own\|team\|department\|branch\|company`) |
+| Config | `config/data-scope.php` |
+| Migration | `2026_07_11_000001_add_data_scope_to_roles_table.php` (nullable string + CHECK) |
+| Servis | `app/Services/DataScopeService.php` — `resolve`, `scopeForUser`, `allowsUserId`, `isDirectSubordinate` |
+| Unit | `tests/Unit/Services/DataScopeServiceTest.php` (8 test) |
+
+Çoklu rol → **en geniş** kapsam. Rol yok → `own`.
+
+### Adım 2 — LeaveRequest Policy
+
+| Parça | Dosya |
+|-------|--------|
+| Policy | `app/Policies/LeaveRequestPolicy.php` — viewAny/view/update/delete/approve |
+| Controller | `authorize()` + index `DataScope::scopeForUser`; reject de `approve` |
+| Workflow | `WorkflowService::canApprove` **public** |
+| BaseController | `AuthorizesRequests` trait |
+
+**approve kuralı:**
+1. `company` scope → evet
+2. Aktif workflow `ApprovalRecord` varsa → `canApprove`
+3. Yoksa: `team` → doğrudan subordinate; `department` → aynı dept (kendi hariç)
+4. Aksi → **hayır** (legacy kapalı)
+
+### Test sonuçları
+
+| Suite | Sonuç |
+|-------|--------|
+| DataScope unit | 8 passed |
+| LeaveRequestPolicyDataScope feature | 7 passed (manager başka ekip **403** kritik) |
+| Tam `php artisan test` | **118 passed**, 1 risky (`RouteComprehensiveTest`) |
+
+Kritik kanıt: `test_manager_cannot_see_or_approve_other_team_leave` → liste yok + show/approve **403**.  
+Kritik kanıt: `test_permission_alone_without_team_cannot_approve_legacy_closed` → sadece permission ile onay **403**.
+
+### Sonraki dalgalar (bu PR dışı)
+
+Employee, ExpenseClaim (`BelongsToCompany`), PerformanceReview, Document visibility…

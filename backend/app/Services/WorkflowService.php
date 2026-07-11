@@ -171,7 +171,7 @@ class WorkflowService
     /**
      * Kullanıcının onaylama yetkisi var mı?
      */
-    protected function canApprove(ApprovalRecord $record, int $userId): bool
+    public function canApprove(ApprovalRecord $record, int $userId): bool
     {
         if ($record->status !== ApprovalRecord::STATUS_PENDING) {
             return false;

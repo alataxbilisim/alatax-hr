@@ -265,6 +265,7 @@ class PermissionEnforcementWave2Test extends TestCase
 
         $approver = $this->makeUser(UserType::User);
         $approver->givePermissionTo('leaves.requests.approve');
+        $approver->assignRole(\Spatie\Permission\Models\Role::findOrCreate('hr_manager', 'sanctum'));
         Sanctum::actingAs($approver);
 
         $this->postJson("/api/v1/leaves/requests/{$leaveRequest->id}/approve")->assertStatus(200);
