@@ -1292,7 +1292,7 @@ Saf create/update/delete manuel loglar kaldırıldı; özel olaylarda `withoutAu
 |-------|--------|
 | `AuditWave2Test` | **10 passed** |
 | Tam suite | **166 passed**, 1 risky |
-| CI | push sonrası |
+| CI | **yeşil** — [run 29159043569](https://github.com/alataxbilisim/alatax-hr/actions/runs/29159043569) |
 
 ### AUDIT v2 TAMAMLANDI mı?
 
