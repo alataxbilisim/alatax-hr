@@ -24,8 +24,8 @@ return new class extends Migration
             // Ayarlar
             $table->boolean('requires_approval')->default(true);
             $table->boolean('requires_attachment')->default(false);
-            $table->json('approval_flow')->nullable(); // Onay akışı
-            $table->json('form_fields')->nullable(); // Özel form alanları
+            $table->jsonb('approval_flow')->nullable(); // Onay akışı
+            $table->jsonb('form_fields')->nullable(); // Özel form alanları
 
             $table->boolean('is_active')->default(true);
             $table->integer('sort_order')->default(0);
@@ -47,14 +47,14 @@ return new class extends Migration
             // Talep içeriği
             $table->string('title');
             $table->text('description')->nullable();
-            $table->json('form_data')->nullable(); // Özel form verileri
+            $table->jsonb('form_data')->nullable(); // Özel form verileri
 
             // Durum
             $table->string('status')->default('pending'); // pending, in_review, approved, rejected, cancelled
             $table->text('rejection_reason')->nullable();
 
             // Ekler
-            $table->json('attachments')->nullable();
+            $table->jsonb('attachments')->nullable();
 
             // Onay bilgileri
             $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('set null');

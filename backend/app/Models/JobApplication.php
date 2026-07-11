@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\JobApplicationStatus;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -43,6 +44,7 @@ class JobApplication extends Model
         'form_data' => 'array',
         'tags' => 'array',
         'rating' => 'integer',
+        'status' => JobApplicationStatus::class,
     ];
 
     protected $appends = ['full_name'];

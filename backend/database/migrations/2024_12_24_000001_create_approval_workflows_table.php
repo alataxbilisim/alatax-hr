@@ -20,7 +20,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->boolean('is_active')->default(true);
             $table->boolean('is_default')->default(false); // Varsayılan akış mı?
-            $table->json('conditions')->nullable(); // Koşullar: gün sayısı, tutar vb.
+            $table->jsonb('conditions')->nullable(); // Koşullar: gün sayısı, tutar vb.
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
             $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
@@ -35,21 +35,13 @@ return new class extends Migration
             $table->foreignId('approval_workflow_id')->constrained()->onDelete('cascade');
             $table->integer('step_order'); // Adım sırası
             $table->string('name'); // Adım adı
-            $table->enum('approver_type', [
-                'direct_manager',     // Direkt yönetici
-                'department_head',    // Departman yöneticisi
-                'specific_user',      // Belirli kullanıcı
-                'specific_role',      // Belirli rol
-                'hr',                 // İK departmanı
-                'cfo',                // Finans müdürü
-                'ceo',                 // Genel müdür
-            ]);
+            \App\Support\PortableEnum::column($table, 'approver_type', ['direct_manager', 'department_head', 'specific_user', 'specific_role', 'hr', 'cfo', 'ceo'], null, false, 64, null);
             $table->foreignId('specific_user_id')->nullable()->constrained('users')->onDelete('set null');
             $table->string('specific_role')->nullable(); // Spatie rol adı
             $table->boolean('is_required')->default(true); // Zorunlu mu?
             $table->boolean('can_skip')->default(false); // Atlanabilir mi?
             $table->integer('timeout_hours')->nullable(); // Otomatik escalation süresi
-            $table->enum('timeout_action', ['escalate', 'auto_approve', 'auto_reject'])->nullable();
+            \App\Support\PortableEnum::column($table, 'timeout_action', ['escalate', 'auto_approve', 'auto_reject'], null, true, 64, null);
             $table->timestamps();
 
             $table->index(['approval_workflow_id', 'step_order']);
@@ -63,7 +55,7 @@ return new class extends Migration
             $table->foreignId('approval_step_id')->constrained()->onDelete('cascade');
             $table->morphs('approvable'); // leave_request, asset_request vb.
             $table->foreignId('approver_id')->nullable()->constrained('users')->onDelete('set null');
-            $table->enum('status', ['pending', 'approved', 'rejected', 'skipped', 'escalated'])->default('pending');
+            \App\Support\PortableEnum::column($table, 'status', ['pending', 'approved', 'rejected', 'skipped', 'escalated'], 'pending', false, 64, null);
             $table->text('comment')->nullable();
             $table->timestamp('decided_at')->nullable();
             $table->integer('step_order');
@@ -92,6 +84,7 @@ return new class extends Migration
 
             $table->index(['company_id', 'delegator_id', 'start_date', 'end_date'], 'approval_delegations_idx');
         });
+            \App\Support\PortableEnum::flushChecks();
     }
 
     /**

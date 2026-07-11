@@ -17,8 +17,8 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->text('description')->nullable();
-            $table->json('widgets'); // Widget dizisi: id, type, config, layout (x, y, w, h), title, notes, labels
-            $table->json('layout_config')->nullable(); // Grid ayarları: cols, rowHeight, etc.
+            $table->jsonb('widgets'); // Widget dizisi: id, type, config, layout (x, y, w, h), title, notes, labels
+            $table->jsonb('layout_config')->nullable(); // Grid ayarları: cols, rowHeight, etc.
             $table->boolean('is_favorite')->default(false);
             $table->boolean('is_shared')->default(false);
             $table->integer('sort_order')->default(0);

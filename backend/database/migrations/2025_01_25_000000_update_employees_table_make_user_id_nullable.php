@@ -171,7 +171,7 @@ return new class extends Migration
             $table->string('termination_reason')->nullable();
 
             $table->text('notes')->nullable();
-            $table->json('custom_fields')->nullable();
+            $table->jsonb('custom_fields')->nullable();
 
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
             $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('set null');
@@ -235,7 +235,7 @@ return new class extends Migration
             $table->date('termination_date')->nullable();
             $table->string('termination_reason')->nullable();
             $table->text('notes')->nullable();
-            $table->json('custom_fields')->nullable();
+            $table->jsonb('custom_fields')->nullable();
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
             $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();

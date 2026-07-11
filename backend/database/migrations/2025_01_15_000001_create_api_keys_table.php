@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('key', 64)->unique();
             $table->text('description')->nullable();
-            $table->json('permissions')->nullable(); // İzinler (opsiyonel)
+            $table->jsonb('permissions')->nullable(); // İzinler (opsiyonel)
             $table->timestamp('last_used_at')->nullable();
             $table->timestamp('expires_at')->nullable();
             $table->boolean('is_active')->default(true);

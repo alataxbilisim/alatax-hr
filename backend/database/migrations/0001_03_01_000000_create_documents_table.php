@@ -21,7 +21,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->unsignedInteger('version')->default(1);
             $table->foreignId('uploaded_by')->nullable()->constrained('users')->onDelete('set null');
-            $table->json('metadata')->nullable();
+            $table->jsonb('metadata')->nullable();
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
             $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();

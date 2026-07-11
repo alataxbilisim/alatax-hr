@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\UserType;
 use App\Notifications\ResetPasswordNotification;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -55,6 +56,7 @@ class User extends Authenticatable
             'is_active' => 'boolean',
             'last_login_at' => 'datetime',
             'preferences' => 'array',
+            'type' => UserType::class,
         ];
     }
 
@@ -95,7 +97,7 @@ class User extends Authenticatable
      */
     public function isSuperAdmin(): bool
     {
-        return $this->type === 'super_admin';
+        return $this->type === UserType::SuperAdmin;
     }
 
     /**
@@ -103,7 +105,7 @@ class User extends Authenticatable
      */
     public function isCompanyAdmin(): bool
     {
-        return $this->type === 'company_admin';
+        return $this->type === UserType::CompanyAdmin;
     }
 
     /**
@@ -111,7 +113,7 @@ class User extends Authenticatable
      */
     public function isUser(): bool
     {
-        return $this->type === 'user';
+        return $this->type === UserType::User;
     }
 
     /**

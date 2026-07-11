@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\CompanyPackageType;
+use App\Enums\CompanyStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -56,6 +58,8 @@ class Company extends Model
         'location_count' => 'integer',
         'location_limit' => 'integer',
         'employee_limit' => 'integer',
+        'status' => CompanyStatus::class,
+        'package_type' => CompanyPackageType::class,
     ];
 
     /**
@@ -167,7 +171,7 @@ class Company extends Model
      */
     public function isActive(): bool
     {
-        return $this->status === 'active';
+        return $this->status === CompanyStatus::Active;
     }
 
     /**
@@ -175,7 +179,7 @@ class Company extends Model
      */
     public function isTrialExpired(): bool
     {
-        if ($this->status !== 'trial') {
+        if ($this->status !== CompanyStatus::Trial) {
             return false;
         }
 

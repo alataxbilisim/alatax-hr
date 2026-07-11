@@ -18,13 +18,13 @@ return new class extends Migration
             $table->text('responsibilities')->nullable();
             $table->string('department')->nullable();
             $table->string('location')->nullable();
-            $table->enum('employment_type', ['full_time', 'part_time', 'contract', 'internship', 'remote'])->default('full_time');
-            $table->enum('experience_level', ['entry', 'mid', 'senior', 'lead', 'manager'])->default('mid');
+            \App\Support\PortableEnum::column($table, 'employment_type', ['full_time', 'part_time', 'contract', 'internship', 'remote'], 'full_time', false, 64, null);
+            \App\Support\PortableEnum::column($table, 'experience_level', ['entry', 'mid', 'senior', 'lead', 'manager'], 'mid', false, 64, null);
             $table->decimal('salary_min', 10, 2)->nullable();
             $table->decimal('salary_max', 10, 2)->nullable();
             $table->boolean('salary_visible')->default(false);
             $table->foreignId('form_id')->nullable()->constrained('application_forms')->nullOnDelete();
-            $table->enum('status', ['draft', 'active', 'paused', 'closed'])->default('draft');
+            \App\Support\PortableEnum::column($table, 'status', ['draft', 'active', 'paused', 'closed'], 'draft', false, 64, null);
             $table->integer('positions_count')->default(1);
             $table->date('application_deadline')->nullable();
             $table->timestamp('published_at')->nullable();
@@ -33,6 +33,7 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
         });
+            \App\Support\PortableEnum::flushChecks();
     }
 
     public function down(): void

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\GenderRestriction;
 use App\Traits\BelongsToCompany;
 use App\Traits\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -34,6 +35,7 @@ class LeaveType extends Model
         'requires_document' => 'boolean',
         'is_active' => 'boolean',
         'approval_flow' => 'array',
+        'gender_restriction' => GenderRestriction::class,
     ];
 
     // Relationships

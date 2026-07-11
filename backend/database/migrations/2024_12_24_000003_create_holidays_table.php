@@ -18,12 +18,7 @@ return new class extends Migration
             $table->string('name');
             $table->date('date');
             $table->date('end_date')->nullable(); // Çok günlük tatiller için
-            $table->enum('type', [
-                'national',     // Ulusal resmi tatil
-                'religious',    // Dini bayram
-                'company',      // Şirket özel tatili
-                'regional',      // Bölgesel tatil
-            ])->default('national');
+            \App\Support\PortableEnum::column($table, 'type', ['national', 'religious', 'company', 'regional'], 'national', false, 64, null);
             $table->string('country_code', 2)->default('TR');
             $table->boolean('is_recurring')->default(false); // Her yıl tekrar eder mi?
             $table->boolean('is_half_day')->default(false); // Yarım gün mü?
@@ -48,7 +43,7 @@ return new class extends Migration
                 $table->integer('current_step')->nullable()->after('approval_workflow_id');
             }
             if (! Schema::hasColumn('leave_requests', 'workflow_status')) {
-                $table->enum('workflow_status', ['pending', 'in_progress', 'completed', 'rejected'])->default('pending')->after('current_step');
+                \App\Support\PortableEnum::column($table, 'workflow_status', ['pending', 'in_progress', 'completed', 'rejected'], 'pending', false, 64, 'current_step');
             }
         });
 
@@ -80,6 +75,7 @@ return new class extends Migration
                 $table->date('carryover_expiry')->nullable()->after('expired');
             }
         });
+            \App\Support\PortableEnum::flushChecks();
     }
 
     /**

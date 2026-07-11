@@ -140,7 +140,7 @@ class AssetController extends BaseController
     {
         $asset = Asset::where('company_id', $this->getCompanyId())->findOrFail($id);
 
-        if ($asset->status === 'assigned') {
+        if ($asset->status === \App\Enums\AssetStatus::Assigned) {
             return $this->error('Zimmetli varlık silinemez. Önce iade alınmalıdır.', 422);
         }
 

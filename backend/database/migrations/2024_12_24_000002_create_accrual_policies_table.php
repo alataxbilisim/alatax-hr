@@ -20,13 +20,7 @@ return new class extends Migration
             $table->text('description')->nullable();
 
             // Birikim tipi
-            $table->enum('accrual_type', [
-                'annual',       // Yılbaşında tamamı
-                'monthly',      // Aylık birikim
-                'per_pay_period', // Her maaş döneminde
-                'hourly',       // Saat bazlı
-                'custom',        // Özel formül
-            ])->default('annual');
+            \App\Support\PortableEnum::column($table, 'accrual_type', ['annual', 'monthly', 'per_pay_period', 'hourly', 'custom'], 'annual', false, 64, null);
 
             // Birikim miktarı
             $table->decimal('accrual_rate', 8, 2); // Aylık veya dönemlik miktar
@@ -34,7 +28,7 @@ return new class extends Migration
             $table->decimal('min_balance', 8, 2)->default(0); // Negatif bakiye izni
 
             // Kıdem bazlı artış
-            $table->json('tenure_rules')->nullable(); // [{years: 1, days: 14}, {years: 5, days: 18}]
+            $table->jsonb('tenure_rules')->nullable(); // [{years: 1, days: 14}, {years: 5, days: 18}]
 
             // Devir kuralları
             $table->boolean('allow_carryover')->default(true);
@@ -68,15 +62,7 @@ return new class extends Migration
             $table->foreignId('accrual_policy_id')->nullable()->constrained()->onDelete('set null');
             $table->foreignId('leave_balance_id')->nullable()->constrained()->onDelete('set null');
 
-            $table->enum('type', [
-                'accrual',          // Hakediş
-                'usage',            // Kullanım
-                'adjustment',       // Manuel düzeltme
-                'carryover',        // Devir
-                'expiry',           // Süresi dolma
-                'encashment',       // Nakde çevirme
-                'initial_grant',     // İlk atama
-            ]);
+            \App\Support\PortableEnum::column($table, 'type', ['accrual', 'usage', 'adjustment', 'carryover', 'expiry', 'encashment', 'initial_grant'], null, false, 64, null);
 
             $table->decimal('amount', 8, 2); // + veya - değer
             $table->decimal('balance_before', 8, 2);
@@ -91,6 +77,7 @@ return new class extends Migration
             $table->index(['company_id', 'user_id', 'leave_type_id']);
             $table->index(['effective_date']);
         });
+            \App\Support\PortableEnum::flushChecks();
     }
 
     /**

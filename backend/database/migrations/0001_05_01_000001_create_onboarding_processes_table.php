@@ -20,7 +20,7 @@ return new class extends Migration
             $table->date('start_date');
             $table->date('target_end_date')->nullable();
             $table->date('actual_end_date')->nullable();
-            $table->enum('status', ['pending', 'in_progress', 'completed', 'cancelled'])->default('pending');
+            \App\Support\PortableEnum::column($table, 'status', ['pending', 'in_progress', 'completed', 'cancelled'], 'pending', false, 64, null);
             $table->integer('progress')->default(0); // 0-100 yüzde
             $table->text('notes')->nullable();
             $table->foreignId('assigned_to')->nullable()->constrained('users')->onDelete('set null'); // İK sorumlusu
@@ -29,6 +29,7 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
         });
+            \App\Support\PortableEnum::flushChecks();
     }
 
     /**

@@ -36,8 +36,8 @@ return new class extends Migration
             $table->integer('sort_order')->default(0); // Sıralama
 
             // Ek ayarlar
-            $table->json('settings')->nullable(); // JSON - ek özellikler
-            $table->json('features')->nullable(); // JSON - özellik listesi (UI için)
+            $table->jsonb('settings')->nullable(); // JSON - ek özellikler
+            $table->jsonb('features')->nullable(); // JSON - özellik listesi (UI için)
 
             // Audit (foreign key'ler users tablosu oluşturulduktan sonra eklenecek)
             $table->unsignedBigInteger('created_by')->nullable();

@@ -24,20 +24,10 @@ return new class extends Migration
             $table->string('cv_original_name')->nullable();
 
             // Form verileri
-            $table->json('form_data')->nullable();
+            $table->jsonb('form_data')->nullable();
 
             // Durum
-            $table->enum('status', [
-                'new',
-                'reviewing',
-                'shortlisted',
-                'interview_scheduled',
-                'interviewed',
-                'offer_sent',
-                'hired',
-                'rejected',
-                'withdrawn',
-            ])->default('new');
+            \App\Support\PortableEnum::column($table, 'status', ['new', 'reviewing', 'shortlisted', 'interview_scheduled', 'interviewed', 'offer_sent', 'hired', 'rejected', 'withdrawn'], 'new', false, 64, null);
 
             // Değerlendirme
             $table->integer('rating')->nullable(); // 1-5
@@ -62,6 +52,7 @@ return new class extends Migration
             $table->index(['company_id', 'status']);
             $table->index(['job_position_id', 'status']);
         });
+            \App\Support\PortableEnum::flushChecks();
     }
 
     public function down(): void

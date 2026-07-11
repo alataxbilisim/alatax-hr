@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('department')->nullable(); // Departman
 
             // Kullanıcı tipi
-            $table->enum('type', ['super_admin', 'company_admin', 'user'])->default('user');
+            \App\Support\PortableEnum::column($table, 'type', ['super_admin', 'company_admin', 'user'], 'user', false, 64, null);
 
             // Kimlik doğrulama
             $table->timestamp('email_verified_at')->nullable();
@@ -40,7 +40,7 @@ return new class extends Migration
             $table->string('last_login_ip')->nullable();
 
             // Tercihler
-            $table->json('preferences')->nullable(); // UI tercihleri (tema, dil vb.)
+            $table->jsonb('preferences')->nullable(); // UI tercihleri (tema, dil vb.)
 
             // Audit
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
@@ -68,6 +68,7 @@ return new class extends Migration
             $table->longText('payload');
             $table->integer('last_activity')->index();
         });
+            \App\Support\PortableEnum::flushChecks();
     }
 
     /**

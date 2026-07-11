@@ -20,7 +20,7 @@ return new class extends Migration
             $table->date('end_date');
             $table->decimal('total_days', 5, 2);
             $table->text('reason')->nullable();
-            $table->enum('status', ['pending', 'approved', 'rejected', 'cancelled'])->default('pending');
+            \App\Support\PortableEnum::column($table, 'status', ['pending', 'approved', 'rejected', 'cancelled'], 'pending', false, 64, null);
             $table->string('document_path')->nullable();
             $table->string('document_name')->nullable();
 
@@ -41,6 +41,7 @@ return new class extends Migration
 
             $table->index(['company_id', 'user_id', 'start_date', 'end_date']);
         });
+            \App\Support\PortableEnum::flushChecks();
     }
 
     /**

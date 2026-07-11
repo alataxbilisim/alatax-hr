@@ -19,14 +19,15 @@ return new class extends Migration
             $table->date('assigned_date');
             $table->date('return_date')->nullable();
             $table->text('notes')->nullable();
-            $table->enum('condition_at_assignment', ['new', 'good', 'fair', 'poor'])->nullable();
-            $table->enum('condition_at_return', ['good', 'fair', 'poor', 'broken'])->nullable();
+            \App\Support\PortableEnum::column($table, 'condition_at_assignment', ['new', 'good', 'fair', 'poor'], null, true, 64, null);
+            \App\Support\PortableEnum::column($table, 'condition_at_return', ['good', 'fair', 'poor', 'broken'], null, true, 64, null);
             $table->foreignId('assigned_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('returned_to')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
 
             $table->index(['asset_id', 'user_id']);
         });
+            \App\Support\PortableEnum::flushChecks();
     }
 
     /**

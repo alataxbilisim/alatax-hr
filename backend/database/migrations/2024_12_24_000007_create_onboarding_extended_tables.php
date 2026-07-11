@@ -39,8 +39,8 @@ return new class extends Migration
             $table->string('name'); // "30 Gün Değerlendirme"
             $table->integer('day_number'); // 30, 60, 90
             $table->text('description')->nullable();
-            $table->json('checklist')->nullable(); // Kontrol listesi
-            $table->json('evaluation_criteria')->nullable(); // Değerlendirme kriterleri
+            $table->jsonb('checklist')->nullable(); // Kontrol listesi
+            $table->jsonb('evaluation_criteria')->nullable(); // Değerlendirme kriterleri
 
             $table->boolean('requires_meeting')->default(true);
             $table->boolean('requires_feedback')->default(true);
@@ -57,13 +57,13 @@ return new class extends Migration
             $table->foreignId('onboarding_milestone_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade'); // Çalışan
 
-            $table->enum('status', ['pending', 'scheduled', 'completed', 'skipped'])->default('pending');
+            \App\Support\PortableEnum::column($table, 'status', ['pending', 'scheduled', 'completed', 'skipped'], 'pending', false, 64, null);
             $table->date('due_date');
             $table->datetime('completed_at')->nullable();
 
             // Değerlendirme
-            $table->json('checklist_responses')->nullable();
-            $table->json('evaluation_scores')->nullable();
+            $table->jsonb('checklist_responses')->nullable();
+            $table->jsonb('evaluation_scores')->nullable();
             $table->text('employee_feedback')->nullable();
             $table->text('manager_feedback')->nullable();
             $table->integer('overall_rating')->nullable(); // 1-5
@@ -84,7 +84,7 @@ return new class extends Migration
 
             $table->date('start_date');
             $table->date('end_date')->nullable();
-            $table->enum('status', ['active', 'completed', 'cancelled'])->default('active');
+            \App\Support\PortableEnum::column($table, 'status', ['active', 'completed', 'cancelled'], 'active', false, 64, null);
             $table->text('notes')->nullable();
 
             $table->foreignId('assigned_by')->nullable()->constrained('users')->onDelete('set null');
@@ -101,7 +101,7 @@ return new class extends Migration
 
             $table->integer('max_mentees')->default(3);
             $table->integer('current_mentees')->default(0);
-            $table->json('expertise_areas')->nullable();
+            $table->jsonb('expertise_areas')->nullable();
             $table->boolean('is_available')->default(true);
 
             $table->timestamps();
@@ -116,9 +116,9 @@ return new class extends Migration
             $table->foreignId('onboarding_process_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
 
-            $table->enum('survey_type', ['week_1', 'week_4', 'month_3', 'exit'])->default('month_3');
+            \App\Support\PortableEnum::column($table, 'survey_type', ['week_1', 'week_4', 'month_3', 'exit'], 'month_3', false, 64, null);
             $table->integer('nps_score')->nullable(); // 0-10
-            $table->json('responses')->nullable();
+            $table->jsonb('responses')->nullable();
             $table->text('additional_comments')->nullable();
 
             $table->datetime('sent_at')->nullable();
@@ -135,6 +135,7 @@ return new class extends Migration
             $table->datetime('first_day')->nullable()->after('preboarding_started_at');
             $table->foreignId('buddy_id')->nullable()->after('first_day')->constrained('users')->nullOnDelete();
         });
+            \App\Support\PortableEnum::flushChecks();
     }
 
     /**

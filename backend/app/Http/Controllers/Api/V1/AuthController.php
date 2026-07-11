@@ -48,7 +48,7 @@ class AuthController extends BaseController
                 return $this->error('Hesabınız bir firmaya bağlı değil.', 403);
             }
 
-            if (! $user->company->isActive() && ! $user->company->status === 'trial') {
+            if (! in_array($user->company->status, [\App\Enums\CompanyStatus::Active, \App\Enums\CompanyStatus::Trial], true)) {
                 return $this->error('Firma hesabınız aktif değil. Lütfen yöneticinizle iletişime geçin.', 403);
             }
 

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->string('name'); // Yazılımcı Onboarding, Satış Onboarding vb.
             $table->text('description')->nullable();
-            $table->json('tasks'); // Görev listesi
+            $table->jsonb('tasks'); // Görev listesi
             $table->integer('estimated_days')->default(7); // Tahmini süre
             $table->boolean('is_active')->default(true);
             $table->boolean('is_default')->default(false);

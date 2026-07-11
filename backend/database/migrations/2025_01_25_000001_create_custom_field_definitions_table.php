@@ -20,13 +20,13 @@ return new class extends Migration
             $table->string('field_key'); // Unique key for the field (e.g., 'blood_type', 'driver_license')
             $table->string('field_label'); // Display label
             $table->string('field_type'); // text, number, date, select, checkbox, radio, textarea, file, email, phone, url
-            $table->json('field_options')->nullable(); // For select/radio/checkbox: [{value: 'A+', label: 'A Pozitif'}]
+            $table->jsonb('field_options')->nullable(); // For select/radio/checkbox: [{value: 'A+', label: 'A Pozitif'}]
 
             // Validation
             $table->boolean('is_required')->default(false);
             $table->boolean('is_active')->default(true);
             $table->integer('sort_order')->default(0);
-            $table->json('validation_rules')->nullable(); // ['min:3', 'max:100', 'regex:/pattern/']
+            $table->jsonb('validation_rules')->nullable(); // ['min:3', 'max:100', 'regex:/pattern/']
 
             // Metadata
             $table->string('placeholder')->nullable();

@@ -38,7 +38,7 @@ return new class extends Migration
             $table->text('description')->nullable();
 
             // Uygulanacak kapsam
-            $table->enum('scope', ['all', 'department', 'position', 'employee_type'])->default('all');
+            \App\Support\PortableEnum::column($table, 'scope', ['all', 'department', 'position', 'employee_type'], 'all', false, 64, null);
             $table->string('scope_value')->nullable(); // Departman adı, pozisyon adı vb.
 
             $table->boolean('is_mandatory')->default(true);
@@ -61,7 +61,7 @@ return new class extends Migration
             $table->foreignId('required_document_id')->constrained()->onDelete('cascade');
             $table->foreignId('document_id')->nullable()->constrained()->onDelete('set null');
 
-            $table->enum('status', ['missing', 'pending', 'approved', 'rejected', 'expired'])->default('missing');
+            \App\Support\PortableEnum::column($table, 'status', ['missing', 'pending', 'approved', 'rejected', 'expired'], 'missing', false, 64, null);
             $table->date('expiry_date')->nullable();
             $table->date('last_reminded_at')->nullable();
             $table->text('rejection_reason')->nullable();
@@ -78,7 +78,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('document_id')->constrained()->onDelete('cascade');
             $table->foreignId('approver_id')->constrained('users')->onDelete('cascade');
-            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+            \App\Support\PortableEnum::column($table, 'status', ['pending', 'approved', 'rejected'], 'pending', false, 64, null);
             $table->text('comment')->nullable();
             $table->datetime('decided_at')->nullable();
             $table->timestamps();
@@ -88,9 +88,10 @@ return new class extends Migration
         Schema::table('documents', function (Blueprint $table) {
             $table->integer('current_version')->default(1)->after('file_size');
             $table->date('validity_date')->nullable()->after('current_version');
-            $table->enum('approval_status', ['draft', 'pending', 'approved', 'rejected'])->default('approved')->after('validity_date');
+            \App\Support\PortableEnum::column($table, 'approval_status', ['draft', 'pending', 'approved', 'rejected'], 'approved', false, 64, 'validity_date');
             $table->boolean('requires_approval')->default(false)->after('approval_status');
         });
+            \App\Support\PortableEnum::flushChecks();
     }
 
     /**

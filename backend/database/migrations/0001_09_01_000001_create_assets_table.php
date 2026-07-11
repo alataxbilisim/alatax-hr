@@ -25,15 +25,16 @@ return new class extends Migration
             $table->date('purchase_date')->nullable();
             $table->decimal('purchase_price', 12, 2)->nullable();
             $table->date('warranty_end_date')->nullable();
-            $table->enum('condition', ['new', 'good', 'fair', 'poor', 'broken'])->default('new');
-            $table->enum('status', ['available', 'assigned', 'maintenance', 'disposed'])->default('available');
+            \App\Support\PortableEnum::column($table, 'condition', ['new', 'good', 'fair', 'poor', 'broken'], 'new', false, 64, null);
+            \App\Support\PortableEnum::column($table, 'status', ['available', 'assigned', 'maintenance', 'disposed'], 'available', false, 64, null);
             $table->string('location')->nullable();
-            $table->json('specifications')->nullable(); // Teknik özellikler
+            $table->jsonb('specifications')->nullable(); // Teknik özellikler
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
 
             $table->index(['company_id', 'asset_code']);
         });
+            \App\Support\PortableEnum::flushChecks();
     }
 
     /**

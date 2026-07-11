@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\UserType;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,7 +18,7 @@ class CheckModuleAccess
         $user = $request->user();
 
         // SuperAdmin tüm modüllere erişebilir
-        if ($user && $user->type === 'super_admin') {
+        if ($user && $user->type === UserType::SuperAdmin) {
             return $next($request);
         }
 

@@ -2,6 +2,7 @@
 
 namespace App\Traits;
 
+use App\Enums\UserType;
 use App\Models\Company;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -22,7 +23,7 @@ trait BelongsToCompany
             if (auth()->check() && ! $model->company_id) {
                 $user = auth()->user();
                 // SuperAdmin değilse company_id ata
-                if ($user->type !== 'super_admin' && $user->company_id) {
+                if ($user->type !== UserType::SuperAdmin && $user->company_id) {
                     $model->company_id = $user->company_id;
                 }
             }
@@ -34,7 +35,7 @@ trait BelongsToCompany
                 $user = auth()->user();
 
                 // SuperAdmin tüm verileri görebilir
-                if ($user->type === 'super_admin') {
+                if ($user->type === UserType::SuperAdmin) {
                     return;
                 }
 
