@@ -7,7 +7,7 @@
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-family-mono: 'JetBrains Mono', 'Fira Code', monospace;
   
-  /* Layout boyutları (Faz 3 Bölüm 5 — ileride sidebar daraltma) */
+  /* Layout boyutları (Faz 3 Bölüm 5) */
   --sidebar-width: 280px;
   --sidebar-collapsed-width: 80px;
   --header-height: 64px;

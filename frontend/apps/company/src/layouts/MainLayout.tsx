@@ -4,7 +4,7 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../store';
 import { logout } from '@shared/store/slices/authSlice';
-import { toggleTheme } from '@shared/store/slices/themeSlice';
+import { toggleTheme, toggleSidebar, setSidebarOpen } from '@shared/store/slices/themeSlice';
 import {
   BsBoxArrowRight,
   BsSun,
@@ -116,9 +116,8 @@ const MainLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useSelector((state: RootState) => state.auth);
-  const { mode } = useSelector((state: RootState) => state.theme);
+  const { mode, sidebarOpen } = useSelector((state: RootState) => state.theme);
 
-  const [contextSidebarOpen, setContextSidebarOpen] = useState(true);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const mobileToggleHostRef = useRef<HTMLDivElement>(null);
@@ -140,9 +139,9 @@ const MainLayout: React.FC = () => {
 
   const handleModuleClick = (moduleId: string) => {
     if (moduleId === activeModule) {
-      setContextSidebarOpen(!contextSidebarOpen);
+      dispatch(toggleSidebar());
     } else {
-      setContextSidebarOpen(true);
+      dispatch(setSidebarOpen(true));
       const module = moduleGroups.find((m) => m.id === moduleId);
       if (module && module.items.length > 0) {
         navigate(module.items[0].path);
@@ -150,8 +149,8 @@ const MainLayout: React.FC = () => {
     }
   };
 
-  const handleContextClose = () => {
-    setContextSidebarOpen(false);
+  const handleContextToggle = () => {
+    dispatch(toggleSidebar());
   };
 
   const getBreadcrumb = () => {
@@ -211,7 +210,7 @@ const MainLayout: React.FC = () => {
   }, []);
 
   return (
-    <div className={`company-portal app-layout dual-sidebar-layout ${contextSidebarOpen ? 'context-open' : 'context-closed'}`}>
+    <div className={`company-portal app-layout dual-sidebar-layout ${sidebarOpen ? 'context-expanded' : 'context-collapsed'}`}>
       <ModuleRail
         activeModule={activeModule}
         onModuleClick={handleModuleClick}
@@ -221,8 +220,8 @@ const MainLayout: React.FC = () => {
 
       <ContextSidebar
         module={currentModule}
-        isOpen={contextSidebarOpen}
-        onClose={handleContextClose}
+        expanded={sidebarOpen}
+        onToggle={handleContextToggle}
       />
 
       <div className="main-content">
@@ -233,8 +232,9 @@ const MainLayout: React.FC = () => {
             <button
               type="button"
               className="header-toggle desktop-only"
-              onClick={() => setContextSidebarOpen(!contextSidebarOpen)}
-              title={contextSidebarOpen ? 'Menüyü Kapat' : 'Menüyü Aç'}
+              onClick={handleContextToggle}
+              title={sidebarOpen ? 'Menüyü Daralt' : 'Menüyü Genişlet'}
+              aria-label={sidebarOpen ? 'Menüyü Daralt' : 'Menüyü Genişlet'}
             >
               <BsList size={20} />
             </button>

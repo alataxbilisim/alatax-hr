@@ -1416,10 +1416,11 @@ textarea.form-control {
    DUAL SIDEBAR - ZOHO STYLE
    ==================================== */
 
-/* CSS Variables for Dual Sidebar */
+/* CSS Variables for Dual Sidebar — TASARIM_REHBERI Bölüm 5 */
 .dual-sidebar-layout {
-  --rail-width: 64px;
-  --context-width: 220px;
+  --rail-width: var(--module-rail-width, 56px);
+  --context-width: var(--context-sidebar-width, 216px);
+  --context-collapsed-width: var(--context-sidebar-collapsed, 48px);
   --rail-bg: #0a0f1a;
   --context-bg: #0f172a;
 }
@@ -1601,6 +1602,7 @@ textarea.form-control {
 
 /* ====================================
    CONTEXT SIDEBAR - Sub-menu Sidebar
+   Geniş 216px / daraltılmış 48px (ikon + tooltip)
    ==================================== */
 .context-sidebar {
   width: var(--context-width);
@@ -1613,29 +1615,45 @@ textarea.form-control {
   display: flex;
   flex-direction: column;
   z-index: 50;
-  transform: translateX(-100%);
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  transition: width var(--transition-base, 0.25s) cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.context-sidebar.open {
-  transform: translateX(0);
+.context-sidebar.collapsed {
+  width: var(--context-collapsed-width);
 }
 
 /* Context Header */
 .context-sidebar-header {
   height: var(--header-height);
-  padding: 0 0.875rem;
+  padding: 0 var(--sp-2);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--sp-1);
   border-bottom: 1px solid var(--border-primary);
   background: var(--surface-glass);
+  flex-shrink: 0;
+}
+
+.context-sidebar.collapsed .context-sidebar-header {
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--sp-1);
+  padding: var(--sp-2) 0;
+  height: auto;
+  min-height: var(--header-height);
 }
 
 .context-header-content {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+.context-sidebar.collapsed .context-header-content {
+  justify-content: center;
 }
 
 .context-header-icon {
@@ -1647,18 +1665,22 @@ textarea.form-control {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
+  flex-shrink: 0;
 }
 
 .context-header-title {
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   font-weight: 600;
   color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .context-close-btn {
-  width: 28px;
-  height: 28px;
+  width: var(--icon-btn-size, 28px);
+  height: var(--icon-btn-size, 28px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1667,7 +1689,8 @@ textarea.form-control {
   border-radius: var(--radius-sm);
   color: var(--text-tertiary);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
 }
 
 .context-close-btn:hover {
@@ -1678,23 +1701,44 @@ textarea.form-control {
 /* Context Navigation */
 .context-nav {
   flex: 1;
-  padding: 0.75rem;
+  padding: var(--sp-2);
   overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.context-sidebar.collapsed .context-nav {
+  padding: var(--sp-1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
 }
 
 .context-nav-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0.625rem 0.875rem;
+  gap: var(--sp-2);
+  justify-content: flex-start;
+  padding: var(--sp-2) var(--sp-3);
   border-radius: var(--radius-md);
   color: var(--text-secondary);
-  font-size: 0.8125rem;
+  font-size: var(--fs-label);
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--transition-fast);
   text-decoration: none;
   margin-bottom: 2px;
+  min-height: var(--tab-height, 36px);
+  box-sizing: border-box;
+}
+
+.context-sidebar.collapsed .context-nav-item {
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0;
+  margin-bottom: 0;
+  justify-content: center;
 }
 
 .context-nav-item:hover {
@@ -1707,14 +1751,43 @@ textarea.form-control {
   color: var(--module-color, var(--primary));
 }
 
+.context-nav-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-secondary, rgba(255, 255, 255, 0.06));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fs-caption);
+  font-weight: 700;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.context-nav-item.active .context-nav-icon {
+  background: rgba(var(--module-color-rgb, 16, 185, 129), 0.2);
+  color: var(--module-color, var(--primary));
+}
+
+.context-sidebar.collapsed .context-nav-icon {
+  width: 28px;
+  height: 28px;
+  background: transparent;
+}
+
 .context-nav-text {
   flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .context-nav-badge {
   background: var(--module-color, var(--primary));
   color: white;
-  font-size: 0.625rem;
+  font-size: var(--fs-caption);
   padding: 0.125rem 0.375rem;
   border-radius: var(--radius-full);
   font-weight: 600;
@@ -1722,15 +1795,15 @@ textarea.form-control {
 
 /* Context Footer */
 .context-sidebar-footer {
-  padding: 0.75rem;
+  padding: var(--sp-3);
   border-top: 1px solid var(--border-primary);
 }
 
 .context-module-info {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.6875rem;
+  gap: var(--sp-2);
+  font-size: var(--fs-caption);
   color: var(--text-muted);
 }
 
@@ -1744,12 +1817,16 @@ textarea.form-control {
    DUAL SIDEBAR LAYOUT ADJUSTMENTS
    ==================================== */
 .dual-sidebar-layout .main-content {
-  margin-left: var(--rail-width);
-  transition: margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-left: calc(var(--rail-width) + var(--context-collapsed-width));
+  transition: margin-left var(--transition-base, 0.25s) cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.dual-sidebar-layout.context-open .main-content {
+.dual-sidebar-layout.context-expanded .main-content {
   margin-left: calc(var(--rail-width) + var(--context-width));
+}
+
+.dual-sidebar-layout.context-collapsed .main-content {
+  margin-left: calc(var(--rail-width) + var(--context-collapsed-width));
 }
 
 /* Hide old sidebar in dual layout */
@@ -1926,7 +2003,8 @@ textarea.form-control {
     margin-left: 0 !important;
   }
   
-  .dual-sidebar-layout.context-open .main-content {
+  .dual-sidebar-layout.context-expanded .main-content,
+  .dual-sidebar-layout.context-collapsed .main-content {
     margin-left: 0 !important;
   }
   
@@ -2020,8 +2098,8 @@ textarea.form-control {
   visibility: visible;
 }
 
-/* Hide tooltip when context sidebar is open */
-.context-open .rail-item[title]::after {
+/* Hide rail tooltip when context sidebar is expanded (label görünür) */
+.context-expanded .rail-item[title]::after {
   display: none;
 }
 

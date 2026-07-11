@@ -6,6 +6,7 @@ export type DensityMode = 'comfortable' | 'compact';
 interface ThemeState {
   mode: ThemeMode;
   density: DensityMode;
+  /** ContextSidebar geniş (true=216px) / daraltılmış (false=48px) */
   sidebarOpen: boolean;
 }
 
@@ -56,6 +57,41 @@ const getInitialDensity = (): DensityMode => {
   return 'comfortable';
 };
 
+/** ContextSidebar: localStorage → user.preferences → varsayılan açık (geniş) */
+const getInitialSidebarOpen = (): boolean => {
+  const saved = localStorage.getItem('contextSidebarExpanded');
+  if (saved === 'true') return true;
+  if (saved === 'false') return false;
+
+  const userStr = localStorage.getItem('user');
+  if (userStr) {
+    try {
+      const user = JSON.parse(userStr);
+      if (typeof user.preferences?.contextSidebarExpanded === 'boolean') {
+        return user.preferences.contextSidebarExpanded;
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  return true;
+};
+
+const persistSidebarOpen = (open: boolean) => {
+  localStorage.setItem('contextSidebarExpanded', String(open));
+  const userStr = localStorage.getItem('user');
+  if (userStr) {
+    try {
+      const user = JSON.parse(userStr);
+      user.preferences = { ...(user.preferences || {}), contextSidebarExpanded: open };
+      localStorage.setItem('user', JSON.stringify(user));
+    } catch {
+      // ignore
+    }
+  }
+};
+
 const applyDensityToDom = (density: DensityMode) => {
   document.documentElement.setAttribute('data-density', density);
 };
@@ -63,7 +99,7 @@ const applyDensityToDom = (density: DensityMode) => {
 const initialState: ThemeState = {
   mode: getInitialTheme(),
   density: getInitialDensity(),
-  sidebarOpen: true,
+  sidebarOpen: getInitialSidebarOpen(),
 };
 
 // İlk yüklemede density attribute (theme App useEffect ile de set edilir)
@@ -98,9 +134,11 @@ const themeSlice = createSlice({
     },
     toggleSidebar: (state) => {
       state.sidebarOpen = !state.sidebarOpen;
+      persistSidebarOpen(state.sidebarOpen);
     },
     setSidebarOpen: (state, action: PayloadAction<boolean>) => {
       state.sidebarOpen = action.payload;
+      persistSidebarOpen(action.payload);
     },
   },
 });

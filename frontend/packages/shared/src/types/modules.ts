@@ -36,6 +36,8 @@ export interface User extends BaseEntity {
   preferences?: {
     theme?: 'light' | 'dark';
     density?: 'comfortable' | 'compact';
+    /** Company ContextSidebar geniş mi (true) / 48px daraltılmış mı (false) */
+    contextSidebarExpanded?: boolean;
     locale?: string;
     notifications?: boolean;
   };
