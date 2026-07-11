@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api\V1\Documents;
 
 use App\Http\Controllers\Api\V1\BaseController;
+use App\Enums\DataScopeLevel;
 use App\Models\ActivityLog;
 use App\Models\Document;
 use App\Models\DocumentVersion;
+use App\Services\DataScopeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -13,12 +15,23 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DocumentController extends BaseController
 {
+    public function __construct(
+        protected DataScopeService $dataScope,
+    ) {}
+
     /**
      * Doküman listesi
      */
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', Document::class);
+
         $query = Document::with(['category', 'uploadedBy']);
+
+        $scope = $this->dataScope->resolve($request->user());
+        if (! in_array($scope, [DataScopeLevel::Company, DataScopeLevel::Department], true)) {
+            $query->where('uploaded_by', $request->user()->id);
+        }
 
         // Kategori filtresi
         if ($request->filled('category_id')) {
@@ -121,6 +134,8 @@ class DocumentController extends BaseController
      */
     public function store(Request $request): JsonResponse
     {
+        $this->authorize('create', Document::class);
+
         $validated = $request->validate([
             'file' => 'required|file|max:10240', // 10MB max
             'name' => 'nullable|string|max:255',
@@ -163,6 +178,8 @@ class DocumentController extends BaseController
         if (! $document) {
             return $this->notFound('Doküman bulunamadı');
         }
+
+        $this->authorize('view', $document);
 
         // Versiyon geçmişini al
         $versions = [];
@@ -223,6 +240,8 @@ class DocumentController extends BaseController
         if (! $document) {
             return $this->notFound('Doküman bulunamadı');
         }
+
+        $this->authorize('view', $document);
 
         if (! $document->file_path || ! Storage::disk('public')->exists($document->file_path)) {
             return $this->error('Dosya bulunamadı', 404);
@@ -382,6 +401,8 @@ class DocumentController extends BaseController
             return $this->notFound('Doküman bulunamadı');
         }
 
+        $this->authorize('update', $document);
+
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
@@ -406,6 +427,8 @@ class DocumentController extends BaseController
         if (! $document) {
             return $this->notFound('Doküman bulunamadı');
         }
+
+        $this->authorize('delete', $document);
 
         // Dosyayı sil
         if ($document->file_path) {

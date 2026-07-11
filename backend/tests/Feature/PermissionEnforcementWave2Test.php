@@ -384,6 +384,7 @@ class PermissionEnforcementWave2Test extends TestCase
         ]);
 
         $user = $this->makeUser(UserType::User, $this->company);
+        $user->assignRole(\Spatie\Permission\Models\Role::findOrCreate('hr_manager', 'sanctum'));
         $user->givePermissionTo('documents.list.view');
         Sanctum::actingAs($user);
 

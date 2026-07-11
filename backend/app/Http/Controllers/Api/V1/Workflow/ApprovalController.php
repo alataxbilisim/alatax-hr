@@ -2,28 +2,30 @@
 
 namespace App\Http\Controllers\Api\V1\Workflow;
 
+use App\Enums\DataScopeLevel;
 use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\ActivityLog;
 use App\Models\ApprovalDelegation;
 use App\Models\ApprovalRecord;
+use App\Services\DataScopeService;
 use App\Services\WorkflowService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ApprovalController extends BaseController
 {
-    protected WorkflowService $workflowService;
-
-    public function __construct(WorkflowService $workflowService)
-    {
-        $this->workflowService = $workflowService;
-    }
+    public function __construct(
+        protected WorkflowService $workflowService,
+        protected DataScopeService $dataScope,
+    ) {}
 
     /**
      * Bekleyen onaylarım
      */
     public function pendingApprovals(): JsonResponse
     {
+        $this->authorize('viewAny', ApprovalRecord::class);
+
         $approvals = $this->workflowService->getPendingApprovalsForUser(
             auth()->id(),
             $this->getCompanyId()
@@ -37,6 +39,8 @@ class ApprovalController extends BaseController
      */
     public function myApprovalHistory(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', ApprovalRecord::class);
+
         $query = ApprovalRecord::where('company_id', $this->getCompanyId())
             ->where('approver_id', auth()->id())
             ->whereIn('status', ['approved', 'rejected', 'skipped'])
@@ -59,6 +63,8 @@ class ApprovalController extends BaseController
     {
         $record = ApprovalRecord::where('company_id', $this->getCompanyId())
             ->findOrFail($recordId);
+
+        $this->authorize('approve', $record);
 
         $validated = $request->validate([
             'comment' => 'nullable|string|max:1000',
@@ -85,6 +91,8 @@ class ApprovalController extends BaseController
         $record = ApprovalRecord::where('company_id', $this->getCompanyId())
             ->findOrFail($recordId);
 
+        $this->authorize('reject', $record);
+
         $validated = $request->validate([
             'reason' => 'required|string|max:1000',
         ]);
@@ -110,6 +118,8 @@ class ApprovalController extends BaseController
         $record = ApprovalRecord::where('company_id', $this->getCompanyId())
             ->findOrFail($recordId);
 
+        $this->authorize('skip', $record);
+
         $validated = $request->validate([
             'reason' => 'nullable|string|max:1000',
         ]);
@@ -128,10 +138,14 @@ class ApprovalController extends BaseController
     }
 
     /**
-     * Vekalet listesi
+     * Vekalet listesi — yalnızca company kapsamı (İK)
      */
     public function delegations(): JsonResponse
     {
+        if ($this->dataScope->resolve(auth()->user()) !== DataScopeLevel::Company) {
+            return $this->error('Vekalet listesini görüntüleme yetkiniz yok', 403);
+        }
+
         $delegations = ApprovalDelegation::where('company_id', $this->getCompanyId())
             ->with(['delegator', 'delegate'])
             ->orderBy('start_date', 'desc')
@@ -167,7 +181,6 @@ class ApprovalController extends BaseController
             'reason' => 'nullable|string|max:500',
         ]);
 
-        // Aynı tarih aralığında çakışma kontrolü
         $conflict = ApprovalDelegation::where('company_id', $this->getCompanyId())
             ->where('delegator_id', auth()->id())
             ->where('is_active', true)
@@ -215,7 +228,7 @@ class ApprovalController extends BaseController
     }
 
     /**
-     * Bir talebin onay geçmişi
+     * Bir talebin onay geçmişi — company veya ilgili kayıtta onaycı/atanmış
      */
     public function getApprovalHistory(Request $request): JsonResponse
     {
@@ -224,12 +237,25 @@ class ApprovalController extends BaseController
             'approvable_id' => 'required|integer',
         ]);
 
+        $user = $request->user();
         $history = ApprovalRecord::where('company_id', $this->getCompanyId())
             ->where('approvable_type', $validated['approvable_type'])
             ->where('approvable_id', $validated['approvable_id'])
             ->with(['step', 'approver'])
             ->orderBy('step_order')
             ->get();
+
+        if ($history->isEmpty()) {
+            return $this->success($history, 'Onay geçmişi');
+        }
+
+        $allowed = $this->dataScope->resolve($user) === DataScopeLevel::Company
+            || $history->contains(fn (ApprovalRecord $r) => (int) $r->approver_id === $user->id)
+            || $history->contains(fn (ApprovalRecord $r) => $this->workflowService->canApprove($r, $user->id));
+
+        if (! $allowed) {
+            return $this->error('Bu onay geçmişini görüntüleme yetkiniz yok', 403);
+        }
 
         return $this->success($history, 'Onay geçmişi');
     }

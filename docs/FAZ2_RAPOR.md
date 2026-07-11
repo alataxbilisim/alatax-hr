@@ -782,3 +782,76 @@ Kritik: expense manager başka ekip approve → **403**; employee manager update
 ### Sonraki / son Policy dalgası
 
 Document görünürlük, ApprovalRecord tighten…
+
+---
+
+## Policy + Data Scope UYGULAMA — Dalga 3 SON (Document + ApprovalRecord)
+
+**Tarih:** 11 Temmuz 2026 · **Branch:** `faz2-rbac-audit`
+
+### Şema kararları (ön kontrol)
+
+| Model / tablo | Görünürlük / sahiplik |
+|---------------|------------------------|
+| **`documents`** | `is_visible_to_employee` **YOK**; firma geneli. `uploaded_by` → users |
+| **`employee_documents`** | **`is_visible_to_employee`** (bool); `employee_id` → employees; portal bunu kullanır |
+| **`approval_records`** | `approver_id`, `is_current`, `status`; morph `approvable_*` |
+
+İki belge modeli → **iki Policy**: `DocumentPolicy` + `EmployeeDocumentPolicy`.
+
+### Document / EmployeeDocument kurallar
+
+| Yüzey | view | update/delete |
+|-------|------|---------------|
+| Document (HR) | company\|department: hepsi; own/team: yalnızca `uploaded_by` | İK (`canManageHrRecords`) veya yükleyen |
+| EmployeeDocument (HR) | `allowsEmployee` (bayraktan bağımsız) | İK + allowsEmployee |
+| EmployeeDocument (Portal) | kendi employee + **`is_visible_to_employee=true`** | — (salt okuma) |
+
+### ApprovalRecord
+
+- Policy: `approve`/`reject`/`skip` → `WorkflowService::canApprove` (atanan veya vekil)
+- `skip` artık `canApprove` ister (açık kapı kapandı)
+- Vekalet entity_type: `LeaveRequest` / `leave_request` / `null` hizalandı
+- `canApprove`: company_admin/super_admin geçici bypass (Gate ile uyum)
+- `delegations` (tüm firma): yalnızca company scope
+- `getApprovalHistory`: company veya ilgili onaycı/atanmış
+
+### Yan bug düzeltmeleri
+
+| Bug | Düzeltme |
+|-----|----------|
+| Portal download `public` disk | → `private` (HR upload ile aynı) |
+| Portal `error(..., null, 404)` imza | → `error($msg, 404)` |
+| Vekalet entity_type mismatch | snake + basename + null |
+
+### Test
+
+| Suite | Sonuç |
+|-------|--------|
+| `PolicyDataScopeWave3Test` | **6 passed** |
+| Tam suite | **139 passed**, 1 risky |
+
+### POLICY BLOĞU TAMAMLANDI mı?
+
+**Evet — kayıt seviyesi P0–P2 modeller kapsandı.**
+
+| Model | Policy | Dalga |
+|-------|--------|-------|
+| LeaveRequest | ✅ | 1 |
+| Employee | ✅ | 2 |
+| ExpenseClaim | ✅ | 2 |
+| PerformanceReview | ✅ | 2 |
+| Document | ✅ | 3 |
+| EmployeeDocument | ✅ | 3 |
+| ApprovalRecord | ✅ | 3 |
+
+**Açık kalan / sonraki (Policy dışı veya düşük öncelik):**
+
+| Konu | Not |
+|------|-----|
+| Document satır görünürlük (dept/kişi) | Şemada kolon yok — ayrı ürün kararı / migration |
+| `document_approvals` / `required_documents` | Extended tablolar; model/controller entegrasyonu yok |
+| ApprovalDelegation ayrı Policy | Controller’da own + company scope yeter |
+| OneOnOne, Asset, Training, vb. | Permission + tenant; satır kapsamı ürün gerektirmedikçe sonraya |
+| Hassas alan (maaş) izinleri | Ayrı blok (alan seviyesi) |
+| Gate::before company_admin bypass kaldırma | Faz 2 sonu / Faz 6 |

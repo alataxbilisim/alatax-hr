@@ -20,7 +20,7 @@ class PortalDocumentController extends BaseController
         $employee = Employee::where('user_id', $user->id)->first();
 
         if (! $employee) {
-            return $this->error('Personel kaydı bulunamadı', null, 404);
+            return $this->error('Personel kaydı bulunamadı', 404);
         }
 
         $query = EmployeeDocument::where('employee_id', $employee->id)
@@ -28,7 +28,6 @@ class PortalDocumentController extends BaseController
             ->active()
             ->orderByDesc('created_at');
 
-        // Kategori filtresi
         if ($request->has('category')) {
             $query->ofCategory($request->category);
         }
@@ -47,17 +46,19 @@ class PortalDocumentController extends BaseController
         $employee = Employee::where('user_id', $user->id)->first();
 
         if (! $employee) {
-            return $this->error('Personel kaydı bulunamadı', null, 404);
+            return $this->error('Personel kaydı bulunamadı', 404);
         }
 
         $document = EmployeeDocument::where('employee_id', $employee->id)
             ->where('id', $id)
-            ->visibleToEmployee()
+            ->with('employee')
             ->first();
 
         if (! $document) {
-            return $this->error('Belge bulunamadı', null, 404);
+            return $this->error('Belge bulunamadı', 404);
         }
+
+        $this->authorize('view', $document);
 
         return $this->success($document);
     }
@@ -71,23 +72,26 @@ class PortalDocumentController extends BaseController
         $employee = Employee::where('user_id', $user->id)->first();
 
         if (! $employee) {
-            return $this->error('Personel kaydı bulunamadı', null, 404);
+            return $this->error('Personel kaydı bulunamadı', 404);
         }
 
         $document = EmployeeDocument::where('employee_id', $employee->id)
             ->where('id', $id)
-            ->visibleToEmployee()
+            ->with('employee')
             ->first();
 
         if (! $document) {
-            return $this->error('Belge bulunamadı', null, 404);
+            return $this->error('Belge bulunamadı', 404);
         }
 
-        if (! Storage::disk('public')->exists($document->file_path)) {
-            return $this->error('Dosya bulunamadı', null, 404);
+        $this->authorize('view', $document);
+
+        // HR private disk'e yazar — public ile uyumsuzluk düzeltildi
+        if (! Storage::disk('private')->exists($document->file_path)) {
+            return $this->error('Dosya bulunamadı', 404);
         }
 
-        return Storage::disk('public')->download($document->file_path, $document->file_name);
+        return Storage::disk('private')->download($document->file_path, $document->file_name);
     }
 
     /**
