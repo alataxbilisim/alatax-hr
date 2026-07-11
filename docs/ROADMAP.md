@@ -1,6 +1,6 @@
 # ALATAX HR — ROADMAP v1.0
 
-**Tarih:** 10 Temmuz 2026
+**Tarih:** 11 Temmuz 2026 (Faz 2 kapanışı)
 **Girdiler:** PROJECT_SNAPSHOT.md (10 Tem 2026) + global HR SaaS pazar/mimari araştırması + proje sahibi hedefleri
 **Bağlam:** Solo geliştirici (Cursor + AI destekli), önce Türkiye pazarı, mobil uygulama sonraki fazda, bordro modülü kapsam dışı (ileride).
 
@@ -35,18 +35,18 @@ Fark yaratacak 4 şey:
 
 | Alan | Bugün (Snapshot) | Hedef |
 |------|------------------|-------|
-| Veritabanı | **PostgreSQL 16** default (Faz 1); mysql legacy Docker'da durur; json→jsonb + string+CHECK | Temiz baseline squash (Faz 2); GIN indeksler |
-| Yetki | Spatie seed'li ama route'ta enforce YOK; type enum'u ile kaba ayrım | Route + Policy enforcement; modül/sayfa/aksiyon/alan + veri kapsamı |
-| Audit | activity_logs (controller bazlı, kısmi) | Observer tabanlı otomatik audit; okuma/export logları; immutable |
+| Veritabanı | **PostgreSQL 16** default (Faz 1); mysql legacy; json→jsonb + string+CHECK | Baseline squash + GIN (Faz 6 / temizlik turu) |
+| Yetki | **Route + Policy + alan + data scope** (Faz 2); Spatie admin; company_admin bypass yok | Rol UI v2 polish (Faz 6); Form Engine alan izin bağlama (Faz 4) |
+| Audit | **Auditable + observer** (P0 modeller); hassas alan maskeleme | P1 modeller + Geçmiş UI (Faz 6); immutable/retention backlog |
 | Özelleştirme | custom_field_definitions + renderer (tohum) | Form Engine: layout, koşullu görünürlük, alan izinleri, liste görünümleri |
-| Workflow | approval_workflows çalışıyor; bildirim TODO | Genel amaçlı motor: tetikleyici + koşul + aksiyon; bildirim entegre |
+| Workflow | approval_workflows + Policy/data scope | Genel amaçlı motor: tetikleyici + koşul + aksiyon; bildirim entegre |
 | Bildirim | In-app var; e-posta/SMS/push kısmi, otomasyon yok | Bildirim Merkezi: şablonlar, kanallar, kullanıcı tercihleri |
 | Raporlama | Modül bazlı sabit raporlar + Excel/PDF export | Semantic layer + sürükle-bırak rapor builder + dashboard v2 |
 | KVKK | Yok | Rıza, veri ihracı, silme/anonimleştirme, saklama politikaları |
-| Deployment | Docker Compose (6 servis) + CI yeşil (Faz 0) | On-prem installer, imzalı lisans |
+| Deployment | Docker Compose + CI (Pint/FE/PHPUnit blocking) | On-prem installer, imzalı lisans |
 | UI | Desktop odaklı, ekranlar büyük | Kompakt token ölçeği, 1366×768 hedefi, density modu |
 | i18n | Altyapı kurulu (tr); yeni kod t() zorunlu (Faz 0) | Toplu string migrasyonu + dil switcher + EN (backlog) |
-| Test | PHPUnit kısmen kırık (CI non-blocking, Faz 2 borcu) | Her endpoint için auth+permission+happy path; suite yeşil |
+| Test | **186 passed**, PHPUnit CI blocking (Faz 2) | Endpoint auth+permission+happy path genişletme |
 
 ---
 
@@ -81,14 +81,14 @@ Fark yaratacak 4 şey:
 - [x] tsc + lint temizliği (3 SPA sıfır hata) + Git / GitHub kurulumu
 - [x] Forgot-password / reset-password sayfaları (3 SPA) + davet / şifre sıfırlama Mailable'ları
 - [x] Docker Compose (dev): app + nginx + mysql + redis + worker + scheduler (6 servis) — on-prem paketinin temeli; Postgres geçişi Faz 1
-- [x] CI (GitHub Actions): Pint + ESLint + tsc/build her push'ta; PHPUnit şimdilik non-blocking (Faz 2 borcu)
+- [x] CI (GitHub Actions): Pint + ESLint + tsc/build her push'ta; PHPUnit → Faz 2'de blocking yapıldı
 - [x] CORS env tabanlı (`CORS_ALLOWED_ORIGINS`); throttle: auth 10/dk, api 120/dk, exports 20/dk, public 20/dk + `AuthThrottleTest`
 - [x] i18n altyapısı (tr): react-i18next `@shared/i18n` + Laravel `lang/tr`; **kural:** yeni UI metni `t()` zorunlu (`.cursorrules`, `docs/I18N.md`)
 - [x] react-hook-form + zod benimsendi (Form Engine temeli); forgot/reset formlarında kullanılıyor
 
 **Faz 0 — Açık Borçlar** (Faz 1/2 veya backlog’a taşınır; DoD’yi bloklamaz)
 
-- [ ] **[Faz 2]** PHPUnit suite yeşile çekme: ~23 eksik `CompanyFactory` + ~18 `users.type` enum uyumu (`employee` vs `super_admin|company_admin|user`); CI’da PHPUnit `continue-on-error` **KALDIR** (blocking). Detay: Faz 2 “Teknik borç — PHPUnit” bölümü.
+- [x] **[Faz 2]** PHPUnit suite yeşile çekme + CI blocking — ✅ kapandı (11 Tem 2026)
 - [ ] **[Faz 0-son]** Mailtrap SMTP testi: forgot/reset + davet maillerini uçtan uca doğrula (kod hazır; SMTP bağla → queue → inbox).
 - [ ] **[Faz 1]** XAMPP/Docker `.env` locale ikiliği: Docker’a tam geçince `backend/.env` `APP_LOCALE` tekilleşir (compose env şimdilik ezer).
 - [ ] **[Faz 0 kalıntı]** 6 kayıp route kararı: `/onboarding/templates`, `/performance/periods`, `/performance/criteria`, `/training/sessions`, `/assets/categories`, `/assets/assignments` → router’a ekle veya sidebar’dan kaldır.
@@ -110,52 +110,57 @@ Fark yaratacak 4 şey:
 - [x] MySQL'e özgü ifadeler ayıklandı (employees nullable migration); enum → string + CHECK; JSON → jsonb
 - [x] `config/database.php` + `.env.example` / compose default → **pgsql**; README güncellendi
 - [x] CI feature/migrate PostgreSQL service container üzerinde
-- [ ] ~~67 migration squash~~ → **Faz 2'ye ertelendi**
-- [ ] İndeks stratejisi GIN (JSONB) — squash/baseline ile birlikte Faz 2'de netleştirilebilir
+- [ ] ~~67 migration squash~~ → **Faz 2'de de ertelendi** → Faz 6 / ayrı temizlik turu
+- [ ] İndeks stratejisi GIN (JSONB) — squash/baseline ile birlikte netleştirilir
 - [ ] pg_dump yedekleme script'i — on-prem paketi ile (sonraki faz)
 
 **Faz 1 — Açık Borçlar**
 
-- [ ] **[Faz 2]** Migration squash: 64 dosya → modül bazlı baseline (`0001_core`…); squash öncesi/sonrası `pg_dump` şema diff
-- [ ] **[Faz 2]** PHPUnit factory'leri (`CompanyFactory` vb.) + `users.type` uyumu; suite'i **pgsql**'de yeşile çek; CI `continue-on-error` **KALDIR**
+- [ ] **[Faz 6 / temizlik]** Migration squash: 64 dosya → modül bazlı baseline (`0001_core`…); squash öncesi/sonrası `pg_dump` şema diff
+- [x] **[Faz 2]** PHPUnit factory'leri + `users.type` uyumu + CI blocking — ✅ kapandı
 - [ ] **[kalıcı]** MySQL Docker servisi legacy — **silinmez** (aşağıdaki kural)
 
-**DoD (kapanış):** `migrate:fresh --seed` PostgreSQL'de hatasız ✅; default pgsql ✅; CI pgsql migrate+pint+frontend yeşil ✅; mysql legacy korunur ✅. Squash + PHPUnit suite yeşili Faz 2.
+**DoD (kapanış):** `migrate:fresh --seed` PostgreSQL'de hatasız ✅; default pgsql ✅; CI pgsql migrate+pint+frontend yeşil ✅; mysql legacy korunur ✅.
 
 ---
 
-### FAZ 2 — Güvenlik ve Yetki Çekirdeği: RBAC v2 + Audit v2 (3–4 hafta)
+### FAZ 2 — Güvenlik ve Yetki Çekirdeği: RBAC v2 + Audit v2 ✅ KAPANDI (11 Temmuz 2026)
 
 **Amaç:** "Detaylı rol tabanlı + her şey loglanır" vaadini gerçeğe çevirmek. Platformun güven katmanı.
 
+**Kapanış özeti:** 7 blok / ~10 dalga. Route permission **0 → 343**; Policy + data scope (`own/team/department/company`); alan seviyesi (maaş/TCKN); Audit v2 (Auditable + P0); gerçek TOTP 2FA; `company_admin` Gate bypass kaldırıldı (Spatie `admin`); PHPUnit **186** + CI blocking. Branch `faz2-rbac-audit` → main merge `0d3ecfd`. Detay: `docs/FAZ2_RAPOR.md`.
+
 **RBAC v2**
-- [ ] Mevcut `{module}.{page}.{action}` izin formatı korunur; **tüm route'lara** `permission:` middleware'i uygulanır (Spatie alias'ları zaten kayıtlı). RouteComprehensiveTest izin matrisiyle güncellenir → hangi rolün hangi endpoint'e eriştiği test garantisinde
-- [ ] Model bazlı Laravel Policy'ler (Employee, LeaveRequest, Document...) — kayıt seviyesi kontroller (örn. yalnızca kendi departmanının iznini onaylama)
-- [ ] **Veri kapsamı (data scope):** rol başına `own / team / department / branch / company` kapsamı; `DataScope` servisi + query macro ile BelongsToCompany'ye eklemlenir
-- [ ] **Alan seviyesi izin temeli:** `field_permissions` (role_id, entity_type, field_key, can_view, can_edit). API Resource'lar response'u izne göre filtreler (örn. maaş alanı hr dışına kapalı). Form Engine (Faz 4) bu tabloyu tüketecek
-- [ ] Rol Yönetimi UI v2: izin matrisi (modül→sayfa→aksiyon ızgarası), veri kapsamı seçimi, alan izinleri sekmesi, rol kopyalama
-- [ ] `user.type` enum'u yalnızca super_admin ayrımı için kalır; firma içi tüm ayrım Spatie rollerine taşınır (company_admin = "admin" rolü)
+- [x] `{module}.{page}.{action}` + **tüm route'lara** `permission:` (343); Gate::before hiyerarşik wildcard; Wave 1–4 testleri
+- [x] Model Policy'ler (Employee, LeaveRequest, Document, EmployeeDocument, ExpenseClaim, PerformanceReview, ApprovalRecord) + kayıt seviyesi
+- [x] **Veri kapsamı (data scope):** rol `data_scope` + `DataScopeService` (`own / team / department / company`)
+- [x] **Alan seviyesi izin:** `employees.salary.view` / `tckn.view` + EmployeeResource filtre; Form Engine bağlama → Faz 4
+- [ ] Rol Yönetimi UI v2: izin matrisi ızgarası, alan izinleri sekmesi, rol kopyalama → **[Faz 6]** polish
+- [x] firma içi yetki Spatie rollerinden; `company_admin` = Spatie `admin` (Gate type bypass kaldırıldı); `super_admin` type bypass kaldı
 
 **Audit v2**
-- [ ] `Auditable` trait + model observer: create/update/delete otomatik loglanır; yalnızca değişen alanların diff'i JSONB'ye (`old_values/new_values`)
-- [ ] Ek olay logları: login/logout/başarısız giriş (var), **hassas veri okuma** (bordro görüntüleme/indirme), export işlemleri, rol/izin değişiklikleri, ayar değişiklikleri, lisans işlemleri
-- [ ] Immutable garanti: activity_logs'a update/delete endpoint'i yok; saklama süresi firma ayarı (varsayılan süresiz); aylık partisyon hazırlığı (büyüme için)
-- [ ] Audit Görüntüleyici v2: kayıt bazlı zaman çizelgesi (her detay sayfasında "Geçmiş" sekmesi) + global arama/filtre/export
+- [x] `Auditable` + `AuditObserver`: create/update/delete diff → JSONB; hassas alan maskeleme
+- [x] P0 modeller + Spatie pivot log; login/2FA/rol olayları
+- [ ] Immutable garanti / saklama süresi / partisyon → **[backlog]**
+- [ ] Audit Görüntüleyici v2 (kayıt "Geçmiş" sekmesi tüm modüllerde) → **[Faz 6]** frontend
 
-**⚠️ Teknik borç — PHPUnit suite + migration squash (Faz 1'den taşındı; burada kapatılacak)**
-- [ ] **Migration squash:** 64 migration → modül bazlı baseline; `pg_dump` şema diff ile doğrula
-- [ ] **PHPUnit test suite'ini yeşile çek (pgsql):** eksik factory'ler (`CompanyFactory` vb.) + test veri şeması + enum/tip uyumu; CI'da PHPUnit `continue-on-error`'ı **KALDIR** (blocking yap).
-  - Teşhis (2026-07-10, sqlite `:memory:`, düzeltme yok): **41 failed / 2 passed**
-  - `Class "Database\Factories\CompanyFactory" not found` (~23 test) — `ExpenseTest`, `SurveyTest`, `TimesheetTest` setUp'ta `Company::factory()` kullanıyor; factory dosyası yok
-  - `CHECK constraint failed: type` (~18 test) — `RouteAuthorizationTest` / `RouteComprehensiveTest` `users.type = 'employee'` yazıyor; kolon değerleri yalnızca `super_admin | company_admin | user`
-  - Mevcut factory'ler: `UserFactory`, `SurveyFactory`, `SurveyQuestionFactory`, `ExpenseClaimFactory`, `ExpenseCategoryFactory`, `AttendanceRecordFactory` — `CompanyFactory` eksik
-  - CI artık postgres service kullanıyor; suite pgsql üzerinde yeşile çekilmeli
+**Teknik borç (Faz 1'den)**
+- [ ] ~~Migration squash~~ → **HÂLÂ ertelendi** — **[Faz 6 veya ayrı temizlik turu]**
+- [x] PHPUnit yeşil (pgsql) + CI `continue-on-error` **KALDIRILDI** (blocking)
 
 **Kimlik sertleştirme**
-- [ ] Gerçek TOTP 2FA (UserController:744 stub → doğrulama + recovery codes + login akışına entegrasyon)
-- [ ] Parola politikası (firma ayarı: uzunluk/karmaşıklık/geçerlilik), Sanctum token süresi netleştirilir (config), oturum listesi/sonlandırma UI polish
+- [x] Gerçek TOTP 2FA (pragmarx/google2fa + challenge token + recovery codes)
+- [ ] Parola politikası / token süresi UI polish → backlog / Faz 6
 
-**DoD:** Postman ile token kullanan bir "employee" rolü admin endpoint'lerinden 403 alır (test kanıtlı); maaş alanı yetkisiz Resource response'unda görünmez; herhangi bir personel kaydının tüm değişim geçmişi UI'da izlenir; 2FA uçtan uca çalışır.
+**Faz 2 — Açık borçlar / ertelenenler**
+
+- [ ] **[Faz 6]** P1 modelleri Auditable yap (Branch, Asset, Survey, Payslip, Recruitment)
+- [ ] **[Faz 6]** diğer modüllerin "Geçmiş" sekmesi (frontend)
+- [ ] **[backlog]** DB-level audit immutable, audit retention/partisyon
+- [ ] **[backlog]** audit senkron→queue (yük olursa)
+- [ ] **[Faz 6 / temizlik]** migration squash (Faz 2 kapanış notu: HÂLÂ ertelendi)
+
+**DoD (kapanış):** employee rolü admin endpoint'lerinden 403 ✅; maaş yetkisiz response'ta yok ✅; Employee Geçmiş (audit) ✅; 2FA uçtan uca ✅; company_admin bypass yok ✅; 186 test + CI blocking ✅.
 
 ---
 
@@ -302,7 +307,7 @@ Fark yaratacak 4 şey:
 
 | Kapı | Ne zaman | Ne anlama geliyor |
 |------|----------|-------------------|
-| **M1 — Güvenli Çekirdek** | Faz 2 sonu | İzin sistemi gerçek; demo verilebilir |
+| **M1 — Güvenli Çekirdek** | ✅ Faz 2 sonu (11 Tem 2026) | İzin sistemi gerçek; demo verilebilir |
 | **M2 — Platform Tamam** | Faz 5 sonu | Özelleştirme + BI çalışıyor; dogfooding başlar |
 | **M3 — Pilot** | Faz 6A sonu | 1–2 dost firma canlı kullanımda (çekirdek + izin + puantaj + masraf) |
 | **M4 — GA v1.0** | Faz 7 sonu | Cloud satış açık + on-prem teklif verilebilir |
@@ -327,4 +332,4 @@ Toplam tahmin: **~29–42 hafta (7–10 ay)** tam zamanlı. Pilot geri bildirimi
 
 ---
 
-*Faz 0 ve Faz 1 kapandı (11 Tem 2026). Sonraki adım: Faz 2 — RBAC v2 + Audit v2 (+ migration squash + PHPUnit yeşili). Her fazın başında bu belge üzerinden o faza özel Cursor promptları hazırlanır.*
+*Faz 0, Faz 1 ve Faz 2 kapandı (11 Tem 2026). Sonraki adım: Faz 3 — Tasarım Sistemi v2 (Kompakt UI). Her fazın başında bu belge üzerinden o faza özel Cursor promptları hazırlanır.*
