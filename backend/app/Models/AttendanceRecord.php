@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class AttendanceRecord extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'company_id',
         'user_id',

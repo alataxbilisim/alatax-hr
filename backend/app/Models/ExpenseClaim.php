@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class ExpenseClaim extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'company_id',
         'user_id',
