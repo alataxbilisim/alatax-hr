@@ -339,43 +339,47 @@ const DepartmentsPage: React.FC = () => {
         onClose={() => setFormModalOpen(false)}
         title={selectedDepartment ? 'Departman Düzenle' : 'Yeni Departman'}
         size="md"
+        footer={
+          <>
+            <button type="button" className="btn btn-secondary" onClick={() => setFormModalOpen(false)}>
+              İptal
+            </button>
+            <button type="button" className="btn btn-primary" onClick={handleSave} disabled={saving}>
+              {saving ? 'Kaydediliyor...' : selectedDepartment ? 'Güncelle' : 'Oluştur'}
+            </button>
+          </>
+        }
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div className="row">
-            <div className="col-md-8">
-              <div className="form-group">
-                <label className="form-label">Departman Adı *</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={formData.name}
-                  onChange={(e) => {
-                    setFormData({
-                      ...formData,
-                      name: e.target.value,
-                      code: formData.code || generateCode(e.target.value),
-                    });
-                  }}
-                  placeholder="Örn: İnsan Kaynakları"
-                />
-              </div>
-            </div>
-            <div className="col-md-4">
-              <div className="form-group">
-                <label className="form-label">Kod</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={formData.code}
-                  onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                  placeholder="IK"
-                  maxLength={10}
-                />
-              </div>
-            </div>
+        <div className="form-grid form-grid-2">
+          <div className="form-group">
+            <label className="form-label">Departman Adı *</label>
+            <input
+              type="text"
+              className="form-control"
+              value={formData.name}
+              onChange={(e) => {
+                setFormData({
+                  ...formData,
+                  name: e.target.value,
+                  code: formData.code || generateCode(e.target.value),
+                });
+              }}
+              placeholder="Örn: İnsan Kaynakları"
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Kod</label>
+            <input
+              type="text"
+              className="form-control"
+              value={formData.code}
+              onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
+              placeholder="IK"
+              maxLength={10}
+            />
           </div>
 
-          <div className="form-group">
+          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
             <label className="form-label">Açıklama</label>
             <textarea
               className="form-control"
@@ -386,45 +390,39 @@ const DepartmentsPage: React.FC = () => {
             />
           </div>
 
-          <div className="row">
-            <div className="col-md-6">
-              <div className="form-group">
-                <label className="form-label">Üst Departman</label>
-                <select
-                  className="form-select"
-                  value={formData.parent_id || ''}
-                  onChange={(e) => setFormData({ ...formData, parent_id: e.target.value ? Number(e.target.value) : null })}
-                >
-                  <option value="">Yok (Kök Departman)</option>
-                  {allDepartments
-                    .filter(d => d.id !== selectedDepartment?.id)
-                    .map((dept) => (
-                      <option key={dept.id} value={dept.id}>{dept.name}</option>
-                    ))
-                  }
-                </select>
-              </div>
-            </div>
-            <div className="col-md-6">
-              <div className="form-group">
-                <label className="form-label">Departman Yöneticisi</label>
-                <select
-                  className="form-select"
-                  value={formData.manager_id || ''}
-                  onChange={(e) => setFormData({ ...formData, manager_id: e.target.value ? Number(e.target.value) : null })}
-                >
-                  <option value="">Seçiniz...</option>
-                  {managers.map((manager) => (
-                    <option key={manager.id} value={manager.id}>
-                      {manager.user?.name || manager.employee_code}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
+          <div className="form-group">
+            <label className="form-label">Üst Departman</label>
+            <select
+              className="form-select"
+              value={formData.parent_id || ''}
+              onChange={(e) => setFormData({ ...formData, parent_id: e.target.value ? Number(e.target.value) : null })}
+            >
+              <option value="">Yok (Kök Departman)</option>
+              {allDepartments
+                .filter(d => d.id !== selectedDepartment?.id)
+                .map((dept) => (
+                  <option key={dept.id} value={dept.id}>{dept.name}</option>
+                ))
+              }
+            </select>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Departman Yöneticisi</label>
+            <select
+              className="form-select"
+              value={formData.manager_id || ''}
+              onChange={(e) => setFormData({ ...formData, manager_id: e.target.value ? Number(e.target.value) : null })}
+            >
+              <option value="">Seçiniz...</option>
+              {managers.map((manager) => (
+                <option key={manager.id} value={manager.id}>
+                  {manager.user?.name || manager.employee_code}
+                </option>
+              ))}
+            </select>
           </div>
 
-          <div className="form-check">
+          <div className="form-check" style={{ gridColumn: '1 / -1' }}>
             <input
               type="checkbox"
               className="form-check-input"
@@ -433,15 +431,6 @@ const DepartmentsPage: React.FC = () => {
               onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
             />
             <label className="form-check-label" htmlFor="is_active">Aktif</label>
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
-            <button className="btn btn-secondary" onClick={() => setFormModalOpen(false)}>
-              İptal
-            </button>
-            <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
-              {saving ? 'Kaydediliyor...' : selectedDepartment ? 'Güncelle' : 'Oluştur'}
-            </button>
           </div>
         </div>
       </Modal>

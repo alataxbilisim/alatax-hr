@@ -480,17 +480,14 @@ const SettingsPage: React.FC = () => {
   }
 
   return (
-    <div className="animate-fade-in">
-      {/* Page Header */}
+    <div className="animate-fade-in form-page">
       <div className="page-header">
         <div className="page-header-content">
-          <h1>Ayarlar</h1>
-          <p>Firma bilgileri, ayarlar ve modül yönetimi</p>
+          <h1 className="page-title">Firma Ayarları</h1>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="tabs" style={{ overflowX: 'auto', flexWrap: 'wrap' }}>
+      <div className="tabs">
         <button
           className={`tab ${activeTab === 'general' ? 'active' : ''}`}
           onClick={() => setActiveTab('general')}
@@ -565,7 +562,7 @@ const SettingsPage: React.FC = () => {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 250px), 1fr))', gap: '1rem' }}>
+              <div className="form-grid form-grid-2">
                 {/* Name */}
                 <div className="form-group">
                   <label className="form-label">
@@ -785,7 +782,7 @@ const SettingsPage: React.FC = () => {
               </div>
             ) : (
               <form onSubmit={handleSmtpSubmit}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 250px), 1fr))', gap: '1rem' }}>
+                <div className="form-grid form-grid-2">
                   <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                     <label className="form-label">SMTP Sunucu</label>
                     <input
@@ -918,7 +915,7 @@ const SettingsPage: React.FC = () => {
               </div>
             ) : (
               <form onSubmit={handleSmsSubmit}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 250px), 1fr))', gap: '1rem' }}>
+                <div className="form-grid form-grid-2">
                   <div className="form-group">
                     <label className="form-label">SMS Sağlayıcı</label>
                     <select
@@ -1033,7 +1030,7 @@ const SettingsPage: React.FC = () => {
               </div>
             ) : (
               <form onSubmit={handleGeneralSubmit}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 250px), 1fr))', gap: '1rem' }}>
+                <div className="form-grid form-grid-2">
                   <div className="form-group">
                     <label className="form-label">Saat Dilimi</label>
                     <select
@@ -1759,7 +1756,7 @@ const SettingsPage: React.FC = () => {
                   Modül bilgisi bulunamadı
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 250px), 1fr))', gap: '1rem' }}>
+                <div className="form-grid form-grid-2">
                   {modules.map((mod) => (
                     <div
                       key={mod.id}

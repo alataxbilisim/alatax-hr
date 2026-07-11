@@ -60,23 +60,23 @@ const GeneralTab: React.FC<GeneralTabProps> = ({ employee, onCreatePortalAccess,
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: 'var(--card-gap)' }}>
       {/* Temel Bilgiler */}
       <div className="card">
         <div className="card-header">
-          <h3 className="card-title"><BsPerson style={{ marginRight: '0.5rem' }} />Temel Bilgiler</h3>
+          <h3 className="card-title"><BsPerson style={{ marginRight: 'var(--sp-2)' }} />Temel Bilgiler</h3>
         </div>
         <div className="card-body">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', fontSize: 'var(--fs-body)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-2)' }}>
               <span style={{ color: 'var(--text-tertiary)' }}>Sicil No</span>
               <span className="badge badge-secondary">{employee.employee_code}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-2)' }}>
               <span style={{ color: 'var(--text-tertiary)' }}>Ad Soyad</span>
               <span style={{ fontWeight: 500 }}>{employee.user?.name || '-'}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-2)' }}>
               <span style={{ color: 'var(--text-tertiary)' }}>Pozisyon</span>
               <span>{employee.position || '-'}</span>
             </div>

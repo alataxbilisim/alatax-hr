@@ -257,40 +257,46 @@ const EmployeeDetailPage: React.FC = () => {
   }
 
   return (
-    <div className="animate-fade-in">
-      {/* Header */}
-      <div className="page-header" style={{ marginBottom: '1.5rem' }}>
-        <div className="page-header-content">
-          <button
-            className="btn btn-ghost btn-sm"
-            onClick={() => navigate('/employees')}
-            style={{ marginBottom: '0.5rem' }}
-          >
-            <BsArrowLeft /> Personel Listesi
-          </button>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <h1 className="page-title" style={{ margin: 0 }}>
-              {employee.user?.name || 'İsimsiz Personel'}
-            </h1>
+    <div className="animate-fade-in detail-page">
+      <div className="detail-identity">
+        <button
+          type="button"
+          className="btn btn-ghost btn-icon"
+          onClick={() => navigate('/employees')}
+          title="Personel Listesi"
+          aria-label="Personel Listesi"
+        >
+          <BsArrowLeft />
+        </button>
+        <div className="detail-identity-avatar" aria-hidden>
+          {(employee.user?.name || '?').charAt(0).toUpperCase()}
+        </div>
+        <div className="detail-identity-main">
+          <div className="detail-identity-title-row">
+            <h1 className="page-title">{employee.user?.name || 'İsimsiz Personel'}</h1>
             {getStatusBadge(employee.status)}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+          <div className="detail-identity-meta">
             <span className="badge badge-secondary">{employee.employee_code}</span>
-            {employee.department && <span>• {employee.department.name}</span>}
-            {employee.position && <span>• {employee.position}</span>}
+            {employee.department && <span>{employee.department.name}</span>}
+            {employee.position && <span>{employee.position}</span>}
+            {employee.title && <span>{employee.title}</span>}
           </div>
         </div>
-        <div className="page-header-actions">
+        <div className="detail-identity-actions">
           <button
-            className="btn btn-primary"
+            type="button"
+            className="btn btn-primary btn-sm"
             onClick={() => navigate(`/employees/${id}/edit`)}
           >
             <BsPencil /> Düzenle
           </button>
           <div style={{ position: 'relative' }}>
             <button
-              className="btn btn-secondary"
+              type="button"
+              className="btn btn-secondary btn-icon"
               onClick={() => setActionsMenuOpen(!actionsMenuOpen)}
+              aria-label="Diğer işlemler"
             >
               <BsThreeDotsVertical />
             </button>
@@ -305,18 +311,19 @@ const EmployeeDetailPage: React.FC = () => {
                     position: 'absolute',
                     top: '100%',
                     right: 0,
-                    marginTop: '0.5rem',
-                    background: 'var(--bg-primary)',
-                    border: '1px solid var(--border-color)',
+                    marginTop: 'var(--sp-1)',
+                    background: 'var(--bg-elevated)',
+                    border: '1px solid var(--border-primary)',
                     borderRadius: 'var(--radius-md)',
                     boxShadow: 'var(--shadow-lg)',
-                    minWidth: '180px',
+                    minWidth: 180,
                     zIndex: 20,
                   }}
                 >
                   {employee.user ? (
                     <button
-                      className="btn btn-ghost"
+                      type="button"
+                      className="btn btn-ghost btn-sm"
                       style={{ width: '100%', justifyContent: 'flex-start', borderRadius: 0 }}
                       onClick={() => {
                         setActionsMenuOpen(false);
@@ -327,7 +334,8 @@ const EmployeeDetailPage: React.FC = () => {
                     </button>
                   ) : (
                     <button
-                      className="btn btn-ghost"
+                      type="button"
+                      className="btn btn-ghost btn-sm"
                       style={{ width: '100%', justifyContent: 'flex-start', borderRadius: 0 }}
                       onClick={() => {
                         setActionsMenuOpen(false);
@@ -342,7 +350,8 @@ const EmployeeDetailPage: React.FC = () => {
                     </button>
                   )}
                   <button
-                    className="btn btn-ghost"
+                    type="button"
+                    className="btn btn-ghost btn-sm"
                     style={{ width: '100%', justifyContent: 'flex-start', borderRadius: 0, color: 'var(--danger)' }}
                     onClick={() => {
                       setActionsMenuOpen(false);
@@ -358,36 +367,13 @@ const EmployeeDetailPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div
-        style={{
-          display: 'flex',
-          gap: '0.25rem',
-          borderBottom: '2px solid var(--border-color)',
-          marginBottom: '1.5rem',
-          overflowX: 'auto',
-          paddingBottom: '0',
-        }}
-      >
+      <div className="tabs">
         {tabs.map((tab) => (
           <button
             key={tab.id}
+            type="button"
+            className={`tab ${activeTab === tab.id ? 'active' : ''}`}
             onClick={() => setActiveTab(tab.id)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.75rem 1rem',
-              background: 'none',
-              border: 'none',
-              borderBottom: activeTab === tab.id ? '2px solid var(--primary)' : '2px solid transparent',
-              marginBottom: '-2px',
-              color: activeTab === tab.id ? 'var(--primary)' : 'var(--text-secondary)',
-              fontWeight: activeTab === tab.id ? 500 : 400,
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-              transition: 'all 0.2s ease',
-            }}
           >
             {tab.icon}
             {tab.label}

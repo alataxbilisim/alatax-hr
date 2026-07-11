@@ -289,7 +289,7 @@ const RoleForm: React.FC<RoleFormProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title={isEditing ? 'Rol Düzenle' : 'Yeni Rol'}
-      size="xxl"
+      size="xl"
       footer={
         <>
           <button className="btn btn-secondary" onClick={onClose} disabled={loading}>
@@ -303,7 +303,7 @@ const RoleForm: React.FC<RoleFormProps> = ({
     >
       <form onSubmit={handleSubmit}>
         {/* Role Name */}
-        <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+        <div className="form-group" style={{ marginBottom: 'var(--form-field-gap)' }}>
           <label className="form-label">Rol Adı *</label>
           <input
             type="text"
@@ -312,7 +312,7 @@ const RoleForm: React.FC<RoleFormProps> = ({
             value={formData.name}
             onChange={handleChange}
             placeholder="Örn: Editör, Muhasebeci, vb."
-            style={{ maxWidth: '400px' }}
+            style={{ maxWidth: 400 }}
           />
           {errors.name && <div className="form-error">{errors.name}</div>}
         </div>

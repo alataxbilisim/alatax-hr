@@ -198,7 +198,7 @@ const EmployeeForm: React.FC = () => {
 
   if (loading && isEdit) {
     return (
-      <div className="animate-fade-in">
+      <div className="animate-fade-in form-page">
         <div className="card">
           <div className="card-body text-center py-5">
             <div className="spinner-border" role="status">
@@ -211,46 +211,22 @@ const EmployeeForm: React.FC = () => {
   }
 
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in form-page">
       <div className="page-header">
         <div className="page-header-content">
           <h1 className="page-title">{isEdit ? 'Personel Düzenle' : 'Yeni Personel'}</h1>
-          <p className="page-subtitle">Personel bilgilerini girin</p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit}>
         <div className="card">
-          {/* Tabs */}
-          <div
-            style={{
-              display: 'flex',
-              gap: '0.25rem',
-              borderBottom: '2px solid var(--border-color)',
-              padding: '0 1rem',
-              overflowX: 'auto',
-            }}
-          >
+          <div className="tabs" style={{ marginBottom: 0, padding: '0 var(--card-padding)' }}>
             {tabs.map(tab => (
               <button
                 key={tab.id}
                 type="button"
+                className={`tab ${activeTab === tab.id ? 'active' : ''}`}
                 onClick={() => setActiveTab(tab.id)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.75rem 1rem',
-                  background: 'none',
-                  border: 'none',
-                  borderBottom: activeTab === tab.id ? '2px solid var(--primary)' : '2px solid transparent',
-                  marginBottom: '-2px',
-                  color: activeTab === tab.id ? 'var(--primary)' : 'var(--text-secondary)',
-                  fontWeight: activeTab === tab.id ? 500 : 400,
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  transition: 'all 0.2s ease',
-                }}
               >
                 {tab.icon}
                 {tab.label}
@@ -261,7 +237,7 @@ const EmployeeForm: React.FC = () => {
           <div className="card-body">
             {/* Genel Bilgiler */}
             {activeTab === 'general' && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '1.25rem' }}>
+              <div className="form-grid form-grid-2">
                 <div className="form-group">
                   <label className="form-label">Sicil No <span style={{ color: 'var(--danger)' }}>*</span></label>
                   <input
@@ -405,7 +381,7 @@ const EmployeeForm: React.FC = () => {
 
             {/* Kişisel Bilgiler */}
             {activeTab === 'personal' && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '1.25rem' }}>
+              <div className="form-grid form-grid-2">
                 <div className="form-group">
                   <label className="form-label">Doğum Tarihi</label>
                   <input
@@ -498,7 +474,7 @@ const EmployeeForm: React.FC = () => {
 
             {/* İletişim */}
             {activeTab === 'contact' && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '1.25rem' }}>
+              <div className="form-grid form-grid-2">
                 <div className="form-group">
                   <label className="form-label">Kişisel Email</label>
                   <input
@@ -567,7 +543,7 @@ const EmployeeForm: React.FC = () => {
 
                 <div style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--border-color)', paddingTop: '1rem', marginTop: '0.5rem' }}>
                   <h4 style={{ fontSize: '1rem', marginBottom: '1rem' }}>Acil Durum İletişim</h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '1.25rem' }}>
+                  <div className="form-grid form-grid-2">
                     <div className="form-group">
                       <label className="form-label">Acil Durum Kişisi</label>
                       <input
@@ -614,7 +590,7 @@ const EmployeeForm: React.FC = () => {
 
             {/* İş Bilgileri */}
             {activeTab === 'work' && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '1.25rem' }}>
+              <div className="form-grid form-grid-2">
                 <div className="form-group">
                   <label className="form-label">İşe Giriş Tarihi</label>
                   <input
@@ -679,7 +655,7 @@ const EmployeeForm: React.FC = () => {
 
             {/* Maaş Bilgileri */}
             {activeTab === 'salary' && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '1.25rem' }}>
+              <div className="form-grid form-grid-2">
                 <div className="form-group">
                   <label className="form-label">Brüt Maaş</label>
                   <input
@@ -747,7 +723,7 @@ const EmployeeForm: React.FC = () => {
 
             {/* SGK Bilgileri */}
             {activeTab === 'sgk' && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '1.25rem' }}>
+              <div className="form-grid form-grid-2">
                 <div className="form-group">
                   <label className="form-label">SGK Numarası</label>
                   <input
@@ -794,7 +770,7 @@ const EmployeeForm: React.FC = () => {
                     </p>
                   </div>
                 ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '1.25rem' }}>
+                  <div className="form-grid form-grid-2">
                     <CustomFieldRenderer
                       fields={customFields}
                       values={formData.custom_fields || {}}
@@ -806,34 +782,31 @@ const EmployeeForm: React.FC = () => {
             )}
           </div>
 
-          {/* Actions */}
-          <div className="card-footer">
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={() => navigate('/employees')}
-                disabled={loading}
-              >
-                <BsX /> İptal
-              </button>
-              <button
-                type="submit"
-                className="btn btn-primary"
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <span className="loading-spinner" style={{ width: 14, height: 14, borderWidth: 2 }} />
-                    Kaydediliyor...
-                  </>
-                ) : (
-                  <>
-                    <BsSave /> Kaydet
-                  </>
-                )}
-              </button>
-            </div>
+          <div className="form-actions-sticky">
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => navigate('/employees')}
+              disabled={loading}
+            >
+              <BsX /> İptal
+            </button>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <span className="loading-spinner" style={{ width: 14, height: 14, borderWidth: 2 }} />
+                  Kaydediliyor...
+                </>
+              ) : (
+                <>
+                  <BsSave /> Kaydet
+                </>
+              )}
+            </button>
           </div>
         </div>
       </form>

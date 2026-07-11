@@ -60,23 +60,23 @@ const WorkTab: React.FC<WorkTabProps> = ({ employee }) => {
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: 'var(--card-gap)' }}>
       {/* Sözleşme Bilgileri */}
       <div className="card">
         <div className="card-header">
-          <h3 className="card-title"><BsBriefcase style={{ marginRight: '0.5rem' }} />Sözleşme Bilgileri</h3>
+          <h3 className="card-title"><BsBriefcase style={{ marginRight: 'var(--sp-2)' }} />Sözleşme Bilgileri</h3>
         </div>
         <div className="card-body">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', fontSize: 'var(--fs-body)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-2)' }}>
               <span style={{ color: 'var(--text-tertiary)' }}>İşe Giriş Tarihi</span>
               <span>{formatDate(employee.hire_date)}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-2)' }}>
               <span style={{ color: 'var(--text-tertiary)' }}>Sözleşme Başlangıç</span>
               <span>{formatDate(employee.contract_start_date)}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-2)' }}>
               <span style={{ color: 'var(--text-tertiary)' }}>Sözleşme Bitiş</span>
               <span>{formatDate(employee.contract_end_date)}</span>
             </div>
@@ -92,28 +92,28 @@ const WorkTab: React.FC<WorkTabProps> = ({ employee }) => {
         </div>
       </div>
 
-      {/* Maaş Bilgileri */}
+      {/* Maaş Bilgileri — alanlar/API yetkisi değiştirilmedi (Faz 2) */}
       <div className="card">
         <div className="card-header">
-          <h3 className="card-title"><BsCurrencyDollar style={{ marginRight: '0.5rem' }} />Maaş Bilgileri</h3>
+          <h3 className="card-title"><BsCurrencyDollar style={{ marginRight: 'var(--sp-2)' }} />Maaş Bilgileri</h3>
         </div>
         <div className="card-body">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', fontSize: 'var(--fs-body)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-2)' }}>
               <span style={{ color: 'var(--text-tertiary)' }}>Brüt Maaş</span>
               <span style={{ fontWeight: 600 }}>{formatCurrency(employee.gross_salary, employee.currency)}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-2)' }}>
               <span style={{ color: 'var(--text-tertiary)' }}>Net Maaş</span>
               <span style={{ fontWeight: 600 }}>{formatCurrency(employee.net_salary, employee.currency)}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-2)' }}>
               <span style={{ color: 'var(--text-tertiary)' }}>Banka</span>
               <span>{employee.bank_name || '-'}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-2)' }}>
               <span style={{ color: 'var(--text-tertiary)' }}>IBAN</span>
-              <span style={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>
+              <span style={{ fontFamily: 'monospace', fontSize: 'var(--fs-caption)' }}>
                 {employee.iban ? `***${employee.iban.slice(-4)}` : '-'}
               </span>
             </div>
@@ -124,15 +124,15 @@ const WorkTab: React.FC<WorkTabProps> = ({ employee }) => {
       {/* SGK Bilgileri */}
       <div className="card">
         <div className="card-header">
-          <h3 className="card-title"><BsShieldCheck style={{ marginRight: '0.5rem' }} />SGK Bilgileri</h3>
+          <h3 className="card-title"><BsShieldCheck style={{ marginRight: 'var(--sp-2)' }} />SGK Bilgileri</h3>
         </div>
         <div className="card-body">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', fontSize: 'var(--fs-body)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-2)' }}>
               <span style={{ color: 'var(--text-tertiary)' }}>SGK Numarası</span>
               <span>{employee.sgk_number ? `***${employee.sgk_number.slice(-4)}` : '-'}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-2)' }}>
               <span style={{ color: 'var(--text-tertiary)' }}>SGK Başlangıç</span>
               <span>{formatDate(employee.sgk_start_date)}</span>
             </div>

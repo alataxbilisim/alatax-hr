@@ -163,6 +163,50 @@ Fark gözle ~8px/satır — önceki ~77→73’e göre belirgin.
 
 **DUR:** Kullanıcı görsel kontrol (birkaç liste ekranı + density). Form/detay/dashboard sonraki dalga.
 
+---
+
+## Dalga 2 — Grup 2: Detay + form ekranları (12 Temmuz 2026)
+
+**Şablon:** TASARIM_REHBERI Bölüm 6 — Detay (kimlik şeridi ≤88px + sekmeler) / Form (≥1280 2 kolon + sticky aksiyon).
+
+### Hizalanan
+| Ekran | Tip | Not |
+|-------|-----|-----|
+| Personel Detay | detay | `.detail-identity` (avatar 40px); shared `.tabs`; Genel sekmesi token gap |
+| Personel Form (yeni/düzenle) | form | `.form-grid-2` + shared tabs + `.form-actions-sticky` |
+| Firma Ayarları | form (sekmeli) | tek satır header; sekmeli alanlar `form-grid-2` |
+| Kullanıcı Form | modal md | `form-grid-2` |
+| Rol Form | modal **xl** (1040) | izin matrisi; xxl→xl token |
+| Departman Form | modal md | `form-grid-2` + Modal footer |
+| İzin Talebi Form | modal md | tarih alanı `form-grid-2` |
+| Doküman Yükle | modal md | dropzone token padding (DocumentForm.tsx yok) |
+| Varlık Form | modal lg | `form-grid-2` + Modal footer |
+
+### Atlanan
+| Ekran | Not |
+|-------|-----|
+| Ayrı DocumentForm | Yok — `DocumentUpload` modal kullanılıyor |
+| Performans sekmesi (Personel Detay) | Route/tab yok (Training vb. mevcut sekmeler korundu) |
+
+### company.css / shared override temizliği
+- Modal lg/xl/xxl sabit px → `--modal-*` token (lg800 / xl1040; xxl=xl alias)
+- Pill `.tabs` override (rounded soft active) kaldırıldı — underline token tabs geçerli
+- Shared: `.detail-identity`, `.form-actions-sticky` (`layout.css`)
+
+### Maaş görünürlüğü (Faz 2)
+- `WorkTab`: yalnızca spacing token; `gross_salary` / `net_salary` render + backend `employees.salary.view` kapısı **dokunulmadı**
+- Sonuç: admin görür / yetkisiz API alanı gelmez → UI `-` — **korundu**
+
+### Doğrulama
+- 3 SPA lint + build: **0**
+- Fonksiyonellik: RHF/zod veya mevcut form submit akışına dokunulmadı (layout-only)
+
+**DUR:** Kullanıcı görsel kontrol — özellikle **Personel Detay** + bir form (Personel Form veya Ayarlar). Commit yok.
+
+Kalan: Grup 3 (dashboard/kanban) + Portal ölçek + sidebar daraltma.
+
+---
+
 ## Kritik Bug Teşhisi (11 Temmuz 2026 — düzeltme YOK)
 
 **Branch:** `faz3-tasarim` · **Kapsam:** yalnızca kök neden + kanıt + öneri · **Düzeltme bu turda yapılmadı.**

@@ -337,7 +337,7 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
         </div>
 
         {/* Dates */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+        <div className="form-grid form-grid-2">
           <div className="form-group">
             <label className="form-label">Başlangıç Tarihi *</label>
             <input

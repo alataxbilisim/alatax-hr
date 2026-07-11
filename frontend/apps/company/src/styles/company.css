@@ -1138,16 +1138,17 @@ textarea.form-control {
   }
 }
 
+/* Modal genişlikleri — TASARIM_REHBERI token (sm420/md560/lg800/xl1040) */
 .modal-lg {
-  max-width: 640px;
+  max-width: var(--modal-lg);
 }
 
 .modal-xl {
-  max-width: 900px;
+  max-width: var(--modal-xl);
 }
 
 .modal-xxl {
-  max-width: 1100px;
+  max-width: var(--modal-xl);
 }
 
 .modal-full {
@@ -2916,38 +2917,55 @@ textarea.form-control {
 }
 
 /* ====================================
-   RESPONSIVE FORM GRID
+   RESPONSIVE FORM GRID — TASARIM_REHBERI ≥1280 2 kolon
    ==================================== */
 .form-grid {
   display: grid;
-  gap: 1rem;
+  gap: var(--form-field-gap);
+  grid-template-columns: 1fr;
 }
 
 .form-grid-2 {
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: 1fr;
 }
 
-.form-grid-3 {
-  grid-template-columns: repeat(3, 1fr);
-}
-
+.form-grid-3,
 .form-grid-4 {
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: 1fr;
 }
 
-@media (max-width: 768px) {
-  .form-grid-2,
-  .form-grid-3,
+@media (min-width: 1280px) {
+  .form-grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .form-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
   .form-grid-4 {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(4, 1fr);
   }
 }
 
-@media (min-width: 769px) and (max-width: 1024px) {
+@media (min-width: 768px) and (max-width: 1279px) {
+  .form-grid-2,
   .form-grid-3,
   .form-grid-4 {
     grid-template-columns: repeat(2, 1fr);
   }
+}
+
+.form-grid .form-group,
+.form-grid-2 .form-group {
+  margin-bottom: 0;
+}
+
+.form-section-title {
+  font-size: var(--fs-section);
+  font-weight: var(--fw-section);
+  color: var(--text-primary);
+  margin: 0 0 var(--sp-3);
 }
 
 /* ====================================
@@ -2978,53 +2996,7 @@ textarea.form-control {
   }
 }
 
-/* ====================================
-   TABS RESPONSIVE — yükseklik token'dan; padding şişirmesin
-   ==================================== */
-.tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--sp-1);
-  min-height: var(--tab-height);
-}
-
-.tab {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sp-2);
-  height: var(--tab-height);
-  padding: 0 var(--sp-3);
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-md);
-  color: var(--text-secondary);
-  font-size: var(--fs-label);
-  font-weight: var(--fw-label);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  white-space: nowrap;
-}
-
-.tab:hover {
-  background: var(--surface-secondary);
-  color: var(--text-primary);
-}
-
-.tab.active {
-  background: var(--primary-soft);
-  color: var(--primary);
-}
-
-@media (max-width: 576px) {
-  .tab {
-    padding: 0 var(--sp-2);
-    font-size: var(--fs-caption);
-  }
-  
-  .tab span {
-    display: none;
-  }
-}
+/* TABS: pill override kaldırıldı — shared underline + üstteki token .tabs/.tab geçerli */
 
 /* ====================================
    PAGE HEADER RESPONSIVE — layout.css ile uyumlu

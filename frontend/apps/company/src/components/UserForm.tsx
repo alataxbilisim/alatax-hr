@@ -249,6 +249,7 @@ const UserForm: React.FC<UserFormProps> = ({
           </div>
         )}
 
+        <div className="form-grid form-grid-2">
         {/* Name */}
         <div className="form-group">
           <label className="form-label">Ad Soyad *</label>
@@ -315,7 +316,7 @@ const UserForm: React.FC<UserFormProps> = ({
         <div className="form-group">
           <label className="form-label">
             Şifre {!isEditing && '*'}
-            {isEditing && <span style={{ fontWeight: 400, color: 'var(--text-tertiary)', fontSize: '0.75rem' }}> (Boş bırakırsanız değişmez)</span>}
+            {isEditing && <span style={{ fontWeight: 400, color: 'var(--text-tertiary)', fontSize: 'var(--fs-caption)' }}> (Boş bırakırsanız değişmez)</span>}
           </label>
           <input
             type="password"
@@ -341,26 +342,27 @@ const UserForm: React.FC<UserFormProps> = ({
           />
           {errors.password_confirmation && <div className="form-error">{errors.password_confirmation}</div>}
         </div>
+        </div>
 
         {/* Roles */}
         {roles.length > 0 && (
           <div className="form-group">
             <label className="form-label">Roller</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-2)' }}>
               {roles.map((role) => (
                 <label
                   key={role.id}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.375rem',
-                    padding: '0.375rem 0.75rem',
+                    gap: 'var(--sp-1)',
+                    padding: 'var(--sp-1) var(--sp-3)',
                     background: formData.roles.includes(role.id) ? 'var(--primary-soft)' : 'var(--surface-glass)',
                     border: `1px solid ${formData.roles.includes(role.id) ? 'var(--primary)' : 'var(--border-primary)'}`,
                     borderRadius: 'var(--radius-md)',
                     cursor: 'pointer',
-                    fontSize: '0.8125rem',
-                    transition: 'all 0.15s ease',
+                    fontSize: 'var(--fs-caption)',
+                    transition: 'all var(--transition-fast)',
                   }}
                 >
                   <input

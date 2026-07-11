@@ -138,28 +138,38 @@ const AssetForm: React.FC<AssetFormProps> = ({
       onClose={onClose}
       title={asset ? 'Varlığı Düzenle' : 'Yeni Varlık'}
       size="lg"
+      footer={
+        <>
+          <button type="button" className="btn btn-secondary" onClick={onClose} disabled={loading}>
+            İptal
+          </button>
+          <button type="submit" form="asset-form" className="btn btn-primary" disabled={loading}>
+            {loading ? 'Kaydediliyor...' : asset ? 'Güncelle' : 'Oluştur'}
+          </button>
+        </>
+      }
     >
-      <form onSubmit={handleSubmit}>
-        <div className="form-row">
-          <div className="form-group" style={{ flex: 2 }}>
+      <form id="asset-form" onSubmit={handleSubmit}>
+        <div className="form-grid form-grid-2">
+          <div className="form-group">
             <label className="form-label">Varlık Adı *</label>
             <input
               type="text"
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className="form-input"
+              className="form-control"
               placeholder="Örn: MacBook Pro 14"
               required
             />
           </div>
-          <div className="form-group" style={{ flex: 1 }}>
+          <div className="form-group">
             <label className="form-label">Kategori</label>
             <select
               name="category_id"
               value={formData.category_id}
               onChange={handleChange}
-              className="form-input"
+              className="form-select"
             >
               <option value="">Seçin...</option>
               {categories.map(c => (
@@ -167,139 +177,122 @@ const AssetForm: React.FC<AssetFormProps> = ({
               ))}
             </select>
           </div>
-        </div>
 
-        <div className="form-group">
-          <label className="form-label">Açıklama</label>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            className="form-input"
-            rows={2}
-          />
-        </div>
+          <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+            <label className="form-label">Açıklama</label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              className="form-control"
+              rows={2}
+            />
+          </div>
 
-        <div className="form-row">
-          <div className="form-group" style={{ flex: 1 }}>
+          <div className="form-group">
             <label className="form-label">Demirbaş Kodu</label>
             <input
               type="text"
               name="asset_code"
               value={formData.asset_code}
               onChange={handleChange}
-              className="form-input"
+              className="form-control"
               placeholder="DMB-001"
             />
           </div>
-          <div className="form-group" style={{ flex: 1 }}>
+          <div className="form-group">
             <label className="form-label">Seri Numarası</label>
             <input
               type="text"
               name="serial_number"
               value={formData.serial_number}
               onChange={handleChange}
-              className="form-input"
+              className="form-control"
             />
           </div>
-        </div>
 
-        <div className="form-row">
-          <div className="form-group" style={{ flex: 1 }}>
+          <div className="form-group">
             <label className="form-label">Marka</label>
             <input
               type="text"
               name="brand"
               value={formData.brand}
               onChange={handleChange}
-              className="form-input"
+              className="form-control"
               placeholder="Apple"
             />
           </div>
-          <div className="form-group" style={{ flex: 1 }}>
+          <div className="form-group">
             <label className="form-label">Model</label>
             <input
               type="text"
               name="model"
               value={formData.model}
               onChange={handleChange}
-              className="form-input"
+              className="form-control"
               placeholder="MacBook Pro 14"
             />
           </div>
-        </div>
 
-        <div className="form-row">
-          <div className="form-group" style={{ flex: 1 }}>
+          <div className="form-group">
             <label className="form-label">Satın Alma Tarihi</label>
             <input
               type="date"
               name="purchase_date"
               value={formData.purchase_date}
               onChange={handleChange}
-              className="form-input"
+              className="form-control"
             />
           </div>
-          <div className="form-group" style={{ flex: 1 }}>
+          <div className="form-group">
             <label className="form-label">Satın Alma Fiyatı</label>
             <input
               type="number"
               name="purchase_price"
               value={formData.purchase_price}
               onChange={handleChange}
-              className="form-input"
+              className="form-control"
               min={0}
               step="0.01"
             />
           </div>
-          <div className="form-group" style={{ flex: 1 }}>
+          <div className="form-group">
             <label className="form-label">Garanti Bitiş</label>
             <input
               type="date"
               name="warranty_end_date"
               value={formData.warranty_end_date}
               onChange={handleChange}
-              className="form-input"
+              className="form-control"
             />
           </div>
-        </div>
 
-        <div className="form-row">
-          <div className="form-group" style={{ flex: 1 }}>
+          <div className="form-group">
             <label className="form-label">Durum</label>
             <select
               name="status"
               value={formData.status}
               onChange={handleChange}
-              className="form-input"
+              className="form-select"
             >
               {Object.entries(statusLabels).map(([value, label]) => (
                 <option key={value} value={value}>{label}</option>
               ))}
             </select>
           </div>
-          <div className="form-group" style={{ flex: 1 }}>
+          <div className="form-group">
             <label className="form-label">Kondisyon</label>
             <select
               name="condition"
               value={formData.condition}
               onChange={handleChange}
-              className="form-input"
+              className="form-select"
             >
               {Object.entries(conditionLabels).map(([value, label]) => (
                 <option key={value} value={value}>{label}</option>
               ))}
             </select>
           </div>
-        </div>
-
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
-          <button type="button" className="btn btn-ghost" onClick={onClose} disabled={loading}>
-            İptal
-          </button>
-          <button type="submit" className="btn btn-primary" disabled={loading}>
-            {loading ? 'Kaydediliyor...' : asset ? 'Güncelle' : 'Oluştur'}
-          </button>
         </div>
       </form>
     </Modal>

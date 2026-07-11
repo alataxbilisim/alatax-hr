@@ -180,12 +180,12 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
         style={{
           border: `2px dashed ${dragOver ? 'var(--primary)' : errors.files ? 'var(--danger)' : 'var(--border-primary)'}`,
           borderRadius: 'var(--radius-lg)',
-          padding: '2rem',
+          padding: 'var(--sp-5)',
           textAlign: 'center',
           cursor: 'pointer',
           background: dragOver ? 'var(--primary-soft)' : 'var(--surface-glass)',
-          transition: 'all 0.15s ease',
-          marginBottom: '1rem',
+          transition: 'all var(--transition-fast)',
+          marginBottom: 'var(--form-field-gap)',
         }}
       >
         <BsCloudUpload size={32} style={{ color: dragOver ? 'var(--primary)' : 'var(--text-muted)', marginBottom: '0.5rem' }} />
