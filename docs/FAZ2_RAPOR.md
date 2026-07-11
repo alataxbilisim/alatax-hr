@@ -60,7 +60,7 @@
 | Assertions | 13 | **173** |
 | `users.type` kararı | — | testler → `user`; enum değişmedi |
 | `continue-on-error` kaldırıldı mı? | hayır | **evet** (CI PHPUnit blocking) |
-| CI tam yeşil mi? | — | push sonrası doğrulanacak |
+| CI tam yeşil mi? | — | **evet** — [run 29148350204](https://github.com/alataxbilisim/alatax-hr/actions/runs/29148350204) (Backend+Frontend+PHPUnit) |
 
 ### Commit özeti (bloklar)
 
