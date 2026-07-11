@@ -188,9 +188,9 @@ class WorkflowService
             return false;
         }
 
-        // Gate::before ile uyumlu: company_admin / super_admin geçici bypass
+        // super_admin type veya Spatie admin rolü (company_admin type tek başına yetmez)
         $actor = User::query()->find($userId);
-        if ($actor && in_array($actor->type, [UserType::SuperAdmin, UserType::CompanyAdmin], true)) {
+        if ($actor && ($actor->type === UserType::SuperAdmin || $actor->hasRole('admin'))) {
             return true;
         }
 

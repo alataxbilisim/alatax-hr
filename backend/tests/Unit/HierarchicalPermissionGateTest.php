@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use App\Enums\UserType;
 use App\Models\User;
 use App\Support\HierarchicalPermission;
+use Database\Seeders\PermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
 use Spatie\Permission\Models\Permission;
@@ -50,12 +51,32 @@ class HierarchicalPermissionGateTest extends TestCase
         $this->assertTrue(Gate::forUser($user)->allows('timesheet.attendance.approve'));
     }
 
-    public function test_company_admin_bypasses_gate_temporarily(): void
+    public function test_company_admin_without_admin_role_denied(): void
     {
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        Permission::findOrCreate('management.audit_logs.view', 'sanctum');
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
         $user = User::factory()->companyAdmin()->create();
 
+        $this->assertFalse($user->hasRole('admin'));
+        $this->assertFalse(Gate::forUser($user)->allows('management.audit_logs.view'));
+        $this->assertFalse(Gate::forUser($user)->allows('timesheet.attendance.view'));
+    }
+
+    public function test_company_admin_with_admin_role_allowed(): void
+    {
+        $this->seed(PermissionSeeder::class);
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
+        $user = User::factory()->companyAdmin()->create();
+        $this->assignSpatieAdminRole($user);
+        $user = $user->fresh();
+
+        $this->assertTrue($user->hasRole('admin'));
         $this->assertTrue(Gate::forUser($user)->allows('management.audit_logs.view'));
         $this->assertTrue(Gate::forUser($user)->allows('timesheet.attendance.view'));
+        $this->assertTrue(Gate::forUser($user)->allows('employees.salary.view'));
     }
 
     public function test_regular_user_with_wildcard_permission_allowed(): void

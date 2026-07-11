@@ -410,12 +410,13 @@ class PolicyDataScopeWave2Test extends TestCase
         $this->postJson("/api/v1/performance/reviews/{$review->id}/approve")->assertStatus(200);
     }
 
-    public function test_performance_company_admin_bypass(): void
+    public function test_performance_company_admin_with_admin_role(): void
     {
         $admin = User::factory()->create([
             'company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
         ]);
+        $this->assignSpatieAdminRole($admin);
         $reviewee = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
         $reviewer = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
 
@@ -436,7 +437,7 @@ class PolicyDataScopeWave2Test extends TestCase
             'submitted_at' => now(),
         ]);
 
-        Sanctum::actingAs($admin);
+        Sanctum::actingAs($admin->fresh());
 
         $this->getJson("/api/v1/performance/reviews/{$review->id}")->assertStatus(200);
         $this->postJson("/api/v1/performance/reviews/{$review->id}/approve")->assertStatus(200);

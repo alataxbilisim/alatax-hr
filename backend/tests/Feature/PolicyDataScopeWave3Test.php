@@ -311,12 +311,13 @@ class PolicyDataScopeWave3Test extends TestCase
         $this->postJson("/api/v1/approvals/{$record->id}/approve")->assertStatus(200);
     }
 
-    public function test_company_admin_bypass_approvals(): void
+    public function test_company_admin_with_admin_role_approvals(): void
     {
         $admin = User::factory()->create([
             'company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
         ]);
+        $this->assignSpatieAdminRole($admin);
         $approver = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
 
         $requester = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
@@ -340,7 +341,7 @@ class PolicyDataScopeWave3Test extends TestCase
 
         $record = $this->makeApprovalRecord($approver, $leave);
 
-        Sanctum::actingAs($admin);
+        Sanctum::actingAs($admin->fresh());
         $this->postJson("/api/v1/approvals/{$record->id}/approve")->assertStatus(200);
     }
 

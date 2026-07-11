@@ -8,6 +8,7 @@ use App\Models\Company;
 use App\Models\Employee;
 use App\Models\Module;
 use App\Models\User;
+use Database\Seeders\PermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
 use Laravel\Sanctum\Sanctum;
@@ -36,6 +37,9 @@ class RouteComprehensiveTest extends TestCase
     {
         parent::setUp();
 
+        $this->seed(PermissionSeeder::class);
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
         $this->superAdmin = User::factory()->superAdmin()->create([
             'name' => 'Super Admin',
             'email' => 'superadmin@test.com',
@@ -58,6 +62,8 @@ class RouteComprehensiveTest extends TestCase
             'company_id' => $this->company->id,
             'is_active' => true,
         ]);
+        $this->assignSpatieAdminRole($this->companyAdmin);
+        $this->companyAdmin = $this->companyAdmin->fresh();
 
         $this->employee = User::factory()->create([
             'name' => 'Employee',

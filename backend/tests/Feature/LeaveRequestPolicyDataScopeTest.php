@@ -205,16 +205,17 @@ class LeaveRequestPolicyDataScopeTest extends TestCase
         $this->assertFalse($ids->contains($theirs->id));
     }
 
-    public function test_company_admin_bypass_sees_and_approves_all(): void
+    public function test_company_admin_with_admin_role_sees_and_approves_all(): void
     {
         $admin = User::factory()->create([
             'company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
         ]);
+        $this->assignSpatieAdminRole($admin);
         $employee = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
         $leave = $this->leaveFor($employee);
 
-        Sanctum::actingAs($admin);
+        Sanctum::actingAs($admin->fresh());
 
         $this->getJson("/api/v1/leaves/requests/{$leave->id}")->assertStatus(200);
         $this->postJson("/api/v1/leaves/requests/{$leave->id}/approve")->assertStatus(200);

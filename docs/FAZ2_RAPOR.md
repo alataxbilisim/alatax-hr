@@ -1339,4 +1339,51 @@ Kapsam dışı (bilinçli / sonraki): framework/log/pivot tabloları; Payslip ve
 | Tam suite | **177 passed**, 1 risky |
 | CI | **yeşil** — [run 29160057361](https://github.com/alataxbilisim/alatax-hr/actions/runs/29160057361) |
 
+---
+
+## company_admin Gate bypass kaldırma (Faz 2 SON BLOK)
+
+**Tarih:** 11 Temmuz 2026 · **Branch:** `faz2-rbac-audit`  
+**Sıra:** önce Spatie `admin` rol garantisi → doğrula → **sonra** Gate bypass kaldır.
+
+### Adım 1 — Rol garantisi (bypass kaldırılmadan önce)
+
+| Parça | Durum |
+|-------|--------|
+| Register → `assignRole('admin')` + `data_scope=company` | ✅ (AuthController) |
+| SuperAdmin firma oluşturma → `admin` / `sanctum` (eski `company_admin`/`web` hatası düzeltildi) | ✅ |
+| Migration `2026_07_11_164542_assign_admin_role_to_company_admins` | ✅ idempotent |
+| Command `users:ensure-admin-role {--dry-run}` | ✅ |
+| Adım 1c test (`CompanyAdminRoleGuaranteeTest`) | ✅ rol + izinler + endpoint |
+
+### Adım 2 — admin tam yetki
+
+| Kontrol | Durum |
+|---------|--------|
+| PermissionSeeder `admin` → `$allPermissions` | ✅ (salary.view / tckn / management.* dahil) |
+| `data_scope` = company (seeder + config fallback) | ✅ |
+
+### Adım 3 — Bypass kaldırma
+
+| Değişiklik | Durum |
+|------------|--------|
+| `Gate::before`: yalnız `SuperAdmin` type bypass | ✅ |
+| `company_admin` type → Spatie `admin` rolünden yetki | ✅ |
+| `WorkflowService::canApprove`: SuperAdmin **veya** `hasRole('admin')` | ✅ |
+| `CompanyAdminOnly` soft-pass yorumları güncellendi | ✅ |
+
+### Adım 4 — Doğrulama
+
+| Senaryo | Sonuç |
+|---------|--------|
+| company_admin + admin → admin endpoint 200 | ✅ |
+| company_admin + admin → maaş görür | ✅ |
+| company_admin → başka firma 404 | ✅ |
+| company_admin **rolsüz** → 403 | ✅ (Wave4) |
+| hr_manager → kendi yetkileri | ✅ |
+| super_admin → Gate bypass | ✅ |
+| Tam suite | **186 passed**, 1 risky |
+
+**Kritik kanıt:** company_admin bypass **olmadan**, Spatie `admin` ile erişim; suite kırılmadı.
+
 

@@ -418,8 +418,14 @@ class AuthController extends BaseController
             ],
         ]);
 
-        // Admin rolünü ata
-        $user->assignRole('admin');
+        // Admin rolünü ata (Spatie sanctum — Gate bypass kalkınca tek yetki yolu)
+        $adminRole = \App\Models\Role::firstOrCreate(
+            ['name' => 'admin', 'guard_name' => 'sanctum']
+        );
+        if ($adminRole->data_scope === null) {
+            $adminRole->forceFill(['data_scope' => 'company'])->save();
+        }
+        $user->assignRole($adminRole);
 
         // Token oluştur
         $token = $user->createToken('auth-token')->plainTextToken;

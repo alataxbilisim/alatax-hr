@@ -497,6 +497,11 @@ class PermissionSeeder extends Seeder
             });
 
             $role->syncPermissions($validPermissions);
+
+            // admin → company data_scope (config fallback ile uyumlu)
+            if ($roleName === 'admin' && $role->data_scope === null) {
+                $role->forceFill(['data_scope' => 'company'])->save();
+            }
         }
     }
 }

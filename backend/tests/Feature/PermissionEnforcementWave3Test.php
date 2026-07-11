@@ -121,11 +121,17 @@ class PermissionEnforcementWave3Test extends TestCase
 
     private function makeUser(UserType $type, ?Company $company = null): User
     {
-        return User::factory()->create([
+        $user = User::factory()->create([
             'type' => $type,
             'company_id' => $type === UserType::SuperAdmin ? null : ($company ?? $this->company)->id,
             'is_active' => true,
         ]);
+
+        if ($type === UserType::CompanyAdmin) {
+            return $this->assignSpatieAdminRole($user);
+        }
+
+        return $user;
     }
 
     /**
@@ -186,14 +192,16 @@ class PermissionEnforcementWave3Test extends TestCase
         }
     }
 
-    public function test_all_groups_super_admin_and_company_admin_bypass(): void
+    public function test_all_groups_super_admin_and_company_admin_with_admin_role(): void
     {
         foreach ($this->groups as $name => $group) {
             Sanctum::actingAs($this->makeUser(UserType::SuperAdmin));
             $this->assertSame(200, $this->getJson($group['uri'])->status(), "{$name} super_admin");
 
-            Sanctum::actingAs($this->makeUser(UserType::CompanyAdmin));
-            $this->assertSame(200, $this->getJson($group['uri'])->status(), "{$name} company_admin");
+            $admin = $this->makeUser(UserType::CompanyAdmin);
+            $this->assertTrue($admin->hasRole('admin'));
+            Sanctum::actingAs($admin);
+            $this->assertSame(200, $this->getJson($group['uri'])->status(), "{$name} company_admin+admin");
         }
     }
 

@@ -63,12 +63,21 @@ class EmployeeFieldPermissionTest extends TestCase
             'company_id' => $this->company->id,
             'type' => $type ?? UserType::User,
         ]);
-        $user->assignRole($role);
+        $spatieRole = Role::findByName($role, 'sanctum');
+        if ($role === 'admin' && $permissions === []) {
+            $spatieRole->syncPermissions(
+                Permission::query()->where('guard_name', 'sanctum')->pluck('name')->all()
+            );
+            if ($spatieRole->data_scope === null) {
+                $spatieRole->forceFill(['data_scope' => 'company'])->save();
+            }
+        }
+        $user->assignRole($spatieRole);
         if ($permissions !== []) {
             $user->givePermissionTo($permissions);
         }
 
-        return $user;
+        return $user->fresh();
     }
 
     private function employeeWithSensitive(array $attrs = []): Employee

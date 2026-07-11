@@ -10,6 +10,7 @@ use App\Models\Module;
 use App\Models\Survey;
 use App\Models\SurveyQuestion;
 use App\Models\User;
+use Database\Seeders\PermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -28,6 +29,9 @@ class SurveyTest extends TestCase
     {
         parent::setUp();
 
+        $this->seed(PermissionSeeder::class);
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
         $this->company = Company::factory()->create([
             'status' => CompanyStatus::Active,
         ]);
@@ -35,6 +39,8 @@ class SurveyTest extends TestCase
             'company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
         ]);
+        $this->assignSpatieAdminRole($this->adminUser);
+        $this->adminUser = $this->adminUser->fresh();
         $this->portalUser = User::factory()->create([
             'company_id' => $this->company->id,
             'type' => UserType::User,

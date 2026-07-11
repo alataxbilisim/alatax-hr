@@ -21,7 +21,7 @@ class DataScopeService
 {
     /**
      * Birden fazla rolde en geniş kapsam kazanır.
-     * company_admin / super_admin → company (Gate bypass ile uyumlu liste filtresi).
+     * company_admin / super_admin → company (firma geneli liste filtresi).
      * Rol yoksa → own (en dar güvenli varsayılan).
      */
     public function resolve(User $user): DataScopeLevel

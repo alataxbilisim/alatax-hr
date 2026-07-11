@@ -32,7 +32,8 @@ class AppServiceProvider extends ServiceProvider
 
     /**
      * Spatie permission: middleware için Gate::before —
-     * type bypass + hiyerarşik wildcard (employees.* → employees.list.view).
+     * super_admin type bypass + hiyerarşik wildcard (employees.* → employees.list.view).
+     * company_admin yetkisi Spatie 'admin' rolünden gelir (type bypass yok).
      */
     protected function configureAuthorizationGates(): void
     {
@@ -41,8 +42,8 @@ class AppServiceProvider extends ServiceProvider
                 return null;
             }
 
-            // GEÇİCİ: company_admin bypass — Faz 2 sonu/Faz 6'da otomatik admin rolü + kaldır
-            if ($user->type === UserType::SuperAdmin || $user->type === UserType::CompanyAdmin) {
+            // Platform sahibi — Spatie rolünden bağımsız
+            if ($user->type === UserType::SuperAdmin) {
                 return true;
             }
 

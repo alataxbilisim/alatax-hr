@@ -11,7 +11,7 @@ use App\Services\WorkflowService;
 
 /**
  * LeaveRequest satır yetkisi.
- * company_admin / super_admin bypass Gate::before'dan gelir — burada yazılmaz.
+ * super_admin Gate::before; company_admin yetkisi Spatie admin + data_scope.
  */
 class LeaveRequestPolicy
 {

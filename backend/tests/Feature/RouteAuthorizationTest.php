@@ -8,6 +8,7 @@ use App\Models\Company;
 use App\Models\Employee;
 use App\Models\Module;
 use App\Models\User;
+use Database\Seeders\PermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
 use Laravel\Sanctum\Sanctum;
@@ -31,6 +32,9 @@ class RouteAuthorizationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        $this->seed(PermissionSeeder::class);
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
         // AuthThrottleTest / önceki istekler aynı IP limiter'ını kirletebilir
         foreach (['127.0.0.1', '::1'] as $ip) {
@@ -59,6 +63,8 @@ class RouteAuthorizationTest extends TestCase
             'company_id' => $this->company->id,
             'is_active' => true,
         ]);
+        $this->assignSpatieAdminRole($this->companyAdmin);
+        $this->companyAdmin = $this->companyAdmin->fresh();
 
         // Şema: type=user (eski testlerdeki 'employee' geçersizdi)
         $this->employee = User::factory()->create([
@@ -247,6 +253,7 @@ class RouteAuthorizationTest extends TestCase
             'company_id' => $this->companyWithoutModule->id,
             'is_active' => true,
         ]);
+        $this->assignSpatieAdminRole($userWithoutModule);
 
         Sanctum::actingAs($userWithoutModule);
         $response = $this->getJson('/api/v1/recruitment/positions');

@@ -11,7 +11,7 @@ use App\Services\DataScopeService;
  * Employee satır yetkisi.
  * view: own/team/department/company (team kendi kaydını da içerir).
  * update/delete: yalnızca company veya department (İK) — manager team ile sadece görür.
- * company_admin bypass Gate::before'dan gelir.
+ * company_admin yetkisi Spatie admin rolü + data_scope ile gelir.
  */
 class EmployeePolicy
 {

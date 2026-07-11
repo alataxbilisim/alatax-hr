@@ -10,7 +10,7 @@ use App\Services\WorkflowService;
 
 /**
  * ApprovalRecord — yalnızca atanan onaycı veya aktif vekil işleyebilir.
- * company_admin bypass Gate::before'dan gelir.
+ * company_admin yetkisi Spatie admin rolü + WorkflowService::canApprove ile gelir.
  */
 class ApprovalRecordPolicy
 {

@@ -8,12 +8,11 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Firma Admini veya SuperAdmin erişimi için middleware.
+ * Firma yönetimi route grubuna soft giriş.
  *
- * Dalga 4 geçiş: UserType::user engellenmez — asıl yetki route'taki
- * permission: middleware + Gate::before (company_admin type bypass) ile verilir.
- * Böylece Spatie rolü olan (hr_manager vb.) user type kullanıcılar da erişebilir;
- * company_admin type ise Gate bypass ile permission'sız geçer.
+ * UserType::user engellenmez — asıl yetki route'taki permission: middleware
+ * + Spatie rollerinden gelir. company_admin type yalnızca grup soft-pass;
+ * izinler Spatie 'admin' rolü ile verilir (Gate type bypass yok).
  */
 class CompanyAdminOnly
 {
@@ -31,12 +30,12 @@ class CompanyAdminOnly
             ], 401);
         }
 
-        // SuperAdmin / CompanyAdmin: type bypass (Gate::before ile permission da geçer)
+        // SuperAdmin / CompanyAdmin: soft-pass (izinler permission middleware'de)
         if (in_array($user->type, [UserType::SuperAdmin, UserType::CompanyAdmin], true)) {
             return $next($request);
         }
 
-        // UserType::user: company_admin type yok — permission middleware karar verir
+        // UserType::user: Spatie rol (hr_manager vb.) + permission middleware
         if ($user->type === UserType::User) {
             return $next($request);
         }

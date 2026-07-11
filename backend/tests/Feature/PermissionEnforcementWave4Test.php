@@ -17,7 +17,7 @@ use Tests\TestCase;
  * Dalga 4 (SON): admin grupları — company_admin soft + permission katmanı.
  *
  * Kritik: UserType::user + Spatie hr_manager → 200 (type-only değil, rol bazlı).
- * company_admin type → Gate bypass ile 200 (mevcut adminler kilitlenmez).
+ * company_admin type + Spatie admin rolü → 200; rol yoksa → 403.
  */
 class PermissionEnforcementWave4Test extends TestCase
 {
@@ -73,9 +73,25 @@ class PermissionEnforcementWave4Test extends TestCase
 
     private function makeUser(UserType $type, ?Company $company = null): User
     {
-        return User::factory()->create([
+        $user = User::factory()->create([
             'type' => $type,
             'company_id' => $type === UserType::SuperAdmin ? null : ($company ?? $this->company)->id,
+            'is_active' => true,
+        ]);
+
+        if ($type === UserType::CompanyAdmin) {
+            return $this->assignSpatieAdminRole($user);
+        }
+
+        return $user;
+    }
+
+    /** Rol atanmamış company_admin — Gate bypass yok, 403 beklenir. */
+    private function makeCompanyAdminWithoutRole(?Company $company = null): User
+    {
+        return User::factory()->create([
+            'type' => UserType::CompanyAdmin,
+            'company_id' => ($company ?? $this->company)->id,
             'is_active' => true,
         ]);
     }
@@ -146,16 +162,27 @@ class PermissionEnforcementWave4Test extends TestCase
         $this->assertSame(403, $this->getJson('/api/v1/roles')->status(), 'yalnızca users.view → roles engelli');
     }
 
-    public function test_admin_groups_company_admin_bypass_without_spatie_perms(): void
+    public function test_admin_groups_company_admin_without_admin_role_returns_403(): void
     {
-        // Gate::before company_admin bypass — Spatie izin yokken de 200
-        $admin = $this->makeUser(UserType::CompanyAdmin);
+        $admin = $this->makeCompanyAdminWithoutRole();
         $this->assertSame(UserType::CompanyAdmin, $admin->type);
+        $this->assertFalse($admin->hasRole('admin'));
         $this->assertCount(0, $admin->getAllPermissions());
         Sanctum::actingAs($admin);
 
         foreach ($this->groups as $name => $group) {
-            $this->assertSame(200, $this->getJson($group['uri'])->status(), "{$name} company_admin bypass");
+            $this->assertSame(403, $this->getJson($group['uri'])->status(), "{$name} company_admin rolsüz");
+        }
+    }
+
+    public function test_admin_groups_company_admin_with_admin_role_returns_200(): void
+    {
+        $admin = $this->makeUser(UserType::CompanyAdmin);
+        $this->assertTrue($admin->hasRole('admin'));
+        Sanctum::actingAs($admin);
+
+        foreach ($this->groups as $name => $group) {
+            $this->assertSame(200, $this->getJson($group['uri'])->status(), "{$name} company_admin+admin");
         }
     }
 

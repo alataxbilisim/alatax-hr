@@ -52,11 +52,17 @@ class PermissionEnforcementWave1Test extends TestCase
 
     private function makeUser(UserType $type, ?Company $company = null): User
     {
-        return User::factory()->create([
+        $user = User::factory()->create([
             'type' => $type,
             'company_id' => $type === UserType::SuperAdmin ? null : ($company ?? $this->company)->id,
             'is_active' => true,
         ]);
+
+        if ($type === UserType::CompanyAdmin) {
+            return $this->assignSpatieAdminRole($user);
+        }
+
+        return $user;
     }
 
     // ——— activity-logs ———
@@ -98,9 +104,11 @@ class PermissionEnforcementWave1Test extends TestCase
         $this->getJson('/api/v1/activity-logs')->assertStatus(200);
     }
 
-    public function test_activity_logs_company_admin_bypass_returns_200(): void
+    public function test_activity_logs_company_admin_with_admin_role_returns_200(): void
     {
-        Sanctum::actingAs($this->makeUser(UserType::CompanyAdmin));
+        $admin = $this->makeUser(UserType::CompanyAdmin);
+        $this->assertTrue($admin->hasRole('admin'));
+        Sanctum::actingAs($admin);
 
         $this->getJson('/api/v1/activity-logs')->assertStatus(200);
     }
@@ -179,12 +187,14 @@ class PermissionEnforcementWave1Test extends TestCase
         $this->postJson("/api/v1/attendance/{$record->id}/approve")->assertStatus(200);
     }
 
-    public function test_attendance_super_admin_and_company_admin_bypass(): void
+    public function test_attendance_super_admin_and_company_admin_with_admin_role(): void
     {
         Sanctum::actingAs($this->makeUser(UserType::SuperAdmin));
         $this->getJson('/api/v1/attendance')->assertStatus(200);
 
-        Sanctum::actingAs($this->makeUser(UserType::CompanyAdmin));
+        $admin = $this->makeUser(UserType::CompanyAdmin);
+        $this->assertTrue($admin->hasRole('admin'));
+        Sanctum::actingAs($admin);
         $this->getJson('/api/v1/attendance')->assertStatus(200);
     }
 

@@ -195,11 +195,13 @@ class CompanyController extends BaseController
                 'is_active' => true,
             ]);
 
-            // company_admin rolü yoksa oluştur ve ata
+            // Spatie admin rolü (sanctum) — Gate bypass kalkınca yetki buradan gelir
             $role = Role::firstOrCreate(
-                ['name' => 'company_admin', 'guard_name' => 'web'],
-                ['name' => 'company_admin', 'guard_name' => 'web']
+                ['name' => 'admin', 'guard_name' => 'sanctum']
             );
+            if ($role->data_scope === null) {
+                $role->forceFill(['data_scope' => 'company'])->save();
+            }
             $admin->assignRole($role);
 
             ActivityLog::log(
@@ -207,7 +209,7 @@ class CompanyController extends BaseController
                 $admin,
                 'Firma admin rolü atandı: '.$admin->email,
                 null,
-                ['roles' => ['company_admin']]
+                ['roles' => ['admin']]
             );
 
             return $this->created([

@@ -96,11 +96,17 @@ class PermissionEnforcementWave2Test extends TestCase
 
     private function makeUser(UserType $type, ?Company $company = null): User
     {
-        return User::factory()->create([
+        $user = User::factory()->create([
             'type' => $type,
             'company_id' => $type === UserType::SuperAdmin ? null : ($company ?? $this->company)->id,
             'is_active' => true,
         ]);
+
+        if ($type === UserType::CompanyAdmin) {
+            return $this->assignSpatieAdminRole($user);
+        }
+
+        return $user;
     }
 
     private function calendarQuery(): string
@@ -170,7 +176,7 @@ class PermissionEnforcementWave2Test extends TestCase
         $this->getJson('/api/v1/recruitment/positions')->assertStatus(200);
     }
 
-    public function test_recruitment_super_admin_and_company_admin_bypass(): void
+    public function test_recruitment_super_admin_and_company_admin_with_admin_role(): void
     {
         Sanctum::actingAs($this->makeUser(UserType::SuperAdmin));
         $this->getJson('/api/v1/recruitment/positions')->assertStatus(200);
@@ -271,7 +277,7 @@ class PermissionEnforcementWave2Test extends TestCase
         $this->postJson("/api/v1/leaves/requests/{$leaveRequest->id}/approve")->assertStatus(200);
     }
 
-    public function test_leaves_super_admin_and_company_admin_bypass(): void
+    public function test_leaves_super_admin_and_company_admin_with_admin_role(): void
     {
         Sanctum::actingAs($this->makeUser(UserType::SuperAdmin));
         $this->getJson('/api/v1/leaves/types')->assertStatus(200);
@@ -355,7 +361,7 @@ class PermissionEnforcementWave2Test extends TestCase
         $this->getJson('/api/v1/documents')->assertStatus(200);
     }
 
-    public function test_documents_super_admin_and_company_admin_bypass(): void
+    public function test_documents_super_admin_and_company_admin_with_admin_role(): void
     {
         Sanctum::actingAs($this->makeUser(UserType::SuperAdmin));
         $this->getJson('/api/v1/documents/categories')->assertStatus(200);
