@@ -26,7 +26,7 @@ class SurveyQuestionFactory extends Factory
             'question_type' => $type,
             'is_required' => $this->faker->boolean(80),
             'options' => $options,
-            'order' => $this->faker->numberBetween(1, 10),
+            'order_number' => $this->faker->numberBetween(1, 10),
         ];
     }
 

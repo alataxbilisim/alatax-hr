@@ -35,10 +35,33 @@ trait ApiResponse
     }
 
     /**
-     * Sayfalanmış response döndür
+     * Sayfalanmış response döndür.
+     *
+     * @param  \Illuminate\Contracts\Pagination\LengthAwarePaginator|\Illuminate\Support\Collection|array  $paginator
+     * @param  \Illuminate\Contracts\Pagination\LengthAwarePaginator|null  $metaSource  Dönüştürülmüş item listesi için meta kaynağı
      */
-    protected function paginated($paginator, string $message = 'Veriler listelendi'): JsonResponse
+    protected function paginated($paginator, string $message = 'Veriler listelendi', $metaSource = null): JsonResponse
     {
+        if ($metaSource !== null) {
+            $items = $paginator instanceof \Illuminate\Support\Collection
+                ? $paginator->values()->all()
+                : (array) $paginator;
+
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'data' => $items,
+                'meta' => [
+                    'current_page' => $metaSource->currentPage(),
+                    'last_page' => $metaSource->lastPage(),
+                    'per_page' => $metaSource->perPage(),
+                    'total' => $metaSource->total(),
+                ],
+                'errors' => null,
+                'timestamp' => now()->toDateTimeString(),
+            ]);
+        }
+
         return response()->json([
             'success' => true,
             'message' => $message,

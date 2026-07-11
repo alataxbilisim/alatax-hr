@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Enums\UserType;
 use App\Models\Department;
 use App\Models\Employee;
 use App\Models\SavedReport;
@@ -171,8 +172,8 @@ class EmployeeReportController extends BaseController
         if (isset($measureConfig['requires_permission'])) {
             $user = auth()->user();
             if (! $user->can($measureConfig['requires_permission']) &&
-                $user->type !== 'company_admin' &&
-                $user->type !== 'super_admin') {
+                $user->type !== UserType::CompanyAdmin &&
+                $user->type !== UserType::SuperAdmin) {
                 return $this->error('Bu metrik için yetkiniz bulunmamaktadır', 403);
             }
         }

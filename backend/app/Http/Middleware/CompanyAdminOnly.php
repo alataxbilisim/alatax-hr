@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\UserType;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -25,8 +26,8 @@ class CompanyAdminOnly
             ], 401);
         }
 
-        // SuperAdmin ve Company Admin izinli
-        if (! in_array($user->type, ['super_admin', 'company_admin'])) {
+        // SuperAdmin ve Company Admin izinli (enum karşılaştırması — string in_array PHP'de false döner)
+        if (! in_array($user->type, [UserType::SuperAdmin, UserType::CompanyAdmin], true)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Bu işlem için yönetici yetkisi gereklidir.',
