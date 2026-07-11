@@ -34,7 +34,7 @@ return new class extends Migration
 
             $table->index(['process_id', 'order']);
         });
-            \App\Support\PortableEnum::flushChecks();
+        \App\Support\PortableEnum::flushChecks();
     }
 
     /**

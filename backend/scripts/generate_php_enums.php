@@ -4,7 +4,6 @@
  * PHP backed enum üretici — migration PortableEnum::column değerlerinden.
  * İsim: App\Enums\{StudlyFromColumn} + çakışmada Values hash suffix.
  */
-
 $files = glob(__DIR__.'/../database/migrations/*.php') ?: [];
 $sets = []; // valuesKey => ['values'=>[], 'usages'=>[]]
 

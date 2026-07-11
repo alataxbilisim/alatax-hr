@@ -41,7 +41,7 @@ return new class extends Migration
 
             $table->index(['company_id', 'user_id', 'start_date', 'end_date']);
         });
-            \App\Support\PortableEnum::flushChecks();
+        \App\Support\PortableEnum::flushChecks();
     }
 
     /**

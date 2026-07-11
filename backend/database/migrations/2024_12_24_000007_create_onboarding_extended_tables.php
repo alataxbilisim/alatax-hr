@@ -135,7 +135,7 @@ return new class extends Migration
             $table->datetime('first_day')->nullable()->after('preboarding_started_at');
             $table->foreignId('buddy_id')->nullable()->after('first_day')->constrained('users')->nullOnDelete();
         });
-            \App\Support\PortableEnum::flushChecks();
+        \App\Support\PortableEnum::flushChecks();
     }
 
     /**

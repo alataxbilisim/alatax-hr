@@ -121,7 +121,7 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
         });
-            \App\Support\PortableEnum::flushChecks();
+        \App\Support\PortableEnum::flushChecks();
     }
 
     /**

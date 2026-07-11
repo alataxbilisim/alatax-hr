@@ -30,7 +30,7 @@ return new class extends Migration
             $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
-            \App\Support\PortableEnum::flushChecks();
+        \App\Support\PortableEnum::flushChecks();
     }
 
     /**

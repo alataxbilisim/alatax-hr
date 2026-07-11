@@ -77,7 +77,7 @@ return new class extends Migration
             $table->index(['company_id', 'user_id', 'leave_type_id']);
             $table->index(['effective_date']);
         });
-            \App\Support\PortableEnum::flushChecks();
+        \App\Support\PortableEnum::flushChecks();
     }
 
     /**

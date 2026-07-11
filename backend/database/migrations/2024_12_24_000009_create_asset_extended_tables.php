@@ -104,7 +104,7 @@ return new class extends Migration
             $table->date('disposed_at')->nullable()->after('lifecycle_stage');
             $table->text('disposal_notes')->nullable()->after('disposed_at');
         });
-            \App\Support\PortableEnum::flushChecks();
+        \App\Support\PortableEnum::flushChecks();
     }
 
     /**

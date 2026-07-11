@@ -117,7 +117,7 @@ return new class extends Migration
             $table->jsonb('parsed_cv_data')->nullable()->after('match_score'); // CV'den çıkarılan veriler
             $table->datetime('last_contacted_at')->nullable()->after('parsed_cv_data');
         });
-            \App\Support\PortableEnum::flushChecks();
+        \App\Support\PortableEnum::flushChecks();
     }
 
     /**

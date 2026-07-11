@@ -34,7 +34,7 @@ return new class extends Migration
 
             $table->index(['company_id', 'asset_code']);
         });
-            \App\Support\PortableEnum::flushChecks();
+        \App\Support\PortableEnum::flushChecks();
     }
 
     /**

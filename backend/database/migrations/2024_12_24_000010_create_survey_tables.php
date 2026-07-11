@@ -106,7 +106,7 @@ return new class extends Migration
 
             $table->unique(['company_id', 'period_date']);
         });
-            \App\Support\PortableEnum::flushChecks();
+        \App\Support\PortableEnum::flushChecks();
     }
 
     /**

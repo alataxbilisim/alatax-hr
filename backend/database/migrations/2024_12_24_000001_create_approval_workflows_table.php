@@ -84,7 +84,7 @@ return new class extends Migration
 
             $table->index(['company_id', 'delegator_id', 'start_date', 'end_date'], 'approval_delegations_idx');
         });
-            \App\Support\PortableEnum::flushChecks();
+        \App\Support\PortableEnum::flushChecks();
     }
 
     /**

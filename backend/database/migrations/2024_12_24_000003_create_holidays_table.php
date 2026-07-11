@@ -75,7 +75,7 @@ return new class extends Migration
                 $table->date('carryover_expiry')->nullable()->after('expired');
             }
         });
-            \App\Support\PortableEnum::flushChecks();
+        \App\Support\PortableEnum::flushChecks();
     }
 
     /**

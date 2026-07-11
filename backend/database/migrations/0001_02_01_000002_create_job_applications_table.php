@@ -52,7 +52,7 @@ return new class extends Migration
             $table->index(['company_id', 'status']);
             $table->index(['job_position_id', 'status']);
         });
-            \App\Support\PortableEnum::flushChecks();
+        \App\Support\PortableEnum::flushChecks();
     }
 
     public function down(): void

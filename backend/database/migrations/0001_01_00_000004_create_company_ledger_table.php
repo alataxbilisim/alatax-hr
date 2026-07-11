@@ -47,7 +47,7 @@ return new class extends Migration
             $table->index('due_date');
             $table->index(['reference_type', 'reference_id']);
         });
-            \App\Support\PortableEnum::flushChecks();
+        \App\Support\PortableEnum::flushChecks();
     }
 
     /**

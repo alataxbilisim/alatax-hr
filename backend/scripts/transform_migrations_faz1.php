@@ -4,7 +4,6 @@
  * Faz 1 Adım A — tek geçişli güvenli dönüştürücü.
  * json→jsonb, enum→PortableEnum::column, flushChecks up() sonuna.
  */
-
 $dir = __DIR__.'/../database/migrations';
 $changed = 0;
 
@@ -36,7 +35,7 @@ foreach (glob($dir.'/*.php') as $path) {
             }
 
             $valuesPhp = '['.implode(', ', array_map(
-                static fn (string $v): string => "'".str_replace(["\\", "'"], ["\\\\", "\\'"], $v)."'",
+                static fn (string $v): string => "'".str_replace(['\\', "'"], ['\\\\', "\\'"], $v)."'",
                 $values
             )).']';
 
@@ -75,6 +74,7 @@ foreach (glob($dir.'/*.php') as $path) {
                     }
                     $i++;
                 }
+
                 continue;
             }
             // skip // comments
@@ -82,6 +82,7 @@ foreach (glob($dir.'/*.php') as $path) {
                 while ($i < $len && $content[$i] !== "\n") {
                     $i++;
                 }
+
                 continue;
             }
             // skip /* */ comments
@@ -91,6 +92,7 @@ foreach (glob($dir.'/*.php') as $path) {
                     $i++;
                 }
                 $i++;
+
                 continue;
             }
             if ($ch === '{') {

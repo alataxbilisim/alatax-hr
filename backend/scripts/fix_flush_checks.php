@@ -30,6 +30,7 @@ foreach (glob($dir.'/*.php') as $path) {
                 }
                 $i++;
             }
+
             continue;
         }
         if ($ch === '{') {

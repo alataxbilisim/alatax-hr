@@ -91,7 +91,7 @@ return new class extends Migration
             \App\Support\PortableEnum::column($table, 'approval_status', ['draft', 'pending', 'approved', 'rejected'], 'approved', false, 64, 'validity_date');
             $table->boolean('requires_approval')->default(false)->after('approval_status');
         });
-            \App\Support\PortableEnum::flushChecks();
+        \App\Support\PortableEnum::flushChecks();
     }
 
     /**

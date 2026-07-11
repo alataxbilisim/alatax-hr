@@ -230,7 +230,7 @@ return new class extends Migration
             $table->decimal('report_score', 5, 2)->nullable()->after('peer_score');
             $table->decimal('final_score', 5, 2)->nullable()->after('report_score');
         });
-            \App\Support\PortableEnum::flushChecks();
+        \App\Support\PortableEnum::flushChecks();
     }
 
     /**

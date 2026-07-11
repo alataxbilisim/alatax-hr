@@ -27,7 +27,7 @@ return new class extends Migration
 
             $table->index(['asset_id', 'user_id']);
         });
-            \App\Support\PortableEnum::flushChecks();
+        \App\Support\PortableEnum::flushChecks();
     }
 
     /**

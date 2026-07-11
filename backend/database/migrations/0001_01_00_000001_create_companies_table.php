@@ -50,7 +50,7 @@ return new class extends Migration
             $table->index('status');
             $table->index('package_type');
         });
-            \App\Support\PortableEnum::flushChecks();
+        \App\Support\PortableEnum::flushChecks();
     }
 
     /**

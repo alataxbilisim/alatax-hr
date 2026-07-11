@@ -3,7 +3,6 @@
 /**
  * Kalan unique CHECK setleri için PHP enum üret (çekirdek Enums/ altındakiler hariç).
  */
-
 $existingValues = [];
 foreach (glob(__DIR__.'/../app/Enums/*.php') ?: [] as $f) {
     $c = file_get_contents($f);
