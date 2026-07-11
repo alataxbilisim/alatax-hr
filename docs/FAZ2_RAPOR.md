@@ -720,6 +720,65 @@ SuperAdmin (tüm tenant'lar)
 Kritik kanıt: `test_manager_cannot_see_or_approve_other_team_leave` → liste yok + show/approve **403**.  
 Kritik kanıt: `test_permission_alone_without_team_cannot_approve_legacy_closed` → sadece permission ile onay **403**.
 
-### Sonraki dalgalar (bu PR dışı)
+### Sonraki dalgalar (Dalga 1 sonrası)
 
 Employee, ExpenseClaim (`BelongsToCompany`), PerformanceReview, Document visibility…
+
+---
+
+## Policy + Data Scope UYGULAMA — Dalga 2 (Employee, ExpenseClaim, PerformanceReview)
+
+**Tarih:** 11 Temmuz 2026 · **Branch:** `faz2-rbac-audit`  
+**Kapsam:** 3 model Policy + DataScope; HR ExpenseClaim API eklendi.
+
+### Kapsam kararları
+
+| Model | view | update/delete | approve |
+|-------|------|---------------|---------|
+| **Employee** | own / team (+kendisi) / department / company | **yalnızca company veya department** (İK) — manager team ile **görür, düzenleyemez** | — |
+| **ExpenseClaim** | own / team / department / company (`user_id`) | sahibi + **draft** only | LeaveRequest deseni (workflow \| team \| company); legacy **KAPALI** |
+| **PerformanceReview** | reviewee **veya** reviewer **veya** DataScope(reviewee) | **yalnızca reviewer** (approved hariç) | company \| team(subordinate reviewee) \| department |
+
+### PerformanceReview şema doğrulaması
+
+| Kolon | Gerçek FK | Anlam |
+|-------|-----------|--------|
+| `employee_id` | → **`users`** (employees tablosu değil) | Reviewee |
+| `reviewer_id` | → **`users`** | Reviewer |
+| `status` | draft / submitted / approved / rejected | |
+
+İsim yanıltıcı ama migration tutarlı; Policy `employee_id`’yi User id olarak ele alır. Model **atlanmadı**.
+
+### ExpenseClaim
+
+- `BelongsToCompany` **eklendi** (önceki bug).
+- HR API yoktu → eklendi: `GET/POST /api/v1/expenses/claims…` (+ approve/reject).
+- Portal: Policy ile update/delete güçlendirildi (approved → 403).
+
+### DataScope genişletmeleri
+
+- `scopeForEmployee` / `allowsEmployee` / `teamEmployeeIds`
+- `scopeForPerformanceReview` (reviewer **veya** scoped reviewee)
+- `canManageHrRecords` (company|department)
+- `resolve`: `company_admin` / `super_admin` → **company** (liste filtresi Gate bypass ile uyumlu)
+
+### Yan düzeltmeler (show 500 — Policy testlerinde ortaya çıktı)
+
+| Bug | Düzeltme |
+|-----|----------|
+| `TrainingCertificate::where('user_id')` | `whereHas('participant')` + `issue_date` |
+| `AssetAssignment.returned_date` | `return_date` |
+| `ActivityLog.subject_type` | `model_type` / `model_id` |
+
+### Test
+
+| Suite | Sonuç |
+|-------|--------|
+| `PolicyDataScopeWave2Test` | **13 passed** |
+| Tam `php artisan test` | **133 passed**, 1 risky |
+
+Kritik: expense manager başka ekip approve → **403**; employee manager update subordinate → **403**.
+
+### Sonraki / son Policy dalgası
+
+Document görünürlük, ApprovalRecord tighten…

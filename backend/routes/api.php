@@ -631,6 +631,18 @@ Route::prefix('v1')->group(function () {
             });
         });
 
+        // Masraf talepleri (HR / manager) — portal own API ayrı (/portal/expenses)
+        Route::prefix('expenses')->group(function () {
+            Route::get('claims', [\App\Http\Controllers\Api\V1\Expenses\ExpenseClaimController::class, 'index'])
+                ->middleware('permission:expenses.claims.view');
+            Route::get('claims/{expense_claim}', [\App\Http\Controllers\Api\V1\Expenses\ExpenseClaimController::class, 'show'])
+                ->middleware('permission:expenses.claims.view');
+            Route::post('claims/{expense_claim}/approve', [\App\Http\Controllers\Api\V1\Expenses\ExpenseClaimController::class, 'approve'])
+                ->middleware('permission:expenses.claims.approve');
+            Route::post('claims/{expense_claim}/reject', [\App\Http\Controllers\Api\V1\Expenses\ExpenseClaimController::class, 'reject'])
+                ->middleware('permission:expenses.claims.approve');
+        });
+
         // Performans Değerlendirme Modülü
         Route::middleware('module.access:performance')->prefix('performance')->group(function () {
             // Periods

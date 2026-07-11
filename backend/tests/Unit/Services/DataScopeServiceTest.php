@@ -171,6 +171,33 @@ class DataScopeServiceTest extends TestCase
         $this->assertTrue($ids->contains($lb->id));
     }
 
+    public function test_scope_for_employee_team_includes_self_and_subordinates(): void
+    {
+        $managerUser = $this->makeUserWithRole('manager');
+        $subUser = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $otherUser = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+
+        $managerEmp = Employee::factory()->forUser($managerUser)->create();
+        $subEmp = Employee::factory()->forUser($subUser)->create(['manager_id' => $managerEmp->id]);
+        $otherEmp = Employee::factory()->forUser($otherUser)->create();
+
+        $ids = $this->service->scopeForEmployee(Employee::query(), $managerUser)->pluck('id');
+
+        $this->assertTrue($ids->contains($managerEmp->id));
+        $this->assertTrue($ids->contains($subEmp->id));
+        $this->assertFalse($ids->contains($otherEmp->id));
+    }
+
+    public function test_company_admin_resolves_to_company_scope(): void
+    {
+        $admin = User::factory()->create([
+            'company_id' => $this->company->id,
+            'type' => UserType::CompanyAdmin,
+        ]);
+
+        $this->assertSame(DataScopeLevel::Company, $this->service->resolve($admin));
+    }
+
     private function leaveType(): LeaveType
     {
         return LeaveType::create([

@@ -184,6 +184,7 @@ class PermissionEnforcementWave4Test extends TestCase
         Employee::factory()->forUser($otherUser)->create();
 
         $viewer = $this->makeUser(UserType::User, $this->company);
+        $viewer->assignRole(\Spatie\Permission\Models\Role::findOrCreate('hr_manager', 'sanctum'));
         $viewer->givePermissionTo('employees.list.view');
         Sanctum::actingAs($viewer);
 

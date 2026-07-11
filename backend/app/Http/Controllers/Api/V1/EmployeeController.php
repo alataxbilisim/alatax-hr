@@ -14,6 +14,7 @@ use App\Models\PerformanceReview;
 use App\Models\TrainingCertificate;
 use App\Models\TrainingParticipant;
 use App\Models\User;
+use App\Services\DataScopeService;
 use App\Services\EmployeeImportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -25,13 +26,21 @@ use Illuminate\Validation\Rule;
 
 class EmployeeController extends BaseController
 {
+    public function __construct(
+        protected DataScopeService $dataScope,
+    ) {}
+
     /**
      * Personel listesi
      */
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', Employee::class);
+
         $query = Employee::with(['user', 'department', 'manager.user'])
             ->where('company_id', $this->getCompanyId());
+
+        $this->dataScope->scopeForEmployee($query, $request->user());
 
         // Arama
         if ($request->has('search')) {
@@ -91,6 +100,8 @@ class EmployeeController extends BaseController
         ])->where('company_id', $this->getCompanyId())
             ->findOrFail($id);
 
+        $this->authorize('view', $employee);
+
         // İzin bilgilerini ekle (user_id varsa)
         $leaveData = null;
         if ($employee->user_id) {
@@ -123,9 +134,11 @@ class EmployeeController extends BaseController
                 ->orderBy('created_at', 'desc')
                 ->get();
 
-            $certificates = TrainingCertificate::where('user_id', $employee->user_id)
-                ->with('training:id,title')
-                ->orderBy('issued_date', 'desc')
+            $certificates = TrainingCertificate::whereHas('participant', function ($q) use ($employee) {
+                $q->where('user_id', $employee->user_id);
+            })
+                ->with(['participant.session.training:id,title'])
+                ->orderBy('issue_date', 'desc')
                 ->get();
 
             $trainingData = [
@@ -138,15 +151,15 @@ class EmployeeController extends BaseController
         $assetData = null;
         if ($employee->user_id) {
             $activeAssignments = AssetAssignment::where('user_id', $employee->user_id)
-                ->whereNull('returned_date')
+                ->whereNull('return_date')
                 ->with('asset:id,name,asset_code,brand,model,status')
                 ->orderBy('assigned_date', 'desc')
                 ->get();
 
             $pastAssignments = AssetAssignment::where('user_id', $employee->user_id)
-                ->whereNotNull('returned_date')
+                ->whereNotNull('return_date')
                 ->with('asset:id,name,asset_code,brand,model')
-                ->orderBy('returned_date', 'desc')
+                ->orderBy('return_date', 'desc')
                 ->limit(10)
                 ->get();
 
@@ -171,8 +184,8 @@ class EmployeeController extends BaseController
         }
 
         // Activity log (son 20 kayıt)
-        $activityLog = ActivityLog::where('subject_type', Employee::class)
-            ->where('subject_id', $employee->id)
+        $activityLog = ActivityLog::where('model_type', Employee::class)
+            ->where('model_id', $employee->id)
             ->orderBy('created_at', 'desc')
             ->limit(20)
             ->get();
@@ -192,6 +205,8 @@ class EmployeeController extends BaseController
      */
     public function store(Request $request): JsonResponse
     {
+        $this->authorize('create', Employee::class);
+
         $validated = $request->validate([
             'employee_code' => [
                 'required',
@@ -346,6 +361,8 @@ class EmployeeController extends BaseController
     {
         $employee = Employee::where('company_id', $this->getCompanyId())->findOrFail($id);
 
+        $this->authorize('update', $employee);
+
         $validated = $request->validate([
             'employee_code' => [
                 'sometimes',
@@ -410,6 +427,9 @@ class EmployeeController extends BaseController
     public function destroy(int $id): JsonResponse
     {
         $employee = Employee::where('company_id', $this->getCompanyId())->findOrFail($id);
+
+        $this->authorize('delete', $employee);
+
         $oldValues = $employee->toArray();
 
         ActivityLog::log('delete', $employee, 'Personel kaydı silindi', $oldValues, null);

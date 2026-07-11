@@ -173,7 +173,7 @@ class ExpenseTest extends TestCase
 
         $response = $this->deleteJson("/api/v1/portal/expenses/{$claim->id}");
 
-        $response->assertStatus(404); // Won't find because of query filter
+        $response->assertStatus(403); // Policy: onaylanmış masraf silinemez
     }
 
     /** @test */

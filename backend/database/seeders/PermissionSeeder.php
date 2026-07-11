@@ -318,6 +318,9 @@ class PermissionSeeder extends Seeder
                     // İzin - Tam yetki
                     'leaves.*',
 
+                    // Masraf - Tam yetki
+                    'expenses.*',
+
                     // Onboarding - Tam yetki
                     'onboarding.*',
 
@@ -430,8 +433,12 @@ class PermissionSeeder extends Seeder
                     'leaves.requests.view', 'leaves.requests.approve',
                     'leaves.calendar.view',
 
+                    // Masraf - ekip onay
+                    'expenses.claims.view', 'expenses.claims.approve',
+
                     // Performans - Değerlendirme yapabilir
                     'performance.reviews.view', 'performance.reviews.create', 'performance.reviews.edit',
+                    'performance.reviews.approve',
                     'performance.feedback.view', 'performance.feedback.create', 'performance.feedback.edit',
                     'performance.one_on_one.view', 'performance.one_on_one.create', 'performance.one_on_one.edit',
                     'performance.okr.view',

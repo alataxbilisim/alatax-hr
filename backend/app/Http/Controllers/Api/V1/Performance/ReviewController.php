@@ -6,18 +6,27 @@ use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\ActivityLog;
 use App\Models\PerformanceReview;
 use App\Models\PerformanceScore;
+use App\Services\DataScopeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ReviewController extends BaseController
 {
+    public function __construct(
+        protected DataScopeService $dataScope,
+    ) {}
+
     /**
      * Değerlendirme listesi
      */
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', PerformanceReview::class);
+
         $query = PerformanceReview::where('company_id', $this->getCompanyId())
             ->with(['period:id,name', 'employee:id,name,email', 'reviewer:id,name,email']);
+
+        $this->dataScope->scopeForPerformanceReview($query, $request->user());
 
         if ($request->has('period_id')) {
             $query->where('period_id', $request->period_id);
@@ -42,6 +51,8 @@ class ReviewController extends BaseController
      */
     public function store(Request $request): JsonResponse
     {
+        $this->authorize('create', PerformanceReview::class);
+
         $validated = $request->validate([
             'period_id' => 'required|exists:performance_periods,id',
             'employee_id' => 'required|exists:users,id',
@@ -78,6 +89,8 @@ class ReviewController extends BaseController
             ->with(['period', 'employee', 'reviewer', 'scores.criteria'])
             ->findOrFail($id);
 
+        $this->authorize('view', $review);
+
         return $this->success($review);
     }
 
@@ -87,6 +100,8 @@ class ReviewController extends BaseController
     public function update(Request $request, int $id): JsonResponse
     {
         $review = PerformanceReview::where('company_id', $this->getCompanyId())->findOrFail($id);
+
+        $this->authorize('update', $review);
 
         if ($review->status === 'approved') {
             return $this->error('Onaylanmış değerlendirme düzenlenemez.', 422);
@@ -147,6 +162,8 @@ class ReviewController extends BaseController
     {
         $review = PerformanceReview::where('company_id', $this->getCompanyId())->findOrFail($id);
 
+        $this->authorize('delete', $review);
+
         if ($review->status === 'approved') {
             return $this->error('Onaylanmış değerlendirme silinemez.', 422);
         }
@@ -164,6 +181,8 @@ class ReviewController extends BaseController
     public function submit(int $id): JsonResponse
     {
         $review = PerformanceReview::where('company_id', $this->getCompanyId())->findOrFail($id);
+
+        $this->authorize('update', $review);
 
         if ($review->status !== 'draft') {
             return $this->error('Sadece taslak değerlendirmeler gönderilebilir.', 422);
@@ -191,6 +210,8 @@ class ReviewController extends BaseController
     {
         $review = PerformanceReview::where('company_id', $this->getCompanyId())->findOrFail($id);
 
+        $this->authorize('approve', $review);
+
         if ($review->status !== 'submitted') {
             return $this->error('Sadece gönderilmiş değerlendirmeler onaylanabilir.', 422);
         }
@@ -212,6 +233,8 @@ class ReviewController extends BaseController
     public function reject(int $id, Request $request): JsonResponse
     {
         $review = PerformanceReview::where('company_id', $this->getCompanyId())->findOrFail($id);
+
+        $this->authorize('approve', $review);
 
         if ($review->status !== 'submitted') {
             return $this->error('Sadece gönderilmiş değerlendirmeler reddedilebilir.', 422);

@@ -53,6 +53,8 @@ class PortalExpenseController extends BaseController
             ->with(['items.category:id,name', 'approver:id,name'])
             ->findOrFail($id);
 
+        $this->authorize('view', $claim);
+
         return $this->success($claim, 'Masraf talebi detayı');
     }
 
@@ -114,9 +116,13 @@ class PortalExpenseController extends BaseController
      */
     public function update(Request $request, int $id): JsonResponse
     {
-        $claim = ExpenseClaim::where('user_id', auth()->id())
-            ->where('status', ExpenseClaim::STATUS_DRAFT)
-            ->findOrFail($id);
+        $claim = ExpenseClaim::where('user_id', auth()->id())->findOrFail($id);
+
+        $this->authorize('update', $claim);
+
+        if ($claim->status !== ExpenseClaim::STATUS_DRAFT) {
+            return $this->error('Sadece taslak masraf talepleri düzenlenebilir', 422);
+        }
 
         $validated = $request->validate([
             'title' => 'sometimes|string|max:255',
@@ -160,9 +166,13 @@ class PortalExpenseController extends BaseController
      */
     public function cancel(int $id): JsonResponse
     {
-        $claim = ExpenseClaim::where('user_id', auth()->id())
-            ->whereIn('status', [ExpenseClaim::STATUS_DRAFT, ExpenseClaim::STATUS_SUBMITTED])
-            ->findOrFail($id);
+        $claim = ExpenseClaim::where('user_id', auth()->id())->findOrFail($id);
+
+        $this->authorize('delete', $claim);
+
+        if (! in_array($claim->status, [ExpenseClaim::STATUS_DRAFT, ExpenseClaim::STATUS_SUBMITTED], true)) {
+            return $this->error('Bu masraf talebi iptal edilemez', 422);
+        }
 
         $claim->delete();
 
