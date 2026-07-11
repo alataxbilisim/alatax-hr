@@ -92,7 +92,7 @@ export interface ReportMetadata {
 // Default widget templates
 export const DEFAULT_WIDGET_LAYOUTS: Record<WidgetType, Partial<WidgetLayout>> = {
   chart: { w: 6, h: 4, minW: 3, minH: 3 },
-  kpi: { w: 3, h: 2, minW: 2, minH: 2 },
+  kpi: { w: 3, h: 2, minW: 2, minH: 1, maxH: 2 },
   table: { w: 6, h: 4, minW: 4, minH: 3 },
   treemap: { w: 6, h: 4, minW: 4, minH: 3 },
   text: { w: 3, h: 2, minW: 2, minH: 1 },

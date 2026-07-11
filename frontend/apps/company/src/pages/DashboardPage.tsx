@@ -121,12 +121,12 @@ const DashboardPage: React.FC = () => {
       {/* Page Header */}
       <div className="page-header">
         <div className="page-header-content">
-          <h1>Hoş Geldiniz, {user?.name?.split(' ')[0]}!</h1>
-          <p>{data.company.name} - Yönetim Paneli</p>
+          <h1 className="page-title">Hoş Geldiniz, {user?.name?.split(' ')[0]}!</h1>
+          <span className="page-subtitle">{data.company.name}</span>
         </div>
         
         {data.company.license_end_date && (
-          <div className="badge badge-info" style={{ padding: '0.5rem 0.75rem' }}>
+          <div className="badge badge-info">
             <BsClock style={{ marginRight: 4 }} />
             Lisans: {data.company.license_end_date}
           </div>

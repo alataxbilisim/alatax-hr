@@ -80,29 +80,29 @@ const OrganizationChartPage: React.FC = () => {
     <div
       onClick={() => navigate(`/employees/${employee.id}`)}
       style={{
-        padding: '0.75rem 1rem',
+        padding: 'var(--sp-2) var(--sp-3)',
         background: isRoot ? 'var(--primary-soft)' : 'var(--bg-primary)',
-        border: `2px solid ${isRoot ? 'var(--primary)' : 'var(--border-color)'}`,
-        borderRadius: 'var(--radius-lg)',
-        minWidth: 200,
+        border: `1px solid ${isRoot ? 'var(--primary)' : 'var(--border-primary)'}`,
+        borderRadius: 'var(--radius-md)',
+        minWidth: 180,
         cursor: 'pointer',
-        transition: 'all 0.2s ease',
+        transition: 'all var(--transition-fast)',
         boxShadow: 'var(--shadow-sm)',
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.boxShadow = 'var(--shadow-md)';
-        e.currentTarget.style.transform = 'translateY(-2px)';
+        e.currentTarget.style.transform = 'translateY(-1px)';
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
         e.currentTarget.style.transform = 'translateY(0)';
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
         <div
           style={{
-            width: 40,
-            height: 40,
+            width: 32,
+            height: 32,
             borderRadius: '50%',
             background: isRoot ? 'var(--primary)' : 'var(--bg-tertiary)',
             display: 'flex',
@@ -110,19 +110,21 @@ const OrganizationChartPage: React.FC = () => {
             justifyContent: 'center',
             color: isRoot ? 'white' : 'var(--text-secondary)',
             fontWeight: 600,
+            fontSize: 'var(--fs-body)',
+            flexShrink: 0,
           }}
         >
           {employee.user?.name?.charAt(0) || <BsPersonBadge />}
         </div>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontWeight: 600, fontSize: 'var(--fs-body)' }}>
             {employee.user?.name || employee.employee_code}
           </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+          <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)' }}>
             {employee.position || employee.title || 'Pozisyon belirtilmemiş'}
           </div>
           {employee.department && (
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.25rem' }}>
+            <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: 2, marginTop: 2 }}>
               <BsBuilding /> {employee.department.name}
             </div>
           )}

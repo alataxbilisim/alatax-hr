@@ -108,99 +108,43 @@ const ApplicationsPage: React.FC = () => {
 
   return (
     <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-      {/* Page Header */}
       <div className="page-header" style={{ flexShrink: 0 }}>
         <div className="page-header-content">
           <button
+            type="button"
             className="btn btn-ghost btn-sm"
             onClick={() => navigate('/recruitment/positions')}
-            style={{ marginBottom: '0.5rem' }}
+            style={{ marginBottom: 'var(--sp-1)' }}
           >
             <BsArrowLeft /> Pozisyonlara Dön
           </button>
-          <h1>Başvurular</h1>
-          <p>Tüm iş başvurularını yönetin</p>
+          <h1 className="page-title">Başvurular</h1>
         </div>
       </div>
 
-      {/* Kanban Board */}
-      <div
-        className="kanban-board"
-        style={{
-          display: 'flex',
-          gap: '0.75rem',
-          overflowX: 'auto',
-          overflowY: 'hidden',
-          flex: 1,
-          minHeight: 0,
-          paddingBottom: '1rem',
-          WebkitOverflowScrolling: 'touch',
-        }}
-      >
+      <div className="kanban-board">
         {statusColumns.map((col) => {
           const colApps = getApplicationsByStatus(col.key);
           return (
-            <div
-              key={col.key}
-              className="kanban-column"
-              style={{
-                minWidth: 240,
-                maxWidth: 300,
-                flex: '0 0 auto',
-                display: 'flex',
-                flexDirection: 'column',
-                background: 'var(--surface-glass)',
-                borderRadius: 'var(--radius-lg)',
-                border: '1px solid var(--border-primary)',
-                maxHeight: '100%',
-              }}
-            >
-              {/* Column Header */}
-              <div
-                style={{
-                  padding: '0.75rem 1rem',
-                  borderBottom: '1px solid var(--border-primary)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  flexShrink: 0,
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <div
-                    style={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: '50%',
-                      background: col.color,
-                    }}
-                  />
-                  <span style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-primary)' }}>
-                    {col.label}
-                  </span>
+            <div key={col.key} className="kanban-column">
+              <div className="kanban-column-header">
+                <div className="kanban-column-title">
+                  <span className="kanban-column-dot" style={{ background: col.color }} />
+                  {col.label}
                 </div>
                 <span className="badge badge-secondary">{colApps.length}</span>
               </div>
 
-              {/* Column Content */}
-              <div
-                style={{
-                  padding: '0.75rem',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.5rem',
-                  flex: 1,
-                  minHeight: 0,
-                  overflowY: 'auto',
-                }}
-              >
+              <div className="kanban-column-body">
                 {colApps.length === 0 ? (
-                  <div style={{ 
-                    padding: '2rem 1rem', 
-                    textAlign: 'center', 
-                    color: 'var(--text-muted)',
-                    fontSize: '0.8125rem',
-                  }}>
+                  <div
+                    style={{
+                      padding: 'var(--sp-5)',
+                      textAlign: 'center',
+                      color: 'var(--text-muted)',
+                      fontSize: 'var(--fs-caption)',
+                    }}
+                  >
                     Başvuru yok
                   </div>
                 ) : (
@@ -222,7 +166,6 @@ const ApplicationsPage: React.FC = () => {
         })}
       </div>
 
-      {/* Application Detail Modal */}
       <ApplicationDetailModal
         isOpen={detailModalOpen}
         onClose={() => setDetailModalOpen(false)}
@@ -233,7 +176,6 @@ const ApplicationsPage: React.FC = () => {
   );
 };
 
-// Application Card Component
 interface ApplicationCardProps {
   application: Application;
   onStatusChange: (app: Application, status: string) => void;
@@ -255,66 +197,39 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
 
   return (
     <div
-      style={{
-        background: 'var(--surface-primary)',
-        border: '1px solid var(--border-primary)',
-        borderRadius: 'var(--radius-md)',
-        padding: '0.75rem',
-        cursor: 'pointer',
-        transition: 'all 0.15s ease',
-      }}
+      className="kanban-card"
       onClick={() => onViewDetail(application.id)}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-        <div>
-          <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-primary)' }}>
-            {application.full_name}
-          </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
-            {application.job_position.title}
-          </div>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 'var(--sp-2)', gap: 'var(--sp-2)' }}>
+        <div style={{ minWidth: 0 }}>
+          <div className="kanban-card-name">{application.full_name}</div>
+          <div className="kanban-card-meta">{application.job_position.title}</div>
         </div>
-        <div
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: 'var(--radius-md)',
-            background: 'var(--gradient-primary)',
-            color: 'white',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '0.75rem',
-            fontWeight: 600,
-            flexShrink: 0,
-          }}
-        >
+        <div className="kanban-card-avatar" aria-hidden>
           {application.full_name.charAt(0)}
         </div>
       </div>
 
-      {/* Contact */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginBottom: '0.5rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginBottom: 'var(--sp-2)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-1)', fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>
           <BsEnvelope size={12} />
           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{application.email}</span>
         </div>
         {application.phone && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-1)', fontSize: 'var(--fs-caption)', color: 'var(--text-secondary)' }}>
             <BsTelephone size={12} />
             <span>{application.phone}</span>
           </div>
         )}
       </div>
 
-      {/* Rating */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.125rem', marginBottom: '0.5rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginBottom: 'var(--sp-2)' }}>
         {[1, 2, 3, 4, 5].map((star) => (
           <button
             key={star}
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               onRate(application, star);
@@ -327,26 +242,35 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
               color: star <= (application.rating || 0) ? '#f59e0b' : 'var(--text-muted)',
             }}
           >
-            {star <= (application.rating || 0) ? <BsStarFill size={14} /> : <BsStar size={14} />}
+            {star <= (application.rating || 0) ? <BsStarFill size={12} /> : <BsStar size={12} />}
           </button>
         ))}
       </div>
 
-      {/* Actions */}
       {showActions && !isLoading && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem', marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid var(--border-primary)' }}>
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 2,
+            marginTop: 'var(--sp-1)',
+            paddingTop: 'var(--sp-2)',
+            borderTop: '1px solid var(--border-primary)',
+          }}
+        >
           {statusColumns
             .filter((s) => s.key !== application.status)
             .slice(0, 3)
             .map((s) => (
               <button
                 key={s.key}
+                type="button"
                 className="btn btn-ghost btn-sm"
                 onClick={(e) => {
                   e.stopPropagation();
                   onStatusChange(application, s.key);
                 }}
-                style={{ fontSize: '0.6875rem', padding: '0.25rem 0.5rem' }}
+                style={{ fontSize: 'var(--fs-caption)', padding: '2px var(--sp-2)' }}
               >
                 {s.label}
               </button>
@@ -355,13 +279,12 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
       )}
 
       {isLoading && (
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 'var(--sp-2)' }}>
           <div className="loading-spinner" style={{ width: 16, height: 16, borderWidth: 2 }} />
         </div>
       )}
 
-      {/* Date */}
-      <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+      <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-muted)', marginTop: 'var(--sp-1)' }}>
         {new Date(application.created_at).toLocaleDateString('tr-TR')}
       </div>
     </div>

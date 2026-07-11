@@ -23,22 +23,27 @@ const DashboardGrid: React.FC<DashboardGridProps> = ({
   isEditing = false,
   width = 1200,
   cols = 12,
-  rowHeight = 80,
+  rowHeight = 42,
 }) => {
   // Widget'lardan layout oluştur (Layout = LayoutItem[], LayoutItem = tek hücre)
-  const layout: Layout = widgets.map((widget): LayoutItem => ({
-    i: widget.id,
-    x: widget.layout.x,
-    y: widget.layout.y,
-    w: widget.layout.w,
-    h: widget.layout.h,
-    minW: widget.layout.minW || 1, // Minimum 1 kolon genişlik
-    minH: widget.layout.minH || 1, // Minimum 1 satır yükseklik
-    maxW: widget.layout.maxW || 12,
-    maxH: widget.layout.maxH, // Maksimum yükseklik sınırı kaldırıldı
-    static: false, // static'i false bırak, isDraggable ve isResizable ile kontrol et
-    isResizable: isEditing,
-  }));
+  // KPI: max h=2 → rowHeight 42 + gap 12 → ≤96px (TASARIM_REHBERI)
+  const layout: Layout = widgets.map((widget): LayoutItem => {
+    const isKpi = widget.type === 'kpi';
+    const h = isKpi ? Math.min(widget.layout.h, 2) : widget.layout.h;
+    return {
+      i: widget.id,
+      x: widget.layout.x,
+      y: widget.layout.y,
+      w: widget.layout.w,
+      h,
+      minW: widget.layout.minW || 1,
+      minH: isKpi ? Math.min(widget.layout.minH || 1, 2) : widget.layout.minH || 1,
+      maxW: widget.layout.maxW || 12,
+      maxH: isKpi ? 2 : widget.layout.maxH,
+      static: false,
+      isResizable: isEditing,
+    };
+  });
 
   // Layout değiştiğinde widget'ları güncelle
   const handleLayoutChange = useCallback(
@@ -87,7 +92,7 @@ const DashboardGrid: React.FC<DashboardGridProps> = ({
         isResizable={isEditing}
         draggableHandle=".widget-drag-handle"
         resizeHandles={['se', 's', 'e', 'sw', 'nw', 'n', 'w', 'ne']}
-        margin={[16, 16]}
+        margin={[12, 12]}
         containerPadding={[0, 0]}
         useCSSTransforms={true}
         preventCollision={false}

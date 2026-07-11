@@ -613,17 +613,22 @@
    ==================================== */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--card-gap);
+  margin-bottom: var(--card-gap);
 }
 
 .stat-card {
   background: var(--surface-primary);
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-lg);
-  padding: 1rem;
-  transition: all 0.15s ease;
+  padding: var(--sp-3);
+  max-height: 96px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transition: all var(--transition-fast);
 }
 
 .stat-card:hover {
@@ -635,17 +640,17 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.75rem;
+  margin-bottom: var(--sp-2);
 }
 
 .stat-card-icon {
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
+  font-size: var(--fs-body);
 }
 
 .stat-card-icon.primary {
@@ -669,16 +674,16 @@
 }
 
 .stat-card-value {
-  font-size: 1.5rem;
+  font-size: var(--fs-section);
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1;
 }
 
 .stat-card-label {
-  font-size: 0.75rem;
+  font-size: var(--fs-caption);
   color: var(--text-tertiary);
-  margin-top: 0.25rem;
+  margin-top: 2px;
 }
 
 .stat-card-change {
@@ -2969,9 +2974,17 @@ textarea.form-control {
 }
 
 /* ====================================
-   KANBAN BOARD RESPONSIVE
+   KANBAN BOARD — token + density
    ==================================== */
 .kanban-board {
+  display: flex;
+  gap: var(--sp-2);
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex: 1;
+  min-height: 0;
+  padding-bottom: var(--sp-3);
+  -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
   scrollbar-color: var(--border-secondary) transparent;
 }
@@ -2987,6 +3000,102 @@ textarea.form-control {
 .kanban-board::-webkit-scrollbar-thumb {
   background: var(--border-secondary);
   border-radius: 3px;
+}
+
+.kanban-column {
+  min-width: 200px;
+  max-width: 260px;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-glass);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-primary);
+  max-height: 100%;
+}
+
+@media (min-width: 1366px) {
+  .kanban-column {
+    min-width: 180px;
+    max-width: 220px;
+  }
+}
+
+.kanban-column-header {
+  padding: var(--sp-2) var(--sp-3);
+  border-bottom: 1px solid var(--border-primary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  min-height: var(--tab-height);
+  box-sizing: border-box;
+}
+
+.kanban-column-title {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-weight: 600;
+  font-size: var(--fs-label);
+  color: var(--text-primary);
+}
+
+.kanban-column-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.kanban-column-body {
+  padding: var(--sp-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.kanban-card {
+  background: var(--surface-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  padding: var(--sp-2) var(--sp-3);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.kanban-card:hover {
+  border-color: var(--border-secondary);
+}
+
+.kanban-card-name {
+  font-weight: 600;
+  font-size: var(--fs-body);
+  color: var(--text-primary);
+  line-height: 1.25;
+}
+
+.kanban-card-meta {
+  font-size: var(--fs-caption);
+  color: var(--text-tertiary);
+  line-height: 1.25;
+}
+
+.kanban-card-avatar {
+  width: var(--icon-btn-size);
+  height: var(--icon-btn-size);
+  border-radius: var(--radius-md);
+  background: var(--gradient-primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  flex-shrink: 0;
 }
 
 @media (max-width: 768px) {

@@ -253,20 +253,22 @@
   border-color: rgba(16, 185, 129, 0.5);
 }
 
-/* Widget Header */
+/* Widget Header — TASARIM_REHBERI: başlık 13px, padding 12px */
 .widget-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  min-height: calc(var(--sp-3) * 2 + 1.2em);
   background: rgba(0, 0, 0, 0.2);
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  box-sizing: border-box;
 }
 
 .widget-drag-handle {
   cursor: grab;
   color: #6b7280;
-  padding: 4px;
+  padding: 2px;
   transition: color 0.2s;
 }
 
@@ -284,19 +286,20 @@
 }
 
 .widget-title {
-  font-size: 0.875rem;
+  font-size: 13px;
   font-weight: 600;
   color: #e5e7eb;
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.2;
 }
 
 .widget-labels {
   display: flex;
   gap: 4px;
-  margin-top: 4px;
+  margin-top: 2px;
   flex-wrap: wrap;
 }
 
@@ -304,7 +307,7 @@
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-size: 0.65rem;
+  font-size: var(--fs-caption, 0.65rem);
   padding: 2px 6px;
   background: rgba(16, 185, 129, 0.15);
   color: #10b981;
@@ -320,8 +323,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: var(--icon-btn-size, 28px);
+  height: var(--icon-btn-size, 28px);
   border-radius: 6px;
   background: transparent;
   border: none;
@@ -340,14 +343,16 @@
   color: #ef4444;
 }
 
-/* Widget Content */
+/* Widget Content — padding 12px */
 .widget-content {
   flex: 1;
-  padding: 16px;
+  padding: var(--sp-3);
   min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 /* Widget States */
@@ -379,60 +384,68 @@
   border-top: 1px solid rgba(255, 255, 255, 0.04);
 }
 
-/* KPI Card Widget */
+/* KPI Card Widget — kompakt, grid h=2 + rowHeight 42 ≤96px */
 .kpi-card-widget {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--sp-3);
   width: 100%;
   height: 100%;
+  max-height: 96px;
+  overflow: hidden;
 }
 
 .kpi-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md, 8px);
   background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.2) 100%);
   color: #10b981;
-  font-size: 1.25rem;
+  font-size: var(--fs-section, 1rem);
 }
 
 .kpi-content {
   flex: 1;
+  min-width: 0;
 }
 
 .kpi-value {
-  font-size: 1.75rem;
+  font-size: var(--fs-section, 15px);
   font-weight: 700;
   color: #f3f4f6;
-  line-height: 1.2;
+  line-height: 1.15;
 }
 
 .kpi-label {
-  font-size: 0.75rem;
+  font-size: var(--fs-caption, 0.75rem);
   color: #9ca3af;
-  margin-top: 4px;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .kpi-secondary {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
+  flex-shrink: 0;
 }
 
 .kpi-mini-stat {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.75rem;
+  font-size: var(--fs-caption, 0.75rem);
   color: #9ca3af;
 }
 
 .kpi-mini-stat .stat-icon {
-  font-size: 0.875rem;
+  font-size: var(--fs-body, 0.875rem);
 }
 
 .kpi-mini-stat .stat-icon.up {

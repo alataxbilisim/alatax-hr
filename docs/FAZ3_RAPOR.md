@@ -207,6 +207,40 @@ Kalan: Grup 3 (dashboard/kanban) + Portal ölçek + sidebar daraltma.
 
 ---
 
+## Dalga 2 — Grup 3: Özel layout (Dashboard + Kanban) (12 Temmuz 2026)
+
+**Şablon:** TASARIM_REHBERI Bölüm 6 Dashboard + Kanban kompakt.
+
+### Hizalanan
+| Ekran | Not |
+|-------|-----|
+| Rapor Dashboard (`DashboardGrid` / legacy RGL) | `rowHeight` 80→**42**, `margin` 16→**12**; KPI `maxH=2` → ≤96px; widget başlık 13px / padding 12px |
+| Ana Dashboard (`DashboardPage`) | `.stat-card` max-height 96px, token padding/gap |
+| İşe Alım Başvurular (Kanban) | `.kanban-*` CSS sınıfları; kolon 180–220@1366; kart padding token/density |
+| Org şeması | kart padding/avatar token (yapı aynı) |
+| İzin takvimi | header/hücre token; hücre ~88px |
+
+### Davranış koruması
+| Özellik | Durum |
+|---------|--------|
+| RGL sürükle / boyutlandır | **korundu** — legacy import, `compactType={null}`, `draggableHandle`, resizeHandles aynı |
+| Kanban kolon arası sürükle-bırak | **Yoktu** — durum değişimi hover butonları ile; DnD eklenmedi (görsel-only) |
+| Faz 2 yetki | dokunulmadı |
+
+### Override temizliği
+- `company.css`: `.stat-card*` token + KPI ≤96; kanban blok genişletildi
+- `dashboard.css`: widget header/content/KPI kompakt token
+
+### Doğrulama
+- 3 SPA lint + build: **0**
+- Fonksiyonellik: grid/widget + kanban status butonları layout-only
+
+**DUR:** Kullanıcı görsel kontrol — **Rapor Dashboard** (sürükle/boyutlandır) + **Başvurular Kanban** (kart/kolon + durum taşıma). Commit yok.
+
+Kalan: Portal ölçek (Bootstrap) + sidebar daraltma → Faz 3 kapanışa yaklaşır.
+
+---
+
 ## Kritik Bug Teşhisi (11 Temmuz 2026 — düzeltme YOK)
 
 **Branch:** `faz3-tasarim` · **Kapsam:** yalnızca kök neden + kanıt + öneri · **Düzeltme bu turda yapılmadı.**

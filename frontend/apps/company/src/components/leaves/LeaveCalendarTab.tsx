@@ -167,20 +167,20 @@ const LeaveCalendarTab: React.FC = () => {
     <div>
       {/* Calendar Header */}
       <div className="card mb-3">
-        <div className="card-body" style={{ padding: '0.75rem 1rem' }}>
+        <div className="card-body" style={{ padding: 'var(--sp-2) var(--sp-3)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <button className="btn btn-ghost btn-icon btn-sm" onClick={goToPreviousMonth}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
+              <button type="button" className="btn btn-ghost btn-icon btn-sm" onClick={goToPreviousMonth}>
                 <BsChevronLeft />
               </button>
-              <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600, minWidth: '150px', textAlign: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: 'var(--fs-section)', fontWeight: 600, minWidth: 150, textAlign: 'center' }}>
                 {monthNames[month]} {year}
               </h3>
-              <button className="btn btn-ghost btn-icon btn-sm" onClick={goToNextMonth}>
+              <button type="button" className="btn btn-ghost btn-icon btn-sm" onClick={goToNextMonth}>
                 <BsChevronRight />
               </button>
             </div>
-            <button className="btn btn-secondary btn-sm" onClick={goToToday}>
+            <button type="button" className="btn btn-secondary btn-sm" onClick={goToToday}>
               Bugün
             </button>
           </div>
@@ -202,12 +202,12 @@ const LeaveCalendarTab: React.FC = () => {
                     <th
                       key={day}
                       style={{
-                        padding: '0.75rem 0.5rem',
+                        padding: 'var(--sp-2) var(--sp-1)',
                         textAlign: 'center',
                         fontWeight: 500,
-                        fontSize: '0.75rem',
+                        fontSize: 'var(--fs-caption)',
                         color: index >= 5 ? 'var(--danger)' : 'var(--text-secondary)',
-                        borderBottom: '1px solid var(--border-color)',
+                        borderBottom: '1px solid var(--border-primary)',
                         background: 'var(--bg-secondary)',
                       }}
                     >
@@ -229,11 +229,11 @@ const LeaveCalendarTab: React.FC = () => {
                         <td
                           key={dayIndex}
                           style={{
-                            padding: '0.25rem',
+                            padding: 2,
                             verticalAlign: 'top',
-                            height: '100px',
-                            borderBottom: '1px solid var(--border-color)',
-                            borderRight: '1px solid var(--border-color)',
+                            height: 88,
+                            borderBottom: '1px solid var(--border-primary)',
+                            borderRight: '1px solid var(--border-primary)',
                             background: holiday
                               ? 'rgba(244, 63, 94, 0.05)'
                               : weekend

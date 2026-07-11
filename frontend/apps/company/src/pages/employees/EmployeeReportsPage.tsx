@@ -352,7 +352,7 @@ const EmployeeReportsPage: React.FC = () => {
             isEditing={isEditing}
             width={gridWidth * (100 / zoomLevel)}
             cols={12}
-            rowHeight={80}
+            rowHeight={42}
           />
         </div>
       </div>
