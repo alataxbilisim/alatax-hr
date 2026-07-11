@@ -23,11 +23,12 @@ class JobController extends Controller
             ], 404);
         }
 
+        // Public: şema ile hizalı (status=active, application_deadline)
         $positions = JobPosition::where('company_id', $company->id)
-            ->where('status', 'published')
+            ->where('status', 'active')
             ->where(function ($q) {
-                $q->whereNull('deadline')
-                    ->orWhere('deadline', '>=', now());
+                $q->whereNull('application_deadline')
+                    ->orWhere('application_deadline', '>=', now()->toDateString());
             })
             ->orderBy('created_at', 'desc')
             ->get()
@@ -60,7 +61,11 @@ class JobController extends Controller
     {
         $position = JobPosition::with(['company', 'form'])
             ->where('slug', $positionSlug)
-            ->where('status', 'published')
+            ->where('status', 'active')
+            ->where(function ($q) {
+                $q->whereNull('application_deadline')
+                    ->orWhere('application_deadline', '>=', now()->toDateString());
+            })
             ->first();
 
         if (! $position) {

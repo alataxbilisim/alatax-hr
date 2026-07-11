@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Http\Resources\EmployeeResource;
 use App\Mail\PasswordResetByAdmin;
 use App\Mail\UserInvitation;
 use App\Models\ActivityLog;
 use App\Models\User;
+use App\Services\TwoFactorService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -18,6 +20,10 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class UserController extends BaseController
 {
+    public function __construct(
+        protected TwoFactorService $twoFactor,
+    ) {}
+
     /**
      * Kullanıcı listesi
      */
@@ -86,8 +92,15 @@ class UserController extends BaseController
             'active_sessions' => $user->tokens()->count(),
         ];
 
+        $employee = $user->employee;
+        $user->unsetRelation('employee');
+        $userPayload = $user->toArray();
+        if ($employee) {
+            $userPayload['employee'] = (new EmployeeResource($employee))->resolve();
+        }
+
         return $this->success([
-            'user' => $user,
+            'user' => $userPayload,
             'stats' => $stats,
         ]);
     }
@@ -150,20 +163,23 @@ class UserController extends BaseController
             'preferences' => ['theme' => 'dark', 'locale' => 'tr'],
         ]);
 
-        // Rolleri ata (ID'lerden role isimlerini al)
+        // Rolleri ata (ID'lerden)
+        $assignedRoles = [];
         if (! empty($validated['roles'])) {
-            $roleIds = $validated['roles'];
-            $user->roles()->sync($roleIds);
+            $user->roles()->sync($validated['roles']);
+            $assignedRoles = $user->fresh()->roles->pluck('name')->values()->all();
         } else {
             $user->assignRole('employee');
+            $assignedRoles = ['employee'];
         }
 
+        // Observer create log yazar; rol pivot'u özel log
         ActivityLog::log(
-            'create',
+            'role_sync',
             $user,
-            'Kullanıcı oluşturuldu: '.$user->name,
+            'Kullanıcı rolleri atandı: '.$user->name,
             null,
-            $user->toArray()
+            ['roles' => $assignedRoles]
         );
 
         return $this->created($user->load('roles'), 'Kullanıcı başarıyla oluşturuldu');
@@ -215,15 +231,23 @@ class UserController extends BaseController
 
         $validated['updated_by'] = auth()->id();
 
-        $oldValues = $user->toArray();
+        $oldRoles = $user->roles->pluck('name')->sort()->values()->all();
         $user->update($validated);
 
-        // Rolleri güncelle (ID'lerle)
+        // Rolleri güncelle (ID'lerle) — pivot; observer yakalamaz
         if (isset($validated['roles'])) {
             $user->roles()->sync($validated['roles']);
+            $newRoles = $user->fresh()->roles->pluck('name')->sort()->values()->all();
+            if ($oldRoles !== $newRoles) {
+                ActivityLog::log(
+                    'role_sync',
+                    $user,
+                    'Kullanıcı rolleri güncellendi: '.$user->name,
+                    ['roles' => $oldRoles],
+                    ['roles' => $newRoles]
+                );
+            }
         }
-
-        ActivityLog::log('update', $user, 'Kullanıcı güncellendi: '.$user->name, $oldValues, $user->fresh()->toArray());
 
         return $this->success($user->fresh()->load('roles'), 'Kullanıcı güncellendi');
     }
@@ -244,10 +268,7 @@ class UserController extends BaseController
         }
 
         $userName = $user->name;
-        $oldValues = $user->toArray();
         $user->delete();
-
-        ActivityLog::log('delete', null, 'Kullanıcı silindi: '.$userName, $oldValues, null);
 
         return $this->success(null, 'Kullanıcı silindi');
     }
@@ -267,10 +288,12 @@ class UserController extends BaseController
             return $this->error('Kendi durumunuzu değiştiremezsiniz', 400);
         }
 
-        $user->update(['is_active' => ! $user->is_active]);
+        User::withoutAuditing(function () use ($user) {
+            $user->update(['is_active' => ! $user->is_active]);
+        });
 
         $status = $user->is_active ? 'aktifleştirildi' : 'pasifleştirildi';
-        ActivityLog::log('update', $user, "Kullanıcı {$status}: ".$user->name);
+        ActivityLog::log('status_change', $user, "Kullanıcı {$status}: ".$user->name);
 
         return $this->success($user, "Kullanıcı {$status}");
     }
@@ -296,9 +319,11 @@ class UserController extends BaseController
 
         // Yeni avatar'ı yükle
         $path = $request->file('avatar')->store('users/avatars', 'public');
-        $user->update(['avatar' => $path]);
+        User::withoutAuditing(function () use ($user, $path) {
+            $user->update(['avatar' => $path]);
+        });
 
-        ActivityLog::log('update', $user, "Kullanıcı avatar'ı güncellendi: {$user->name}");
+        ActivityLog::log('avatar_update', $user, "Kullanıcı avatar'ı güncellendi: {$user->name}");
 
         return $this->success([
             'avatar_url' => asset('storage/'.$path),
@@ -317,9 +342,9 @@ class UserController extends BaseController
 
         if ($user->avatar) {
             Storage::disk('public')->delete($user->avatar);
-            $user->update(['avatar' => null]);
+            User::withoutAuditing(fn () => $user->update(['avatar' => null]));
 
-            ActivityLog::log('update', $user, "Kullanıcı avatar'ı silindi: {$user->name}");
+            ActivityLog::log('avatar_update', $user, "Kullanıcı avatar'ı silindi: {$user->name}");
         }
 
         return $this->success(null, 'Avatar başarıyla silindi');
@@ -347,22 +372,31 @@ class UserController extends BaseController
         // Davet token oluştur
         $token = Str::random(64);
 
-        // Kullanıcı oluştur (henüz aktif değil, şifre yok)
-        $user = User::create([
-            'company_id' => $company->id,
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make(Str::random(32)), // Geçici şifre
-            'type' => 'user',
-            'is_active' => false, // Davet kabul edilene kadar pasif
-            'invitation_token' => Hash::make($token),
-            'invited_at' => now(),
-            'created_by' => auth()->id(),
-        ]);
+        // Kullanıcı oluştur (henüz aktif değil, şifre yok) — invite özel log; CRUD observer kapalı
+        $user = User::withoutAuditing(function () use ($company, $validated, $token) {
+            return User::create([
+                'company_id' => $company->id,
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => Hash::make(Str::random(32)), // Geçici şifre
+                'type' => 'user',
+                'is_active' => false, // Davet kabul edilene kadar pasif
+                'invitation_token' => Hash::make($token),
+                'invited_at' => now(),
+                'created_by' => auth()->id(),
+            ]);
+        });
 
         // Roller atanırsa
         if (! empty($validated['roles'])) {
             $user->roles()->sync($validated['roles']);
+            ActivityLog::log(
+                'role_sync',
+                $user,
+                'Davet kullanıcısına rol atandı: '.$user->name,
+                null,
+                ['roles' => $user->roles->pluck('name')->values()->all()]
+            );
         }
 
         // E-posta gönder (queued)
@@ -377,7 +411,7 @@ class UserController extends BaseController
             return $this->error('Davet e-postası kuyruğa alınamadı. Lütfen SMTP/queue ayarlarınızı kontrol edin.', 500);
         }
 
-        ActivityLog::log('create', $user, "Kullanıcı davet edildi: {$user->name} ({$user->email})");
+        ActivityLog::log('invite', $user, "Kullanıcı davet edildi: {$user->name} ({$user->email})");
 
         return $this->success([
             'user' => $user,
@@ -400,14 +434,14 @@ class UserController extends BaseController
             'notify_user' => 'nullable|boolean', // Kullanıcıya bildirim gönder
         ]);
 
-        $user->update([
+        User::withoutAuditing(fn () => $user->update([
             'password' => Hash::make($validated['password']),
-        ]);
+        ]));
 
         // Kullanıcının tüm token'larını iptal et (güvenlik için)
         $user->tokens()->delete();
 
-        ActivityLog::log('update', $user, "Kullanıcı şifresi sıfırlandı: {$user->name}");
+        ActivityLog::log('password_reset', $user, "Kullanıcı şifresi sıfırlandı: {$user->name}");
 
         // Kullanıcıya bildirim gönderilmesi istenirse
         if ($request->boolean('notify_user')) {
@@ -512,31 +546,30 @@ class UserController extends BaseController
 
             switch ($action) {
                 case 'activate':
-                    $user->update(['is_active' => true]);
-                    ActivityLog::log('update', $user, "Kullanıcı aktifleştirildi: {$user->name}");
+                    User::withoutAuditing(fn () => $user->update(['is_active' => true]));
+                    ActivityLog::log('status_change', $user, "Kullanıcı aktifleştirildi: {$user->name}");
                     $count++;
                     break;
                 case 'deactivate':
-                    $user->update(['is_active' => false]);
-                    ActivityLog::log('update', $user, "Kullanıcı pasifleştirildi: {$user->name}");
+                    User::withoutAuditing(fn () => $user->update(['is_active' => false]));
+                    ActivityLog::log('status_change', $user, "Kullanıcı pasifleştirildi: {$user->name}");
                     $count++;
                     break;
                 case 'delete':
-                    ActivityLog::log('delete', $user, "Kullanıcı silindi: {$user->name}");
                     $user->delete();
                     $count++;
                     break;
                 case 'assign_role':
                     if (! $user->roles->contains($validated['role_id'])) {
                         $user->roles()->attach($validated['role_id']);
-                        ActivityLog::log('update', $user, "Kullanıcıya rol atandı: {$user->name}");
+                        ActivityLog::log('role_sync', $user, "Kullanıcıya rol atandı: {$user->name}");
                         $count++;
                     }
                     break;
                 case 'remove_role':
                     if ($user->roles->contains($validated['role_id'])) {
                         $user->roles()->detach($validated['role_id']);
-                        ActivityLog::log('update', $user, "Kullanıcıdan rol kaldırıldı: {$user->name}");
+                        ActivityLog::log('role_sync', $user, "Kullanıcıdan rol kaldırıldı: {$user->name}");
                         $count++;
                     }
                     break;
@@ -689,7 +722,7 @@ class UserController extends BaseController
     }
 
     /**
-     * 2FA'yı etkinleştir (QR code ve secret oluştur)
+     * 2FA kurulum başlat (secret + QR + recovery — henüz aktif değil)
      */
     public function enable2FA(Request $request, User $user): JsonResponse
     {
@@ -697,41 +730,34 @@ class UserController extends BaseController
             return $this->error('Yetkisiz erişim', 403);
         }
 
-        // Secret oluştur (basit bir implementasyon - production'da google2fa paketi kullanılmalı)
-        $secret = bin2hex(random_bytes(16));
-
-        // Recovery codes oluştur
-        $recoveryCodes = [];
-        for ($i = 0; $i < 8; $i++) {
-            $recoveryCodes[] = strtoupper(substr(md5(uniqid(rand(), true)), 0, 8));
+        if ($user->two_factor_enabled) {
+            return $this->error('2FA zaten etkin. Önce devre dışı bırakın.', 400);
         }
 
-        $user->update([
-            'two_factor_secret' => encrypt($secret),
-            'two_factor_recovery_codes' => encrypt(json_encode($recoveryCodes)),
-            'two_factor_enabled' => false, // Kullanıcı doğrulamayı tamamlayana kadar false
-        ]);
+        $secret = $this->twoFactor->generateSecret();
+        $plainRecovery = $this->twoFactor->generateRecoveryCodes();
+        $hashedRecovery = $this->twoFactor->hashRecoveryCodes($plainRecovery);
+        $otpAuthUrl = $this->twoFactor->getOtpAuthUrl($user, $secret);
 
-        // QR Code URL oluştur (Google Authenticator format)
-        $qrCodeUrl = sprintf(
-            'otpauth://totp/%s:%s?secret=%s&issuer=%s',
-            urlencode($user->company->name ?? 'HR System'),
-            urlencode($user->email),
-            $secret,
-            urlencode($user->company->name ?? 'HR System')
-        );
+        User::withoutAuditing(fn () => $user->update([
+            'two_factor_secret' => $this->twoFactor->encryptSecret($secret),
+            'two_factor_recovery_codes' => $this->twoFactor->storeEncryptedRecoveryHashes($hashedRecovery),
+            'two_factor_enabled' => false,
+        ]));
 
-        ActivityLog::log('update', $user, "2FA etkinleştirme başlatıldı: {$user->name}");
+        ActivityLog::log('two_factor_setup', $user, "2FA etkinleştirme başlatıldı: {$user->name}");
 
         return $this->success([
             'secret' => $secret,
-            'qr_code_url' => $qrCodeUrl,
-            'recovery_codes' => $recoveryCodes, // Sadece ilk gösterimde
-        ], '2FA etkinleştirme başlatıldı. Lütfen QR kodu tarayın ve doğrulama kodunu girin.');
+            'qr_code_url' => $otpAuthUrl,
+            'qr_code_svg' => $this->twoFactor->generateQrSvg($otpAuthUrl),
+            'recovery_codes' => $plainRecovery,
+            'two_factor_enabled' => false,
+        ], '2FA etkinleştirme başlatıldı. Authenticator uygulamasına ekleyip doğrulama kodunu girin.');
     }
 
     /**
-     * 2FA'yı doğrula ve etkinleştir
+     * İlk TOTP doğrulaması → 2FA aktif
      */
     public function verify2FA(Request $request, User $user): JsonResponse
     {
@@ -743,76 +769,94 @@ class UserController extends BaseController
             return $this->error('Yetkisiz erişim', 403);
         }
 
-        // Basit doğrulama (production'da TOTP algoritması kullanılmalı)
-        // Şimdilik sadece secret'ın varlığını kontrol ediyoruz
         if (! $user->two_factor_secret) {
-            return $this->error('2FA secret bulunamadı', 400);
+            return $this->error('2FA secret bulunamadı. Önce enable çağırın.', 400);
         }
 
-        // TODO: Gerçek TOTP doğrulaması yapılmalı
-        // $secret = decrypt($user->two_factor_secret);
-        // $isValid = Google2FA::verifyKey($secret, $request->code);
+        if ($user->two_factor_enabled) {
+            return $this->error('2FA zaten etkin', 400);
+        }
 
-        // Şimdilik her zaman true döndürüyoruz (geliştirme için)
-        $isValid = true;
+        $secret = $this->twoFactor->decryptSecret($user->two_factor_secret);
 
-        if (! $isValid) {
+        if (! $this->twoFactor->verifyTotp($secret, $request->code)) {
+            ActivityLog::log(
+                'two_factor_failed',
+                $user,
+                "2FA etkinleştirme doğrulaması başarısız: {$user->name}",
+                null,
+                null,
+                false,
+                'Geçersiz TOTP'
+            );
+
             return $this->error('Geçersiz doğrulama kodu', 400);
         }
 
-        $user->update([
+        User::withoutAuditing(fn () => $user->update([
             'two_factor_enabled' => true,
-        ]);
+        ]));
 
-        ActivityLog::log('update', $user, "2FA etkinleştirildi: {$user->name}");
+        ActivityLog::log('two_factor_enable', $user, "2FA etkinleştirildi: {$user->name}");
 
-        return $this->success(null, '2FA başarıyla etkinleştirildi');
+        return $this->success([
+            'two_factor_enabled' => true,
+        ], '2FA başarıyla etkinleştirildi');
     }
 
     /**
-     * 2FA'yı devre dışı bırak
+     * 2FA kapat — hedef kullanıcının TOTP kodu VEYA işlem yapanın şifresi
      */
-    public function disable2FA(User $user): JsonResponse
+    public function disable2FA(Request $request, User $user): JsonResponse
     {
         if ($user->company_id !== $this->getCompanyId()) {
             return $this->error('Yetkisiz erişim', 403);
         }
 
-        $user->update([
+        $validated = $request->validate([
+            'code' => 'required_without:password|nullable|string',
+            'password' => 'required_without:code|nullable|string',
+        ]);
+
+        $actor = $request->user();
+        $confirmed = false;
+
+        if (! empty($validated['password'])) {
+            $confirmed = Hash::check($validated['password'], $actor->password);
+        } elseif (! empty($validated['code']) && $user->two_factor_secret) {
+            $secret = $this->twoFactor->decryptSecret($user->two_factor_secret);
+            $confirmed = $this->twoFactor->verifyTotp($secret, $validated['code']);
+        }
+
+        if (! $confirmed) {
+            ActivityLog::log(
+                'two_factor_failed',
+                $user,
+                "2FA kapatma doğrulaması başarısız: {$user->name}",
+                null,
+                null,
+                false,
+                'Geçersiz kod veya şifre'
+            );
+
+            return $this->error('Geçersiz doğrulama kodu veya şifre', 403);
+        }
+
+        User::withoutAuditing(fn () => $user->update([
             'two_factor_enabled' => false,
             'two_factor_secret' => null,
             'two_factor_recovery_codes' => null,
-        ]);
+        ]));
 
-        ActivityLog::log('update', $user, "2FA devre dışı bırakıldı: {$user->name}");
+        ActivityLog::log('two_factor_disable', $user, "2FA devre dışı bırakıldı: {$user->name}");
 
         return $this->success(null, '2FA devre dışı bırakıldı');
     }
 
     /**
-     * Recovery code'ları görüntüle
+     * Recovery kodları düz metin olarak döndürülemez (hash'li).
      */
     public function getRecoveryCodes(User $user): JsonResponse
-    {
-        if ($user->company_id !== $this->getCompanyId()) {
-            return $this->error('Yetkisiz erişim', 403);
-        }
-
-        if (! $user->two_factor_recovery_codes) {
-            return $this->error('Recovery code bulunamadı', 404);
-        }
-
-        $recoveryCodes = json_decode(decrypt($user->two_factor_recovery_codes), true);
-
-        return $this->success([
-            'recovery_codes' => $recoveryCodes,
-        ]);
-    }
-
-    /**
-     * Recovery code'ları yenile
-     */
-    public function regenerateRecoveryCodes(User $user): JsonResponse
     {
         if ($user->company_id !== $this->getCompanyId()) {
             return $this->error('Yetkisiz erişim', 403);
@@ -822,20 +866,58 @@ class UserController extends BaseController
             return $this->error('2FA etkin değil', 400);
         }
 
-        $recoveryCodes = [];
-        for ($i = 0; $i < 8; $i++) {
-            $recoveryCodes[] = strtoupper(substr(md5(uniqid(rand(), true)), 0, 8));
-        }
-
-        $user->update([
-            'two_factor_recovery_codes' => encrypt(json_encode($recoveryCodes)),
-        ]);
-
-        ActivityLog::log('update', $user, "2FA recovery code'ları yenilendi: {$user->name}");
+        $hashes = $this->twoFactor->decryptRecoveryHashes($user->two_factor_recovery_codes);
 
         return $this->success([
-            'recovery_codes' => $recoveryCodes,
-        ], 'Recovery code\'lar yenilendi');
+            'remaining_count' => $hashes ? count($hashes) : 0,
+            'message' => 'Recovery kodları yalnızca üretim anında gösterilir. Yenilemek için regenerate kullanın.',
+        ]);
+    }
+
+    /**
+     * Recovery code'ları yenile (düz metin bir kez döner; hash saklanır)
+     */
+    public function regenerateRecoveryCodes(Request $request, User $user): JsonResponse
+    {
+        if ($user->company_id !== $this->getCompanyId()) {
+            return $this->error('Yetkisiz erişim', 403);
+        }
+
+        if (! $user->two_factor_enabled || ! $user->two_factor_secret) {
+            return $this->error('2FA etkin değil', 400);
+        }
+
+        $validated = $request->validate([
+            'code' => 'required_without:password|nullable|string',
+            'password' => 'required_without:code|nullable|string',
+        ]);
+
+        $actor = $request->user();
+        $confirmed = false;
+
+        if (! empty($validated['password'])) {
+            $confirmed = Hash::check($validated['password'], $actor->password);
+        } elseif (! empty($validated['code'])) {
+            $secret = $this->twoFactor->decryptSecret($user->two_factor_secret);
+            $confirmed = $this->twoFactor->verifyTotp($secret, $validated['code']);
+        }
+
+        if (! $confirmed) {
+            return $this->error('Geçersiz doğrulama kodu veya şifre', 403);
+        }
+
+        $plainRecovery = $this->twoFactor->generateRecoveryCodes();
+        $hashedRecovery = $this->twoFactor->hashRecoveryCodes($plainRecovery);
+
+        User::withoutAuditing(fn () => $user->update([
+            'two_factor_recovery_codes' => $this->twoFactor->storeEncryptedRecoveryHashes($hashedRecovery),
+        ]));
+
+        ActivityLog::log('two_factor_recovery_regen', $user, "2FA recovery code'ları yenilendi: {$user->name}");
+
+        return $this->success([
+            'recovery_codes' => $plainRecovery,
+        ], 'Recovery code\'lar yenilendi. Bu kodları güvenli yerde saklayın.');
     }
 
     /**

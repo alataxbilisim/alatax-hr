@@ -138,14 +138,6 @@ class CompanySettingsController extends BaseController
         $oldValues = $company->toArray();
         $company->update(['settings' => $settings]);
 
-        ActivityLog::log(
-            'update',
-            $company,
-            'Firma ayarları güncellendi',
-            ['settings' => $oldSettings],
-            ['settings' => $settings]
-        );
-
         return $this->success($settings, 'Ayarlar güncellendi');
     }
 

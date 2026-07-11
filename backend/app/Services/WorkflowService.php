@@ -2,11 +2,14 @@
 
 namespace App\Services;
 
+use App\Enums\UserType;
 use App\Models\ActivityLog;
 use App\Models\ApprovalDelegation;
 use App\Models\ApprovalRecord;
 use App\Models\ApprovalWorkflow;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class WorkflowService
 {
@@ -119,9 +122,13 @@ class WorkflowService
      */
     public function skip(ApprovalRecord $record, int $approverId, ?string $reason = null): bool
     {
+        if (! $this->canApprove($record, $approverId)) {
+            return false;
+        }
+
         $step = $record->step;
 
-        if (! $step->can_skip) {
+        if (! $step || ! $step->can_skip) {
             return false;
         }
 
@@ -171,7 +178,7 @@ class WorkflowService
     /**
      * Kullanıcının onaylama yetkisi var mı?
      */
-    protected function canApprove(ApprovalRecord $record, int $userId): bool
+    public function canApprove(ApprovalRecord $record, int $userId): bool
     {
         if ($record->status !== ApprovalRecord::STATUS_PENDING) {
             return false;
@@ -181,19 +188,55 @@ class WorkflowService
             return false;
         }
 
-        // Direkt atanmış mı?
-        if ($record->approver_id === $userId) {
+        // super_admin type veya Spatie admin rolü (company_admin type tek başına yetmez)
+        $actor = User::query()->find($userId);
+        if ($actor && ($actor->type === UserType::SuperAdmin || $actor->hasRole('admin'))) {
             return true;
         }
 
-        // Vekalet var mı?
-        $delegation = ApprovalDelegation::findActiveDelegate(
-            $record->approver_id,
-            $record->company_id,
-            class_basename($record->approvable)
-        );
+        // Direkt atanmış mı?
+        if ((int) $record->approver_id === $userId) {
+            return true;
+        }
 
-        return $delegation && $delegation->id === $userId;
+        // Vekalet: entity_type leave_request / LeaveRequest / null (tümü)
+        $entityHints = $this->delegationEntityHints($record);
+
+        foreach ($entityHints as $entityType) {
+            $delegate = ApprovalDelegation::findActiveDelegate(
+                (int) $record->approver_id,
+                (int) $record->company_id,
+                $entityType
+            );
+
+            if ($delegate && (int) $delegate->id === $userId) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @return list<string|null>
+     */
+    protected function delegationEntityHints(ApprovalRecord $record): array
+    {
+        $hints = [null];
+
+        if (! $record->relationLoaded('approvable')) {
+            $record->load('approvable');
+        }
+
+        if (! $record->approvable) {
+            return $hints;
+        }
+
+        $basename = class_basename($record->approvable);
+        $hints[] = $basename;
+        $hints[] = Str::snake($basename);
+
+        return array_values(array_unique($hints));
     }
 
     /**

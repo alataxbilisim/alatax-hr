@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Http\Resources\EmployeeResource;
 use App\Models\ActivityLog;
 use App\Models\Branch;
 use Illuminate\Http\JsonResponse;
@@ -320,6 +321,10 @@ class BranchController extends BaseController
 
         $employees = $query->paginate($request->get('per_page', 15));
 
-        return $this->paginated($employees, 'Şube çalışanları listelendi');
+        return $this->paginated(
+            EmployeeResource::collection($employees->getCollection())->resolve(),
+            'Şube çalışanları listelendi',
+            $employees
+        );
     }
 }

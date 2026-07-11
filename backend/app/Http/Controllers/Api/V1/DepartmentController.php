@@ -2,9 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Models\ActivityLog;
 use App\Models\Department;
-use App\Models\Employee;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -43,25 +41,7 @@ class DepartmentController extends BaseController
 
         $departments = $query->get();
 
-        // Manager bilgisini Employee üzerinden al
-        $departments->transform(function ($dept) {
-            if ($dept->manager_id) {
-                $employee = Employee::with('user:id,name')
-                    ->where('company_id', $this->getCompanyId())
-                    ->where('id', $dept->manager_id)
-                    ->first();
-
-                if ($employee) {
-                    $dept->manager = [
-                        'id' => $employee->id,
-                        'user' => $employee->user,
-                    ];
-                }
-            }
-
-            return $dept;
-        });
-
+        // manager_id → users (şema); eager load yeterli
         return $this->success($departments);
     }
 
@@ -71,24 +51,9 @@ class DepartmentController extends BaseController
     public function show(int $id): JsonResponse
     {
         $department = Department::where('company_id', $this->getCompanyId())
-            ->with(['parent:id,name', 'children:id,name,parent_id'])
+            ->with(['parent:id,name', 'children:id,name,parent_id', 'manager:id,name'])
             ->withCount('employees')
             ->findOrFail($id);
-
-        // Manager bilgisini Employee üzerinden al
-        if ($department->manager_id) {
-            $employee = Employee::with('user:id,name')
-                ->where('company_id', $this->getCompanyId())
-                ->where('id', $department->manager_id)
-                ->first();
-
-            if ($employee) {
-                $department->manager = [
-                    'id' => $employee->id,
-                    'user' => $employee->user,
-                ];
-            }
-        }
 
         return $this->success($department);
     }
@@ -117,7 +82,7 @@ class DepartmentController extends BaseController
             ],
             'description' => 'nullable|string|max:500',
             'parent_id' => 'nullable|exists:departments,id',
-            'manager_id' => 'nullable|exists:employees,id',
+            'manager_id' => 'nullable|exists:users,id',
             'is_active' => 'boolean',
             'sort_order' => 'nullable|integer|min:0',
         ]);
@@ -133,8 +98,6 @@ class DepartmentController extends BaseController
             'sort_order' => $validated['sort_order'] ?? 0,
             'created_by' => auth()->id(),
         ]);
-
-        ActivityLog::log('create', $department, 'Departman oluşturuldu: '.$department->name);
 
         return $this->created($department->load('parent:id,name'), 'Departman başarıyla oluşturuldu');
     }
@@ -165,7 +128,7 @@ class DepartmentController extends BaseController
             ],
             'description' => 'nullable|string|max:500',
             'parent_id' => 'nullable|exists:departments,id',
-            'manager_id' => 'nullable|exists:employees,id',
+            'manager_id' => 'nullable|exists:users,id',
             'is_active' => 'boolean',
             'sort_order' => 'nullable|integer|min:0',
         ]);
@@ -180,8 +143,6 @@ class DepartmentController extends BaseController
         $department->update(array_merge($validated, [
             'updated_by' => auth()->id(),
         ]));
-
-        ActivityLog::log('update', $department, 'Departman güncellendi', $oldValues, $department->fresh()->toArray());
 
         return $this->success($department->load('parent:id,name'), 'Departman başarıyla güncellendi');
     }
@@ -207,7 +168,6 @@ class DepartmentController extends BaseController
         }
 
         $oldValues = $department->toArray();
-        ActivityLog::log('delete', $department, 'Departman silindi: '.$department->name, $oldValues);
 
         $department->delete();
 

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use App\Traits\BelongsToCompany;
 use App\Traits\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,7 +13,35 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Employee extends Model
 {
-    use BelongsToCompany, HasAuditColumns, HasFactory, SoftDeletes;
+    use Auditable, BelongsToCompany, HasAuditColumns, HasFactory, SoftDeletes;
+
+    /**
+     * Audit v2 — hassas alanlar diff'te maskelenir.
+     *
+     * @var list<string>
+     */
+    protected array $auditMasked = [
+        'national_id',
+        'gross_salary',
+        'net_salary',
+        'bank_name',
+        'iban',
+        'sgk_number',
+        'sgk_start_date',
+    ];
+
+    /**
+     * @var array<string, string>
+     */
+    protected array $auditMaskedLabels = [
+        'national_id' => 'tckn',
+        'gross_salary' => 'maaş',
+        'net_salary' => 'net maaş',
+        'bank_name' => 'banka',
+        'iban' => 'iban',
+        'sgk_number' => 'sgk',
+        'sgk_start_date' => 'sgk başlangıç',
+    ];
 
     protected $fillable = [
         'company_id',
@@ -70,13 +99,7 @@ class Employee extends Model
         'custom_fields' => 'array',
     ];
 
-    protected $hidden = [
-        'national_id',
-        'gross_salary',
-        'net_salary',
-        'iban',
-        'sgk_number',
-    ];
+    // Hassas alanlar: global $hidden KALDIRILDI — API çıkışı EmployeeResource + izin ile (Faz 2)
 
     /**
      * İlişkili kullanıcı hesabı

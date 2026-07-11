@@ -68,14 +68,18 @@ class ActivityLog extends Model
         $user = auth()->user();
         $request = request();
 
-        // company_id öncelik sırası: 1) Model'den, 2) User'dan
+        // company_id öncelik: 1) Company modeli → id, 2) model.company_id attribute, 3) auth user
         $companyId = null;
-        if ($model && property_exists($model, 'company_id')) {
-            $companyId = $model->company_id;
-        } elseif ($model instanceof Company) {
+        if ($model instanceof Company) {
             $companyId = $model->id;
+        } elseif ($model !== null) {
+            $attrs = $model->getAttributes();
+            if (array_key_exists('company_id', $attrs) && $attrs['company_id'] !== null) {
+                $companyId = $attrs['company_id'];
+            } elseif ($model->getAttribute('company_id') !== null) {
+                $companyId = $model->getAttribute('company_id');
+            }
         }
-        // Model'den alınamazsa user'dan al
         if ($companyId === null) {
             $companyId = $user?->company_id;
         }
@@ -85,7 +89,7 @@ class ActivityLog extends Model
             'user_id' => $user?->id,
             'user_name' => $user?->name,
             'action' => $action,
-            'model_type' => $model ? class_basename($model) : null,
+            'model_type' => $model ? $model->getMorphClass() : null,
             'model_id' => $model?->id,
             'description' => $description,
             'old_values' => $oldValues,

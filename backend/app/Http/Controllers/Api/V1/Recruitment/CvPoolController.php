@@ -11,54 +11,51 @@ use Illuminate\Http\Request;
 class CvPoolController extends BaseController
 {
     /**
-     * CV havuzu - tüm adaylar
+     * CV havuzu - tüm adaylar (email bazlı gruplama).
+     * Şema: first_name, last_name, email, phone (applicant_* kolonları yok).
      */
     public function index(Request $request): JsonResponse
     {
-        $query = JobApplication::select(
-            'applicant_email',
-            'applicant_name',
-            'applicant_phone',
-        )
+        $query = JobApplication::query()
+            ->select('email', 'first_name', 'last_name', 'phone')
             ->selectRaw('MAX(id) as id')
             ->selectRaw('MAX(cv_path) as cv_path')
             ->selectRaw('MAX(rating) as rating')
             ->selectRaw('MAX(created_at) as last_application_date')
-            ->groupBy('applicant_email', 'applicant_name', 'applicant_phone');
+            ->groupBy('email', 'first_name', 'last_name', 'phone');
 
-        // Arama
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('applicant_name', 'like', "%{$search}%")
-                    ->orWhere('applicant_email', 'like', "%{$search}%");
+                $q->where('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
-        $candidates = $query->orderBy('last_application_date', 'desc')
+        $candidates = $query->orderByRaw('MAX(created_at) DESC')
             ->limit(100)
             ->get()
             ->map(function ($candidate) {
-                // Aday bilgilerini en son başvurudan al
-                $latestApplication = JobApplication::where('applicant_email', $candidate->applicant_email)
+                $latestApplication = JobApplication::where('email', $candidate->email)
                     ->orderBy('created_at', 'desc')
                     ->first();
 
                 return [
                     'id' => $candidate->id,
-                    'name' => $candidate->applicant_name,
-                    'email' => $candidate->applicant_email,
-                    'phone' => $candidate->applicant_phone,
-                    'city' => $latestApplication->form_data['city'] ?? null,
-                    'experience_years' => $latestApplication->form_data['experience_years'] ?? null,
-                    'education_level' => $latestApplication->form_data['education_level'] ?? null,
-                    'skills' => $latestApplication->form_data['skills'] ?? [],
-                    'tags' => $latestApplication->tags ?? [],
+                    'name' => trim(($candidate->first_name ?? '').' '.($candidate->last_name ?? '')),
+                    'email' => $candidate->email,
+                    'phone' => $candidate->phone,
+                    'city' => $latestApplication?->form_data['city'] ?? null,
+                    'experience_years' => $latestApplication?->form_data['experience_years'] ?? null,
+                    'education_level' => $latestApplication?->form_data['education_level'] ?? null,
+                    'skills' => $latestApplication?->form_data['skills'] ?? [],
+                    'tags' => $latestApplication?->form_data['tags'] ?? [],
                     'rating' => $candidate->rating,
-                    'status' => $latestApplication->status,
+                    'status' => $latestApplication?->status,
                     'cv_path' => $candidate->cv_path ? asset('storage/'.$candidate->cv_path) : null,
                     'last_application_date' => $candidate->last_application_date,
-                    'created_at' => $latestApplication->created_at->toDateTimeString(),
+                    'created_at' => $latestApplication?->created_at?->toDateTimeString(),
                 ];
             });
 
@@ -66,7 +63,7 @@ class CvPoolController extends BaseController
     }
 
     /**
-     * Toplu etiketleme
+     * Toplu etiketleme (form_data.tags içinde)
      */
     public function bulkTag(Request $request): JsonResponse
     {
@@ -80,10 +77,12 @@ class CvPoolController extends BaseController
         foreach ($validated['candidate_ids'] as $id) {
             $application = JobApplication::find($id);
             if ($application) {
-                $tags = $application->tags ?? [];
-                if (! in_array($validated['tag'], $tags)) {
+                $formData = $application->form_data ?? [];
+                $tags = $formData['tags'] ?? [];
+                if (! in_array($validated['tag'], $tags, true)) {
                     $tags[] = $validated['tag'];
-                    $application->update(['tags' => $tags]);
+                    $formData['tags'] = $tags;
+                    $application->update(['form_data' => $formData]);
                     ActivityLog::log('update', $application, "Etiket eklendi: {$validated['tag']}");
                     $updated++;
                 }
@@ -108,11 +107,12 @@ class CvPoolController extends BaseController
             'tag' => 'required|string',
         ]);
 
-        $oldTags = $application->tags ?? [];
-        $tags = array_values(array_filter($oldTags, fn ($t) => $t !== $validated['tag']));
-        $application->update(['tags' => $tags]);
+        $formData = $application->form_data ?? [];
+        $oldTags = $formData['tags'] ?? [];
+        $formData['tags'] = array_values(array_filter($oldTags, fn ($t) => $t !== $validated['tag']));
+        $application->update(['form_data' => $formData]);
 
-        ActivityLog::log('update', $application, "Etiket kaldırıldı: {$validated['tag']}", ['tags' => $oldTags], ['tags' => $tags]);
+        ActivityLog::log('update', $application, "Etiket kaldırıldı: {$validated['tag']}", ['tags' => $oldTags], ['tags' => $formData['tags']]);
 
         return $this->success(null, 'Etiket kaldırıldı');
     }

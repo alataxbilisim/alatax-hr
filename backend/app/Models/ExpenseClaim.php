@@ -2,12 +2,23 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
+use App\Traits\BelongsToCompany;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class ExpenseClaim extends Model
 {
+    use Auditable, BelongsToCompany, HasFactory;
+
+    /** @var list<string> */
+    protected array $auditMasked = [
+        'payment_reference',
+    ];
+
     protected $fillable = [
         'company_id',
         'user_id',
@@ -75,6 +86,11 @@ class ExpenseClaim extends Model
     public function items(): HasMany
     {
         return $this->hasMany(ExpenseItem::class);
+    }
+
+    public function approvalRecords(): MorphMany
+    {
+        return $this->morphMany(ApprovalRecord::class, 'approvable');
     }
 
     public function calculateTotal(): void

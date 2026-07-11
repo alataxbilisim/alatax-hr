@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Enums\DataScopeLevel;
 use App\Models\ActivityLog;
 use App\Models\Employee;
 use App\Models\EmployeeDocument;
+use App\Services\DataScopeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -12,6 +14,10 @@ use Illuminate\Validation\Rule;
 
 class EmployeeDocumentController extends BaseController
 {
+    public function __construct(
+        protected DataScopeService $dataScope,
+    ) {}
+
     /**
      * Personele ait belgeleri listele
      */
@@ -19,6 +25,8 @@ class EmployeeDocumentController extends BaseController
     {
         $employee = Employee::where('company_id', $this->getCompanyId())
             ->findOrFail($employeeId);
+
+        $this->authorize('view', $employee);
 
         $query = EmployeeDocument::where('employee_id', $employeeId)
             ->where('company_id', $this->getCompanyId());
@@ -57,8 +65,10 @@ class EmployeeDocumentController extends BaseController
     {
         $document = EmployeeDocument::where('employee_id', $employeeId)
             ->where('company_id', $this->getCompanyId())
-            ->with('uploadedBy:id,name', 'employee:id,employee_code')
+            ->with('uploadedBy:id,name', 'employee:id,employee_code,user_id')
             ->findOrFail($documentId);
+
+        $this->authorize('view', $document);
 
         $document->checkExpiry();
 
@@ -72,6 +82,8 @@ class EmployeeDocumentController extends BaseController
     {
         $employee = Employee::where('company_id', $this->getCompanyId())
             ->findOrFail($employeeId);
+
+        $this->authorize('createForEmployee', [EmployeeDocument::class, $employee]);
 
         $validated = $request->validate([
             'file' => 'required|file|max:10240|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,gif',
@@ -91,26 +103,28 @@ class EmployeeDocumentController extends BaseController
         $fileName = $file->getClientOriginalName();
         $filePath = $file->store("employees/{$employeeId}/documents", 'private');
 
-        $document = EmployeeDocument::create([
-            'company_id' => $this->getCompanyId(),
-            'employee_id' => $employeeId,
-            'title' => $validated['title'],
-            'description' => $validated['description'] ?? null,
-            'category' => $validated['category'],
-            'file_path' => $filePath,
-            'file_name' => $fileName,
-            'file_type' => $file->getMimeType(),
-            'file_size' => $file->getSize(),
-            'issue_date' => $validated['issue_date'] ?? null,
-            'expiry_date' => $validated['expiry_date'] ?? null,
-            'is_visible_to_employee' => $validated['is_visible_to_employee'] ?? true,
-            'status' => 'active',
-            'notes' => $validated['notes'] ?? null,
-            'uploaded_by' => auth()->id(),
-            'created_by' => auth()->id(),
-        ]);
+        $document = EmployeeDocument::withoutAuditing(function () use ($validated, $employeeId, $filePath, $fileName, $file) {
+            return EmployeeDocument::create([
+                'company_id' => $this->getCompanyId(),
+                'employee_id' => $employeeId,
+                'title' => $validated['title'],
+                'description' => $validated['description'] ?? null,
+                'category' => $validated['category'],
+                'file_path' => $filePath,
+                'file_name' => $fileName,
+                'file_type' => $file->getMimeType(),
+                'file_size' => $file->getSize(),
+                'issue_date' => $validated['issue_date'] ?? null,
+                'expiry_date' => $validated['expiry_date'] ?? null,
+                'is_visible_to_employee' => $validated['is_visible_to_employee'] ?? true,
+                'status' => 'active',
+                'notes' => $validated['notes'] ?? null,
+                'uploaded_by' => auth()->id(),
+                'created_by' => auth()->id(),
+            ]);
+        });
 
-        ActivityLog::log('create', $document, "Personel belgesi yüklendi: {$validated['title']}");
+        ActivityLog::log('upload', $document, "Personel belgesi yüklendi: {$validated['title']}");
 
         return $this->created($document->load('uploadedBy:id,name'), 'Belge başarıyla yüklendi');
     }
@@ -122,7 +136,10 @@ class EmployeeDocumentController extends BaseController
     {
         $document = EmployeeDocument::where('employee_id', $employeeId)
             ->where('company_id', $this->getCompanyId())
+            ->with('employee')
             ->findOrFail($documentId);
+
+        $this->authorize('update', $document);
 
         $validated = $request->validate([
             'title' => 'sometimes|string|max:255',
@@ -144,10 +161,7 @@ class EmployeeDocumentController extends BaseController
             'updated_by' => auth()->id(),
         ]));
 
-        // Süresi dolmuşluk durumunu kontrol et
         $document->checkExpiry();
-
-        ActivityLog::log('update', $document, 'Personel belgesi güncellendi', $oldValues, $document->fresh()->toArray());
 
         return $this->success($document->load('uploadedBy:id,name'), 'Belge başarıyla güncellendi');
     }
@@ -159,16 +173,14 @@ class EmployeeDocumentController extends BaseController
     {
         $document = EmployeeDocument::where('employee_id', $employeeId)
             ->where('company_id', $this->getCompanyId())
+            ->with('employee')
             ->findOrFail($documentId);
 
-        $oldValues = $document->toArray();
+        $this->authorize('delete', $document);
 
-        // Dosyayı storage'dan sil
         if (Storage::disk('private')->exists($document->file_path)) {
             Storage::disk('private')->delete($document->file_path);
         }
-
-        ActivityLog::log('delete', $document, "Personel belgesi silindi: {$document->title}", $oldValues, null);
 
         $document->delete();
 
@@ -182,7 +194,10 @@ class EmployeeDocumentController extends BaseController
     {
         $document = EmployeeDocument::where('employee_id', $employeeId)
             ->where('company_id', $this->getCompanyId())
+            ->with('employee')
             ->findOrFail($documentId);
+
+        $this->authorize('view', $document);
 
         if (! Storage::disk('private')->exists($document->file_path)) {
             return $this->error('Dosya bulunamadı', 404);
@@ -213,20 +228,39 @@ class EmployeeDocumentController extends BaseController
     }
 
     /**
-     * Süresi yaklaşan belgeleri getir
+     * Süresi yaklaşan belgeleri getir — DataScope ile personel sınırı
      */
     public function expiringSoon(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', EmployeeDocument::class);
+
         $days = $request->get('days', 30);
 
-        $documents = EmployeeDocument::where('company_id', $this->getCompanyId())
+        $query = EmployeeDocument::where('company_id', $this->getCompanyId())
             ->whereNotNull('expiry_date')
             ->where('expiry_date', '<=', now()->addDays($days))
             ->where('expiry_date', '>=', now())
             ->where('status', 'active')
-            ->with(['employee:id,employee_code,user_id', 'employee.user:id,name'])
-            ->orderBy('expiry_date', 'asc')
-            ->get();
+            ->with(['employee:id,employee_code,user_id', 'employee.user:id,name']);
+
+        $employeeIds = $this->dataScope->teamEmployeeIds($request->user());
+        $scope = $this->dataScope->resolve($request->user());
+        if ($scope !== DataScopeLevel::Company) {
+            if ($scope === DataScopeLevel::Department) {
+                $emp = $request->user()->employee;
+                if ($emp?->department_id) {
+                    $query->whereHas('employee', fn ($q) => $q->where('department_id', $emp->department_id));
+                } else {
+                    $query->whereIn('employee_id', $this->dataScope->ownEmployeeIds($request->user()));
+                }
+            } else {
+                $query->whereIn('employee_id', $employeeIds !== []
+                    ? $employeeIds
+                    : $this->dataScope->ownEmployeeIds($request->user()));
+            }
+        }
+
+        $documents = $query->orderBy('expiry_date', 'asc')->get();
 
         return $this->success($documents);
     }

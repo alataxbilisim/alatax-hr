@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Http\Resources\EmployeeResource;
 use App\Mail\EmployeeInvitation;
 use App\Models\ActivityLog;
 use App\Models\AssetAssignment;
@@ -14,7 +15,9 @@ use App\Models\PerformanceReview;
 use App\Models\TrainingCertificate;
 use App\Models\TrainingParticipant;
 use App\Models\User;
+use App\Services\DataScopeService;
 use App\Services\EmployeeImportService;
+use App\Services\EmployeeSensitiveFieldService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -25,13 +28,22 @@ use Illuminate\Validation\Rule;
 
 class EmployeeController extends BaseController
 {
+    public function __construct(
+        protected DataScopeService $dataScope,
+        protected EmployeeSensitiveFieldService $sensitiveFields,
+    ) {}
+
     /**
      * Personel listesi
      */
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', Employee::class);
+
         $query = Employee::with(['user', 'department', 'manager.user'])
             ->where('company_id', $this->getCompanyId());
+
+        $this->dataScope->scopeForEmployee($query, $request->user());
 
         // Arama
         if ($request->has('search')) {
@@ -69,7 +81,11 @@ class EmployeeController extends BaseController
         $perPage = $request->get('per_page', 15);
         $employees = $query->paginate($perPage);
 
-        return $this->success($employees);
+        return $this->paginated(
+            EmployeeResource::collection($employees->getCollection())->resolve(),
+            'Personel listelendi',
+            $employees
+        );
     }
 
     /**
@@ -90,6 +106,8 @@ class EmployeeController extends BaseController
             },
         ])->where('company_id', $this->getCompanyId())
             ->findOrFail($id);
+
+        $this->authorize('view', $employee);
 
         // İzin bilgilerini ekle (user_id varsa)
         $leaveData = null;
@@ -123,9 +141,11 @@ class EmployeeController extends BaseController
                 ->orderBy('created_at', 'desc')
                 ->get();
 
-            $certificates = TrainingCertificate::where('user_id', $employee->user_id)
-                ->with('training:id,title')
-                ->orderBy('issued_date', 'desc')
+            $certificates = TrainingCertificate::whereHas('participant', function ($q) use ($employee) {
+                $q->where('user_id', $employee->user_id);
+            })
+                ->with(['participant.session.training:id,title'])
+                ->orderBy('issue_date', 'desc')
                 ->get();
 
             $trainingData = [
@@ -138,15 +158,15 @@ class EmployeeController extends BaseController
         $assetData = null;
         if ($employee->user_id) {
             $activeAssignments = AssetAssignment::where('user_id', $employee->user_id)
-                ->whereNull('returned_date')
+                ->whereNull('return_date')
                 ->with('asset:id,name,asset_code,brand,model,status')
                 ->orderBy('assigned_date', 'desc')
                 ->get();
 
             $pastAssignments = AssetAssignment::where('user_id', $employee->user_id)
-                ->whereNotNull('returned_date')
+                ->whereNotNull('return_date')
                 ->with('asset:id,name,asset_code,brand,model')
-                ->orderBy('returned_date', 'desc')
+                ->orderBy('return_date', 'desc')
                 ->limit(10)
                 ->get();
 
@@ -170,15 +190,25 @@ class EmployeeController extends BaseController
             ];
         }
 
-        // Activity log (son 20 kayıt)
-        $activityLog = ActivityLog::where('subject_type', Employee::class)
-            ->where('subject_id', $employee->id)
-            ->orderBy('created_at', 'desc')
+        // Activity log (son 20 kayıt) — FQCN + legacy basename uyumu
+        $activityLog = ActivityLog::query()
+            ->where('model_id', $employee->id)
+            ->where(function ($q) {
+                $q->where('model_type', Employee::class)
+                    ->orWhere('model_type', class_basename(Employee::class));
+            })
+            ->with('user:id,name')
+            ->orderByDesc('id')
             ->limit(20)
             ->get();
 
+        // A9: maaş alanları response'ta varsa hassas okuma logu (normal okuma loglanmaz)
+        if ($this->sensitiveFields->canViewSalary($request->user())) {
+            ActivityLog::log('view_sensitive', $employee, 'maaş bilgisi görüntülendi');
+        }
+
         return $this->success([
-            'employee' => $employee,
+            'employee' => new EmployeeResource($employee),
             'leaves' => $leaveData,
             'trainings' => $trainingData,
             'assets' => $assetData,
@@ -192,6 +222,8 @@ class EmployeeController extends BaseController
      */
     public function store(Request $request): JsonResponse
     {
+        $this->authorize('create', Employee::class);
+
         $validated = $request->validate([
             'employee_code' => [
                 'required',
@@ -255,6 +287,16 @@ class EmployeeController extends BaseController
             'create_portal_access' => 'boolean',
             'portal_email' => 'nullable|required_if:create_portal_access,true|email|unique:users,email',
         ]);
+
+        $strip = $this->sensitiveFields->stripUnauthorizedWrite($request->user(), $validated);
+        $validated = $strip['data'];
+        if ($strip['stripped'] !== []) {
+            ActivityLog::log(
+                'update',
+                null,
+                'yetkisiz alan güncellemesi yok sayıldı: '.implode(', ', $strip['stripped'])
+            );
+        }
 
         DB::beginTransaction();
         try {
@@ -327,11 +369,14 @@ class EmployeeController extends BaseController
                 );
             }
 
-            ActivityLog::log('create', $employee, 'Personel kaydı oluşturuldu: '.$validated['name'], null, $employee->toArray());
+            // Observer Auditable create log yazar — manuel CRUD log yok
 
             DB::commit();
 
-            return $this->created($employee->load('user', 'department', 'manager'), 'Personel başarıyla oluşturuldu');
+            return $this->created(
+                new EmployeeResource($employee->load('user', 'department', 'manager')),
+                'Personel başarıyla oluşturuldu'
+            );
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -345,6 +390,8 @@ class EmployeeController extends BaseController
     public function update(Request $request, int $id): JsonResponse
     {
         $employee = Employee::where('company_id', $this->getCompanyId())->findOrFail($id);
+
+        $this->authorize('update', $employee);
 
         $validated = $request->validate([
             'employee_code' => [
@@ -393,15 +440,26 @@ class EmployeeController extends BaseController
             'custom_fields' => 'nullable|array',
         ]);
 
-        $oldValues = $employee->toArray();
+        $strip = $this->sensitiveFields->stripUnauthorizedWrite($request->user(), $validated);
+        $validated = $strip['data'];
+        if ($strip['stripped'] !== []) {
+            ActivityLog::log(
+                'update',
+                $employee,
+                'yetkisiz alan güncellemesi yok sayıldı: '.implode(', ', $strip['stripped'])
+            );
+        }
 
         $employee->update(array_merge($validated, [
             'updated_by' => auth()->id(),
         ]));
 
-        ActivityLog::log('update', $employee, 'Personel kaydı güncellendi', $oldValues, $employee->fresh()->toArray());
+        // Observer Auditable update log yazar — manuel CRUD log yok
 
-        return $this->success($employee->load('user', 'department', 'manager'), 'Personel başarıyla güncellendi');
+        return $this->success(
+            new EmployeeResource($employee->load('user', 'department', 'manager')),
+            'Personel başarıyla güncellendi'
+        );
     }
 
     /**
@@ -410,10 +468,10 @@ class EmployeeController extends BaseController
     public function destroy(int $id): JsonResponse
     {
         $employee = Employee::where('company_id', $this->getCompanyId())->findOrFail($id);
-        $oldValues = $employee->toArray();
 
-        ActivityLog::log('delete', $employee, 'Personel kaydı silindi', $oldValues, null);
+        $this->authorize('delete', $employee);
 
+        // Observer Auditable delete log yazar — manuel CRUD log yok
         $employee->delete();
 
         return $this->success(null, 'Personel başarıyla silindi');
@@ -464,7 +522,7 @@ class EmployeeController extends BaseController
             DB::commit();
 
             return $this->success([
-                'employee' => $employee->load('user'),
+                'employee' => new EmployeeResource($employee->load('user')),
                 'temporary_password' => $temporaryPassword,
             ], 'Portal erişimi başarıyla oluşturuldu');
         } catch (\Exception $e) {
@@ -499,7 +557,7 @@ class EmployeeController extends BaseController
 
             DB::commit();
 
-            return $this->success($employee, 'Portal erişimi başarıyla kaldırıldı');
+            return $this->success(new EmployeeResource($employee), 'Portal erişimi başarıyla kaldırıldı');
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -655,9 +713,8 @@ class EmployeeController extends BaseController
         DB::beginTransaction();
         try {
             foreach ($employees as $employee) {
-                $oldValues = $employee->toArray();
+                // Observer Auditable update log yazar
                 $employee->update($updateData);
-                ActivityLog::log('update', $employee, 'Toplu güncelleme yapıldı', $oldValues, $employee->fresh()->toArray());
             }
 
             DB::commit();
@@ -693,8 +750,7 @@ class EmployeeController extends BaseController
         DB::beginTransaction();
         try {
             foreach ($employees as $employee) {
-                $oldValues = $employee->toArray();
-                ActivityLog::log('delete', $employee, 'Toplu silme ile personel kaydı silindi', $oldValues, null);
+                // Observer Auditable delete log yazar
                 $employee->delete();
             }
 
@@ -861,13 +917,23 @@ class EmployeeController extends BaseController
     {
         $employee = Employee::where('company_id', $this->getCompanyId())->findOrFail($id);
 
-        $activities = ActivityLog::where('subject_type', Employee::class)
-            ->where('subject_id', $employee->id)
-            ->with('causer:id,name')
-            ->orderBy('created_at', 'desc')
+        $this->authorize('view', $employee);
+
+        $activities = ActivityLog::query()
+            ->where('model_id', $employee->id)
+            ->where(function ($q) {
+                $q->where('model_type', Employee::class)
+                    ->orWhere('model_type', class_basename(Employee::class));
+            })
+            ->with('user:id,name')
+            ->orderByDesc('id')
             ->paginate(20);
 
-        return $this->success($activities);
+        return $this->paginated(
+            $activities->getCollection()->values()->all(),
+            'Personel geçmişi listelendi',
+            $activities
+        );
     }
 
     /**

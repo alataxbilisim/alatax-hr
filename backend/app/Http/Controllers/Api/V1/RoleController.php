@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Models\ActivityLog;
+use App\Models\Role;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 
 class RoleController extends BaseController
 {
@@ -89,14 +89,14 @@ class RoleController extends BaseController
             'guard_name' => 'sanctum',
         ]);
 
+        // Pivot — observer yakalamaz; özel izin logu
         $role->syncPermissions($validated['permissions']);
-
         ActivityLog::log(
-            'create',
+            'permission_sync',
             $role,
-            'Rol oluşturuldu: '.$role->name,
+            'Rol izinleri atandı: '.$role->name,
             null,
-            array_merge($role->toArray(), ['permissions' => $validated['permissions']])
+            ['permissions' => $validated['permissions']]
         );
 
         return $this->created([
@@ -130,19 +130,25 @@ class RoleController extends BaseController
             'permissions.*' => 'string|exists:permissions,name',
         ]);
 
-        $oldValues = array_merge($role->toArray(), ['permissions' => $role->permissions->pluck('name')->toArray()]);
-
         if (isset($validated['name'])) {
             $role->update(['name' => $validated['name']]);
         }
 
         if (isset($validated['permissions'])) {
+            $oldPermissions = $role->permissions->pluck('name')->sort()->values()->all();
             $role->syncPermissions($validated['permissions']);
+            $newPermissions = $role->permissions->pluck('name')->sort()->values()->all();
+
+            if ($oldPermissions !== $newPermissions) {
+                ActivityLog::log(
+                    'permission_sync',
+                    $role,
+                    'Rol izinleri güncellendi: '.$role->name,
+                    ['permissions' => $oldPermissions],
+                    ['permissions' => $newPermissions]
+                );
+            }
         }
-
-        $newValues = array_merge($role->fresh()->toArray(), ['permissions' => $role->permissions->pluck('name')->toArray()]);
-
-        ActivityLog::log('update', $role, 'Rol güncellendi: '.$role->name, $oldValues, $newValues);
 
         return $this->success([
             'id' => $role->id,
@@ -179,11 +185,8 @@ class RoleController extends BaseController
             return $this->error('Bu role sahip kullanıcılar var. Önce kullanıcıların rollerini değiştirin.', 400);
         }
 
-        $roleName = $role->name;
-        $oldValues = array_merge($role->toArray(), ['permissions' => $role->permissions->pluck('name')->toArray()]);
+        // Observer delete log yazar
         $role->delete();
-
-        ActivityLog::log('delete', null, 'Rol silindi: '.$roleName, $oldValues, null);
 
         return $this->success(null, 'Rol silindi');
     }

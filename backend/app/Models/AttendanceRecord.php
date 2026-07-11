@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AttendanceRecord extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'company_id',
         'user_id',
@@ -81,8 +84,19 @@ class AttendanceRecord extends Model
             return 0;
         }
 
-        $clockIn = \Carbon\Carbon::parse($this->date->format('Y-m-d').' '.$this->clock_in);
-        $clockOut = \Carbon\Carbon::parse($this->date->format('Y-m-d').' '.$this->clock_out);
+        $date = $this->date instanceof \Carbon\CarbonInterface
+            ? $this->date->format('Y-m-d')
+            : (string) $this->date;
+
+        $clockInTime = $this->clock_in instanceof \Carbon\CarbonInterface
+            ? $this->clock_in->format('H:i')
+            : (string) $this->clock_in;
+        $clockOutTime = $this->clock_out instanceof \Carbon\CarbonInterface
+            ? $this->clock_out->format('H:i')
+            : (string) $this->clock_out;
+
+        $clockIn = \Carbon\Carbon::parse($date.' '.$clockInTime);
+        $clockOut = \Carbon\Carbon::parse($date.' '.$clockOutTime);
 
         // Handle overnight shifts
         if ($clockOut < $clockIn) {
@@ -93,8 +107,15 @@ class AttendanceRecord extends Model
 
         // Subtract break time if exists
         if ($this->break_start && $this->break_end) {
-            $breakStart = \Carbon\Carbon::parse($this->date->format('Y-m-d').' '.$this->break_start);
-            $breakEnd = \Carbon\Carbon::parse($this->date->format('Y-m-d').' '.$this->break_end);
+            $breakStartTime = $this->break_start instanceof \Carbon\CarbonInterface
+                ? $this->break_start->format('H:i')
+                : (string) $this->break_start;
+            $breakEndTime = $this->break_end instanceof \Carbon\CarbonInterface
+                ? $this->break_end->format('H:i')
+                : (string) $this->break_end;
+
+            $breakStart = \Carbon\Carbon::parse($date.' '.$breakStartTime);
+            $breakEnd = \Carbon\Carbon::parse($date.' '.$breakEndTime);
             $breakMinutes = $breakEnd->diffInMinutes($breakStart);
             $totalMinutes -= $breakMinutes;
         }

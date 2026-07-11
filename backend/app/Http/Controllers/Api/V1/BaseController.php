@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Enums\UserType;
 use App\Http\Controllers\Controller;
 use App\Traits\ApiResponse;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 /**
  * API V1 Base Controller
@@ -12,7 +13,7 @@ use App\Traits\ApiResponse;
  */
 class BaseController extends Controller
 {
-    use ApiResponse;
+    use ApiResponse, AuthorizesRequests;
 
     /**
      * Geçerli kullanıcının firma ID'sini al

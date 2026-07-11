@@ -2,7 +2,10 @@
 
 namespace Tests\Feature\Api;
 
+use App\Enums\CompanyStatus;
+use App\Enums\UserType;
 use App\Models\Company;
+use App\Models\Employee;
 use App\Models\ExpenseCategory;
 use App\Models\ExpenseClaim;
 use App\Models\User;
@@ -24,11 +27,15 @@ class ExpenseTest extends TestCase
     {
         parent::setUp();
 
-        $this->company = Company::factory()->create(['is_active' => true]);
+        $this->company = Company::factory()->create([
+            'status' => CompanyStatus::Active,
+        ]);
         $this->user = User::factory()->create([
             'company_id' => $this->company->id,
-            'type' => 'user',
+            'type' => UserType::User,
         ]);
+        // PortalAccess aktif Employee kaydı ister
+        Employee::factory()->forUser($this->user)->create();
         $this->category = ExpenseCategory::factory()->create([
             'company_id' => $this->company->id,
             'name' => 'Yemek',
@@ -99,9 +106,7 @@ class ExpenseTest extends TestCase
         $response->assertOk()
             ->assertJsonStructure([
                 'data' => [
-                    'data' => [
-                        '*' => ['id', 'title', 'status', 'total_amount'],
-                    ],
+                    '*' => ['id', 'title', 'status', 'total_amount'],
                 ],
             ]);
     }
@@ -168,7 +173,7 @@ class ExpenseTest extends TestCase
 
         $response = $this->deleteJson("/api/v1/portal/expenses/{$claim->id}");
 
-        $response->assertStatus(404); // Won't find because of query filter
+        $response->assertStatus(403); // Policy: onaylanmış masraf silinemez
     }
 
     /** @test */

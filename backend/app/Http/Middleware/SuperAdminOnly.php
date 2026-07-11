@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\UserType;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,7 +16,7 @@ class SuperAdminOnly
     {
         $user = $request->user();
 
-        if (! $user || $user->type !== 'super_admin') {
+        if (! $user || $user->type !== UserType::SuperAdmin) {
             return response()->json([
                 'success' => false,
                 'message' => 'Bu işlem için SuperAdmin yetkisi gereklidir.',

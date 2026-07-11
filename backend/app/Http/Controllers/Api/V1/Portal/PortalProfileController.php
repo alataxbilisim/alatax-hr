@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1\Portal;
 
 use App\Http\Controllers\Api\V1\BaseController;
+use App\Http\Resources\EmployeeResource;
 use App\Models\ActivityLog;
 use App\Models\Employee;
 use Illuminate\Http\JsonResponse;
@@ -34,38 +35,7 @@ class PortalProfileController extends BaseController
                 'phone' => $user->phone,
                 'avatar' => $user->avatar,
             ],
-            'employee' => [
-                'id' => $employee->id,
-                'employee_code' => $employee->employee_code,
-                'title' => $employee->title,
-                'position' => $employee->position,
-                'department' => $employee->department?->name,
-                'manager_name' => $employee->manager?->user?->name,
-
-                // Kişisel bilgiler (düzenlenebilir)
-                'birth_date' => $employee->birth_date?->format('Y-m-d'),
-                'gender' => $employee->gender,
-                'marital_status' => $employee->marital_status,
-                'blood_type' => $employee->blood_type,
-
-                // İletişim
-                'personal_email' => $employee->personal_email,
-                'personal_phone' => $employee->personal_phone,
-                'address' => $employee->address,
-                'city' => $employee->city,
-                'district' => $employee->district,
-
-                // Acil durum
-                'emergency_contact_name' => $employee->emergency_contact_name,
-                'emergency_contact_phone' => $employee->emergency_contact_phone,
-                'emergency_contact_relation' => $employee->emergency_contact_relation,
-
-                // İş bilgileri (sadece görüntüleme)
-                'hire_date' => $employee->hire_date?->format('d.m.Y'),
-                'contract_type' => $employee->contract_type,
-                'work_type' => $employee->work_type,
-                'status' => $employee->status,
-            ],
+            'employee' => new EmployeeResource($employee),
         ]);
     }
 

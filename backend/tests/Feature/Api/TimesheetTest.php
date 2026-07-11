@@ -2,8 +2,11 @@
 
 namespace Tests\Feature\Api;
 
+use App\Enums\CompanyStatus;
+use App\Enums\UserType;
 use App\Models\AttendanceRecord;
 use App\Models\Company;
+use App\Models\Employee;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
@@ -21,11 +24,14 @@ class TimesheetTest extends TestCase
     {
         parent::setUp();
 
-        $this->company = Company::factory()->create(['is_active' => true]);
+        $this->company = Company::factory()->create([
+            'status' => CompanyStatus::Active,
+        ]);
         $this->user = User::factory()->create([
             'company_id' => $this->company->id,
-            'type' => 'user',
+            'type' => UserType::User,
         ]);
+        Employee::factory()->forUser($this->user)->create();
     }
 
     /** @test */

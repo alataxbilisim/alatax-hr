@@ -2,24 +2,33 @@
 
 namespace App\Http\Controllers\Api\V1\Leaves;
 
+use App\Enums\LeaveRequestStatus;
 use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\ActivityLog;
 use App\Models\LeaveBalance;
 use App\Models\LeaveRequest;
 use App\Models\LeaveType;
+use App\Services\DataScopeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class LeaveRequestController extends BaseController
 {
+    public function __construct(
+        protected DataScopeService $dataScope,
+    ) {}
+
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', LeaveRequest::class);
+
         $query = LeaveRequest::with(['user', 'leaveType', 'approvedBy', 'rejectedBy'])
             ->latest();
+
+        $this->dataScope->scopeForUser($query, $request->user());
 
         // Filter by status
         if ($request->has('status')) {
@@ -46,6 +55,8 @@ class LeaveRequestController extends BaseController
      */
     public function store(Request $request): JsonResponse
     {
+        $this->authorize('create', LeaveRequest::class);
+
         $validated = $request->validate([
             'leave_type_id' => 'required|exists:leave_types,id',
             'start_date' => 'required|date|after_or_equal:today',
@@ -110,8 +121,6 @@ class LeaveRequestController extends BaseController
         // Update balance pending
         $balance->addPending($totalDays);
 
-        ActivityLog::log('create', $leaveRequest, 'İzin talebi oluşturuldu: '.$leaveRequest->leaveType->name.' - '.$totalDays.' gün');
-
         return $this->success($leaveRequest->load(['leaveType', 'user']), 'İzin talebi oluşturuldu', 201);
     }
 
@@ -120,6 +129,8 @@ class LeaveRequestController extends BaseController
      */
     public function show(LeaveRequest $leaveRequest): JsonResponse
     {
+        $this->authorize('view', $leaveRequest);
+
         return $this->success(
             $leaveRequest->load(['user', 'leaveType', 'approvedBy', 'rejectedBy']),
             'İzin talebi detayları'
@@ -128,10 +139,13 @@ class LeaveRequestController extends BaseController
 
     /**
      * Approve a leave request.
+     * Onay yetkisi: Policy (workflow canApprove | team | company). Legacy serbest onay yok.
      */
     public function approve(Request $request, LeaveRequest $leaveRequest): JsonResponse
     {
-        if ($leaveRequest->status !== LeaveRequest::STATUS_PENDING) {
+        $this->authorize('approve', $leaveRequest);
+
+        if ($leaveRequest->status !== LeaveRequestStatus::Pending) {
             return $this->error('Bu talep zaten işlenmiş', null, 422);
         }
 
@@ -139,7 +153,9 @@ class LeaveRequestController extends BaseController
             'note' => 'nullable|string|max:500',
         ]);
 
-        $leaveRequest->approve(auth()->id(), $validated['note'] ?? null);
+        LeaveRequest::withoutAuditing(
+            fn () => $leaveRequest->approve(auth()->id(), $validated['note'] ?? null)
+        );
 
         ActivityLog::log('approved', $leaveRequest, 'İzin talebi onaylandı: '.$leaveRequest->leaveType->name);
 
@@ -151,7 +167,9 @@ class LeaveRequestController extends BaseController
      */
     public function reject(Request $request, LeaveRequest $leaveRequest): JsonResponse
     {
-        if ($leaveRequest->status !== LeaveRequest::STATUS_PENDING) {
+        $this->authorize('approve', $leaveRequest);
+
+        if ($leaveRequest->status !== LeaveRequestStatus::Pending) {
             return $this->error('Bu talep zaten işlenmiş', null, 422);
         }
 
@@ -159,7 +177,9 @@ class LeaveRequestController extends BaseController
             'reason' => 'required|string|max:500',
         ]);
 
-        $leaveRequest->reject(auth()->id(), $validated['reason']);
+        LeaveRequest::withoutAuditing(
+            fn () => $leaveRequest->reject(auth()->id(), $validated['reason'])
+        );
 
         ActivityLog::log('rejected', $leaveRequest, 'İzin talebi reddedildi: '.$leaveRequest->leaveType->name.' - Sebep: '.$validated['reason']);
 
@@ -171,6 +191,8 @@ class LeaveRequestController extends BaseController
      */
     public function cancel(LeaveRequest $leaveRequest): JsonResponse
     {
+        $this->authorize('delete', $leaveRequest);
+
         if ($leaveRequest->user_id !== auth()->id()) {
             return $this->error('Bu talebi iptal etme yetkiniz yok', null, 403);
         }
@@ -179,7 +201,7 @@ class LeaveRequestController extends BaseController
             return $this->error('Sadece bekleyen talepler iptal edilebilir', null, 422);
         }
 
-        $leaveRequest->cancel();
+        LeaveRequest::withoutAuditing(fn () => $leaveRequest->cancel());
 
         ActivityLog::log('cancelled', $leaveRequest, 'İzin talebi iptal edildi: '.$leaveRequest->leaveType->name);
 
@@ -200,14 +222,19 @@ class LeaveRequestController extends BaseController
     }
 
     /**
-     * Get pending requests for approval.
+     * Get pending requests for approval — DataScope ile sınırlı (legacy serbest liste kapalı).
      */
     public function pendingApprovals(Request $request): JsonResponse
     {
-        $leaveRequests = LeaveRequest::with(['user', 'leaveType'])
+        $this->authorize('viewAny', LeaveRequest::class);
+
+        $query = LeaveRequest::with(['user', 'leaveType'])
             ->pending()
-            ->latest()
-            ->paginate($request->get('per_page', 15));
+            ->latest();
+
+        $this->dataScope->scopeForUser($query, $request->user());
+
+        $leaveRequests = $query->paginate($request->get('per_page', 15));
 
         return $this->success($leaveRequests, 'Onay bekleyen talepler listelendi');
     }

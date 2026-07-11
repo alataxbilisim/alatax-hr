@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Role;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 
 class PermissionSeeder extends Seeder
 {
@@ -57,8 +57,11 @@ class PermissionSeeder extends Seeder
                 'branches' => ['view', 'create', 'edit', 'delete'],
                 'audit_logs' => ['view', 'export'],
                 'settings' => ['view', 'edit'],
+                'company' => ['view', 'edit'],
                 'webhooks' => ['view', 'create', 'edit', 'delete'],
                 'api_keys' => ['view', 'create', 'edit', 'delete'],
+                'custom_fields' => ['view', 'create', 'edit', 'delete'],
+                'workflows' => ['view', 'create', 'edit', 'delete'],
             ],
 
             // Personel Modülü
@@ -69,13 +72,19 @@ class PermissionSeeder extends Seeder
                 'custom_fields' => ['view', 'create', 'edit', 'delete'],
                 'reports' => ['view', 'export'],
                 'documents' => ['view', 'create', 'edit', 'delete'],
+                // Alan seviyesi (Faz 2) — field_permissions tablosu Faz 4'e
+                'salary' => ['view', 'edit'],
+                'tckn' => ['view'],
             ],
 
             // İşe Alım Modülü
             'recruitment' => [
                 'positions' => ['view', 'create', 'edit', 'delete'],
                 'applications' => ['view', 'edit', 'delete', 'approve'],
-                'cv_pool' => ['view', 'export'],
+                'cv_pool' => ['view', 'edit', 'export'],
+                'interviews' => ['view', 'create', 'edit', 'delete'],
+                'reports' => ['view', 'export'],
+                'forms' => ['view', 'create', 'edit', 'delete'],
                 'custom_fields' => ['view', 'create', 'edit', 'delete'],
             ],
 
@@ -94,6 +103,7 @@ class PermissionSeeder extends Seeder
             'documents' => [
                 'list' => ['view', 'create', 'edit', 'delete', 'approve'],
                 'categories' => ['view', 'create', 'edit', 'delete'],
+                'reports' => ['view', 'export'],
                 'custom_fields' => ['view', 'create', 'edit', 'delete'],
             ],
 
@@ -109,7 +119,7 @@ class PermissionSeeder extends Seeder
                 'periods' => ['view', 'create', 'edit', 'delete'],
                 'criteria' => ['view', 'create', 'edit', 'delete'],
                 'okr' => ['view', 'create', 'edit', 'delete'],
-                'feedback' => ['view', 'create'],
+                'feedback' => ['view', 'create', 'edit'],
                 'competencies' => ['view', 'create', 'edit', 'delete'],
                 'one_on_one' => ['view', 'create', 'edit', 'delete'],
                 'custom_fields' => ['view', 'create', 'edit', 'delete'],
@@ -293,8 +303,11 @@ class PermissionSeeder extends Seeder
                     'management.users.view', 'management.users.create', 'management.users.edit',
                     'management.roles.view',
                     'management.branches.view', 'management.branches.create', 'management.branches.edit',
-                    'management.settings.view',
+                    'management.settings.view', 'management.settings.edit',
+                    'management.company.view', 'management.company.edit',
                     'management.audit_logs.view',
+                    'management.custom_fields.view', 'management.custom_fields.create', 'management.custom_fields.edit',
+                    // api_keys / webhooks / workflows → yalnızca admin (company_admin / admin rolü)
 
                     // Personel - Tam yetki
                     'employees.*',
@@ -308,27 +321,26 @@ class PermissionSeeder extends Seeder
                     // İzin - Tam yetki
                     'leaves.*',
 
+                    // Masraf - Tam yetki
+                    'expenses.*',
+
                     // Onboarding - Tam yetki
                     'onboarding.*',
 
-                    // Eğitim - Görüntüleme ve düzenleme
-                    'training.list.view', 'training.list.create', 'training.list.edit',
-                    'training.sessions.view', 'training.sessions.create', 'training.sessions.edit',
+                    // Eğitim - Tam yetki
+                    'training.*',
 
-                    // Performans - Görüntüleme ve düzenleme
-                    'performance.reviews.view', 'performance.reviews.create', 'performance.reviews.edit',
-                    'performance.periods.view',
-                    'performance.criteria.view',
+                    // Performans - Tam yetki
+                    'performance.*',
 
-                    // Varlıklar - Görüntüleme ve düzenleme
-                    'assets.list.view', 'assets.list.create', 'assets.list.edit',
-                    'assets.assignments.view', 'assets.assignments.create', 'assets.assignments.edit',
+                    // Varlıklar - Tam yetki
+                    'assets.*',
 
                     // Anketler
-                    'surveys.list.view', 'surveys.list.create', 'surveys.list.edit',
+                    'surveys.*',
 
                     // Analitik
-                    'analytics.reports.view', 'analytics.reports.export',
+                    'analytics.*',
 
                     // Geriye uyumluluk
                     'users.view', 'users.create', 'users.edit',
@@ -356,17 +368,23 @@ class PermissionSeeder extends Seeder
                     // İşe Alım
                     'recruitment.positions.view',
                     'recruitment.applications.view', 'recruitment.applications.edit',
-                    'recruitment.cv_pool.view',
+                    'recruitment.cv_pool.view', 'recruitment.cv_pool.edit',
+                    'recruitment.interviews.view', 'recruitment.interviews.create', 'recruitment.interviews.edit',
+                    'recruitment.reports.view',
+                    'recruitment.forms.view',
 
                     // Evrak
                     'documents.list.view', 'documents.list.create', 'documents.list.edit',
                     'documents.categories.view',
+                    'documents.reports.view',
 
                     // İzin
                     'leaves.requests.view', 'leaves.requests.create', 'leaves.requests.edit',
                     'leaves.types.view',
                     'leaves.balances.view',
                     'leaves.calendar.view',
+                    'leaves.holidays.view',
+                    'leaves.accrual_policies.view',
 
                     // Onboarding
                     'onboarding.processes.view', 'onboarding.processes.edit',
@@ -376,8 +394,22 @@ class PermissionSeeder extends Seeder
                     'training.list.view', 'training.list.create', 'training.list.edit',
                     'training.sessions.view', 'training.sessions.create', 'training.sessions.edit',
 
-                    // Performans - Sadece görüntüleme
+                    // Performans
                     'performance.reviews.view',
+                    'performance.periods.view',
+                    'performance.criteria.view',
+                    'performance.feedback.view',
+
+                    // Varlıklar
+                    'assets.list.view', 'assets.list.create', 'assets.list.edit',
+                    'assets.categories.view',
+                    'assets.maintenance.view',
+
+                    // Anketler
+                    'surveys.list.view', 'surveys.list.create', 'surveys.list.edit',
+
+                    // Analitik
+                    'analytics.reports.view',
 
                     // Geriye uyumluluk
                     'users.view',
@@ -404,10 +436,15 @@ class PermissionSeeder extends Seeder
                     'leaves.requests.view', 'leaves.requests.approve',
                     'leaves.calendar.view',
 
+                    // Masraf - ekip onay
+                    'expenses.claims.view', 'expenses.claims.approve',
+
                     // Performans - Değerlendirme yapabilir
                     'performance.reviews.view', 'performance.reviews.create', 'performance.reviews.edit',
-                    'performance.feedback.view', 'performance.feedback.create',
+                    'performance.reviews.approve',
+                    'performance.feedback.view', 'performance.feedback.create', 'performance.feedback.edit',
                     'performance.one_on_one.view', 'performance.one_on_one.create', 'performance.one_on_one.edit',
+                    'performance.okr.view',
 
                     // Geriye uyumluluk
                     'users.view',
@@ -460,6 +497,11 @@ class PermissionSeeder extends Seeder
             });
 
             $role->syncPermissions($validPermissions);
+
+            // admin → company data_scope (config fallback ile uyumlu)
+            if ($roleName === 'admin' && $role->data_scope === null) {
+                $role->forceFill(['data_scope' => 'company'])->save();
+            }
         }
     }
 }

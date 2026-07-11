@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\UserType;
 use App\Notifications\ResetPasswordNotification;
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -14,7 +15,21 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, HasRoles, Notifiable, SoftDeletes;
+    use Auditable, HasApiTokens, HasFactory, HasRoles, Notifiable, SoftDeletes;
+
+    /**
+     * @var list<string>
+     */
+    protected array $auditMasked = [
+        'password',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
+        'remember_token',
+        'invitation_token',
+    ];
+
+    /** Spatie PermissionSeeder ile aynı guard (API) */
+    protected $guard_name = 'sanctum';
 
     protected $fillable = [
         'company_id',

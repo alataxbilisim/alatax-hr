@@ -212,7 +212,7 @@ class PortalSurveyController extends BaseController
         ]);
 
         $submission = SurveySubmission::where('id', $validated['submission_id'])
-            ->where(function ($q) use ($user) {
+            ->where(function ($q) use ($user, $request) {
                 $q->where('user_id', $user->id)
                     ->orWhere('anonymous_id', $request->input('anonymous_id'));
             })
