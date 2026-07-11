@@ -23,7 +23,7 @@ Fark yaratacak 4 şey:
 1. **Önce platform, sonra modül.** Form motoru, yetki, audit, workflow, bildirim ve rapor motorları önce bitirilir; modüller bu motorların üstüne oturtulur. Solo geliştirici için en büyük kaldıraç budur — aynı işi 15 modülde 15 kez yazmak yerine 1 kez motora yazılır.
 2. **Modüler monolith.** Mikroservis yok. Tek Laravel uygulaması, net modül sınırları, tek deployment. On-prem kurulumu ve solo bakımı ancak bu basitlikte sürdürülebilir.
 3. **API-first.** Company/Portal/SuperAdmin SPA'larının kullandığı API, ileride mobil uygulamanın kullanacağı API'nin ta kendisidir. UI'a özel gizli endpoint yazılmaz.
-4. **Tek veritabanı motoru: PostgreSQL.** MySQL/SQLite desteği taşınmaz. JSONB + GIN index, custom field ve audit mimarisinin temelidir.
+4. **Tek veritabanı motoru (uygulama default): PostgreSQL.** Default connection `pgsql`. MySQL bilgisayardan / Docker'dan **ASLA silinmez** — legacy olarak korunur (devre dışı bırakılabilir ama servis/bağımlılık kalır). SQLite yalnızca acil lokal deneme; CI ve prod pgsql. JSONB + GIN index, custom field ve audit mimarisinin temelidir.
 5. **Kod cloud/on-prem ayrımı bilmez.** Fark yalnızca konfigürasyon (`APP_MODE`) ve lisans katmanındadır.
 6. **Derinlik > genişlik.** Pilot için seçilen çekirdek modüller "satılabilir" kaliteye getirilir; kalanlar lisans sisteminde kapalı tutulur. Yarım 15 modül yerine tam 7 modül.
 7. **Türkçe-first, i18n-ready.** Arayüz Türkçe; ancak bugünden itibaren yazılan her yeni metin çeviri altyapısından (t()) geçer. Toplu string migrasyonu global açılım öncesine ertelenir.
@@ -35,7 +35,7 @@ Fark yaratacak 4 şey:
 
 | Alan | Bugün (Snapshot) | Hedef |
 |------|------------------|-------|
-| Veritabanı | SQLite fiilen / MySQL dokümanda; 3 migration çakışması | PostgreSQL 16+, temiz baseline migration seti, JSONB |
+| Veritabanı | **PostgreSQL 16** default (Faz 1); mysql legacy Docker'da durur; json→jsonb + string+CHECK | Temiz baseline squash (Faz 2); GIN indeksler |
 | Yetki | Spatie seed'li ama route'ta enforce YOK; type enum'u ile kaba ayrım | Route + Policy enforcement; modül/sayfa/aksiyon/alan + veri kapsamı |
 | Audit | activity_logs (controller bazlı, kısmi) | Observer tabanlı otomatik audit; okuma/export logları; immutable |
 | Özelleştirme | custom_field_definitions + renderer (tohum) | Form Engine: layout, koşullu görünürlük, alan izinleri, liste görünümleri |
@@ -100,20 +100,27 @@ Fark yaratacak 4 şey:
 
 ---
 
-### FAZ 1 — PostgreSQL Geçişi (1–2 hafta)
+### FAZ 1 — PostgreSQL Geçişi ✅ KAPANDI (11 Temmuz 2026)
 
 **Amaç:** Tek ve doğru veritabanı motoruna geçiş + temiz şema baseline'ı.
 
-- [ ] **Karar noktası:** SQLite'taki 118 MB veri test verisi ise atılır (varsayım: evet). Korunacak veri varsa pgloader ile tek seferlik taşıma.
-- [ ] 67 migration → **modül bazlı temiz baseline setine squash** (örn. `0001_core`, `0002_hr`, `0003_leave`...). Çakışmalar bu sırada kalıcı çözülür. Kural: bundan sonra baseline'a dokunulmaz, her değişiklik yeni migration.
-- [ ] MySQL/SQLite'a özgü ifadeler ayıklanır; enum kolonlar → string + CHECK constraint (Laravel cast ile PHP enum)
-- [ ] JSONB dönüşümü: `custom_fields`, `settings`, `preferences`, `old_values/new_values`, `widgets`, `approval_flow`, `form_fields` vb. tüm JSON kolonları
-- [ ] İndeks stratejisi: her tenant tablosunda `(company_id)` + sık sorgu kombinasyonlarına bileşik indeks; `employees.custom_fields` gibi filtrelenecek JSONB'lere GIN
-- [ ] `config/database.php` + `.env.example` yalnızca pgsql; README kurulum güncellenir
-- [ ] Tüm feature testleri PostgreSQL üzerinde koşacak şekilde CI güncellenir
-- [ ] pg_dump tabanlı yedekleme script'i (on-prem'in yedekleme aracının temeli)
+**Kapanış özeti:** Default DB **pgsql**; Docker app → postgres; CI postgres:16 service. `json`→`jsonb`, `enum`→string+CHECK (`PortableEnum`) + çekirdek PHP enums. `migrate:fresh --seed` **pgsql ve mysql** yeşil. MySQL servisi **silinmedi** (legacy). Migration squash **Faz 2'ye ertelendi**. Branch: `faz1-postgresql` → main merge `bd9f47a`.
 
-**DoD:** `migrate:fresh --seed` PostgreSQL'de hatasız; tüm testler pgsql'de yeşil; SQLite/MySQL referansı repoda kalmaz.
+- [x] Karar: mevcut SQLite dump test verisi — Docker/pgsql fresh seed ile devam (pgloader gerekmedi)
+- [x] MySQL'e özgü ifadeler ayıklandı (employees nullable migration); enum → string + CHECK; JSON → jsonb
+- [x] `config/database.php` + `.env.example` / compose default → **pgsql**; README güncellendi
+- [x] CI feature/migrate PostgreSQL service container üzerinde
+- [ ] ~~67 migration squash~~ → **Faz 2'ye ertelendi**
+- [ ] İndeks stratejisi GIN (JSONB) — squash/baseline ile birlikte Faz 2'de netleştirilebilir
+- [ ] pg_dump yedekleme script'i — on-prem paketi ile (sonraki faz)
+
+**Faz 1 — Açık Borçlar**
+
+- [ ] **[Faz 2]** Migration squash: 64 dosya → modül bazlı baseline (`0001_core`…); squash öncesi/sonrası `pg_dump` şema diff
+- [ ] **[Faz 2]** PHPUnit factory'leri (`CompanyFactory` vb.) + `users.type` uyumu; suite'i **pgsql**'de yeşile çek; CI `continue-on-error` **KALDIR**
+- [ ] **[kalıcı]** MySQL Docker servisi legacy — **silinmez** (aşağıdaki kural)
+
+**DoD (kapanış):** `migrate:fresh --seed` PostgreSQL'de hatasız ✅; default pgsql ✅; CI pgsql migrate+pint+frontend yeşil ✅; mysql legacy korunur ✅. Squash + PHPUnit suite yeşili Faz 2.
 
 ---
 
@@ -135,13 +142,14 @@ Fark yaratacak 4 şey:
 - [ ] Immutable garanti: activity_logs'a update/delete endpoint'i yok; saklama süresi firma ayarı (varsayılan süresiz); aylık partisyon hazırlığı (büyüme için)
 - [ ] Audit Görüntüleyici v2: kayıt bazlı zaman çizelgesi (her detay sayfasında "Geçmiş" sekmesi) + global arama/filtre/export
 
-**⚠️ Teknik borç — PHPUnit suite (Faz 0'da CI non-blocking bırakıldı; burada kapatılacak)**
-- [ ] **PHPUnit test suite'ini yeşile çek:** eksik factory'ler (`CompanyFactory` vb.) + test veri şeması + enum/tip uyumu; CI'da PHPUnit `continue-on-error`'ı **KALDIR** (blocking yap).
+**⚠️ Teknik borç — PHPUnit suite + migration squash (Faz 1'den taşındı; burada kapatılacak)**
+- [ ] **Migration squash:** 64 migration → modül bazlı baseline; `pg_dump` şema diff ile doğrula
+- [ ] **PHPUnit test suite'ini yeşile çek (pgsql):** eksik factory'ler (`CompanyFactory` vb.) + test veri şeması + enum/tip uyumu; CI'da PHPUnit `continue-on-error`'ı **KALDIR** (blocking yap).
   - Teşhis (2026-07-10, sqlite `:memory:`, düzeltme yok): **41 failed / 2 passed**
   - `Class "Database\Factories\CompanyFactory" not found` (~23 test) — `ExpenseTest`, `SurveyTest`, `TimesheetTest` setUp'ta `Company::factory()` kullanıyor; factory dosyası yok
-  - `CHECK constraint failed: type` (~18 test) — `RouteAuthorizationTest` / `RouteComprehensiveTest` `users.type = 'employee'` yazıyor; migration enum'u yalnızca `super_admin | company_admin | user`
-  - MySQL ortamında aynı tip uyumsuzluğu `Data truncated for column 'type'` olarak da görülür
+  - `CHECK constraint failed: type` (~18 test) — `RouteAuthorizationTest` / `RouteComprehensiveTest` `users.type = 'employee'` yazıyor; kolon değerleri yalnızca `super_admin | company_admin | user`
   - Mevcut factory'ler: `UserFactory`, `SurveyFactory`, `SurveyQuestionFactory`, `ExpenseClaimFactory`, `ExpenseCategoryFactory`, `AttendanceRecordFactory` — `CompanyFactory` eksik
+  - CI artık postgres service kullanıyor; suite pgsql üzerinde yeşile çekilmeli
 
 **Kimlik sertleştirme**
 - [ ] Gerçek TOTP 2FA (UserController:744 stub → doğrulama + recovery codes + login akışına entegrasyon)
@@ -319,4 +327,4 @@ Toplam tahmin: **~29–42 hafta (7–10 ay)** tam zamanlı. Pilot geri bildirimi
 
 ---
 
-*Faz 0 kapandı (11 Tem 2026). Sonraki adım: Faz 1 — PostgreSQL geçişi. Her fazın başında bu belge üzerinden o faza özel Cursor promptları hazırlanır.*
+*Faz 0 ve Faz 1 kapandı (11 Tem 2026). Sonraki adım: Faz 2 — RBAC v2 + Audit v2 (+ migration squash + PHPUnit yeşili). Her fazın başında bu belge üzerinden o faza özel Cursor promptları hazırlanır.*

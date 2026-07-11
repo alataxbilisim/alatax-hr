@@ -4,7 +4,7 @@
 
 ## Proje Bağlamı
 
-ALATAX HR: Türkiye odaklı, multi-tenant B2B HR SaaS. Backend: Laravel 12 REST API (`/api/v1`, modüler monolith). Frontend: pnpm monorepo, 3 React 19 + TS SPA (superadmin/company/portal) + `@alatax/shared`. Veritabanı: PostgreSQL (JSONB ağırlıklı hibrit model). Auth: Sanctum Bearer token. RBAC: Spatie Permission (`{module}.{page}.{action}` formatı). Multi-tenancy: `company_id` + `BelongsToCompany` global scope. Yol haritası `ROADMAP.md` dosyasındadır; faz sırasına uy, kapsam dışına çıkma.
+ALATAX HR: Türkiye odaklı, multi-tenant B2B HR SaaS. Backend: Laravel 12 REST API (`/api/v1`, modüler monolith). Frontend: pnpm monorepo, 3 React 19 + TS SPA (superadmin/company/portal) + `@alatax/shared`. Veritabanı: **PostgreSQL** default (JSONB hibrit model); **MySQL legacy olarak korunur, ASLA silinmez**. Auth: Sanctum Bearer token. RBAC: Spatie Permission (`{module}.{page}.{action}` formatı). Multi-tenancy: `company_id` + `BelongsToCompany` global scope. Yol haritası `ROADMAP.md` dosyasındadır; faz sırasına uy, kapsam dışına çıkma.
 
 ## Genel Çalışma Kuralları
 
@@ -29,6 +29,8 @@ ALATAX HR: Türkiye odaklı, multi-tenant B2B HR SaaS. Backend: Laravel 12 REST 
 
 ## Veritabanı Kuralları
 
+- **Default motor: PostgreSQL (`pgsql`).** Uygulama ve CI pgsql kullanır.
+- **MySQL KALICI KURAL:** MySQL bilgisayardan / Docker Compose'tan **ASLA silinmez**. Devre dışı veya legacy olabilir; servis ve bağımlılık olarak korunur. Default yine pgsql'dir — mysql'e geri dönüş yolu açık kalsın.
 - Tablo adları snake_case çoğul; pivot tablolar alfabetik tekil (`company_module` değil — mevcut `company_modules` istisnası korunur, mevcut adlandırmayı bozma).
 - Her FK için `constrained()` + davranış (`cascadeOnDelete` / `nullOnDelete`) açıkça yazılır.
 - Sık filtrelenen kolon kombinasyonlarına bileşik indeks: `(company_id, status)` gibi. Filtrelenen JSONB alanlarına GIN.
@@ -58,4 +60,4 @@ ALATAX HR: Türkiye odaklı, multi-tenant B2B HR SaaS. Backend: Laravel 12 REST 
 
 ## Yasaklar (kısa liste)
 
-- localStorage'a token dışında hassas veri yazmak · `company_id`'yi request body'den okumak · route'suz sidebar linki · korumasız endpoint · ham SQL · hardcoded renk/metin · baseline migration düzenlemek · Telescope/debug'ı prod'da açık bırakmak · frontend'de yetki kontrolünü tek güvence sanmak (backend her zaman asıl kapıdır).
+- localStorage'a token dışında hassas veri yazmak · `company_id`'yi request body'den okumak · route'suz sidebar linki · korumasız endpoint · ham SQL · hardcoded renk/metin · baseline migration düzenlemek · Telescope/debug'ı prod'da açık bırakmak · frontend'de yetki kontrolünü tek güvence sanmak (backend her zaman asıl kapıdır) · **MySQL servisini/bağımlılığını silmek**.
