@@ -13,7 +13,7 @@
 | `migrate:fresh --seed` **mysql** (legacy) | ✅ YEŞİL |
 | Default connection | ✅ **pgsql** |
 | Docker app → postgres | ✅ `/up` 200 + login OK |
-| CI postgres | 🔄 push sonrası |
+| CI postgres | ✅ migrate+pint+frontend yeşil (PHPUnit non-blocking) |
 | Squash | ⏸️ **Faz 2'ye ertelendi** |
 | mysql silme | ⏸️ **YAPILMADI** — legacy kalır (Faz 1 sonu/Faz 2) |
 
