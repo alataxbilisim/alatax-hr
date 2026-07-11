@@ -116,6 +116,7 @@ class EmployeeSensitiveFieldService
 
     /**
      * Audit old/new values: hassas alan değerlerini maskele (K7).
+     * Observer Auditable tercih edilir; manuel çağrılar için geriye uyum.
      */
     public function maskForAudit(?array $values): ?array
     {
@@ -125,7 +126,7 @@ class EmployeeSensitiveFieldService
 
         foreach (self::ALL_SENSITIVE_FIELDS as $field) {
             if (array_key_exists($field, $values) && $values[$field] !== null) {
-                $values[$field] = '***';
+                $values[$field] = '*** güncellendi';
             }
         }
 

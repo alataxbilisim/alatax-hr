@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1\Portal;
 
 use App\Http\Controllers\Api\V1\BaseController;
+use App\Models\ActivityLog;
 use App\Models\Employee;
 use App\Models\Payslip;
 use Illuminate\Http\JsonResponse;
@@ -76,6 +77,8 @@ class PortalPayslipController extends BaseController
         // Okundu olarak işaretle
         $payslip->markAsViewed();
 
+        ActivityLog::log('view_sensitive', $payslip, 'bordro görüntülendi');
+
         // Tüm detayları göster
         return $this->success([
             'id' => $payslip->id,
@@ -121,6 +124,8 @@ class PortalPayslipController extends BaseController
         if (! $payslip->file_path || ! Storage::disk('public')->exists($payslip->file_path)) {
             return $this->error('Bordro dosyası bulunamadı', null, 404);
         }
+
+        ActivityLog::log('export', $payslip, 'bordro export edildi');
 
         $fileName = "Bordro_{$payslip->year}_{$payslip->month}.pdf";
 

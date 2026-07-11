@@ -190,12 +190,22 @@ class EmployeeController extends BaseController
             ];
         }
 
-        // Activity log (son 20 kayıt)
-        $activityLog = ActivityLog::where('model_type', Employee::class)
+        // Activity log (son 20 kayıt) — FQCN + legacy basename uyumu
+        $activityLog = ActivityLog::query()
             ->where('model_id', $employee->id)
-            ->orderBy('created_at', 'desc')
+            ->where(function ($q) {
+                $q->where('model_type', Employee::class)
+                    ->orWhere('model_type', class_basename(Employee::class));
+            })
+            ->with('user:id,name')
+            ->orderByDesc('id')
             ->limit(20)
             ->get();
+
+        // A9: maaş alanları response'ta varsa hassas okuma logu (normal okuma loglanmaz)
+        if ($this->sensitiveFields->canViewSalary($request->user())) {
+            ActivityLog::log('view_sensitive', $employee, 'maaş bilgisi görüntülendi');
+        }
 
         return $this->success([
             'employee' => new EmployeeResource($employee),
@@ -359,13 +369,7 @@ class EmployeeController extends BaseController
                 );
             }
 
-            ActivityLog::log(
-                'create',
-                $employee,
-                'Personel kaydı oluşturuldu: '.$validated['name'],
-                null,
-                $this->sensitiveFields->maskForAudit($employee->toArray())
-            );
+            // Observer Auditable create log yazar — manuel CRUD log yok
 
             DB::commit();
 
@@ -446,27 +450,11 @@ class EmployeeController extends BaseController
             );
         }
 
-        $oldValues = $employee->toArray();
-
         $employee->update(array_merge($validated, [
             'updated_by' => auth()->id(),
         ]));
 
-        $fresh = $employee->fresh();
-        $newValues = $fresh->toArray();
-        $sensitiveNotes = $this->sensitiveFields->changedSensitiveLabels($oldValues, $newValues);
-        $description = 'Personel kaydı güncellendi';
-        if ($sensitiveNotes !== []) {
-            $description .= ' ('.implode(', ', $sensitiveNotes).')';
-        }
-
-        ActivityLog::log(
-            'update',
-            $employee,
-            $description,
-            $this->sensitiveFields->maskForAudit($oldValues),
-            $this->sensitiveFields->maskForAudit($newValues)
-        );
+        // Observer Auditable update log yazar — manuel CRUD log yok
 
         return $this->success(
             new EmployeeResource($employee->load('user', 'department', 'manager')),
@@ -483,16 +471,7 @@ class EmployeeController extends BaseController
 
         $this->authorize('delete', $employee);
 
-        $oldValues = $employee->toArray();
-
-        ActivityLog::log(
-            'delete',
-            $employee,
-            'Personel kaydı silindi',
-            $this->sensitiveFields->maskForAudit($oldValues),
-            null
-        );
-
+        // Observer Auditable delete log yazar — manuel CRUD log yok
         $employee->delete();
 
         return $this->success(null, 'Personel başarıyla silindi');
@@ -734,15 +713,8 @@ class EmployeeController extends BaseController
         DB::beginTransaction();
         try {
             foreach ($employees as $employee) {
-                $oldValues = $employee->toArray();
+                // Observer Auditable update log yazar
                 $employee->update($updateData);
-                ActivityLog::log(
-                    'update',
-                    $employee,
-                    'Toplu güncelleme yapıldı',
-                    $this->sensitiveFields->maskForAudit($oldValues),
-                    $this->sensitiveFields->maskForAudit($employee->fresh()->toArray())
-                );
             }
 
             DB::commit();
@@ -778,14 +750,7 @@ class EmployeeController extends BaseController
         DB::beginTransaction();
         try {
             foreach ($employees as $employee) {
-                $oldValues = $employee->toArray();
-                ActivityLog::log(
-                    'delete',
-                    $employee,
-                    'Toplu silme ile personel kaydı silindi',
-                    $this->sensitiveFields->maskForAudit($oldValues),
-                    null
-                );
+                // Observer Auditable delete log yazar
                 $employee->delete();
             }
 
@@ -952,13 +917,23 @@ class EmployeeController extends BaseController
     {
         $employee = Employee::where('company_id', $this->getCompanyId())->findOrFail($id);
 
-        $activities = ActivityLog::where('subject_type', Employee::class)
-            ->where('subject_id', $employee->id)
-            ->with('causer:id,name')
-            ->orderBy('created_at', 'desc')
+        $this->authorize('view', $employee);
+
+        $activities = ActivityLog::query()
+            ->where('model_id', $employee->id)
+            ->where(function ($q) {
+                $q->where('model_type', Employee::class)
+                    ->orWhere('model_type', class_basename(Employee::class));
+            })
+            ->with('user:id,name')
+            ->orderByDesc('id')
             ->paginate(20);
 
-        return $this->success($activities);
+        return $this->paginated(
+            $activities->getCollection()->values()->all(),
+            'Personel geçmişi listelendi',
+            $activities
+        );
     }
 
     /**

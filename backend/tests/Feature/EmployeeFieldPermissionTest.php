@@ -230,9 +230,10 @@ class EmployeeFieldPermissionTest extends TestCase
             ->first();
 
         $this->assertNotNull($log);
-        $this->assertEquals('***', $log->old_values['gross_salary'] ?? null);
-        $this->assertEquals('***', $log->new_values['gross_salary'] ?? null);
-        $this->assertNotEquals('60000', $log->new_values['gross_salary'] ?? null);
+        $this->assertEquals('*** güncellendi', $log->old_values['gross_salary'] ?? null);
+        $this->assertEquals('*** güncellendi', $log->new_values['gross_salary'] ?? null);
+        $this->assertStringNotContainsString('60000', json_encode($log->new_values));
+        $this->assertEquals(Employee::class, $log->model_type);
     }
 
     public function test_dashboard_salary_widget_forbidden_without_permission(): void

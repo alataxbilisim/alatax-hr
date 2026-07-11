@@ -85,7 +85,7 @@ class ActivityLog extends Model
             'user_id' => $user?->id,
             'user_name' => $user?->name,
             'action' => $action,
-            'model_type' => $model ? class_basename($model) : null,
+            'model_type' => $model ? $model->getMorphClass() : null,
             'model_id' => $model?->id,
             'description' => $description,
             'old_values' => $oldValues,

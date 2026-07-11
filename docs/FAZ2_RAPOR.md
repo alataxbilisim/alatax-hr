@@ -1194,3 +1194,46 @@ Observer + mevcut manuel `ActivityLog::log` = **çift kayıt**.
 9. **A9 — Hassas okuma:** Payslip show/download + Employee show salary.view yetkisiyle mi, yoksa yalnızca bordro/export?
 
 **Sonraki adım (onay sonrası):** Auditable trait + Employee pilot (uygulama dalgası).
+
+---
+
+## Audit v2 UYGULAMA — Dalga 1 (Auditable + Employee pilot)
+
+**Tarih:** 11 Temmuz 2026 · **Branch:** `faz2-rbac-audit`
+
+### Kararlar (kilitlendi)
+
+| # | Karar |
+|---|--------|
+| A1 | Senkron |
+| A2 | Backend + Employee Geçmiş şimdi; diğer sekmeler Faz 6 |
+| A3 | `model_type` = FQCN (`getMorphClass()`) |
+| A4 | Auditable sonrası saf CRUD manuel log silindi; özel olaylar korundu |
+| A5 | 403 log yok |
+| A6 | Uygulama seviyesi immutable (API GET-only) |
+| A8 | ignore: timestamps + remember_token + created_by/updated_by |
+| A9 | Payslip show/export + Employee show salary.view → `view_sensitive` / `export` |
+
+### Yapılanlar
+
+| Parça | Detay |
+|-------|--------|
+| `Auditable` trait | `$auditMasked`, `$auditIgnore`, `withoutAuditing()` |
+| `AuditObserver` | create/update/delete; diff sadece değişen; maske `*** güncellendi` |
+| `ActivityLog::log` | `model_type` → FQCN |
+| Employee | `use Auditable` + masked list; CRUD manuel log kaldırıldı |
+| Korunan özel loglar | strip notu, portal erişim ver/kaldır, import |
+| Geçmiş | `show` + `GET .../activity` — FQCN (+ legacy basename), `orderByDesc(id)`, `user` ilişkisi |
+| Hassas okuma | Payslip show/download; Employee show + salary.view |
+
+### Test
+
+| Suite | Sonuç |
+|-------|--------|
+| `AuditWave1Test` | **8 passed** |
+| `EmployeeFieldPermissionTest` mask assertion | güncellendi (`*** güncellendi`) |
+| Tam suite | **156 passed**, 1 risky |
+
+### Sonraki dalga
+
+User, LeaveRequest, Document, ExpenseClaim… Auditable yayılımı.
