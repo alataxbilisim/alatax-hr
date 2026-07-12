@@ -19,6 +19,7 @@ class SurveyController extends BaseController
     public function __construct(
         protected LookupService $lookups,
     ) {}
+
     /**
      * Anket listesi
      */

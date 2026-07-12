@@ -73,8 +73,11 @@
 
 ### CI
 
-Push sonrası Actions run beklenir: https://github.com/alataxbilisim/alatax-hr/actions?query=branch%3Afaz4-form-engine  
-Not: CI Postgres + Pint + PHPUnit + FE build. Yerel Timesheet flake CI’da da kırılırsa ayrı turda ele alınmalı (bu doğrulama kapsamı dışı).
+- Run: https://github.com/alataxbilisim/alatax-hr/actions/runs/29206290752 (`ba772a5`) — **failure** (~46s): Pint (Grup 3 controller style) + Portal lint (`_result` unused in 2FA LoginPage).
+- Follow-up fix commit: Pint 3 controller + Portal login lint; yeni run beklenir.
+
+Push sonrası Actions: https://github.com/alataxbilisim/alatax-hr/actions?query=branch%3Afaz4-form-engine  
+Not: Yerel Timesheet flake CI PHPUnit’a ulaşmadan Pint/Lint’te duruyordu; bu turda o engeller açıldı. Timesheet 6 fail yerel sqlite’da hâlâ var — CI Postgres’te ayrıca izlenecek.
 
 ---
 

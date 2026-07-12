@@ -16,6 +16,7 @@ class InterviewController extends BaseController
     public function __construct(
         protected LookupService $lookups,
     ) {}
+
     /**
      * Mülakat listesi
      */

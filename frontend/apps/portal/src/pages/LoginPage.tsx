@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { AppDispatch, RootState } from '../store';
 import { login } from '@shared/store/slices/authSlice';
 import { TwoFactorChallenge } from '@shared/components/TwoFactorChallenge';
-import { isTwoFactorChallenge, type AuthResponse, type TwoFactorChallenge as TwoFactorChallengeData } from '@shared/types';
+import { isTwoFactorChallenge, type TwoFactorChallenge as TwoFactorChallengeData } from '@shared/types';
 import toast from 'react-hot-toast';
 import { BsEnvelope, BsLock, BsEye, BsEyeSlash } from 'react-icons/bs';
 
@@ -24,7 +24,7 @@ const LoginPage: React.FC = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const completeLogin = (_result: AuthResponse) => {
+  const finishLogin = () => {
     toast.success('Portal girişi başarılı!');
     navigate('/dashboard');
   };
@@ -40,7 +40,7 @@ const LoginPage: React.FC = () => {
         return;
       }
 
-      completeLogin(result);
+      finishLogin();
     } catch {
       // Error handled by API interceptor
     }
@@ -56,7 +56,7 @@ const LoginPage: React.FC = () => {
       {challenge ? (
         <TwoFactorChallenge
           challengeToken={challenge.challenge_token}
-          onSuccess={completeLogin}
+          onSuccess={() => finishLogin()}
           onCancel={() => setChallenge(null)}
         />
       ) : (

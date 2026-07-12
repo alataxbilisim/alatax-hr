@@ -16,6 +16,7 @@ class SessionController extends BaseController
     public function __construct(
         protected LookupService $lookups,
     ) {}
+
     /**
      * Eğitim oturumlarını listele
      */
