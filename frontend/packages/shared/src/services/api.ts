@@ -16,12 +16,15 @@ const api: AxiosInstance = axios.create({
   withCredentials: true,
 });
 
-// Request interceptor - Token ekle
+// Request interceptor - Token ekle (açık Authorization varsa üzerine yazma — 2FA challenge)
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    const existing = config.headers.Authorization;
+    if (!existing) {
+      const token = localStorage.getItem('token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },
@@ -74,6 +77,18 @@ api.interceptors.response.use(
             toast.error(response.data?.message || 'Doğrulama hatası.');
           }
           break;
+        case 429: {
+          // Login / 2FA challenge sayfası kendi i18n mesajını gösterir
+          const path = window.location.pathname;
+          const isPublicAuth =
+            path.includes('/login') ||
+            path.includes('/forgot-password') ||
+            path.includes('/reset-password');
+          if (!isPublicAuth) {
+            toast.error(response.data?.message || 'Çok fazla istek. Lütfen daha sonra tekrar deneyin.');
+          }
+          break;
+        }
         case 500:
           toast.error('Sunucu hatası. Lütfen daha sonra tekrar deneyin.');
           break;
@@ -92,8 +107,16 @@ export default api;
 
 // Auth API
 export const authApi = {
-  login: (data: { email: string; password: string }) => 
+  login: (data: { email: string; password: string; portal_login?: boolean }) =>
     api.post('/auth/login', data),
+  /** Challenge Bearer ile TOTP veya recovery kod doğrula → gerçek token */
+  verifyTwoFactor: (
+    data: { code?: string; recovery_code?: string },
+    challengeToken: string
+  ) =>
+    api.post('/auth/2fa/verify', data, {
+      headers: { Authorization: `Bearer ${challengeToken}` },
+    }),
   register: (data: { company_name: string; name: string; email: string; password: string; password_confirmation: string }) => 
     api.post('/auth/register', data),
   logout: () => 

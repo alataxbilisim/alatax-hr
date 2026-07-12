@@ -14,13 +14,18 @@ import {
   BsArrowDown,
 } from 'react-icons/bs';
 
+interface FieldOption {
+  value: string;
+  label: string;
+}
+
 interface CustomField {
   id: number;
   entity_type: string;
   field_key: string;
   field_label: string;
   field_type: string;
-  field_options?: string[] | null;
+  field_options?: FieldOption[] | null;
   placeholder?: string;
   default_value?: string;
   is_required: boolean;
@@ -37,6 +42,7 @@ interface FieldFormData {
   field_key: string;
   field_label: string;
   field_type: string;
+  /** Form textarea: satır başına bir etiket; kayıtta [{value,label}]'e çevrilir */
   field_options?: string;
   placeholder?: string;
   default_value?: string;
@@ -57,6 +63,7 @@ const entityTypes = [
   { value: 'expense', label: 'Masraf' },
 ];
 
+/** BE getFieldTypes ile hizalı; multiselect FE'den çıkarıldı. datetime BE'de string olarak kabul. */
 const fieldTypes = [
   { value: 'text', label: 'Metin' },
   { value: 'textarea', label: 'Uzun Metin' },
@@ -64,7 +71,7 @@ const fieldTypes = [
   { value: 'date', label: 'Tarih' },
   { value: 'datetime', label: 'Tarih ve Saat' },
   { value: 'select', label: 'Seçim Kutusu' },
-  { value: 'multiselect', label: 'Çoklu Seçim' },
+  { value: 'radio', label: 'Radyo Butonları' },
   { value: 'checkbox', label: 'Onay Kutusu' },
   { value: 'email', label: 'Email' },
   { value: 'phone', label: 'Telefon' },
@@ -130,7 +137,9 @@ const CustomFieldsPage: React.FC = () => {
         field_key: field.field_key,
         field_label: field.field_label,
         field_type: field.field_type,
-        field_options: field.field_options?.join('\n') || '',
+        field_options: (field.field_options ?? [])
+          .map((o) => o.label || o.value)
+          .join('\n'),
         placeholder: field.placeholder || '',
         default_value: field.default_value || '',
         is_required: field.is_required,
@@ -184,7 +193,11 @@ const CustomFieldsPage: React.FC = () => {
       const data = {
         ...formData,
         field_options: formData.field_options
-          ? formData.field_options.split('\n').map(o => o.trim()).filter(Boolean)
+          ? formData.field_options
+              .split('\n')
+              .map((o) => o.trim())
+              .filter(Boolean)
+              .map((label) => ({ value: label, label }))
           : null,
       };
 
@@ -306,7 +319,7 @@ const CustomFieldsPage: React.FC = () => {
     return fieldTypes.find(t => t.value === type)?.label || type;
   };
 
-  const needsOptions = (type: string) => ['select', 'multiselect'].includes(type);
+  const needsOptions = (type: string) => ['select', 'radio'].includes(type);
 
   return (
     <div className="animate-fade-in">

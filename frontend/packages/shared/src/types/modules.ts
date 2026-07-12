@@ -165,7 +165,7 @@ export interface CustomFieldDefinition extends CompanyScopedEntity {
   entity_type: string;
   field_key: string;
   field_label: string;
-  field_type: 'text' | 'number' | 'date' | 'select' | 'checkbox' | 'radio' | 'textarea' | 'file' | 'email' | 'phone' | 'url';
+  field_type: 'text' | 'number' | 'date' | 'datetime' | 'select' | 'checkbox' | 'radio' | 'textarea' | 'file' | 'email' | 'phone' | 'url';
   field_options?: Array<{ value: string; label: string }> | null;
   is_required: boolean;
   is_active: boolean;

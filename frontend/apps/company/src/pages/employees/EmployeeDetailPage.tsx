@@ -29,6 +29,7 @@ import {
   TrainingTab,
   AssetsTab,
   HistoryTab,
+  CustomFieldsTab,
 } from '../../components/employees/tabs';
 import type {
   EmployeeLeaveData,
@@ -37,6 +38,8 @@ import type {
   ActivityLog,
 } from '../../components/employees/tabs';
 import type { CustomFieldValue } from '@shared/types/modules';
+import { useTranslation } from 'react-i18next';
+import { BsListCheck } from 'react-icons/bs';
 
 interface EmployeeDocumentRow {
   id: number;

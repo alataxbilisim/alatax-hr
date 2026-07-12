@@ -17,7 +17,12 @@ import { Modal, ConfirmDialog } from '../../components/ui';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 
-// Özel alan tanımı
+interface FieldOption {
+  value: string;
+  label: string;
+}
+
+// Özel alan tanımı — BE field_options: [{value, label}]
 interface CustomField {
   id: number;
   entity_type: string;
@@ -29,7 +34,7 @@ interface CustomField {
   is_unique: boolean;
   show_in_list: boolean;
   show_in_filter: boolean;
-  options?: string[] | null;
+  field_options?: FieldOption[] | null;
   placeholder?: string;
   default_value?: string;
   help_text?: string;
@@ -46,7 +51,7 @@ interface FieldFormData {
   is_unique: boolean;
   show_in_list: boolean;
   show_in_filter: boolean;
-  options?: string[];
+  field_options?: FieldOption[];
   placeholder?: string;
   default_value?: string;
   help_text?: string;
@@ -59,6 +64,7 @@ interface ModuleCustomFieldsPageProps {
   moduleColor?: string;
 }
 
+/** BE getFieldTypes ile hizalı; multiselect/color FE'den çıkarıldı (BE desteklemiyor). */
 const fieldTypes = [
   { value: 'text', label: 'Metin' },
   { value: 'textarea', label: 'Uzun Metin' },
@@ -66,14 +72,12 @@ const fieldTypes = [
   { value: 'date', label: 'Tarih' },
   { value: 'datetime', label: 'Tarih ve Saat' },
   { value: 'select', label: 'Seçim Listesi' },
-  { value: 'multiselect', label: 'Çoklu Seçim' },
   { value: 'checkbox', label: 'Onay Kutusu' },
   { value: 'radio', label: 'Radyo Butonları' },
   { value: 'email', label: 'E-posta' },
   { value: 'phone', label: 'Telefon' },
   { value: 'url', label: 'URL' },
   { value: 'file', label: 'Dosya' },
-  { value: 'color', label: 'Renk' },
 ];
 
 const ModuleCustomFieldsPage: React.FC<ModuleCustomFieldsPageProps> = ({
@@ -104,7 +108,7 @@ const ModuleCustomFieldsPage: React.FC<ModuleCustomFieldsPageProps> = ({
     is_unique: false,
     show_in_list: false,
     show_in_filter: false,
-    options: [],
+    field_options: [],
     placeholder: '',
     default_value: '',
     help_text: '',
@@ -222,7 +226,7 @@ const ModuleCustomFieldsPage: React.FC<ModuleCustomFieldsPageProps> = ({
         is_unique: field.is_unique,
         show_in_list: field.show_in_list,
         show_in_filter: field.show_in_filter,
-        options: field.options || [],
+        field_options: field.field_options || [],
         placeholder: field.placeholder || '',
         default_value: field.default_value || '',
         help_text: field.help_text || '',
@@ -243,7 +247,7 @@ const ModuleCustomFieldsPage: React.FC<ModuleCustomFieldsPageProps> = ({
         is_unique: false,
         show_in_list: false,
         show_in_filter: false,
-        options: [],
+        field_options: [],
         placeholder: '',
         default_value: '',
         help_text: '',
@@ -322,19 +326,19 @@ const ModuleCustomFieldsPage: React.FC<ModuleCustomFieldsPageProps> = ({
   };
 
   const addOption = () => {
-    if (newOption.trim()) {
-      setFormData({
-        ...formData,
-        options: [...(formData.options || []), newOption.trim()],
-      });
-      setNewOption('');
-    }
+    const label = newOption.trim();
+    if (!label) return;
+    setFormData({
+      ...formData,
+      field_options: [...(formData.field_options || []), { value: label, label }],
+    });
+    setNewOption('');
   };
 
   const removeOption = (index: number) => {
-    const options = [...(formData.options || [])];
-    options.splice(index, 1);
-    setFormData({ ...formData, options });
+    const field_options = [...(formData.field_options || [])];
+    field_options.splice(index, 1);
+    setFormData({ ...formData, field_options });
   };
 
   // Drag & Drop
@@ -376,7 +380,7 @@ const ModuleCustomFieldsPage: React.FC<ModuleCustomFieldsPageProps> = ({
     }
   };
 
-  const needsOptions = ['select', 'multiselect', 'radio'].includes(formData.field_type);
+  const needsOptions = ['select', 'radio'].includes(formData.field_type);
 
   return (
     <div className="animate-fade-in">
@@ -652,13 +656,13 @@ const ModuleCustomFieldsPage: React.FC<ModuleCustomFieldsPageProps> = ({
                 </button>
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                {(formData.options || []).map((option, index) => (
+                {(formData.field_options || []).map((option, index) => (
                   <span
-                    key={index}
+                    key={`${option.value}-${index}`}
                     className="badge badge-secondary"
                     style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', padding: '0.25rem 0.5rem' }}
                   >
-                    {option}
+                    {option.label}
                     <button
                       type="button"
                       style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', marginLeft: '0.25rem' }}

@@ -45,6 +45,9 @@ class CustomFieldDefinition extends Model
 
     const TYPE_DATE = 'date';
 
+    /** ISO benzeri tarih-saat string (FE datetime-local / ISO8601) */
+    const TYPE_DATETIME = 'datetime';
+
     const TYPE_SELECT = 'select';
 
     const TYPE_CHECKBOX = 'checkbox';
@@ -87,6 +90,7 @@ class CustomFieldDefinition extends Model
             self::TYPE_TEXT => 'Metin',
             self::TYPE_NUMBER => 'Sayı',
             self::TYPE_DATE => 'Tarih',
+            self::TYPE_DATETIME => 'Tarih ve Saat',
             self::TYPE_SELECT => 'Açılır Liste',
             self::TYPE_CHECKBOX => 'Onay Kutusu',
             self::TYPE_RADIO => 'Seçenek Butonu',

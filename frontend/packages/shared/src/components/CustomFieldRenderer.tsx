@@ -79,6 +79,18 @@ export const CustomFieldRenderer: React.FC<CustomFieldRendererProps> = ({
           />
         );
 
+      case 'datetime':
+        return (
+          <input
+            type="datetime-local"
+            className="form-control"
+            value={String(value ?? '').slice(0, 16)}
+            onChange={(e) => onChange(field.field_key, e.target.value)}
+            required={field.is_required}
+            disabled={readonly}
+          />
+        );
+
       case 'textarea':
         return (
           <textarea

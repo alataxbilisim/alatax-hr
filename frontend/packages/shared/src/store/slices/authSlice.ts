@@ -1,6 +1,13 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { authApi } from '../../services/api';
-import { User, AuthResponse, LoginCredentials, RegisterData } from '../../types';
+import {
+  User,
+  AuthResponse,
+  LoginCredentials,
+  LoginResult,
+  RegisterData,
+  isTwoFactorChallenge,
+} from '../../types';
 import toast from 'react-hot-toast';
 
 interface AuthState {
@@ -56,25 +63,82 @@ function mergeUserPreservingAuthz(incoming: User, previous: User | null): User {
   };
 }
 
-// Login thunk
-export const login = createAsyncThunk<AuthResponse, LoginCredentials & { portal_login?: boolean }>(
+function persistSession(user: User, token: string, employee?: unknown): void {
+  localStorage.setItem('token', token);
+  localStorage.setItem('user', JSON.stringify(user));
+  if (employee) {
+    localStorage.setItem('employee', JSON.stringify(employee));
+  }
+}
+
+// Login thunk — 2FA aktifse challenge döner (token yazılmaz)
+export const login = createAsyncThunk<LoginResult, LoginCredentials & { portal_login?: boolean }>(
   'auth/login',
   async (credentials, { rejectWithValue }) => {
     try {
       const response = await authApi.login(credentials);
-      const { user, token, employee } = response.data.data;
+      const data = response.data.data as {
+        requires_2fa?: boolean;
+        challenge_token?: string;
+        expires_in?: number;
+        user: User | { id: number; name: string; email: string };
+        token?: string;
+        employee?: unknown;
+      };
 
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-
-      if (employee) {
-        localStorage.setItem('employee', JSON.stringify(employee));
+      if (data.requires_2fa === true && data.challenge_token) {
+        // Eski oturum Bearer'ı challenge verify'ı bozmasın
+        localStorage.removeItem('token');
+        return {
+          requires_2fa: true as const,
+          challenge_token: data.challenge_token,
+          expires_in: data.expires_in ?? 300,
+          user: data.user as { id: number; name: string; email: string },
+        };
       }
 
+      const user = data.user as User;
+      const token = data.token as string;
+      persistSession(user, token, data.employee);
       return { user, token };
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       return rejectWithValue(err.response?.data?.message || 'Giriş yapılamadı');
+    }
+  }
+);
+
+export type VerifyTwoFactorPayload = {
+  challenge_token: string;
+  code?: string;
+  recovery_code?: string;
+};
+
+export type VerifyTwoFactorReject = {
+  status?: number;
+  message: string;
+};
+
+// 2FA challenge tamamla → gerçek Sanctum token
+export const verifyTwoFactor = createAsyncThunk<
+  AuthResponse,
+  VerifyTwoFactorPayload,
+  { rejectValue: VerifyTwoFactorReject }
+>(
+  'auth/verifyTwoFactor',
+  async ({ challenge_token, code, recovery_code }, { rejectWithValue }) => {
+    try {
+      const body = code ? { code } : { recovery_code };
+      const response = await authApi.verifyTwoFactor(body, challenge_token);
+      const { user, token, employee } = response.data.data as AuthResponse & { employee?: unknown };
+      persistSession(user, token, employee);
+      return { user, token };
+    } catch (error: unknown) {
+      const err = error as { response?: { status?: number; data?: { message?: string } } };
+      return rejectWithValue({
+        status: err.response?.status,
+        message: err.response?.data?.message || 'Doğrulama başarısız',
+      });
     }
   }
 );
@@ -199,6 +263,13 @@ const authSlice = createSlice({
       })
       .addCase(login.fulfilled, (state, action) => {
         state.isLoading = false;
+        if (isTwoFactorChallenge(action.payload)) {
+          // Challenge aşaması — oturum açılmaz
+          state.isAuthenticated = false;
+          state.token = null;
+          state.error = null;
+          return;
+        }
         state.isAuthenticated = true;
         state.user = action.payload.user;
         state.token = action.payload.token;
@@ -206,6 +277,21 @@ const authSlice = createSlice({
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
+      })
+      .addCase(verifyTwoFactor.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(verifyTwoFactor.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isAuthenticated = true;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+        state.error = null;
+      })
+      .addCase(verifyTwoFactor.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload?.message ?? 'Doğrulama başarısız';
       })
       .addCase(register.pending, (state) => {
         state.isLoading = true;

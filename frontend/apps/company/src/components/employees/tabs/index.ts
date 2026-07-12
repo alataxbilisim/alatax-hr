@@ -6,6 +6,7 @@ export { default as LeavesTab } from './LeavesTab';
 export { default as TrainingTab } from './TrainingTab';
 export { default as AssetsTab } from './AssetsTab';
 export { default as HistoryTab } from './HistoryTab';
+export { default as CustomFieldsTab } from './CustomFieldsTab';
 
 export type { EmployeeLeaveData, LeaveBalance, LeaveRequest } from './LeavesTab';
 export type { EmployeeTrainingData, TrainingParticipation, TrainingCertificate } from './TrainingTab';

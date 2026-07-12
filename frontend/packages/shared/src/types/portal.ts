@@ -8,6 +8,24 @@ export interface AuthResponse {
   token: string;
 }
 
+/** Login 2FA challenge — gerçek token yok; POST /auth/2fa/verify ile tamamlanır */
+export interface TwoFactorChallenge {
+  requires_2fa: true;
+  challenge_token: string;
+  expires_in: number;
+  user: {
+    id: number;
+    name: string;
+    email: string;
+  };
+}
+
+export type LoginResult = AuthResponse | TwoFactorChallenge;
+
+export function isTwoFactorChallenge(result: LoginResult): result is TwoFactorChallenge {
+  return 'requires_2fa' in result && result.requires_2fa === true;
+}
+
 export interface LoginCredentials {
   email: string;
   password: string;

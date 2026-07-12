@@ -1,5 +1,5 @@
-export { CustomFieldRenderer, Select } from './components';
-export type { SelectOption, SelectProps } from './components';
+export { CustomFieldRenderer, Select, TwoFactorChallenge } from './components';
+export type { SelectOption, SelectProps, TwoFactorChallengeProps } from './components';
 export * from './hooks';
 export * from './services';
 export * from './utils';

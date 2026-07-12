@@ -15,6 +15,7 @@ use App\Models\PerformanceReview;
 use App\Models\TrainingCertificate;
 use App\Models\TrainingParticipant;
 use App\Models\User;
+use App\Services\CustomFieldValidationService;
 use App\Services\DataScopeService;
 use App\Services\EmployeeImportService;
 use App\Services\EmployeeSensitiveFieldService;
@@ -33,6 +34,7 @@ class EmployeeController extends BaseController
         protected DataScopeService $dataScope,
         protected EmployeeSensitiveFieldService $sensitiveFields,
         protected LookupService $lookups,
+        protected CustomFieldValidationService $customFieldValidation,
     ) {}
 
     /**
@@ -300,6 +302,10 @@ class EmployeeController extends BaseController
         $this->lookups->assertValid(LookupService::TYPE_EDUCATION_LEVEL, $validated['education_level'] ?? null, $companyId, 'education_level');
         $this->lookups->assertValid(LookupService::TYPE_EMERGENCY_RELATION, $validated['emergency_contact_relation'] ?? null, $companyId, 'emergency_contact_relation');
         $this->lookups->assertValid(LookupService::TYPE_CONTRACT_TYPE, $validated['contract_type'] ?? null, $companyId, 'contract_type');
+        $this->customFieldValidation->validate(
+            CustomFieldDefinition::ENTITY_EMPLOYEE,
+            $validated['custom_fields'] ?? null
+        );
 
         $strip = $this->sensitiveFields->stripUnauthorizedWrite($request->user(), $validated);
         $validated = $strip['data'];
@@ -463,6 +469,12 @@ class EmployeeController extends BaseController
         $this->lookups->assertValid(LookupService::TYPE_EDUCATION_LEVEL, $validated['education_level'] ?? null, $companyId, 'education_level');
         $this->lookups->assertValid(LookupService::TYPE_EMERGENCY_RELATION, $validated['emergency_contact_relation'] ?? null, $companyId, 'emergency_contact_relation');
         $this->lookups->assertValid(LookupService::TYPE_CONTRACT_TYPE, $validated['contract_type'] ?? null, $companyId, 'contract_type');
+        if (array_key_exists('custom_fields', $validated)) {
+            $this->customFieldValidation->validate(
+                CustomFieldDefinition::ENTITY_EMPLOYEE,
+                $validated['custom_fields']
+            );
+        }
 
         $strip = $this->sensitiveFields->stripUnauthorizedWrite($request->user(), $validated);
         $validated = $strip['data'];
