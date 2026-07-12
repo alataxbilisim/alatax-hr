@@ -185,6 +185,11 @@ Fark yaratacak 4 şey:
 
 **Amaç:** Özelleştirme vaadinin kalbi. Dört motor + tek yönetim merkezi.
 
+**Ayarlar Stüdyosu vizyonu (kullanıcı):** İki üst menü (modül alanında):
+(1) **AYARLAR** = kişisel (kullanıcı kendi hesabı: profil, şifre, 2FA, bildirim tercihi, tema/density, dil).
+(2) **YÖNETİM (Ayarlar Stüdyosu)** = firma özelleştirme, rol bazlı. Tüm modüller sırayla, her modülün özelleştirilebilir sayfaları. Buradan: özel alan aç, picklist/combobox içeriklerini yönet (izin türleri, kanban aşamaları/isimleri, kategori listeleri, durum seçenekleri), form düzeni. Firma default gelen listeleri kendine göre tasarlar → satış sonrası destek yükü azalır (Zoho mantığı). Firma/program ayarları da burada, gruplandırılmış. Rol bazlı: herkes her sayfayı göremez.
+**Sıra:** (1) özel alan + picklist → (2) izin/kanban özelleştirme → (3) Ayarlar Stüdyosu iskeleti → (4) form düzeni/koşullu görünürlük.
+
 **4A. Form Engine (metadata-driven ekranlar)**
 - [ ] Veri modeli: mevcut `custom_field_definitions` genişletilir + yeni `form_definitions` (entity_type, layout JSONB: bölümler/satırlar/alan sırası). Standart (sistem) alanlar da tanıma dahil edilir → yeniden adlandırma, zorunluluk, **devre dışı bırakma** (silme yok — Zoho deseni)
 - [ ] Alan tipleri v1: text, textarea, number, decimal, date, select, multiselect, checkbox, phone, email, tckn (doğrulamalı), lookup (başka entity'ye referans), file
