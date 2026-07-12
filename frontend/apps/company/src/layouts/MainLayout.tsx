@@ -183,6 +183,7 @@ const MainLayout: React.FC = () => {
       surveys: 'Anketler',
       analytics: 'Analitik',
       settings: 'Ayarlar',
+      lookups: 'Listeler',
       'audit-logs': 'Log & Denetim',
     };
 

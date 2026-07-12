@@ -61,6 +61,7 @@ export const moduleGroups: ModuleGroup[] = [
       { path: '/branches', label: 'Şubeler', permission: { module: 'management', page: 'branches' } },
       { path: '/audit-logs', label: 'Log & Denetim', permission: { module: 'management', page: 'audit_logs' } },
       { path: '/settings', label: 'Ayarlar', permission: { module: 'management', page: 'settings' } },
+      { path: '/lookups', label: 'Listeler', permission: { module: 'management', page: 'lookups' } },
       { path: '/webhooks', label: 'Webhook\'lar', permission: { module: 'management', page: 'webhooks' } },
     ],
   },

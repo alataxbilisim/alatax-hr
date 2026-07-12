@@ -33,8 +33,10 @@ import RoleDetailPage from './pages/users/RoleDetailPage';
 import SettingsPage from './pages/settings/SettingsPage';
 import WebhooksPage from './pages/settings/WebhooksPage';
 import CustomFieldsPage from './pages/settings/CustomFieldsPage';
+import LookupsPage from './pages/lookups/LookupsPage';
 import BranchesPage from './pages/branches/BranchesPage';
 import BranchDetailPage from './pages/branches/BranchDetailPage';
+import PermissionProtectedRoute from './components/routing/PermissionProtectedRoute';
 
 // Employees
 import EmployeesPage from './pages/employees/EmployeesPage';
@@ -587,6 +589,16 @@ const App: React.FC = () => {
           <Route
             path="/settings"
             element={<ProtectedRoute><SettingsPage /></ProtectedRoute>}
+          />
+          <Route
+            path="/lookups"
+            element={
+              <ProtectedRoute>
+                <PermissionProtectedRoute module="management" page="lookups" action="view">
+                  <LookupsPage />
+                </PermissionProtectedRoute>
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/webhooks"
