@@ -190,6 +190,12 @@ Fark yaratacak 4 şey:
 (2) **YÖNETİM (Ayarlar Stüdyosu)** = firma özelleştirme, rol bazlı. Tüm modüller sırayla, her modülün özelleştirilebilir sayfaları. Buradan: özel alan aç, picklist/combobox içeriklerini yönet (izin türleri, kanban aşamaları/isimleri, kategori listeleri, durum seçenekleri), form düzeni. Firma default gelen listeleri kendine göre tasarlar → satış sonrası destek yükü azalır (Zoho mantığı). Firma/program ayarları da burada, gruplandırılmış. Rol bazlı: herkes her sayfayı göremez.
 **Sıra:** (1) özel alan + picklist → (2) izin/kanban özelleştirme → (3) Ayarlar Stüdyosu iskeleti → (4) form düzeni/koşullu görünürlük.
 
+**Lookup / picklist borçları (Faz 4):**
+- [ ] **CASCADING / DEPENDENT PICKLIST (Faz 4 sonu, yayılım sonrası):** `parent_lookup_id` altyapısı hazır (kolon var). Lookup'lar birbirine bağlanacak: departman→pozisyon, şehir→ilçe, kategori→alt kategori. Bir alanın değeri seçilince bağlı alanın seçenekleri filtrelenir (Zoho *Map Dependency* deseni). **Ön koşul:** ilgili lookup'lar tekil olarak sisteme bağlı olmalı → bu yüzden yayılım **SONRASI**. Lookup Engine'i tamamlayan son parça — unutma.
+
+**Faz 3/4 görsel cilalama (borç — şimdi uygulama yok):**
+- [ ] **DROPDOWN/SELECT GÖRSEL:** dropdown'larda uzun etiketler sığmıyor (kesiliyor/taşıyor), açık menü tasarımı zayıf. Ortak Select/Dropdown bileşeninde çözülecek — Lookup Engine yayılımında ortak bileşen kullanılacağı için **tek yerde** düzeltilince tüm dropdown'lar düzelir. Uçtan uca test turu görsel bulgularıyla birlikte ele alınacak. **Öncelik ayrımı:** "yazı okunamıyor/kesiliyor" = kullanılabilirlik (erken); "çirkin/boşluk" = ince ayar (en son).
+
 **4A. Form Engine (metadata-driven ekranlar)**
 - [ ] Veri modeli: mevcut `custom_field_definitions` genişletilir + yeni `form_definitions` (entity_type, layout JSONB: bölümler/satırlar/alan sırası). Standart (sistem) alanlar da tanıma dahil edilir → yeniden adlandırma, zorunluluk, **devre dışı bırakma** (silme yok — Zoho deseni)
 - [ ] Alan tipleri v1: text, textarea, number, decimal, date, select, multiselect, checkbox, phone, email, tckn (doğrulamalı), lookup (başka entity'ye referans), file
