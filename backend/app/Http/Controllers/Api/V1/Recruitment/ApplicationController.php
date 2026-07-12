@@ -15,6 +15,7 @@ class ApplicationController extends BaseController
     public function __construct(
         protected LookupService $lookups,
     ) {}
+
     /**
      * Başvuru listesi
      */
@@ -95,9 +96,11 @@ class ApplicationController extends BaseController
             'status_logs' => $application->statusLogs->map(function ($log) {
                 return [
                     'id' => $log->id,
-                    'status' => $log->status,
-                    'notes' => $log->notes,
-                    'user' => $log->user ? $log->user->name : null,
+                    'from_status' => $log->from_status,
+                    'to_status' => $log->to_status,
+                    'status' => $log->to_status,
+                    'notes' => $log->note,
+                    'user' => $log->changedBy?->name,
                     'created_at' => $log->created_at->toDateTimeString(),
                 ];
             }),
@@ -132,20 +135,24 @@ class ApplicationController extends BaseController
         $oldStatus = $application->status instanceof \BackedEnum
             ? $application->status->value
             : (string) $application->status;
-        $application->update(['status' => $validated['status']]);
 
-        // Durum log kaydı
+        $application->update([
+            'status' => $validated['status'],
+            'updated_by' => auth()->id(),
+        ]);
+
+        // Durum log kaydı (şema: from_status / to_status / note)
         ApplicationStatusLog::create([
             'job_application_id' => $application->id,
-            'company_id' => $this->getCompanyId(),
-            'status' => $validated['status'],
-            'notes' => $validated['notes'] ?? null,
+            'from_status' => $oldStatus,
+            'to_status' => $validated['status'],
+            'note' => $validated['notes'] ?? null,
             'changed_by' => auth()->id(),
         ]);
 
         ActivityLog::log('update', $application, "Başvuru durumu güncellendi: {$oldStatus} -> {$validated['status']}");
 
-        return $this->success($application, 'Durum güncellendi');
+        return $this->success($application->fresh(), 'Durum güncellendi');
     }
 
     /**

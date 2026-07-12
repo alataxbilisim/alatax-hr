@@ -163,7 +163,7 @@ class JobApplication extends Model
 
         // Log the status change
         $this->statusLogs()->create([
-            'from_status' => $oldStatus,
+            'from_status' => $oldStatus instanceof \BackedEnum ? $oldStatus->value : $oldStatus,
             'to_status' => $newStatus,
             'note' => $note,
             'changed_by' => $changedBy ?? auth()->id(),

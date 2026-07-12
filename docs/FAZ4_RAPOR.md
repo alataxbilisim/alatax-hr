@@ -6,6 +6,78 @@
 
 ---
 
+## Gece İşi Doğrulama (12 Temmuz 2026 — akşam)
+
+**Amaç:** Gece eklenen 6 özelliğin CI derlemesi değil, **mantık** kanıtı. Yeni özellik yok; test derinleştirme + bulunan kırık düzeltme.  
+**KARAR BEKLENENLER’e dokunulmadı:** başvuru kaynağı FE↔BE, hired→onboarding otomasyonu, expense/request CRUD.
+
+### Suite özeti (yerel sqlite)
+
+| Kapsam | Sonuç |
+|--------|--------|
+| Doğrulama filtresi (`ApplicationStageKanbanTest` + `LookupTest` + `EmployeeCustomFieldValidationTest` + `Totp2faTest`) | **43 passed** (237 assertions) |
+| Select empty contract (`assert-select-empty-contract.mjs`) | **PASSED** |
+| Tam backend suite | **215 passed**, 6 failed (`TimesheetTest` break start/end — gece işiyle **ilgisiz**, önceden var), 1 risky |
+
+### 1. Kanban hibrit (`application_stage`) — kritik
+
+| Soru | Öncesi | Sonrası |
+|------|--------|---------|
+| Gerçek mantık testi var mıydı? | Kısmen: `LookupTest::application_stage_hybrid_matches_job_application_status_enum` (seed/enum eşleşmesi). **K-A kanban rename / geçiş / pasif / silme kilidi yoktu.** | **YENİ** `ApplicationStageKanbanTest` (4 test) |
+
+**EKLENEN testler**
+
+- `ka_label_color_change_does_not_mutate_application_status_code` — label+renk değişir, başvuru `status`/`system_code` = `new` kalır (K-A).
+- `kb_deactivate_stage_keeps_existing_applications_readable` — pasif aşamadaki başvuru okunur; o aşamaya **yeni** geçiş 422.
+- `status_transition_updates_system_code_and_rejects_legacy_enum_mismatch` — `new`→`shortlisted` + status log; legacy `interview`/`pool`/`accepted` **red**; `interview_scheduled` kabul (enum uyumsuzluğu kapandı).
+- `hybrid_application_stage_cannot_add_or_hard_delete_system_code` — sistem kodu silme/ekleme engelli.
+
+**BULUNAN kırık + düzeltme**
+
+- `ApplicationController::updateStatus` `application_status_logs`’a **yanlış kolonlar** yazıyordu (`company_id`, `status`, `notes` → şema: `from_status`, `to_status`, `note`, `changed_by`). Geçiş “çalışıyor” gibi görünürken log kırılıyordu.
+- `JobApplication::changeStatus` enum’u string’e cast etmiyordu → `from_status` bozulabilirdi.
+- **Düzeltildi:** controller log + show mapping; model cast.
+
+### 2. 2FA challenge UI
+
+| Soru | Öncesi | Sonrası |
+|------|--------|---------|
+| Backend challenge/verify testi? | **VAR** — `Totp2faTest` (11 test): 2FA’sız token; challenge; yanlış kod 401; doğru TOTP; recovery single-use; throttle; challenge token API’ye giremez | Aynı suite **yeşil** — ek test gerekmedi |
+| FE E2E? | Yok (Playwright/Cypress yok) | Eklenmedi; BE kanıtı yeterli kabul |
+
+2FA’sız login akışı değişmedi (`login_without_2fa_returns_token`).
+
+### 3. Custom field
+
+| Soru | Öncesi | Sonrası |
+|------|--------|---------|
+| Zorunlu boş → 422? | **VAR** — store/update 422 testleri (`2598300`) | Yeşil |
+| Kaydet + detayda görünür? | Detay FE vardı; API show assertion zayıftı | **EKLENDİ:** geçerli select değeri + `GET employees/{id}` → `custom_fields` |
+| `field_options` sözleşmesi? | Controller `{value,label}` bekliyor; FE legacy `options` riski | **EKLENDİ:** POST `field_options` kabul; legacy `options: string[]` → boş `field_options` |
+
+### 4. Lookup yönetim UI (`/lookups`)
+
+| Soru | Öncesi | Sonrası |
+|------|--------|---------|
+| CRUD / sistem 403 / hibrit / K-B / permission? | **VAR** — `LookupTest` 21 test (CRUD permission, system 403, K-A/K-B, hibrit leave/application_stage, tenant) | Yeşil; ek test gerekmedi (UI E2E yok, API kanıtı) |
+
+### 5. Radix Select sentinel (ADIM 0)
+
+| Soru | Öncesi | Sonrası |
+|------|--------|---------|
+| Boş submit ≠ ilk öğe? | Kodda sentinel vardı; otomatik sözleşme testi yoktu | **YENİ** `frontend/packages/shared/scripts/assert-select-empty-contract.mjs` — boş/sanitize, allowEmpty→sentinel, zorunlu boş→undefined, filtre “Tümü”→boş |
+
+### Commit
+
+`test(faz4): gece işi doğrulama — kanban/2fa/customfield/lookup/select testleri`
+
+### CI
+
+Push sonrası Actions run beklenir: https://github.com/alataxbilisim/alatax-hr/actions?query=branch%3Afaz4-form-engine  
+Not: CI Postgres + Pint + PHPUnit + FE build. Yerel Timesheet flake CI’da da kırılırsa ayrı turda ele alınmalı (bu doğrulama kapsamı dışı).
+
+---
+
 ## ÖZET TABLO — Gece otonom (12 Temmuz 2026)
 
 | Adım | Durum | Commit / not |
