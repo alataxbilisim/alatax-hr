@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { portalApi } from '@shared/services/api';
+import { portalApi, lookupsApi, type LookupItem } from '@shared/services/api';
+import { Select } from '@shared/components';
 import toast from 'react-hot-toast';
 import { BsGraphUp, BsListCheck, BsChatDots, BsPlus, BsX } from 'react-icons/bs';
 
@@ -46,22 +47,46 @@ interface Feedback {
   created_at: string;
 }
 
+const statusClassMap: Record<string, string> = {
+  draft: 'pending',
+  submitted: 'pending',
+  approved: 'approved',
+  rejected: 'rejected',
+  in_progress: 'pending',
+  completed: 'approved',
+};
+
 const PerformancePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'reviews' | 'okrs' | 'feedbacks'>('reviews');
   const [reviews, setReviews] = useState<Review[]>([]);
   const [okrs, setOkrs] = useState<Objective[]>([]);
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(true);
-  
-  // Feedback form
+  const [reviewStatusLookups, setReviewStatusLookups] = useState<LookupItem[]>([]);
+  const [feedbackTypeLookups, setFeedbackTypeLookups] = useState<LookupItem[]>([]);
+
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [feedbackForm, setFeedbackForm] = useState({
     employee_id: '',
-    type: 'appreciation',
+    type: 'praise',
     content: '',
     is_anonymous: false,
   });
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    void Promise.all([
+      lookupsApi.forType('performance_review_status'),
+      lookupsApi.forType('continuous_feedback_type'),
+    ])
+      .then(([statusRes, typeRes]) => {
+        setReviewStatusLookups(statusRes.data.data ?? []);
+        setFeedbackTypeLookups(typeRes.data.data ?? []);
+      })
+      .catch(() => {
+        console.error('Performans lookup listeleri yüklenemedi');
+      });
+  }, []);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -84,31 +109,22 @@ const PerformancePage: React.FC = () => {
   }, [activeTab]);
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, [loadData]);
 
   const getStatusBadge = (status: string) => {
-    const statusMap: Record<string, { label: string; class: string }> = {
-      draft: { label: 'Taslak', class: 'pending' },
-      submitted: { label: 'Gönderildi', class: 'pending' },
-      approved: { label: 'Onaylandı', class: 'approved' },
-      rejected: { label: 'Reddedildi', class: 'rejected' },
-      in_progress: { label: 'Devam Ediyor', class: 'pending' },
-      completed: { label: 'Tamamlandı', class: 'approved' },
-    };
-    const s = statusMap[status] || { label: status, class: '' };
-    return <span className={`request-status ${s.class}`}>{s.label}</span>;
+    const label = reviewStatusLookups.find((o) => o.value === status)?.label || status;
+    const className = statusClassMap[status] || '';
+    return <span className={`request-status ${className}`}>{label}</span>;
   };
 
   const getFeedbackTypeBadge = (type: string) => {
-    const typeMap: Record<string, { label: string; color: string }> = {
-      appreciation: { label: 'Takdir', color: 'success' },
-      suggestion: { label: 'Öneri', color: 'info' },
-      concern: { label: 'Endişe', color: 'warning' },
-      other: { label: 'Diğer', color: 'secondary' },
-    };
-    const t = typeMap[type] || { label: type, color: 'secondary' };
-    return <span className={`badge bg-${t.color}`}>{t.label}</span>;
+    const item = feedbackTypeLookups.find((o) => o.value === type);
+    return (
+      <span className="badge" style={item?.color ? { background: item.color, color: '#fff' } : undefined}>
+        {item?.label || type}
+      </span>
+    );
   };
 
   const handleSubmitFeedback = async (e: React.FormEvent) => {
@@ -128,8 +144,8 @@ const PerformancePage: React.FC = () => {
       });
       toast.success('Geri bildirim gönderildi');
       setShowFeedbackModal(false);
-      setFeedbackForm({ employee_id: '', type: 'appreciation', content: '', is_anonymous: false });
-      if (activeTab === 'feedbacks') loadData();
+      setFeedbackForm({ employee_id: '', type: 'praise', content: '', is_anonymous: false });
+      if (activeTab === 'feedbacks') void loadData();
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       toast.error(err.response?.data?.message || 'Geri bildirim gönderilemedi');
@@ -147,7 +163,6 @@ const PerformancePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Tabs - Mobile Friendly */}
       <div className="nav-tabs-mobile mb-4">
         <button
           className={`nav-tab-mobile ${activeTab === 'reviews' ? 'active' : ''}`}
@@ -172,7 +187,6 @@ const PerformancePage: React.FC = () => {
         </button>
       </div>
 
-      {/* Content */}
       <div className="card">
         <div className="card-body p-0">
           {loading ? (
@@ -182,7 +196,6 @@ const PerformancePage: React.FC = () => {
           ) : activeTab === 'reviews' ? (
             reviews.length > 0 ? (
               <>
-                {/* Desktop Table */}
                 <div className="table-responsive desktop-only">
                   <table className="table table-hover mb-0">
                     <thead>
@@ -220,7 +233,6 @@ const PerformancePage: React.FC = () => {
                   </table>
                 </div>
 
-                {/* Mobile Cards */}
                 <div className="mobile-card-list has-data">
                   {reviews.map((review) => (
                     <div key={review.id} className="mobile-card">
@@ -261,7 +273,6 @@ const PerformancePage: React.FC = () => {
           ) : activeTab === 'okrs' ? (
             okrs.length > 0 ? (
               <>
-                {/* Desktop Table */}
                 <div className="table-responsive desktop-only">
                   <table className="table table-hover mb-0">
                     <thead>
@@ -299,7 +310,6 @@ const PerformancePage: React.FC = () => {
                   </table>
                 </div>
 
-                {/* Mobile Cards */}
                 <div className="mobile-card-list has-data">
                   {okrs.map((okr) => (
                     <div key={okr.id} className="mobile-card">
@@ -344,7 +354,6 @@ const PerformancePage: React.FC = () => {
               </div>
             )
           ) : (
-            // Feedbacks Tab
             feedbacks.length > 0 ? (
               <div className="mobile-card-list has-data" style={{ display: 'flex' }}>
                 {feedbacks.map((feedback) => (
@@ -380,14 +389,12 @@ const PerformancePage: React.FC = () => {
         </div>
       </div>
 
-      {/* FAB for Feedbacks */}
       {activeTab === 'feedbacks' && (
         <button className="fab" onClick={() => setShowFeedbackModal(true)} aria-label="Geri Bildirim Gönder">
           <BsPlus size={24} />
         </button>
       )}
 
-      {/* Feedback Modal */}
       {showFeedbackModal && (
         <div className="modal-mobile open">
           <div className="modal-mobile-header">
@@ -400,16 +407,17 @@ const PerformancePage: React.FC = () => {
             <div className="modal-mobile-body">
               <div className="mb-3">
                 <label className="form-label">Geri Bildirim Türü</label>
-                <select
-                  className="form-control"
+                <Select
                   value={feedbackForm.type}
-                  onChange={(e) => setFeedbackForm({ ...feedbackForm, type: e.target.value })}
-                >
-                  <option value="appreciation">Takdir</option>
-                  <option value="suggestion">Öneri</option>
-                  <option value="concern">Endişe</option>
-                  <option value="other">Diğer</option>
-                </select>
+                  onChange={(v) => setFeedbackForm({ ...feedbackForm, type: v })}
+                  options={feedbackTypeLookups.map((opt) => ({
+                    value: opt.value,
+                    label: opt.label,
+                    color: opt.color,
+                  }))}
+                  placeholder="Tür seçin"
+                  aria-label="Geri bildirim türü"
+                />
               </div>
               <div className="mb-3">
                 <label className="form-label">Geri Bildirim *</label>

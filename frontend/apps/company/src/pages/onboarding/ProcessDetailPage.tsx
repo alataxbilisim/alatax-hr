@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { onboardingApi } from '@shared/services/api';
+import { onboardingApi, lookupsApi, type LookupItem } from '@shared/services/api';
 import toast from 'react-hot-toast';
 import TaskList from '../../components/onboarding/TaskList';
 import {
@@ -16,7 +16,7 @@ interface Task {
   title: string;
   description?: string;
   type: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'skipped';
+  status: string;
   is_required: boolean;
   due_date?: string;
   completed_at?: string;
@@ -29,7 +29,7 @@ interface Process {
   user: { id: number; name: string; email: string };
   template?: { id: number; name: string };
   assigned_to?: { id: number; name: string };
-  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+  status: string;
   progress: number;
   start_date: string;
   target_end_date?: string;
@@ -38,13 +38,6 @@ interface Process {
   tasks: Task[];
   created_at: string;
 }
-
-const statusLabels: Record<string, string> = {
-  pending: 'Bekliyor',
-  in_progress: 'Devam Ediyor',
-  completed: 'Tamamlandı',
-  cancelled: 'İptal Edildi',
-};
 
 const statusColors: Record<string, string> = {
   pending: 'var(--warning)',
@@ -58,6 +51,10 @@ const ProcessDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const [process, setProcess] = useState<Process | null>(null);
   const [loading, setLoading] = useState(true);
+  const [processStatusOptions, setProcessStatusOptions] = useState<LookupItem[]>([]);
+
+  const processStatusLabel = (value: string) =>
+    processStatusOptions.find((o) => o.value === value)?.label || value;
 
   const loadProcess = useCallback(async () => {
     try {
@@ -73,12 +70,16 @@ const ProcessDetailPage: React.FC = () => {
   }, [id, navigate]);
 
   useEffect(() => {
+    void lookupsApi.forType('onboarding_process_status')
+      .then((res) => setProcessStatusOptions(res.data.data ?? []))
+      .catch(() => console.error('Onboarding process status lookup yüklenemedi'));
+  }, []);
+
+  useEffect(() => {
     if (id) {
       loadProcess();
     }
   }, [id, loadProcess]);
-
-  
 
   const handleCompleteTask = async (taskId: number) => {
     try {
@@ -143,12 +144,12 @@ const ProcessDetailPage: React.FC = () => {
             style={{
               padding: '0.5rem 1rem',
               borderRadius: 'var(--radius-md)',
-              background: statusColors[process.status],
+              background: statusColors[process.status] || 'var(--text-tertiary)',
               color: 'white',
               fontWeight: 500,
             }}
           >
-            {statusLabels[process.status]}
+            {processStatusLabel(process.status)}
           </div>
         </div>
       </div>

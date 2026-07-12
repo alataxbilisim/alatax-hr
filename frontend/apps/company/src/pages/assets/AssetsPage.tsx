@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { assetsApi } from '@shared/services/api';
+import { assetsApi, lookupsApi, type LookupItem } from '@shared/services/api';
 import toast from 'react-hot-toast';
 import { DataTable, ConfirmDialog, EmptyState } from '../../components/ui';
 import AssetForm from '../../components/assets/AssetForm';
@@ -37,8 +37,8 @@ interface Asset {
   purchase_date?: string;
   purchase_price?: number;
   warranty_end_date?: string;
-  status: 'available' | 'assigned' | 'maintenance' | 'retired';
-  condition: 'new' | 'good' | 'fair' | 'poor';
+  status: string;
+  condition: string;
   current_assignment?: {
     user: { id: number; name: string };
     assigned_date: string;
@@ -51,21 +51,7 @@ const statusBadgeClass: Record<string, string> = {
   available: 'badge-success',
   assigned: 'badge-info',
   maintenance: 'badge-warning',
-  retired: 'badge-secondary',
-};
-
-const statusLabels: Record<string, string> = {
-  available: 'Müsait',
-  assigned: 'Zimmetli',
-  maintenance: 'Bakımda',
-  retired: 'Emekli',
-};
-
-const conditionLabels: Record<string, string> = {
-  new: 'Yeni',
-  good: 'İyi',
-  fair: 'Orta',
-  poor: 'Kötü',
+  disposed: 'badge-secondary',
 };
 
 const AssetsPage: React.FC = () => {
@@ -99,6 +85,28 @@ const AssetsPage: React.FC = () => {
   const [returnDialogOpen, setReturnDialogOpen] = useState(false);
   const [assetToReturn, setAssetToReturn] = useState<Asset | null>(null);
 
+  const [statusOptions, setStatusOptions] = useState<LookupItem[]>([]);
+  const [conditionOptions, setConditionOptions] = useState<LookupItem[]>([]);
+
+  const loadLookups = useCallback(async () => {
+    try {
+      const [statusRes, conditionRes] = await Promise.all([
+        lookupsApi.forType('asset_status'),
+        lookupsApi.forType('asset_condition'),
+      ]);
+      setStatusOptions(statusRes.data.data ?? []);
+      setConditionOptions(conditionRes.data.data ?? []);
+    } catch {
+      console.error('Varlık lookup listeleri yüklenemedi');
+    }
+  }, []);
+
+  const statusLabel = (value: string) =>
+    statusOptions.find((o) => o.value === value)?.label || value;
+
+  const conditionLabel = (value: string) =>
+    conditionOptions.find((o) => o.value === value)?.label || value;
+
   const loadCategories = useCallback(async () => {
     try {
       setCategoriesLoading(true);
@@ -127,7 +135,8 @@ const AssetsPage: React.FC = () => {
 
   useEffect(() => {
     loadCategories();
-  }, [loadCategories]);
+    loadLookups();
+  }, [loadCategories, loadLookups]);
 
   useEffect(() => {
     if (activeTab === 'assets') {
@@ -234,8 +243,8 @@ const AssetsPage: React.FC = () => {
       key: 'status',
       title: 'Durum',
       render: (a: Asset) => (
-        <span className={`badge ${statusBadgeClass[a.status]}`}>
-          {statusLabels[a.status]}
+        <span className={`badge ${statusBadgeClass[a.status] || 'badge-secondary'}`}>
+          {statusLabel(a.status)}
         </span>
       ),
     },
@@ -247,7 +256,7 @@ const AssetsPage: React.FC = () => {
     {
       key: 'condition',
       title: 'Kondisyon',
-      render: (a: Asset) => conditionLabels[a.condition],
+      render: (a: Asset) => conditionLabel(a.condition),
     },
     {
       key: 'actions',

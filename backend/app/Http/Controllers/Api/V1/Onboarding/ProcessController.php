@@ -6,11 +6,16 @@ use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\ActivityLog;
 use App\Models\OnboardingProcess;
 use App\Models\OnboardingTask;
+use App\Services\LookupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ProcessController extends BaseController
 {
+    public function __construct(
+        protected LookupService $lookups,
+    ) {}
+
     /**
      * Display a listing of the resource.
      */
@@ -19,7 +24,13 @@ class ProcessController extends BaseController
         $query = OnboardingProcess::with(['user', 'template', 'assignedTo'])
             ->withCount('tasks');
 
-        if ($request->has('status')) {
+        if ($request->filled('status')) {
+            $this->lookups->assertValid(
+                LookupService::TYPE_ONBOARDING_PROCESS_STATUS,
+                $request->string('status')->toString(),
+                $this->getCompanyId(),
+                'status'
+            );
             $query->where('status', $request->status);
         }
 
@@ -84,8 +95,15 @@ class ProcessController extends BaseController
             'target_end_date' => 'sometimes|nullable|date|after_or_equal:start_date',
             'notes' => 'sometimes|nullable|string',
             'assigned_to' => 'sometimes|nullable|exists:users,id',
-            'status' => 'sometimes|in:pending,in_progress,completed,cancelled',
+            'status' => 'sometimes|string|max:100',
         ]);
+
+        $this->lookups->assertValid(
+            LookupService::TYPE_ONBOARDING_PROCESS_STATUS,
+            $validated['status'] ?? null,
+            $this->getCompanyId(),
+            'status'
+        );
 
         $oldValues = $process->getOriginal();
         $process->update($validated);

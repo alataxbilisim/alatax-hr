@@ -8,6 +8,7 @@ use App\Models\ActivityLog;
 use App\Models\Document;
 use App\Models\DocumentVersion;
 use App\Services\DataScopeService;
+use App\Services\LookupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -17,6 +18,7 @@ class DocumentController extends BaseController
 {
     public function __construct(
         protected DataScopeService $dataScope,
+        protected LookupService $lookups,
     ) {}
 
     /**
@@ -409,7 +411,16 @@ class DocumentController extends BaseController
             'name' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
             'category_id' => 'nullable|exists:document_categories,id',
+            'approval_status' => 'sometimes|nullable|string|max:100',
         ]);
+
+        $companyId = $this->getCompanyId();
+        $this->lookups->assertValid(
+            LookupService::TYPE_DOCUMENT_APPROVAL_STATUS,
+            $validated['approval_status'] ?? null,
+            $companyId,
+            'approval_status'
+        );
 
         $oldValues = $document->getOriginal();
         $document->update($validated);

@@ -7,11 +7,15 @@ use App\Models\ActivityLog;
 use App\Models\Training;
 use App\Models\TrainingSession;
 use App\Models\User;
+use App\Services\LookupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class SessionController extends BaseController
 {
+    public function __construct(
+        protected LookupService $lookups,
+    ) {}
     /**
      * Eğitim oturumlarını listele
      */
@@ -97,9 +101,16 @@ class SessionController extends BaseController
             'end_date' => 'sometimes|date|after:start_date',
             'location' => 'nullable|string|max:255',
             'instructor' => 'nullable|string|max:255',
-            'status' => 'sometimes|in:scheduled,in_progress,completed,cancelled',
+            'status' => 'sometimes|nullable|string|max:100',
             'notes' => 'nullable|string',
         ]);
+
+        $this->lookups->assertValid(
+            LookupService::TYPE_TRAINING_SESSION_STATUS,
+            $validated['status'] ?? null,
+            $this->getCompanyId(),
+            'status'
+        );
 
         $oldValues = $session->getOriginal();
         $session->update($validated);

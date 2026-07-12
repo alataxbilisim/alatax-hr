@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { surveysApi } from '@shared/services/api';
+import { surveysApi, lookupsApi, type LookupItem } from '@shared/services/api';
+import { Select } from '@shared/components';
 import toast from 'react-hot-toast';
 import { DataTable, ConfirmDialog, EmptyState, Modal } from '../../components/ui';
 import {
@@ -36,24 +37,6 @@ interface SurveyQuestion {
   order: number;
 }
 
-const typeLabels: Record<string, string> = {
-  engagement: 'Çalışan Bağlılığı',
-  satisfaction: 'Memnuniyet',
-  pulse: 'Nabız Yoklaması',
-  enps: 'Employee NPS',
-  onboarding: 'Onboarding Deneyimi',
-  exit: 'Çıkış Mülakatı',
-  custom: 'Özel',
-};
-
-const questionTypes = [
-  { value: 'text', label: 'Metin' },
-  { value: 'rating', label: 'Puan (1-5)' },
-  { value: 'single_choice', label: 'Tek Seçim' },
-  { value: 'multiple_choice', label: 'Çoklu Seçim' },
-  { value: 'nps', label: 'NPS (0-10)' },
-];
-
 const SurveysPage: React.FC = () => {
   const [surveys, setSurveys] = useState<Survey[]>([]);
   const [loading, setLoading] = useState(true);
@@ -89,6 +72,25 @@ const SurveysPage: React.FC = () => {
     results: Record<string, unknown>;
   } | null>(null);
 
+  const [typeOptions, setTypeOptions] = useState<LookupItem[]>([]);
+  const [questionTypeOptions, setQuestionTypeOptions] = useState<LookupItem[]>([]);
+
+  const loadLookups = useCallback(async () => {
+    try {
+      const [typeRes, questionTypeRes] = await Promise.all([
+        lookupsApi.forType('survey_type'),
+        lookupsApi.forType('survey_question_type'),
+      ]);
+      setTypeOptions(typeRes.data.data ?? []);
+      setQuestionTypeOptions(questionTypeRes.data.data ?? []);
+    } catch {
+      console.error('Anket lookup listeleri yüklenemedi');
+    }
+  }, []);
+
+  const typeLabel = (value: string) =>
+    typeOptions.find((o) => o.value === value)?.label || value;
+
   const loadSurveys = useCallback(async () => {
     try {
       setLoading(true);
@@ -107,7 +109,9 @@ const SurveysPage: React.FC = () => {
     loadSurveys();
   }, [loadSurveys]);
 
-  
+  useEffect(() => {
+    void loadLookups();
+  }, [loadLookups]);
 
   const handleDelete = (survey: Survey) => {
     setItemToDelete(survey);
@@ -305,7 +309,7 @@ const SurveysPage: React.FC = () => {
       key: 'type',
       title: 'Tür',
       render: (s: Survey) => (
-        <span className="badge bg-info">{typeLabels[s.type] || s.type}</span>
+        <span className="badge bg-info">{typeLabel(s.type)}</span>
       ),
     },
     {
@@ -431,15 +435,17 @@ const SurveysPage: React.FC = () => {
             </div>
             <div className="col-md-4 mb-3">
               <label className="form-label">Anket Türü</label>
-              <select
-                className="form-control"
+              <Select
                 value={formData.type}
-                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-              >
-                {Object.entries(typeLabels).map(([value, label]) => (
-                  <option key={value} value={value}>{label}</option>
-                ))}
-              </select>
+                onChange={(v) => setFormData({ ...formData, type: v })}
+                options={typeOptions.map((o) => ({
+                  value: o.value,
+                  label: o.label,
+                  color: o.color,
+                }))}
+                placeholder="Tür seçin"
+                aria-label="Anket türü"
+              />
             </div>
           </div>
           
@@ -551,15 +557,17 @@ const SurveysPage: React.FC = () => {
                       />
                     </div>
                     <div className="col-md-4 mb-2">
-                      <select
-                        className="form-control"
+                      <Select
                         value={question.question_type}
-                        onChange={(e) => updateQuestion(qIndex, 'question_type', e.target.value)}
-                      >
-                        {questionTypes.map(t => (
-                          <option key={t.value} value={t.value}>{t.label}</option>
-                        ))}
-                      </select>
+                        onChange={(v) => updateQuestion(qIndex, 'question_type', v)}
+                        options={questionTypeOptions.map((t) => ({
+                          value: t.value,
+                          label: t.label,
+                          color: t.color,
+                        }))}
+                        placeholder="Soru tipi"
+                        aria-label="Soru tipi"
+                      />
                     </div>
                   </div>
 

@@ -2,13 +2,24 @@
 
 namespace App\Services;
 
+use App\Models\Asset;
+use App\Models\ContinuousFeedback;
+use App\Models\Document;
 use App\Models\Employee;
 use App\Models\EmployeeDocument;
+use App\Models\EmployeeRequest;
+use App\Models\ExpenseClaim;
 use App\Models\Interview;
 use App\Models\JobApplication;
 use App\Models\JobPosition;
 use App\Models\LeaveRequest;
 use App\Models\Lookup;
+use App\Models\OnboardingProcess;
+use App\Models\OnboardingTask;
+use App\Models\PerformancePeriod;
+use App\Models\PerformanceReview;
+use App\Models\Survey;
+use App\Models\Training;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
@@ -51,6 +62,12 @@ class LookupService
 
     public const TYPE_INTERVIEW_RECOMMENDATION = 'interview_recommendation';
 
+    public const TYPE_EXPENSE_CLAIM_STATUS = 'expense_claim_status';
+
+    public const TYPE_EMPLOYEE_REQUEST_PRIORITY = 'employee_request_priority';
+
+    public const TYPE_EMPLOYEE_REQUEST_STATUS = 'employee_request_status';
+
     public const TYPE_CURRENCY = 'currency';
 
     public const TYPE_CITY_TR = 'city_tr';
@@ -59,12 +76,44 @@ class LookupService
 
     public const TYPE_COUNTRY = 'country';
 
+    public const TYPE_ASSET_STATUS = 'asset_status';
+
+    public const TYPE_ASSET_CONDITION = 'asset_condition';
+
+    public const TYPE_PERFORMANCE_PERIOD_STATUS = 'performance_period_status';
+
+    public const TYPE_PERFORMANCE_REVIEW_STATUS = 'performance_review_status';
+
+    public const TYPE_CONTINUOUS_FEEDBACK_TYPE = 'continuous_feedback_type';
+
+    public const TYPE_ONBOARDING_PROCESS_STATUS = 'onboarding_process_status';
+
+    public const TYPE_ONBOARDING_TASK_STATUS = 'onboarding_task_status';
+
+    public const TYPE_DOCUMENT_APPROVAL_STATUS = 'document_approval_status';
+
+    public const TYPE_DOCUMENT_FILE_TYPE = 'document_file_type';
+
+    public const TYPE_EMPLOYEE_DOCUMENT_STATUS = 'employee_document_status';
+
+    public const TYPE_TRAINING_TYPE = 'training_type';
+
+    public const TYPE_TRAINING_SESSION_STATUS = 'training_session_status';
+
+    public const TYPE_TRAINING_CATEGORY = 'training_category';
+
+    public const TYPE_SURVEY_TYPE = 'survey_type';
+
+    public const TYPE_SURVEY_QUESTION_TYPE = 'survey_question_type';
+
     /** @var list<string> */
     public const SYSTEM_TYPES = [
         self::TYPE_CURRENCY,
         self::TYPE_CITY_TR,
         self::TYPE_BLOOD_TYPE,
         self::TYPE_COUNTRY,
+        self::TYPE_DOCUMENT_FILE_TYPE,
+        self::TYPE_SURVEY_QUESTION_TYPE,
     ];
 
     /** Hibrit: value sabit, label/renk/sıra firma (meta.hybrid) */
@@ -74,6 +123,15 @@ class LookupService
         self::TYPE_LEAVE_GENDER_RESTRICTION,
         self::TYPE_APPLICATION_STAGE,
         self::TYPE_INTERVIEW_STATUS,
+        self::TYPE_EXPENSE_CLAIM_STATUS,
+        self::TYPE_EMPLOYEE_REQUEST_STATUS,
+        self::TYPE_PERFORMANCE_PERIOD_STATUS,
+        self::TYPE_PERFORMANCE_REVIEW_STATUS,
+        self::TYPE_ONBOARDING_PROCESS_STATUS,
+        self::TYPE_ONBOARDING_TASK_STATUS,
+        self::TYPE_DOCUMENT_APPROVAL_STATUS,
+        self::TYPE_EMPLOYEE_DOCUMENT_STATUS,
+        self::TYPE_TRAINING_SESSION_STATUS,
     ];
 
     /** @var array<string, list<array{model: class-string, column: string}>> */
@@ -129,6 +187,51 @@ class LookupService
         ],
         self::TYPE_INTERVIEW_RECOMMENDATION => [
             ['model' => Interview::class, 'column' => 'recommendation'],
+        ],
+        self::TYPE_ASSET_STATUS => [
+            ['model' => Asset::class, 'column' => 'status'],
+        ],
+        self::TYPE_ASSET_CONDITION => [
+            ['model' => Asset::class, 'column' => 'condition'],
+        ],
+        self::TYPE_EXPENSE_CLAIM_STATUS => [
+            ['model' => ExpenseClaim::class, 'column' => 'status'],
+        ],
+        self::TYPE_EMPLOYEE_REQUEST_PRIORITY => [
+            ['model' => EmployeeRequest::class, 'column' => 'priority'],
+        ],
+        self::TYPE_EMPLOYEE_REQUEST_STATUS => [
+            ['model' => EmployeeRequest::class, 'column' => 'status'],
+        ],
+        self::TYPE_PERFORMANCE_PERIOD_STATUS => [
+            ['model' => PerformancePeriod::class, 'column' => 'status'],
+        ],
+        self::TYPE_PERFORMANCE_REVIEW_STATUS => [
+            ['model' => PerformanceReview::class, 'column' => 'status'],
+        ],
+        self::TYPE_CONTINUOUS_FEEDBACK_TYPE => [
+            ['model' => ContinuousFeedback::class, 'column' => 'type'],
+        ],
+        self::TYPE_ONBOARDING_PROCESS_STATUS => [
+            ['model' => OnboardingProcess::class, 'column' => 'status'],
+        ],
+        self::TYPE_ONBOARDING_TASK_STATUS => [
+            ['model' => OnboardingTask::class, 'column' => 'status'],
+        ],
+        self::TYPE_DOCUMENT_APPROVAL_STATUS => [
+            ['model' => Document::class, 'column' => 'approval_status'],
+        ],
+        self::TYPE_EMPLOYEE_DOCUMENT_STATUS => [
+            ['model' => EmployeeDocument::class, 'column' => 'status'],
+        ],
+        self::TYPE_TRAINING_TYPE => [
+            ['model' => Training::class, 'column' => 'type'],
+        ],
+        self::TYPE_TRAINING_CATEGORY => [
+            ['model' => Training::class, 'column' => 'category'],
+        ],
+        self::TYPE_SURVEY_TYPE => [
+            ['model' => Survey::class, 'column' => 'type'],
         ],
     ];
 

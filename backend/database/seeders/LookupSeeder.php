@@ -8,9 +8,12 @@ use Illuminate\Database\Seeder;
 
 /**
  * Lookup Engine seed — idempotent.
- * Sistem: currency, city_tr, blood_type, country.
- * Firma default: employee_*, contract, work_type…
- * Hibrit: leave_request_status (meta.hybrid).
+ * Sistem: currency, city_tr, blood_type, country, document_file_type, survey_question_type.
+ * Firma default: employee_*, contract, work_type, training_*, survey_type…
+ * Hibrit: leave_request_status, expense_claim_status, employee_request_status,
+ * performance_period_status, performance_review_status, onboarding_process_status,
+ * onboarding_task_status, document_approval_status, employee_document_status,
+ * training_session_status (meta.hybrid).
  */
 class LookupSeeder extends Seeder
 {
@@ -33,6 +36,24 @@ class LookupSeeder extends Seeder
         $this->seedInterviewType();
         $this->seedInterviewStatus();
         $this->seedInterviewRecommendation();
+        $this->seedAssetStatus();
+        $this->seedAssetCondition();
+        $this->seedExpenseClaimStatus();
+        $this->seedEmployeeRequestPriority();
+        $this->seedEmployeeRequestStatus();
+        $this->seedPerformancePeriodStatus();
+        $this->seedPerformanceReviewStatus();
+        $this->seedContinuousFeedbackType();
+        $this->seedOnboardingProcessStatus();
+        $this->seedOnboardingTaskStatus();
+        $this->seedDocumentApprovalStatus();
+        $this->seedDocumentFileType();
+        $this->seedEmployeeDocumentStatus();
+        $this->seedTrainingType();
+        $this->seedTrainingSessionStatus();
+        $this->seedTrainingCategory();
+        $this->seedSurveyType();
+        $this->seedSurveyQuestionType();
         $this->seedCurrency();
         $this->seedBloodType();
         $this->seedCountries();
@@ -264,6 +285,256 @@ class LookupSeeder extends Seeder
             ['value' => 'strong_no_hire', 'label' => 'Kesinlikle Alınmasın', 'color' => '#ef4444', 'sort_order' => 50],
         ] as $item) {
             $this->upsertDefault(LookupService::TYPE_INTERVIEW_RECOMMENDATION, $item, false);
+        }
+    }
+
+    private function seedAssetStatus(): void
+    {
+        foreach ([
+            ['value' => 'available', 'label' => 'Müsait', 'color' => '#10b981', 'sort_order' => 10],
+            ['value' => 'assigned', 'label' => 'Zimmetli', 'color' => '#3b82f6', 'sort_order' => 20],
+            ['value' => 'maintenance', 'label' => 'Bakımda', 'color' => '#f59e0b', 'sort_order' => 30],
+            ['value' => 'disposed', 'label' => 'Elden Çıkarıldı', 'color' => '#64748b', 'sort_order' => 40],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_ASSET_STATUS, $item, false);
+        }
+    }
+
+    private function seedAssetCondition(): void
+    {
+        foreach ([
+            ['value' => 'new', 'label' => 'Yeni', 'sort_order' => 10],
+            ['value' => 'good', 'label' => 'İyi', 'sort_order' => 20],
+            ['value' => 'fair', 'label' => 'Orta', 'sort_order' => 30],
+            ['value' => 'poor', 'label' => 'Kötü', 'sort_order' => 40],
+            ['value' => 'broken', 'label' => 'Bozuk', 'sort_order' => 50],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_ASSET_CONDITION, $item, false);
+        }
+    }
+
+    /** ExpenseClaim::STATUS_* ile birebir — hibrit */
+    private function seedExpenseClaimStatus(): void
+    {
+        $meta = ['hybrid' => true];
+        foreach ([
+            ['value' => 'draft', 'label' => 'Taslak', 'color' => '#64748b', 'sort_order' => 10],
+            ['value' => 'submitted', 'label' => 'Gönderildi', 'color' => '#f59e0b', 'sort_order' => 20],
+            ['value' => 'approved', 'label' => 'Onaylandı', 'color' => '#10b981', 'sort_order' => 30],
+            ['value' => 'rejected', 'label' => 'Reddedildi', 'color' => '#ef4444', 'sort_order' => 40],
+            ['value' => 'paid', 'label' => 'Ödendi', 'color' => '#3b82f6', 'sort_order' => 50],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_EXPENSE_CLAIM_STATUS, $item, false, $meta);
+        }
+    }
+
+    private function seedEmployeeRequestPriority(): void
+    {
+        foreach ([
+            ['value' => 'low', 'label' => 'Düşük', 'color' => '#94a3b8', 'sort_order' => 10],
+            ['value' => 'normal', 'label' => 'Normal', 'color' => '#3b82f6', 'sort_order' => 20],
+            ['value' => 'high', 'label' => 'Yüksek', 'color' => '#f59e0b', 'sort_order' => 30],
+            ['value' => 'urgent', 'label' => 'Acil', 'color' => '#ef4444', 'sort_order' => 40],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_EMPLOYEE_REQUEST_PRIORITY, $item, false);
+        }
+    }
+
+    /** EmployeeRequest::STATUS_* ile birebir — hibrit */
+    private function seedEmployeeRequestStatus(): void
+    {
+        $meta = ['hybrid' => true];
+        foreach ([
+            ['value' => 'pending', 'label' => 'Beklemede', 'color' => '#f59e0b', 'sort_order' => 10],
+            ['value' => 'in_review', 'label' => 'İnceleniyor', 'color' => '#3b82f6', 'sort_order' => 20],
+            ['value' => 'approved', 'label' => 'Onaylandı', 'color' => '#10b981', 'sort_order' => 30],
+            ['value' => 'rejected', 'label' => 'Reddedildi', 'color' => '#ef4444', 'sort_order' => 40],
+            ['value' => 'cancelled', 'label' => 'İptal Edildi', 'color' => '#64748b', 'sort_order' => 50],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_EMPLOYEE_REQUEST_STATUS, $item, false, $meta);
+        }
+    }
+
+    /** PerformancePeriod status — hibrit */
+    private function seedPerformancePeriodStatus(): void
+    {
+        $meta = ['hybrid' => true];
+        foreach ([
+            ['value' => 'draft', 'label' => 'Taslak', 'color' => '#64748b', 'sort_order' => 10],
+            ['value' => 'active', 'label' => 'Aktif', 'color' => '#10b981', 'sort_order' => 20],
+            ['value' => 'closed', 'label' => 'Kapalı', 'color' => '#94a3b8', 'sort_order' => 30],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_PERFORMANCE_PERIOD_STATUS, $item, false, $meta);
+        }
+    }
+
+    /** PerformanceReview status — hibrit */
+    private function seedPerformanceReviewStatus(): void
+    {
+        $meta = ['hybrid' => true];
+        foreach ([
+            ['value' => 'draft', 'label' => 'Taslak', 'color' => '#64748b', 'sort_order' => 10],
+            ['value' => 'submitted', 'label' => 'Gönderildi', 'color' => '#f59e0b', 'sort_order' => 20],
+            ['value' => 'approved', 'label' => 'Onaylandı', 'color' => '#10b981', 'sort_order' => 30],
+            ['value' => 'rejected', 'label' => 'Reddedildi', 'color' => '#ef4444', 'sort_order' => 40],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_PERFORMANCE_REVIEW_STATUS, $item, false, $meta);
+        }
+    }
+
+    /** ContinuousFeedback::TYPE_* ile birebir — firma */
+    private function seedContinuousFeedbackType(): void
+    {
+        foreach ([
+            ['value' => 'praise', 'label' => 'Takdir/Övgü', 'color' => '#10b981', 'sort_order' => 10],
+            ['value' => 'suggestion', 'label' => 'Öneri', 'color' => '#3b82f6', 'sort_order' => 20],
+            ['value' => 'concern', 'label' => 'Endişe', 'color' => '#f59e0b', 'sort_order' => 30],
+            ['value' => 'coaching', 'label' => 'Koçluk', 'color' => '#8b5cf6', 'sort_order' => 40],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_CONTINUOUS_FEEDBACK_TYPE, $item, false);
+        }
+    }
+
+    /** OnboardingProcess::STATUS_* ile birebir — hibrit */
+    private function seedOnboardingProcessStatus(): void
+    {
+        $meta = ['hybrid' => true];
+        foreach ([
+            ['value' => 'pending', 'label' => 'Bekliyor', 'color' => '#f59e0b', 'sort_order' => 10],
+            ['value' => 'in_progress', 'label' => 'Devam Ediyor', 'color' => '#3b82f6', 'sort_order' => 20],
+            ['value' => 'completed', 'label' => 'Tamamlandı', 'color' => '#10b981', 'sort_order' => 30],
+            ['value' => 'cancelled', 'label' => 'İptal Edildi', 'color' => '#64748b', 'sort_order' => 40],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_ONBOARDING_PROCESS_STATUS, $item, false, $meta);
+        }
+    }
+
+    /** OnboardingTask::STATUS_* ile birebir — hibrit */
+    private function seedOnboardingTaskStatus(): void
+    {
+        $meta = ['hybrid' => true];
+        foreach ([
+            ['value' => 'pending', 'label' => 'Bekliyor', 'color' => '#94a3b8', 'sort_order' => 10],
+            ['value' => 'in_progress', 'label' => 'Devam Ediyor', 'color' => '#f59e0b', 'sort_order' => 20],
+            ['value' => 'completed', 'label' => 'Tamamlandı', 'color' => '#10b981', 'sort_order' => 30],
+            ['value' => 'skipped', 'label' => 'Atlandı', 'color' => '#64748b', 'sort_order' => 40],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_ONBOARDING_TASK_STATUS, $item, false, $meta);
+        }
+    }
+
+    /** ApprovalStatusValue / documents.approval_status — hibrit */
+    private function seedDocumentApprovalStatus(): void
+    {
+        $meta = ['hybrid' => true];
+        foreach ([
+            ['value' => 'draft', 'label' => 'Taslak', 'color' => '#64748b', 'sort_order' => 10],
+            ['value' => 'pending', 'label' => 'Onay Bekliyor', 'color' => '#f59e0b', 'sort_order' => 20],
+            ['value' => 'approved', 'label' => 'Onaylandı', 'color' => '#10b981', 'sort_order' => 30],
+            ['value' => 'rejected', 'label' => 'Reddedildi', 'color' => '#ef4444', 'sort_order' => 40],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_DOCUMENT_APPROVAL_STATUS, $item, false, $meta);
+        }
+    }
+
+    /** DocumentController MIME kategori filtresi — sistem */
+    private function seedDocumentFileType(): void
+    {
+        foreach ([
+            ['value' => 'pdf', 'label' => 'PDF', 'sort_order' => 10],
+            ['value' => 'image', 'label' => 'Resim', 'sort_order' => 20],
+            ['value' => 'document', 'label' => 'Word', 'sort_order' => 30],
+            ['value' => 'spreadsheet', 'label' => 'Excel', 'sort_order' => 40],
+            ['value' => 'presentation', 'label' => 'PowerPoint', 'sort_order' => 50],
+            ['value' => 'archive', 'label' => 'Arşiv (ZIP, RAR)', 'sort_order' => 60],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_DOCUMENT_FILE_TYPE, $item, true);
+        }
+    }
+
+    /** EmployeeDocument status (active/archived/expired) — hibrit */
+    private function seedEmployeeDocumentStatus(): void
+    {
+        $meta = ['hybrid' => true];
+        foreach ([
+            ['value' => 'active', 'label' => 'Aktif', 'color' => '#10b981', 'sort_order' => 10],
+            ['value' => 'archived', 'label' => 'Arşivlendi', 'color' => '#64748b', 'sort_order' => 20],
+            ['value' => 'expired', 'label' => 'Süresi Doldu', 'color' => '#ef4444', 'sort_order' => 30],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_EMPLOYEE_DOCUMENT_STATUS, $item, false, $meta);
+        }
+    }
+
+    /** Training.type — firma */
+    private function seedTrainingType(): void
+    {
+        foreach ([
+            ['value' => 'online', 'label' => 'Online', 'sort_order' => 10],
+            ['value' => 'classroom', 'label' => 'Sınıf İçi', 'sort_order' => 20],
+            ['value' => 'hybrid', 'label' => 'Hibrit', 'sort_order' => 30],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_TRAINING_TYPE, $item, false);
+        }
+    }
+
+    /** TrainingSession.status — hibrit */
+    private function seedTrainingSessionStatus(): void
+    {
+        $meta = ['hybrid' => true];
+        foreach ([
+            ['value' => 'scheduled', 'label' => 'Planlandı', 'color' => '#3b82f6', 'sort_order' => 10],
+            ['value' => 'in_progress', 'label' => 'Devam Ediyor', 'color' => '#f59e0b', 'sort_order' => 20],
+            ['value' => 'completed', 'label' => 'Tamamlandı', 'color' => '#10b981', 'sort_order' => 30],
+            ['value' => 'cancelled', 'label' => 'İptal Edildi', 'color' => '#ef4444', 'sort_order' => 40],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_TRAINING_SESSION_STATUS, $item, false, $meta);
+        }
+    }
+
+    /** Training.category — firma (TR varsayılanlar) */
+    private function seedTrainingCategory(): void
+    {
+        foreach ([
+            ['value' => 'general', 'label' => 'Genel', 'sort_order' => 10],
+            ['value' => 'technical', 'label' => 'Teknik', 'sort_order' => 20],
+            ['value' => 'soft_skills', 'label' => 'Yumuşak Beceri', 'sort_order' => 30],
+            ['value' => 'compliance', 'label' => 'Uyum', 'sort_order' => 40],
+            ['value' => 'leadership', 'label' => 'Liderlik', 'sort_order' => 50],
+            ['value' => 'safety', 'label' => 'Güvenlik', 'sort_order' => 60],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_TRAINING_CATEGORY, $item, false);
+        }
+    }
+
+    /** Survey::TYPE_* — firma */
+    private function seedSurveyType(): void
+    {
+        foreach ([
+            ['value' => 'engagement', 'label' => 'Çalışan Bağlılığı', 'sort_order' => 10],
+            ['value' => 'satisfaction', 'label' => 'Memnuniyet', 'sort_order' => 20],
+            ['value' => 'pulse', 'label' => 'Nabız Yoklaması', 'sort_order' => 30],
+            ['value' => 'enps', 'label' => 'Employee NPS', 'sort_order' => 40],
+            ['value' => 'onboarding', 'label' => 'Onboarding Deneyimi', 'sort_order' => 50],
+            ['value' => 'exit', 'label' => 'Çıkış Mülakatı', 'sort_order' => 60],
+            ['value' => 'custom', 'label' => 'Özel', 'sort_order' => 70],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_SURVEY_TYPE, $item, false);
+        }
+    }
+
+    /** SurveyQuestion::TYPE_* — sistem */
+    private function seedSurveyQuestionType(): void
+    {
+        foreach ([
+            ['value' => 'single_choice', 'label' => 'Tek Seçim', 'sort_order' => 10],
+            ['value' => 'multiple_choice', 'label' => 'Çoklu Seçim', 'sort_order' => 20],
+            ['value' => 'rating', 'label' => 'Puanlama', 'sort_order' => 30],
+            ['value' => 'nps', 'label' => 'NPS', 'sort_order' => 40],
+            ['value' => 'text', 'label' => 'Açık Uçlu', 'sort_order' => 50],
+            ['value' => 'scale', 'label' => 'Ölçek', 'sort_order' => 60],
+            ['value' => 'matrix', 'label' => 'Matris', 'sort_order' => 70],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_SURVEY_QUESTION_TYPE, $item, true);
         }
     }
 

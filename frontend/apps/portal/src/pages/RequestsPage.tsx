@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { portalApi } from '@shared/services/api';
+import { portalApi, lookupsApi, type LookupItem } from '@shared/services/api';
+import { Select } from '@shared/components';
 import toast from 'react-hot-toast';
 import { BsPlus, BsInboxes, BsX } from 'react-icons/bs';
 
@@ -21,14 +22,23 @@ interface EmployeeRequest {
   created_at: string;
 }
 
+const statusClassMap: Record<string, string> = {
+  pending: 'pending',
+  in_review: 'pending',
+  approved: 'approved',
+  rejected: 'rejected',
+  cancelled: 'cancelled',
+};
+
 const RequestsPage: React.FC = () => {
   const [requests, setRequests] = useState<EmployeeRequest[]>([]);
   const [requestTypes, setRequestTypes] = useState<RequestType[]>([]);
+  const [statusLookups, setStatusLookups] = useState<LookupItem[]>([]);
+  const [priorityLookups, setPriorityLookups] = useState<LookupItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // Form state
   const [formData, setFormData] = useState({
     request_type_id: '',
     title: '',
@@ -37,17 +47,21 @@ const RequestsPage: React.FC = () => {
   });
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, []);
 
   const loadData = async () => {
     try {
-      const [requestsRes, typesRes] = await Promise.all([
+      const [requestsRes, typesRes, statusRes, priorityRes] = await Promise.all([
         portalApi.requests.list(),
         portalApi.requests.types(),
+        lookupsApi.forType('employee_request_status'),
+        lookupsApi.forType('employee_request_priority'),
       ]);
       setRequests(requestsRes.data.data.data || []);
       setRequestTypes(typesRes.data.data || []);
+      setStatusLookups(statusRes.data.data ?? []);
+      setPriorityLookups(priorityRes.data.data ?? []);
     } catch {
       toast.error('Veriler yüklenemedi');
     } finally {
@@ -56,26 +70,23 @@ const RequestsPage: React.FC = () => {
   };
 
   const getStatusBadge = (status: string) => {
-    const statusMap: Record<string, { label: string; class: string }> = {
-      pending: { label: 'Beklemede', class: 'pending' },
-      in_review: { label: 'İnceleniyor', class: 'pending' },
-      approved: { label: 'Onaylandı', class: 'approved' },
-      rejected: { label: 'Reddedildi', class: 'rejected' },
-      cancelled: { label: 'İptal', class: 'cancelled' },
-    };
-    const s = statusMap[status] || { label: status, class: '' };
-    return <span className={`request-status ${s.class}`}>{s.label}</span>;
+    const label = statusLookups.find((o) => o.value === status)?.label || status;
+    const className = statusClassMap[status] || '';
+    return <span className={`request-status ${className}`}>{label}</span>;
   };
 
   const getPriorityBadge = (priority: string) => {
-    const priorityMap: Record<string, { label: string; color: string }> = {
-      low: { label: 'Düşük', color: 'secondary' },
-      normal: { label: 'Normal', color: 'info' },
-      high: { label: 'Yüksek', color: 'warning' },
-      urgent: { label: 'Acil', color: 'danger' },
-    };
-    const p = priorityMap[priority] || { label: priority, color: 'secondary' };
-    return <span className={`badge bg-${p.color}`}>{p.label}</span>;
+    const item = priorityLookups.find((o) => o.value === priority);
+    const label = item?.label || priority;
+    const color = item?.color;
+    if (color) {
+      return (
+        <span className="badge" style={{ backgroundColor: color, color: '#fff' }}>
+          {label}
+        </span>
+      );
+    }
+    return <span className="badge bg-secondary">{label}</span>;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -97,7 +108,7 @@ const RequestsPage: React.FC = () => {
       toast.success('Talep oluşturuldu');
       setShowModal(false);
       setFormData({ request_type_id: '', title: '', description: '', priority: 'normal' });
-      loadData();
+      void loadData();
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       toast.error(err.response?.data?.message || 'Talep oluşturulamadı');
@@ -111,7 +122,7 @@ const RequestsPage: React.FC = () => {
     try {
       await portalApi.requests.cancel(id);
       toast.success('Talep iptal edildi');
-      loadData();
+      void loadData();
     } catch {
       toast.error('İptal işlemi başarısız');
     }
@@ -139,7 +150,6 @@ const RequestsPage: React.FC = () => {
             </div>
           ) : requests.length > 0 ? (
             <>
-              {/* Desktop Table */}
               <div className="table-responsive desktop-only">
                 <table className="table table-hover mb-0">
                   <thead>
@@ -169,7 +179,7 @@ const RequestsPage: React.FC = () => {
                           {request.status === 'pending' && (
                             <button
                               className="btn btn-sm btn-ghost text-danger"
-                              onClick={() => handleCancel(request.id)}
+                              onClick={() => void handleCancel(request.id)}
                             >
                               İptal
                             </button>
@@ -181,7 +191,6 @@ const RequestsPage: React.FC = () => {
                 </table>
               </div>
 
-              {/* Mobile Cards */}
               <div className="mobile-card-list has-data">
                 {requests.map((request) => (
                   <div key={request.id} className="mobile-card">
@@ -215,7 +224,7 @@ const RequestsPage: React.FC = () => {
                       <div className="mobile-card-footer">
                         <button
                           className="btn btn-outline-primary btn-sm"
-                          onClick={() => handleCancel(request.id)}
+                          onClick={() => void handleCancel(request.id)}
                         >
                           İptal Et
                         </button>
@@ -238,37 +247,33 @@ const RequestsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile FAB */}
       <button className="fab" onClick={() => setShowModal(true)} aria-label="Yeni Talep">
         <BsPlus size={24} />
       </button>
 
-      {/* Modal */}
       {showModal && (
-        <div className={`modal-mobile open`}>
+        <div className="modal-mobile open">
           <div className="modal-mobile-header">
             <h3 className="modal-mobile-title">Yeni Talep</h3>
             <button className="modal-mobile-close" onClick={() => setShowModal(false)}>
               <BsX size={24} />
             </button>
           </div>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={(e) => void handleSubmit(e)}>
             <div className="modal-mobile-body">
               <div className="mb-3">
                 <label className="form-label">Talep Türü *</label>
-                <select
-                  className="form-control"
+                <Select
                   value={formData.request_type_id}
-                  onChange={(e) => setFormData({ ...formData, request_type_id: e.target.value })}
-                  required
-                >
-                  <option value="">Seçiniz</option>
-                  {requestTypes.map((type) => (
-                    <option key={type.id} value={type.id}>
-                      {type.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(v) => setFormData({ ...formData, request_type_id: v })}
+                  options={requestTypes.map((type) => ({
+                    value: String(type.id),
+                    label: type.name,
+                  }))}
+                  allowEmpty
+                  placeholder="Seçiniz"
+                  aria-label="Talep türü"
+                />
               </div>
               <div className="mb-3">
                 <label className="form-label">Talep Başlığı *</label>
@@ -283,16 +288,17 @@ const RequestsPage: React.FC = () => {
               </div>
               <div className="mb-3">
                 <label className="form-label">Öncelik</label>
-                <select
-                  className="form-control"
+                <Select
                   value={formData.priority}
-                  onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                >
-                  <option value="low">Düşük</option>
-                  <option value="normal">Normal</option>
-                  <option value="high">Yüksek</option>
-                  <option value="urgent">Acil</option>
-                </select>
+                  onChange={(v) => setFormData({ ...formData, priority: v || 'normal' })}
+                  options={priorityLookups.map((opt) => ({
+                    value: opt.value,
+                    label: opt.label,
+                    color: opt.color,
+                  }))}
+                  placeholder="Öncelik seçin"
+                  aria-label="Öncelik"
+                />
               </div>
               <div className="mb-3">
                 <label className="form-label">Açıklama</label>

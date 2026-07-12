@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { assetsApi } from '@shared/services/api';
+import { assetsApi, lookupsApi, type LookupItem } from '@shared/services/api';
 import toast from 'react-hot-toast';
 import { ConfirmDialog } from '../../components/ui';
 import AssignmentForm from '../../components/assets/AssignmentForm';
@@ -24,8 +24,8 @@ interface Asset {
   purchase_date?: string;
   purchase_price?: number;
   warranty_end_date?: string;
-  status: 'available' | 'assigned' | 'maintenance' | 'retired';
-  condition: 'new' | 'good' | 'fair' | 'poor';
+  status: string;
+  condition: string;
   current_assignment?: {
     user: { id: number; name: string };
     assigned_date: string;
@@ -40,25 +40,11 @@ interface Asset {
   }>;
 }
 
-const statusLabels: Record<string, string> = {
-  available: 'Müsait',
-  assigned: 'Zimmetli',
-  maintenance: 'Bakımda',
-  retired: 'Emekli',
-};
-
-const statusColors: Record<string, string> = {
+const statusFallbackColors: Record<string, string> = {
   available: 'var(--success)',
   assigned: 'var(--info)',
   maintenance: 'var(--warning)',
-  retired: 'var(--text-tertiary)',
-};
-
-const conditionLabels: Record<string, string> = {
-  new: 'Yeni',
-  good: 'İyi',
-  fair: 'Orta',
-  poor: 'Kötü',
+  disposed: 'var(--text-tertiary)',
 };
 
 const AssetDetailPage: React.FC = () => {
@@ -70,6 +56,8 @@ const AssetDetailPage: React.FC = () => {
   // Assignment state
   const [assignmentFormOpen, setAssignmentFormOpen] = useState(false);
   const [returnDialogOpen, setReturnDialogOpen] = useState(false);
+  const [statusOptions, setStatusOptions] = useState<LookupItem[]>([]);
+  const [conditionOptions, setConditionOptions] = useState<LookupItem[]>([]);
 
   const loadAsset = useCallback(async () => {
     try {
@@ -84,6 +72,23 @@ const AssetDetailPage: React.FC = () => {
     }
   }, [id, navigate]);
 
+  const loadLookups = useCallback(async () => {
+    try {
+      const [statusRes, conditionRes] = await Promise.all([
+        lookupsApi.forType('asset_status'),
+        lookupsApi.forType('asset_condition'),
+      ]);
+      setStatusOptions(statusRes.data.data ?? []);
+      setConditionOptions(conditionRes.data.data ?? []);
+    } catch {
+      console.error('Varlık lookup listeleri yüklenemedi');
+    }
+  }, []);
+
+  useEffect(() => {
+    loadLookups();
+  }, [loadLookups]);
+
   useEffect(() => {
     if (id) {
       loadAsset();
@@ -91,6 +96,19 @@ const AssetDetailPage: React.FC = () => {
   }, [id, loadAsset]);
 
   
+
+  const statusLookup = asset
+    ? statusOptions.find((o) => o.value === asset.status)
+    : undefined;
+  const statusLabel = statusLookup?.label || asset?.status || '';
+  const statusColor =
+    statusLookup?.color ||
+    (asset ? statusFallbackColors[asset.status] : undefined) ||
+    'var(--text-tertiary)';
+  const conditionLabel =
+    conditionOptions.find((o) => o.value === asset?.condition)?.label ||
+    asset?.condition ||
+    '';
 
   const handleAssign = async (data: { user_id: number; notes?: string; assigned_date?: string }) => {
     try {
@@ -170,8 +188,8 @@ const AssetDetailPage: React.FC = () => {
         className="card"
         style={{
           marginBottom: '1.5rem',
-          background: `${statusColors[asset.status]}20`,
-          border: `1px solid ${statusColors[asset.status]}40`,
+          background: `${statusColor}20`,
+          border: `1px solid ${statusColor}40`,
         }}
       >
         <div className="card-body" style={{ padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -181,10 +199,10 @@ const AssetDetailPage: React.FC = () => {
                 width: '12px',
                 height: '12px',
                 borderRadius: '50%',
-                background: statusColors[asset.status],
+                background: statusColor,
               }}
             />
-            <span style={{ fontWeight: 500 }}>{statusLabels[asset.status]}</span>
+            <span style={{ fontWeight: 500 }}>{statusLabel}</span>
             {asset.current_assignment && (
               <span style={{ color: 'var(--text-secondary)' }}>
                 • Zimmetli: {asset.current_assignment.user.name}
@@ -192,7 +210,7 @@ const AssetDetailPage: React.FC = () => {
             )}
           </div>
           <span style={{ fontSize: '0.875rem', color: 'var(--text-tertiary)' }}>
-            Kondisyon: {conditionLabels[asset.condition]}
+            Kondisyon: {conditionLabel}
           </span>
         </div>
       </div>

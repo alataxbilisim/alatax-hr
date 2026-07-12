@@ -7,12 +7,17 @@ use App\Models\ActivityLog;
 use App\Models\ExpenseCategory;
 use App\Models\ExpenseClaim;
 use App\Models\ExpenseItem;
+use App\Services\LookupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class PortalExpenseController extends BaseController
 {
+    public function __construct(
+        protected LookupService $lookups,
+    ) {}
+
     /**
      * Masraf kategorilerini listele
      */
@@ -35,7 +40,13 @@ class PortalExpenseController extends BaseController
             ->withCount('items')
             ->orderBy('created_at', 'desc');
 
-        if ($request->has('status')) {
+        if ($request->filled('status')) {
+            $this->lookups->assertValid(
+                LookupService::TYPE_EXPENSE_CLAIM_STATUS,
+                $request->string('status')->toString(),
+                $this->getCompanyId(),
+                'status'
+            );
             $query->where('status', $request->status);
         }
 

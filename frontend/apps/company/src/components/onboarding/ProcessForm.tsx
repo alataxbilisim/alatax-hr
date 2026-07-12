@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../ui';
 import { onboardingApi, usersApi } from '@shared/services/api';
+import { Select } from '@shared/components';
 import toast from 'react-hot-toast';
 
 interface Template {
@@ -41,7 +42,7 @@ const ProcessForm: React.FC<ProcessFormProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      loadData();
+      void loadData();
       setFormData({
         user_id: '',
         template_id: '',
@@ -67,24 +68,25 @@ const ProcessForm: React.FC<ProcessFormProps> = ({
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
-    // Şablon seçildiğinde tahmini bitiş tarihini hesapla
-    if (name === 'template_id' && value) {
-      const template = templates.find(t => t.id === Number(value));
-      if (template) {
-        const startDate = new Date(formData.start_date);
-        startDate.setDate(startDate.getDate() + template.estimated_days);
-        setFormData(prev => ({
-          ...prev,
-          template_id: value,
-          target_end_date: startDate.toISOString().split('T')[0],
-          title: prev.title || `${template.name} Süreci`,
-        }));
-      }
+  const handleTemplateChange = (value: string) => {
+    const template = templates.find((t) => t.id === Number(value));
+    if (template) {
+      const startDate = new Date(formData.start_date);
+      startDate.setDate(startDate.getDate() + template.estimated_days);
+      setFormData((prev) => ({
+        ...prev,
+        template_id: value,
+        target_end_date: startDate.toISOString().split('T')[0],
+        title: prev.title || `${template.name} Süreci`,
+      }));
+      return;
     }
+    setFormData((prev) => ({ ...prev, template_id: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -118,35 +120,32 @@ const ProcessForm: React.FC<ProcessFormProps> = ({
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label className="form-label">Çalışan *</label>
-          <select
-            name="user_id"
+          <Select
             value={formData.user_id}
-            onChange={handleChange}
-            className="form-input"
-            required
-          >
-            <option value="">Çalışan seçin</option>
-            {users.map(user => (
-              <option key={user.id} value={user.id}>{user.name} ({user.email})</option>
-            ))}
-          </select>
+            onChange={(v) => setFormData((prev) => ({ ...prev, user_id: v }))}
+            options={users.map((user) => ({
+              value: String(user.id),
+              label: `${user.name} (${user.email})`,
+            }))}
+            placeholder="Çalışan seçin"
+            aria-label="Çalışan"
+          />
         </div>
 
         <div className="form-group">
           <label className="form-label">Şablon</label>
-          <select
-            name="template_id"
+          <Select
             value={formData.template_id}
-            onChange={handleChange}
-            className="form-input"
-          >
-            <option value="">Şablon seçin (opsiyonel)</option>
-            {templates.map(template => (
-              <option key={template.id} value={template.id}>
-                {template.name} ({template.estimated_days} gün)
-              </option>
-            ))}
-          </select>
+            onChange={handleTemplateChange}
+            options={templates.map((template) => ({
+              value: String(template.id),
+              label: `${template.name} (${template.estimated_days} gün)`,
+            }))}
+            allowEmpty
+            emptyLabel="Şablon seçin (opsiyonel)"
+            placeholder="Şablon seçin (opsiyonel)"
+            aria-label="Şablon"
+          />
         </div>
 
         <div className="form-group">
@@ -188,17 +187,18 @@ const ProcessForm: React.FC<ProcessFormProps> = ({
 
         <div className="form-group">
           <label className="form-label">Sorumlu Kişi</label>
-          <select
-            name="assigned_to"
+          <Select
             value={formData.assigned_to}
-            onChange={handleChange}
-            className="form-input"
-          >
-            <option value="">Sorumlu seçin (opsiyonel)</option>
-            {users.map(user => (
-              <option key={user.id} value={user.id}>{user.name}</option>
-            ))}
-          </select>
+            onChange={(v) => setFormData((prev) => ({ ...prev, assigned_to: v }))}
+            options={users.map((user) => ({
+              value: String(user.id),
+              label: user.name,
+            }))}
+            allowEmpty
+            emptyLabel="Sorumlu seçin (opsiyonel)"
+            placeholder="Sorumlu seçin (opsiyonel)"
+            aria-label="Sorumlu kişi"
+          />
         </div>
 
         <div className="form-group">
@@ -217,7 +217,7 @@ const ProcessForm: React.FC<ProcessFormProps> = ({
           <button type="button" className="btn btn-ghost" onClick={onClose} disabled={loading}>
             İptal
           </button>
-          <button type="submit" className="btn btn-primary" disabled={loading}>
+          <button type="submit" className="btn btn-primary" disabled={loading || !formData.user_id}>
             {loading ? 'Başlatılıyor...' : 'Süreci Başlat'}
           </button>
         </div>
@@ -227,4 +227,3 @@ const ProcessForm: React.FC<ProcessFormProps> = ({
 };
 
 export default ProcessForm;
-

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { trainingApi, usersApi } from '@shared/services/api';
+import { trainingApi, usersApi, lookupsApi, type LookupItem } from '@shared/services/api';
+import { Select } from '@shared/components';
 import toast from 'react-hot-toast';
 import { DataTable, ConfirmDialog, EmptyState, Modal } from '../../components/ui';
 import TrainingForm from '../../components/training/TrainingForm';
@@ -19,7 +20,7 @@ interface Training {
   title: string;
   description?: string;
   category?: string;
-  type: 'online' | 'classroom' | 'hybrid';
+  type: string;
   duration_hours?: number;
   is_mandatory: boolean;
   is_active: boolean;
@@ -38,7 +39,7 @@ interface Session {
   end_date?: string;
   max_participants?: number;
   participants_count?: number;
-  status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
+  status: string;
 }
 
 interface User {
@@ -49,12 +50,6 @@ interface User {
 
 type TabType = 'trainings' | 'sessions';
 
-const typeLabels: Record<string, string> = {
-  online: 'Online',
-  classroom: 'Sınıf İçi',
-  hybrid: 'Hibrit',
-};
-
 const statusBadgeClass: Record<string, string> = {
   scheduled: 'badge-info',
   in_progress: 'badge-warning',
@@ -62,26 +57,16 @@ const statusBadgeClass: Record<string, string> = {
   cancelled: 'badge-danger',
 };
 
-const statusLabels: Record<string, string> = {
-  scheduled: 'Planlandı',
-  in_progress: 'Devam Ediyor',
-  completed: 'Tamamlandı',
-  cancelled: 'İptal Edildi',
-};
-
 const TrainingPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('trainings');
 
-  // Trainings state
   const [trainings, setTrainings] = useState<Training[]>([]);
   const [trainingsLoading, setTrainingsLoading] = useState(true);
   const [trainingPage, setTrainingPage] = useState(1);
   const [trainingTotalPages, setTrainingTotalPages] = useState(1);
   const [trainingFormOpen, setTrainingFormOpen] = useState(false);
   const [selectedTraining, setSelectedTraining] = useState<Training | null>(null);
-  const [categories, setCategories] = useState<string[]>([]);
 
-  // Sessions state
   const [sessions, setSessions] = useState<Session[]>([]);
   const [sessionsLoading, setSessionsLoading] = useState(true);
   const [sessionPage, setSessionPage] = useState(1);
@@ -89,31 +74,54 @@ const TrainingPage: React.FC = () => {
   const [sessionFormOpen, setSessionFormOpen] = useState(false);
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
 
-  // Participants modal
   const [participantsModalOpen, setParticipantsModalOpen] = useState(false);
   const [currentSession, setCurrentSession] = useState<Session | null>(null);
-  const [users, setUsers] = useState<User[]>([]);
   const [addParticipantOpen, setAddParticipantOpen] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
   const [selectedUserId, setSelectedUserId] = useState('');
 
-  // Delete state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{ type: 'training' | 'session'; item: Training | Session } | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  const loadCategories = useCallback(async () => {
+  const [typeOptions, setTypeOptions] = useState<LookupItem[]>([]);
+  const [categoryOptions, setCategoryOptions] = useState<LookupItem[]>([]);
+  const [statusOptions, setStatusOptions] = useState<LookupItem[]>([]);
+  const [typeFilter, setTypeFilter] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+
+  const loadLookups = useCallback(async () => {
     try {
-      const response = await trainingApi.categories();
-      setCategories(response.data.data || []);
+      const [typeRes, categoryRes, statusRes] = await Promise.all([
+        lookupsApi.forType('training_type'),
+        lookupsApi.forType('training_category'),
+        lookupsApi.forType('training_session_status'),
+      ]);
+      setTypeOptions(typeRes.data.data ?? []);
+      setCategoryOptions(categoryRes.data.data ?? []);
+      setStatusOptions(statusRes.data.data ?? []);
     } catch {
-      // Silent fail
+      console.error('Eğitim lookup listeleri yüklenemedi');
     }
   }, []);
+
+  const typeLabel = (value: string) =>
+    typeOptions.find((o) => o.value === value)?.label || value;
+
+  const categoryLabel = (value?: string) =>
+    value ? (categoryOptions.find((o) => o.value === value)?.label || value) : '-';
+
+  const statusLabel = (value: string) =>
+    statusOptions.find((o) => o.value === value)?.label || value;
 
   const loadTrainings = useCallback(async () => {
     try {
       setTrainingsLoading(true);
-      const response = await trainingApi.trainings.list({ page: trainingPage });
+      const params: Record<string, string | number> = { page: trainingPage };
+      if (typeFilter) params.type = typeFilter;
+      if (categoryFilter) params.category = categoryFilter;
+      const response = await trainingApi.trainings.list(params);
       const data = response.data.data;
       setTrainings(data.data || []);
       setTrainingTotalPages(data.last_page || 1);
@@ -122,12 +130,14 @@ const TrainingPage: React.FC = () => {
     } finally {
       setTrainingsLoading(false);
     }
-  }, [trainingPage]);
+  }, [trainingPage, typeFilter, categoryFilter]);
 
   const loadSessions = useCallback(async () => {
     try {
       setSessionsLoading(true);
-      const response = await trainingApi.sessions.list({ page: sessionPage });
+      const params: Record<string, string | number> = { page: sessionPage };
+      if (statusFilter) params.status = statusFilter;
+      const response = await trainingApi.sessions.list(params);
       const data = response.data.data;
       setSessions(data.data || []);
       setSessionTotalPages(data.last_page || 1);
@@ -136,7 +146,7 @@ const TrainingPage: React.FC = () => {
     } finally {
       setSessionsLoading(false);
     }
-  }, [sessionPage]);
+  }, [sessionPage, statusFilter]);
 
   const loadUsers = useCallback(async () => {
     try {
@@ -148,21 +158,23 @@ const TrainingPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    void loadLookups();
+  }, [loadLookups]);
+
+  useEffect(() => {
     if (activeTab === 'trainings') {
       loadTrainings();
-      loadCategories();
     } else {
       loadSessions();
+      // Oturum formu için eğitim listesi gerekli
+      if (trainings.length === 0) {
+        void trainingApi.trainings.list({ per_page: 100 }).then((response) => {
+          const data = response.data.data;
+          setTrainings(data.data || data || []);
+        }).catch(() => undefined);
+      }
     }
-  }, [activeTab, loadCategories, loadTrainings, loadSessions]);
-
-  
-
-  
-
-  
-
-  
+  }, [activeTab, loadTrainings, loadSessions, trainings.length]);
 
   const handleTrainingSubmit = async (data: Omit<Training, 'id'>) => {
     if (selectedTraining) {
@@ -191,18 +203,18 @@ const TrainingPage: React.FC = () => {
     setDeleteLoading(true);
     try {
       if (itemToDelete.type === 'training') {
-        await trainingApi.trainings.delete((itemToDelete.item as Training).id);
+        await trainingApi.trainings.delete(itemToDelete.item.id);
         toast.success('Eğitim silindi');
         loadTrainings();
       } else {
-        await trainingApi.sessions.delete((itemToDelete.item as Session).id);
+        await trainingApi.sessions.delete(itemToDelete.item.id);
         toast.success('Oturum silindi');
         loadSessions();
       }
       setDeleteDialogOpen(false);
       setItemToDelete(null);
     } catch {
-      // Error handled by interceptor
+      toast.error('Silme başarısız');
     } finally {
       setDeleteLoading(false);
     }
@@ -217,11 +229,9 @@ const TrainingPage: React.FC = () => {
       setSelectedUserId('');
       loadSessions();
     } catch {
-      // Error handled by interceptor
+      toast.error('Katılımcı eklenemedi');
     }
   };
-
-  const formatDate = (date: string) => new Date(date).toLocaleString('tr-TR');
 
   const trainingColumns = [
     {
@@ -229,43 +239,36 @@ const TrainingPage: React.FC = () => {
       title: 'Eğitim',
       render: (t: Training) => (
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span style={{ fontWeight: 500 }}>{t.title}</span>
-            {t.is_mandatory && (
-              <span className="badge badge-danger" style={{ fontSize: '0.625rem' }}>Zorunlu</span>
-            )}
-          </div>
-          {t.description && (
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{t.description}</div>
-          )}
+          <div style={{ fontWeight: 500 }}>{t.title}</div>
+          {t.is_mandatory && <span className="badge badge-warning" style={{ fontSize: '0.65rem' }}>Zorunlu</span>}
         </div>
       ),
     },
     {
       key: 'category',
       title: 'Kategori',
-      render: (t: Training) => t.category || '-',
+      render: (t: Training) => categoryLabel(t.category),
     },
     {
       key: 'type',
       title: 'Tür',
-      render: (t: Training) => typeLabels[t.type],
+      render: (t: Training) => typeLabel(t.type),
     },
     {
-      key: 'duration',
+      key: 'duration_hours',
       title: 'Süre',
-      render: (t: Training) => t.duration_hours ? `${t.duration_hours} saat` : '-',
+      render: (t: Training) => (t.duration_hours ? `${t.duration_hours} sa` : '-'),
     },
     {
-      key: 'sessions',
-      title: 'Oturumlar',
-      render: (t: Training) => `${t.sessions_count || 0} oturum`,
+      key: 'sessions_count',
+      title: 'Oturum',
+      render: (t: Training) => t.sessions_count ?? 0,
     },
     {
       key: 'status',
       title: 'Durum',
       render: (t: Training) => (
-        <span className={`badge ${t.is_active ? 'badge-success' : 'badge-warning'}`}>
+        <span className={`badge ${t.is_active ? 'badge-success' : 'badge-secondary'}`}>
           {t.is_active ? 'Aktif' : 'Pasif'}
         </span>
       ),
@@ -303,37 +306,32 @@ const TrainingPage: React.FC = () => {
         <div>
           <div style={{ fontWeight: 500 }}>{s.title}</div>
           <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
-            {s.training?.title}
+            {s.training?.title || '-'}
           </div>
         </div>
       ),
     },
     {
-      key: 'instructor',
-      title: 'Eğitmen',
-      render: (s: Session) => s.instructor_name || '-',
+      key: 'start_date',
+      title: 'Başlangıç',
+      render: (s: Session) => new Date(s.start_date).toLocaleString('tr-TR'),
     },
     {
-      key: 'date',
-      title: 'Tarih',
-      render: (s: Session) => formatDate(s.start_date),
+      key: 'location',
+      title: 'Konum',
+      render: (s: Session) => s.location || '-',
     },
     {
-      key: 'participants',
+      key: 'participants_count',
       title: 'Katılımcı',
-      render: (s: Session) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span>{s.participants_count || 0}</span>
-          {s.max_participants && <span style={{ color: 'var(--text-tertiary)' }}>/ {s.max_participants}</span>}
-        </div>
-      ),
+      render: (s: Session) => s.participants_count ?? 0,
     },
     {
       key: 'status',
       title: 'Durum',
       render: (s: Session) => (
-        <span className={`badge ${statusBadgeClass[s.status]}`}>
-          {statusLabels[s.status]}
+        <span className={`badge ${statusBadgeClass[s.status] || 'badge-secondary'}`}>
+          {statusLabel(s.status)}
         </span>
       ),
     },
@@ -344,7 +342,11 @@ const TrainingPage: React.FC = () => {
         <div style={{ display: 'flex', gap: '0.25rem' }}>
           <button
             className="btn btn-ghost btn-icon btn-sm"
-            onClick={() => { setCurrentSession(s); loadUsers(); setParticipantsModalOpen(true); }}
+            onClick={() => {
+              setCurrentSession(s);
+              setParticipantsModalOpen(true);
+              loadUsers();
+            }}
             title="Katılımcılar"
           >
             <BsPeople size={14} />
@@ -370,12 +372,10 @@ const TrainingPage: React.FC = () => {
   ];
 
   return (
-    <div className="animate-fade-in">
-      {/* Page Header */}
+    <div className="animate-fade-in list-page">
       <div className="page-header">
-        <div>
-          <h1 className="page-title">Eğitim Yönetimi</h1>
-          <p className="page-subtitle">Eğitim katalog ve oturum yönetimi</p>
+        <div className="page-header-content">
+          <h1 className="page-title">Eğitimler</h1>
         </div>
         <button
           className="btn btn-primary"
@@ -394,7 +394,6 @@ const TrainingPage: React.FC = () => {
         </button>
       </div>
 
-      {/* Tabs */}
       <div className="tabs" style={{ marginBottom: '1.5rem' }}>
         <button
           className={`tab ${activeTab === 'trainings' ? 'active' : ''}`}
@@ -412,65 +411,107 @@ const TrainingPage: React.FC = () => {
         </button>
       </div>
 
-      {/* Content */}
       {activeTab === 'trainings' ? (
-        trainingsLoading ? (
-          <div className="loading-container"><div className="loading-spinner" /></div>
-        ) : trainings.length === 0 ? (
-          <EmptyState
-            icon={<BsMortarboard size={48} />}
-            title="Henüz eğitim yok"
-            description="Yeni bir eğitim ekleyerek başlayın."
-            action={
-              <button className="btn btn-primary" onClick={() => { setSelectedTraining(null); setTrainingFormOpen(true); }}>
-                <BsPlus size={18} />
-                İlk Eğitimi Ekle
-              </button>
-            }
-          />
-        ) : (
-          <DataTable
-            columns={trainingColumns}
-            data={trainings}
-            currentPage={trainingPage}
-            totalPages={trainingTotalPages}
-            onPageChange={setTrainingPage}
-          />
-        )
-      ) : sessionsLoading ? (
-        <div className="loading-container"><div className="loading-spinner" /></div>
-      ) : sessions.length === 0 ? (
-        <EmptyState
-          icon={<BsCalendarEvent size={48} />}
-          title="Henüz oturum yok"
-          description="Eğitim oturumu planlayarak başlayın."
-          action={
-            <button className="btn btn-primary" onClick={() => { setSelectedSession(null); setSessionFormOpen(true); }}>
-              <BsPlus size={18} />
-              İlk Oturumu Planla
-            </button>
-          }
-        />
+        <>
+          <div className="list-filter-bar" style={{ marginBottom: '1rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <div style={{ minWidth: 160 }}>
+              <Select
+                value={typeFilter}
+                onChange={(v) => { setTypeFilter(v); setTrainingPage(1); }}
+                options={typeOptions.map((o) => ({ value: o.value, label: o.label, color: o.color }))}
+                placeholder="Tür"
+                allowEmpty
+                emptyLabel="Tüm türler"
+                clearable
+                aria-label="Tür filtresi"
+              />
+            </div>
+            <div style={{ minWidth: 160 }}>
+              <Select
+                value={categoryFilter}
+                onChange={(v) => { setCategoryFilter(v); setTrainingPage(1); }}
+                options={categoryOptions.map((o) => ({ value: o.value, label: o.label, color: o.color }))}
+                placeholder="Kategori"
+                allowEmpty
+                emptyLabel="Tüm kategoriler"
+                clearable
+                aria-label="Kategori filtresi"
+              />
+            </div>
+          </div>
+          {trainingsLoading ? (
+            <div className="loading-container"><div className="loading-spinner" /></div>
+          ) : trainings.length === 0 ? (
+            <EmptyState
+              icon={<BsMortarboard size={48} />}
+              title="Henüz eğitim yok"
+              description="Yeni bir eğitim ekleyerek başlayın."
+              action={
+                <button className="btn btn-primary" onClick={() => { setSelectedTraining(null); setTrainingFormOpen(true); }}>
+                  <BsPlus size={18} />
+                  İlk Eğitimi Ekle
+                </button>
+              }
+            />
+          ) : (
+            <DataTable
+              columns={trainingColumns}
+              data={trainings}
+              currentPage={trainingPage}
+              totalPages={trainingTotalPages}
+              onPageChange={setTrainingPage}
+            />
+          )}
+        </>
       ) : (
-        <DataTable
-          columns={sessionColumns}
-          data={sessions}
-          currentPage={sessionPage}
-          totalPages={sessionTotalPages}
-          onPageChange={setSessionPage}
-        />
+        <>
+          <div className="list-filter-bar" style={{ marginBottom: '1rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <div style={{ minWidth: 180 }}>
+              <Select
+                value={statusFilter}
+                onChange={(v) => { setStatusFilter(v); setSessionPage(1); }}
+                options={statusOptions.map((o) => ({ value: o.value, label: o.label, color: o.color }))}
+                placeholder="Durum"
+                allowEmpty
+                emptyLabel="Tüm durumlar"
+                clearable
+                aria-label="Durum filtresi"
+              />
+            </div>
+          </div>
+          {sessionsLoading ? (
+            <div className="loading-container"><div className="loading-spinner" /></div>
+          ) : sessions.length === 0 ? (
+            <EmptyState
+              icon={<BsCalendarEvent size={48} />}
+              title="Henüz oturum yok"
+              description="Eğitim oturumu planlayarak başlayın."
+              action={
+                <button className="btn btn-primary" onClick={() => { setSelectedSession(null); setSessionFormOpen(true); }}>
+                  <BsPlus size={18} />
+                  İlk Oturumu Planla
+                </button>
+              }
+            />
+          ) : (
+            <DataTable
+              columns={sessionColumns}
+              data={sessions}
+              currentPage={sessionPage}
+              totalPages={sessionTotalPages}
+              onPageChange={setSessionPage}
+            />
+          )}
+        </>
       )}
 
-      {/* Training Form */}
       <TrainingForm
         isOpen={trainingFormOpen}
         onClose={() => { setTrainingFormOpen(false); setSelectedTraining(null); }}
         onSubmit={handleTrainingSubmit}
         training={selectedTraining}
-        categories={categories}
       />
 
-      {/* Session Form */}
       <SessionForm
         isOpen={sessionFormOpen}
         onClose={() => { setSessionFormOpen(false); setSelectedSession(null); }}
@@ -479,7 +520,6 @@ const TrainingPage: React.FC = () => {
         trainings={trainings}
       />
 
-      {/* Participants Modal */}
       <Modal
         isOpen={participantsModalOpen}
         onClose={() => setParticipantsModalOpen(false)}
@@ -496,47 +536,43 @@ const TrainingPage: React.FC = () => {
           </button>
         </div>
         <p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '2rem' }}>
-          Katılımcı listesi API'den yüklenecek.
+          Katılımcı listesi API&apos;den yüklenecek.
         </p>
       </Modal>
 
-      {/* Add Participant Modal */}
       <Modal
         isOpen={addParticipantOpen}
-        onClose={() => { setAddParticipantOpen(false); setSelectedUserId(''); }}
+        onClose={() => setAddParticipantOpen(false)}
         title="Katılımcı Ekle"
         size="sm"
       >
         <div className="form-group">
           <label className="form-label">Kullanıcı</label>
-          <select
+          <Select
             value={selectedUserId}
-            onChange={(e) => setSelectedUserId(e.target.value)}
-            className="form-input"
-          >
-            <option value="">Seçin...</option>
-            {users.map(u => (
-              <option key={u.id} value={u.id}>{u.name} ({u.email})</option>
-            ))}
-          </select>
+            onChange={setSelectedUserId}
+            options={users.map((u) => ({
+              value: String(u.id),
+              label: `${u.name} (${u.email})`,
+            }))}
+            placeholder="Seçin..."
+            aria-label="Kullanıcı"
+          />
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1rem' }}>
-          <button className="btn btn-ghost" onClick={() => { setAddParticipantOpen(false); setSelectedUserId(''); }}>
-            İptal
-          </button>
+          <button className="btn btn-ghost" onClick={() => setAddParticipantOpen(false)}>İptal</button>
           <button className="btn btn-primary" onClick={handleAddParticipant} disabled={!selectedUserId}>
             Ekle
           </button>
         </div>
       </Modal>
 
-      {/* Delete Confirm */}
       <ConfirmDialog
         isOpen={deleteDialogOpen}
-        onClose={() => { setDeleteDialogOpen(false); setItemToDelete(null); }}
+        onClose={() => setDeleteDialogOpen(false)}
         onConfirm={handleDelete}
         title={itemToDelete?.type === 'training' ? 'Eğitimi Sil' : 'Oturumu Sil'}
-        message={`"${(itemToDelete?.item as Training | Session)?.title}" silinecek. Emin misiniz?`}
+        message="Bu kaydı silmek istediğinize emin misiniz?"
         confirmText="Sil"
         variant="danger"
         loading={deleteLoading}
@@ -546,4 +582,3 @@ const TrainingPage: React.FC = () => {
 };
 
 export default TrainingPage;
-

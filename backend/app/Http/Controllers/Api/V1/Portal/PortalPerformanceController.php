@@ -8,11 +8,16 @@ use App\Models\Employee;
 use App\Models\KeyResult;
 use App\Models\Objective;
 use App\Models\PerformanceReview;
+use App\Services\LookupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class PortalPerformanceController extends BaseController
 {
+    public function __construct(
+        protected LookupService $lookups,
+    ) {}
+
     /**
      * Çalışanın performans değerlendirmelerini listele
      */
@@ -34,7 +39,13 @@ class PortalPerformanceController extends BaseController
             ]);
 
         // Durum filtresi
-        if ($request->has('status')) {
+        if ($request->filled('status')) {
+            $this->lookups->assertValid(
+                LookupService::TYPE_PERFORMANCE_REVIEW_STATUS,
+                $request->string('status')->toString(),
+                $user->company_id,
+                'status'
+            );
             $query->where('status', $request->status);
         }
 
@@ -213,21 +224,30 @@ class PortalPerformanceController extends BaseController
 
         $query = ContinuousFeedback::where('company_id', $user->company_id)
             ->where(function ($q) use ($user) {
-                $q->where('employee_id', $user->id) // Kendisine verilen geri bildirimler
-                    ->orWhere('given_by_id', $user->id); // Kendisinin verdiği geri bildirimler
+                $q->where('to_user_id', $user->id)
+                    ->orWhere('from_user_id', $user->id);
             })
             ->with([
-                'employee:id,name,email',
-                'givenBy:id,name,email',
+                'fromUser:id,name,email',
+                'toUser:id,name,email',
             ]);
 
-        // Filtreleme
         if ($request->boolean('received_only')) {
-            $query->where('employee_id', $user->id);
+            $query->where('to_user_id', $user->id);
         }
 
         if ($request->boolean('given_only')) {
-            $query->where('given_by_id', $user->id);
+            $query->where('from_user_id', $user->id);
+        }
+
+        if ($request->filled('type')) {
+            $this->lookups->assertValid(
+                LookupService::TYPE_CONTINUOUS_FEEDBACK_TYPE,
+                $request->string('type')->toString(),
+                $user->company_id,
+                'type'
+            );
+            $query->where('type', $request->type);
         }
 
         $feedbacks = $query->orderByDesc('created_at')
@@ -245,10 +265,17 @@ class PortalPerformanceController extends BaseController
 
         $validated = $request->validate([
             'employee_id' => 'required|exists:users,id',
-            'type' => 'required|in:positive,constructive,development',
+            'type' => 'required|string|max:100',
             'content' => 'required|string|max:1000',
             'is_anonymous' => 'boolean',
         ]);
+
+        $this->lookups->assertValid(
+            LookupService::TYPE_CONTINUOUS_FEEDBACK_TYPE,
+            $validated['type'],
+            $user->company_id,
+            'type'
+        );
 
         // Aynı firmada mı?
         $targetEmployee = \App\Models\User::where('id', $validated['employee_id'])
@@ -261,11 +288,12 @@ class PortalPerformanceController extends BaseController
 
         $feedback = ContinuousFeedback::create([
             'company_id' => $user->company_id,
-            'employee_id' => $validated['employee_id'],
-            'given_by_id' => $validated['is_anonymous'] ? null : $user->id,
+            'to_user_id' => $validated['employee_id'],
+            'from_user_id' => $user->id,
             'type' => $validated['type'],
             'content' => $validated['content'],
             'is_anonymous' => $validated['is_anonymous'] ?? false,
+            'created_by' => $user->id,
         ]);
 
         \App\Models\ActivityLog::log('create', $feedback, 'Geri bildirim gönderildi');

@@ -16,7 +16,7 @@ interface Task {
   title: string;
   description?: string;
   type: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'skipped';
+  status: string;
   is_required: boolean;
   due_date?: string;
   completed_at?: string;

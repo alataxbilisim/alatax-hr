@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\ActivityLog;
 use App\Models\ExpenseClaim;
 use App\Services\DataScopeService;
+use App\Services\LookupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -16,6 +17,7 @@ class ExpenseClaimController extends BaseController
 {
     public function __construct(
         protected DataScopeService $dataScope,
+        protected LookupService $lookups,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -28,7 +30,13 @@ class ExpenseClaimController extends BaseController
 
         $this->dataScope->scopeForUser($query, $request->user());
 
-        if ($request->has('status')) {
+        if ($request->filled('status')) {
+            $this->lookups->assertValid(
+                LookupService::TYPE_EXPENSE_CLAIM_STATUS,
+                $request->string('status')->toString(),
+                $this->getCompanyId(),
+                'status'
+            );
             $query->where('status', $request->status);
         }
 

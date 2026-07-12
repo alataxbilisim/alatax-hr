@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../ui';
+import { lookupsApi, type LookupItem } from '@shared/services/api';
+import { Select } from '@shared/components';
+import toast from 'react-hot-toast';
 
 interface Category {
   id: number;
@@ -18,8 +21,8 @@ interface Asset {
   purchase_date?: string;
   purchase_price?: number;
   warranty_end_date?: string;
-  status: 'available' | 'assigned' | 'maintenance' | 'retired';
-  condition: 'new' | 'good' | 'fair' | 'poor';
+  status: string;
+  condition: string;
 }
 
 interface AssetFormProps {
@@ -30,20 +33,6 @@ interface AssetFormProps {
   categories: Category[];
 }
 
-const statusLabels: Record<string, string> = {
-  available: 'Müsait',
-  assigned: 'Zimmetli',
-  maintenance: 'Bakımda',
-  retired: 'Emekli',
-};
-
-const conditionLabels: Record<string, string> = {
-  new: 'Yeni',
-  good: 'İyi',
-  fair: 'Orta',
-  poor: 'Kötü',
-};
-
 const AssetForm: React.FC<AssetFormProps> = ({
   isOpen,
   onClose,
@@ -52,6 +41,8 @@ const AssetForm: React.FC<AssetFormProps> = ({
   categories,
 }) => {
   const [loading, setLoading] = useState(false);
+  const [statusOptions, setStatusOptions] = useState<LookupItem[]>([]);
+  const [conditionOptions, setConditionOptions] = useState<LookupItem[]>([]);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -63,43 +54,53 @@ const AssetForm: React.FC<AssetFormProps> = ({
     purchase_date: '',
     purchase_price: '',
     warranty_end_date: '',
-    status: 'available' as Asset['status'],
-    condition: 'new' as Asset['condition'],
+    status: 'available',
+    condition: 'new',
   });
 
   useEffect(() => {
-    if (isOpen) {
-      if (asset) {
-        setFormData({
-          name: asset.name,
-          description: asset.description || '',
-          category_id: asset.category_id ? String(asset.category_id) : '',
-          asset_code: asset.asset_code || '',
-          serial_number: asset.serial_number || '',
-          brand: asset.brand || '',
-          model: asset.model || '',
-          purchase_date: asset.purchase_date?.split('T')[0] || '',
-          purchase_price: asset.purchase_price ? String(asset.purchase_price) : '',
-          warranty_end_date: asset.warranty_end_date?.split('T')[0] || '',
-          status: asset.status,
-          condition: asset.condition,
-        });
-      } else {
-        setFormData({
-          name: '',
-          description: '',
-          category_id: '',
-          asset_code: '',
-          serial_number: '',
-          brand: '',
-          model: '',
-          purchase_date: '',
-          purchase_price: '',
-          warranty_end_date: '',
-          status: 'available',
-          condition: 'new',
-        });
-      }
+    if (!isOpen) return;
+
+    Promise.all([
+      lookupsApi.forType('asset_status'),
+      lookupsApi.forType('asset_condition'),
+    ])
+      .then(([statusRes, conditionRes]) => {
+        setStatusOptions(statusRes.data.data ?? []);
+        setConditionOptions(conditionRes.data.data ?? []);
+      })
+      .catch(() => toast.error('Lookup listeleri yüklenemedi'));
+
+    if (asset) {
+      setFormData({
+        name: asset.name,
+        description: asset.description || '',
+        category_id: asset.category_id ? String(asset.category_id) : '',
+        asset_code: asset.asset_code || '',
+        serial_number: asset.serial_number || '',
+        brand: asset.brand || '',
+        model: asset.model || '',
+        purchase_date: asset.purchase_date?.split('T')[0] || '',
+        purchase_price: asset.purchase_price ? String(asset.purchase_price) : '',
+        warranty_end_date: asset.warranty_end_date?.split('T')[0] || '',
+        status: asset.status,
+        condition: asset.condition,
+      });
+    } else {
+      setFormData({
+        name: '',
+        description: '',
+        category_id: '',
+        asset_code: '',
+        serial_number: '',
+        brand: '',
+        model: '',
+        purchase_date: '',
+        purchase_price: '',
+        warranty_end_date: '',
+        status: 'available',
+        condition: 'new',
+      });
     }
   }, [isOpen, asset]);
 
@@ -269,29 +270,31 @@ const AssetForm: React.FC<AssetFormProps> = ({
 
           <div className="form-group">
             <label className="form-label">Durum</label>
-            <select
-              name="status"
+            <Select
               value={formData.status}
-              onChange={handleChange}
-              className="form-select"
-            >
-              {Object.entries(statusLabels).map(([value, label]) => (
-                <option key={value} value={value}>{label}</option>
-              ))}
-            </select>
+              onChange={(v) => setFormData((prev) => ({ ...prev, status: v }))}
+              options={statusOptions.map((opt) => ({
+                value: opt.value,
+                label: opt.label,
+                color: opt.color,
+              }))}
+              placeholder="Seçiniz..."
+              aria-label="Durum"
+            />
           </div>
           <div className="form-group">
             <label className="form-label">Kondisyon</label>
-            <select
-              name="condition"
+            <Select
               value={formData.condition}
-              onChange={handleChange}
-              className="form-select"
-            >
-              {Object.entries(conditionLabels).map(([value, label]) => (
-                <option key={value} value={value}>{label}</option>
-              ))}
-            </select>
+              onChange={(v) => setFormData((prev) => ({ ...prev, condition: v }))}
+              options={conditionOptions.map((opt) => ({
+                value: opt.value,
+                label: opt.label,
+                color: opt.color,
+              }))}
+              placeholder="Seçiniz..."
+              aria-label="Kondisyon"
+            />
           </div>
         </div>
       </form>
@@ -300,4 +303,3 @@ const AssetForm: React.FC<AssetFormProps> = ({
 };
 
 export default AssetForm;
-

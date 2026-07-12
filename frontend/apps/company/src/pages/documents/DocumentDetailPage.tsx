@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { documentsApi } from '@shared/services/api';
+import { documentsApi, lookupsApi, type LookupItem } from '@shared/services/api';
+import { Select } from '@shared/components';
 import toast from 'react-hot-toast';
 import { ConfirmDialog, Modal } from '../../components/ui';
 import {
@@ -64,6 +65,7 @@ const DocumentDetailPage: React.FC = () => {
   const [document, setDocument] = useState<DocumentDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [approvalStatusOptions, setApprovalStatusOptions] = useState<LookupItem[]>([]);
   
   // Edit modal
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -100,16 +102,21 @@ const DocumentDetailPage: React.FC = () => {
     }
   }, []);
 
-  useEffect(() => {
-    if (id) {
-      loadDocument();
-      loadCategories();
+  const loadLookups = useCallback(async () => {
+    try {
+      const res = await lookupsApi.forType('document_approval_status');
+      setApprovalStatusOptions(res.data.data ?? []);
+    } catch {
+      console.error('Onay durumu lookup yüklenemedi');
     }
-  }, [id, loadDocument, loadCategories]);
+  }, []);
 
-  
-
-  
+  useEffect(() => {
+    if (!id) return;
+    void loadDocument();
+    void loadCategories();
+    void loadLookups();
+  }, [id, loadDocument, loadCategories, loadLookups]);
 
   const handleDownload = async () => {
     if (!document) return;
@@ -228,14 +235,16 @@ const DocumentDetailPage: React.FC = () => {
   };
 
   const getApprovalStatusBadge = (status?: string) => {
-    const statusMap: Record<string, { label: string; className: string }> = {
-      draft: { label: 'Taslak', className: 'badge-secondary' },
-      pending: { label: 'Onay Bekliyor', className: 'badge-warning' },
-      approved: { label: 'Onaylandı', className: 'badge-success' },
-      rejected: { label: 'Reddedildi', className: 'badge-danger' },
+    const value = status || 'approved';
+    const lookup = approvalStatusOptions.find((o) => o.value === value);
+    const label = lookup?.label || value;
+    const classMap: Record<string, string> = {
+      draft: 'badge-secondary',
+      pending: 'badge-warning',
+      approved: 'badge-success',
+      rejected: 'badge-danger',
     };
-    const info = statusMap[status || 'approved'] || statusMap.approved;
-    return <span className={`badge ${info.className}`}>{info.label}</span>;
+    return <span className={`badge ${classMap[value] || 'badge-secondary'}`}>{label}</span>;
   };
 
   if (loading) {
@@ -533,16 +542,19 @@ const DocumentDetailPage: React.FC = () => {
         </div>
         <div className="form-group">
           <label className="form-label">Kategori</label>
-          <select
-            className="form-control"
+          <Select
             value={editFormData.category_id}
-            onChange={(e) => setEditFormData({ ...editFormData, category_id: e.target.value })}
-          >
-            <option value="">Kategori seçin</option>
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>{cat.name}</option>
-            ))}
-          </select>
+            onChange={(v) => setEditFormData({ ...editFormData, category_id: v })}
+            options={categories.map((cat) => ({
+              value: String(cat.id),
+              label: cat.name,
+            }))}
+            placeholder="Kategori seçin"
+            allowEmpty
+            emptyLabel="Kategori seçin"
+            clearable
+            aria-label="Kategori"
+          />
         </div>
         <div className="form-group">
           <label className="form-label">Açıklama</label>

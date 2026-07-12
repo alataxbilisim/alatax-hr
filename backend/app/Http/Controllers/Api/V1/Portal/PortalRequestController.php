@@ -6,12 +6,17 @@ use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\Employee;
 use App\Models\EmployeeRequest;
 use App\Models\RequestType;
+use App\Services\LookupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class PortalRequestController extends BaseController
 {
+    public function __construct(
+        protected LookupService $lookups,
+    ) {}
+
     /**
      * Talep türlerini listele
      */
@@ -44,7 +49,13 @@ class PortalRequestController extends BaseController
             ->orderByDesc('created_at');
 
         // Durum filtresi
-        if ($request->has('status')) {
+        if ($request->filled('status')) {
+            $this->lookups->assertValid(
+                LookupService::TYPE_EMPLOYEE_REQUEST_STATUS,
+                $request->string('status')->toString(),
+                $this->getCompanyId(),
+                'status'
+            );
             $query->where('status', $request->status);
         }
 
@@ -99,11 +110,18 @@ class PortalRequestController extends BaseController
             'title' => 'required|string|max:255',
             'description' => 'nullable|string|max:2000',
             'form_data' => 'nullable|array',
-            'priority' => 'nullable|in:low,normal,high,urgent',
+            'priority' => 'nullable|string|max:100',
             'effective_date' => 'nullable|date',
             'attachments' => 'nullable|array',
             'attachments.*' => 'file|max:10240', // Max 10MB per file
         ]);
+
+        $this->lookups->assertValid(
+            LookupService::TYPE_EMPLOYEE_REQUEST_PRIORITY,
+            $validated['priority'] ?? null,
+            $this->getCompanyId(),
+            'priority'
+        );
 
         // Talep türünü kontrol et
         $requestType = RequestType::where('id', $validated['request_type_id'])
@@ -186,9 +204,18 @@ class PortalRequestController extends BaseController
             'title' => 'sometimes|required|string|max:255',
             'description' => 'sometimes|nullable|string|max:2000',
             'form_data' => 'sometimes|nullable|array',
-            'priority' => 'sometimes|nullable|in:low,normal,high,urgent',
+            'priority' => 'sometimes|nullable|string|max:100',
             'effective_date' => 'sometimes|nullable|date',
         ]);
+
+        if (array_key_exists('priority', $validated)) {
+            $this->lookups->assertValid(
+                LookupService::TYPE_EMPLOYEE_REQUEST_PRIORITY,
+                $validated['priority'] ?? null,
+                $this->getCompanyId(),
+                'priority'
+            );
+        }
 
         $employeeRequest->update($validated);
 

@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BsLaptop, BsArrowRight, BsCalendar } from 'react-icons/bs';
+import { lookupsApi, type LookupItem } from '@shared/services/api';
 
 export interface EmployeeAssetItem {
   id: number;
@@ -34,8 +35,25 @@ interface AssetsTabProps {
   history: EmployeeAssetAssignment[];
 }
 
+const statusBadgeClass: Record<string, string> = {
+  available: 'badge-success',
+  assigned: 'badge-info',
+  maintenance: 'badge-warning',
+  disposed: 'badge-secondary',
+};
+
 const AssetsTab: React.FC<AssetsTabProps> = ({ active, history }) => {
   const navigate = useNavigate();
+  const [statusOptions, setStatusOptions] = useState<LookupItem[]>([]);
+
+  useEffect(() => {
+    lookupsApi
+      .forType('asset_status')
+      .then((res) => setStatusOptions(res.data.data ?? []))
+      .catch(() => {
+        console.error('Varlık durum lookup yüklenemedi');
+      });
+  }, []);
 
   const formatDate = (date?: string) => {
     if (!date) return '-';
@@ -43,14 +61,9 @@ const AssetsTab: React.FC<AssetsTabProps> = ({ active, history }) => {
   };
 
   const getStatusBadge = (status: string) => {
-    const map: Record<string, { label: string; className: string }> = {
-      available: { label: 'Müsait', className: 'badge-success' },
-      assigned: { label: 'Zimmetli', className: 'badge-info' },
-      maintenance: { label: 'Bakımda', className: 'badge-warning' },
-      retired: { label: 'Emekli', className: 'badge-secondary' },
-    };
-    const info = map[status] || { label: status, className: 'badge-secondary' };
-    return <span className={`badge ${info.className}`}>{info.label}</span>;
+    const label = statusOptions.find((o) => o.value === status)?.label || status;
+    const className = statusBadgeClass[status] || 'badge-secondary';
+    return <span className={`badge ${className}`}>{label}</span>;
   };
 
   return (
@@ -170,4 +183,3 @@ const AssetsTab: React.FC<AssetsTabProps> = ({ active, history }) => {
 };
 
 export default AssetsTab;
-

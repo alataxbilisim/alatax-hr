@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { performanceApi } from '@shared/services/api';
+import { performanceApi, lookupsApi, type LookupItem } from '@shared/services/api';
 import toast from 'react-hot-toast';
 import { DataTable, ConfirmDialog, EmptyState } from '../../components/ui';
 import PeriodForm from '../../components/performance/PeriodForm';
@@ -24,7 +24,7 @@ interface Period {
   description?: string;
   start_date: string;
   end_date: string;
-  status: 'draft' | 'active' | 'closed';
+  status: string;
   reviews_count?: number;
 }
 
@@ -42,7 +42,7 @@ interface Review {
   period: { id: number; name: string };
   employee: { id: number; name: string; email: string };
   reviewer: { id: number; name: string };
-  status: 'draft' | 'submitted' | 'approved' | 'rejected';
+  status: string;
   overall_score?: number;
   created_at: string;
 }
@@ -58,27 +58,16 @@ const statusBadgeClass: Record<string, string> = {
   rejected: 'badge-danger',
 };
 
-const statusLabels: Record<string, string> = {
-  draft: 'Taslak',
-  active: 'Aktif',
-  closed: 'Kapalı',
-  submitted: 'Gönderildi',
-  approved: 'Onaylandı',
-  rejected: 'Reddedildi',
-};
-
 const PerformancePage: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>('reviews');
 
-  // Reviews state
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(true);
   const [reviewPage, setReviewPage] = useState(1);
   const [reviewTotalPages, setReviewTotalPages] = useState(1);
   const [reviewFormOpen, setReviewFormOpen] = useState(false);
 
-  // Periods state
   const [periods, setPeriods] = useState<Period[]>([]);
   const [periodsLoading, setPeriodsLoading] = useState(true);
   const [periodPage, setPeriodPage] = useState(1);
@@ -86,16 +75,36 @@ const PerformancePage: React.FC = () => {
   const [periodFormOpen, setPeriodFormOpen] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<Period | null>(null);
 
-  // Criteria state
   const [criteria, setCriteria] = useState<Criteria[]>([]);
   const [criteriaLoading, setCriteriaLoading] = useState(true);
   const [criteriaFormOpen, setCriteriaFormOpen] = useState(false);
   const [selectedCriteria, setSelectedCriteria] = useState<Criteria | null>(null);
 
-  // Delete state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{ type: 'period' | 'criteria' | 'review'; item: Period | Criteria | Review } | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const [periodStatusOptions, setPeriodStatusOptions] = useState<LookupItem[]>([]);
+  const [reviewStatusOptions, setReviewStatusOptions] = useState<LookupItem[]>([]);
+
+  const loadLookups = useCallback(async () => {
+    try {
+      const [periodRes, reviewRes] = await Promise.all([
+        lookupsApi.forType('performance_period_status'),
+        lookupsApi.forType('performance_review_status'),
+      ]);
+      setPeriodStatusOptions(periodRes.data.data ?? []);
+      setReviewStatusOptions(reviewRes.data.data ?? []);
+    } catch {
+      console.error('Performans lookup listeleri yüklenemedi');
+    }
+  }, []);
+
+  const periodStatusLabel = (value: string) =>
+    periodStatusOptions.find((o) => o.value === value)?.label || value;
+
+  const reviewStatusLabel = (value: string) =>
+    reviewStatusOptions.find((o) => o.value === value)?.label || value;
 
   const loadReviews = useCallback(async () => {
     try {
@@ -138,6 +147,10 @@ const PerformancePage: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    void loadLookups();
+  }, [loadLookups]);
+
+  useEffect(() => {
     if (activeTab === 'reviews') {
       loadReviews();
     } else if (activeTab === 'periods') {
@@ -146,12 +159,6 @@ const PerformancePage: React.FC = () => {
       loadCriteria();
     }
   }, [activeTab, loadReviews, loadPeriods, loadCriteria]);
-
-  
-
-  
-
-  
 
   const handlePeriodSubmit = async (data: Omit<Period, 'id' | 'status'>) => {
     if (selectedPeriod) {
@@ -259,8 +266,8 @@ const PerformancePage: React.FC = () => {
       key: 'status',
       title: 'Durum',
       render: (review: Review) => (
-        <span className={`badge ${statusBadgeClass[review.status]}`}>
-          {statusLabels[review.status]}
+        <span className={`badge ${statusBadgeClass[review.status] || 'badge-secondary'}`}>
+          {reviewStatusLabel(review.status)}
         </span>
       ),
     },
@@ -320,8 +327,8 @@ const PerformancePage: React.FC = () => {
       key: 'status',
       title: 'Durum',
       render: (period: Period) => (
-        <span className={`badge ${statusBadgeClass[period.status]}`}>
-          {statusLabels[period.status]}
+        <span className={`badge ${statusBadgeClass[period.status] || 'badge-secondary'}`}>
+          {periodStatusLabel(period.status)}
         </span>
       ),
     },
@@ -520,7 +527,6 @@ const PerformancePage: React.FC = () => {
 
   return (
     <div className="animate-fade-in">
-      {/* Page Header */}
       <div className="page-header">
         <div>
           <h1 className="page-title">Performans Değerlendirme</h1>
@@ -545,7 +551,6 @@ const PerformancePage: React.FC = () => {
         </button>
       </div>
 
-      {/* Tabs */}
       <div className="tabs" style={{ marginBottom: '1.5rem' }}>
         <button
           className={`tab ${activeTab === 'reviews' ? 'active' : ''}`}
@@ -570,10 +575,8 @@ const PerformancePage: React.FC = () => {
         </button>
       </div>
 
-      {/* Content */}
       {renderContent()}
 
-      {/* Forms */}
       <PeriodForm
         isOpen={periodFormOpen}
         onClose={() => { setPeriodFormOpen(false); setSelectedPeriod(null); }}
@@ -594,7 +597,6 @@ const PerformancePage: React.FC = () => {
         onSuccess={loadReviews}
       />
 
-      {/* Delete Confirm */}
       <ConfirmDialog
         isOpen={deleteDialogOpen}
         onClose={() => { setDeleteDialogOpen(false); setItemToDelete(null); }}
@@ -610,4 +612,3 @@ const PerformancePage: React.FC = () => {
 };
 
 export default PerformancePage;
-

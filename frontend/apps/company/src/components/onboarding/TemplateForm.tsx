@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../ui';
+import { Select } from '@shared/components';
 import { BsPlus, BsTrash, BsGripVertical } from 'react-icons/bs';
 
 interface Task {
@@ -35,7 +36,8 @@ interface TemplateFormProps {
   } | null;
 }
 
-const taskTypes = [
+/** Motor dışı — lookup değil; sabit seçenekler + Select */
+const TASK_TYPE_OPTIONS = [
   { value: 'document_upload', label: 'Evrak Yükleme' },
   { value: 'document_fill', label: 'Form Doldurma' },
   { value: 'training', label: 'Eğitim' },
@@ -87,7 +89,7 @@ const TemplateForm: React.FC<TemplateFormProps> = ({
     }
   }, [isOpen, template]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
     setFormData(prev => ({
@@ -225,16 +227,15 @@ const TemplateForm: React.FC<TemplateFormProps> = ({
                         required
                         style={{ flex: 2 }}
                       />
-                      <select
-                        value={task.type}
-                        onChange={(e) => handleTaskChange(index, 'type', e.target.value)}
-                        className="form-input"
-                        style={{ flex: 1 }}
-                      >
-                        {taskTypes.map(t => (
-                          <option key={t.value} value={t.value}>{t.label}</option>
-                        ))}
-                      </select>
+                      <div style={{ flex: 1 }}>
+                        <Select
+                          value={task.type}
+                          onChange={(v) => handleTaskChange(index, 'type', v)}
+                          options={TASK_TYPE_OPTIONS}
+                          placeholder="Görev tipi"
+                          aria-label={`Görev tipi ${index + 1}`}
+                        />
+                      </div>
                     </div>
                     <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                       <input

@@ -5,19 +5,35 @@ namespace App\Http\Controllers\Api\V1\Performance;
 use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\ActivityLog;
 use App\Models\PerformancePeriod;
+use App\Services\LookupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class PeriodController extends BaseController
 {
+    public function __construct(
+        protected LookupService $lookups,
+    ) {}
+
     /**
      * Dönem listesi
      */
     public function index(Request $request): JsonResponse
     {
-        $periods = PerformancePeriod::where('company_id', $this->getCompanyId())
-            ->withCount('reviews')
-            ->orderBy('start_date', 'desc')
+        $query = PerformancePeriod::where('company_id', $this->getCompanyId())
+            ->withCount('reviews');
+
+        if ($request->filled('status')) {
+            $this->lookups->assertValid(
+                LookupService::TYPE_PERFORMANCE_PERIOD_STATUS,
+                $request->string('status')->toString(),
+                $this->getCompanyId(),
+                'status'
+            );
+            $query->where('status', $request->status);
+        }
+
+        $periods = $query->orderBy('start_date', 'desc')
             ->paginate($request->get('per_page', 15));
 
         return $this->success($periods, 'Performans dönemleri listelendi');
@@ -70,9 +86,17 @@ class PeriodController extends BaseController
             'name' => 'sometimes|required|string|max:255',
             'start_date' => 'sometimes|required|date',
             'end_date' => 'sometimes|required|date|after:start_date',
-            'status' => 'sometimes|in:draft,active,closed',
+            'status' => 'sometimes|string|max:100',
             'description' => 'nullable|string',
         ]);
+
+        $companyId = $this->getCompanyId();
+        $this->lookups->assertValid(
+            LookupService::TYPE_PERFORMANCE_PERIOD_STATUS,
+            $validated['status'] ?? null,
+            $companyId,
+            'status'
+        );
 
         $oldValues = $period->getOriginal();
         $period->update($validated);

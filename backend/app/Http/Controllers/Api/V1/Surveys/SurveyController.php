@@ -8,6 +8,7 @@ use App\Models\Survey;
 use App\Models\SurveyQuestion;
 use App\Models\SurveyResponse;
 use App\Models\SurveySubmission;
+use App\Services\LookupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +16,9 @@ use Illuminate\Support\Str;
 
 class SurveyController extends BaseController
 {
+    public function __construct(
+        protected LookupService $lookups,
+    ) {}
     /**
      * Anket listesi
      */
@@ -58,7 +62,7 @@ class SurveyController extends BaseController
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'type' => 'required|in:engagement,satisfaction,pulse,enps,onboarding,exit,custom',
+            'type' => 'required|string|max:100',
             'is_anonymous' => 'boolean',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after:start_date',
@@ -67,7 +71,7 @@ class SurveyController extends BaseController
             'audience_filter' => 'nullable|array',
             'questions' => 'required|array|min:1',
             'questions.*.question_text' => 'required|string',
-            'questions.*.question_type' => 'required|in:single_choice,multiple_choice,rating,nps,text,scale,matrix',
+            'questions.*.question_type' => 'required|string|max:100',
             'questions.*.options' => 'nullable|array',
             'questions.*.min_value' => 'nullable|integer',
             'questions.*.max_value' => 'nullable|integer',
@@ -75,10 +79,26 @@ class SurveyController extends BaseController
             'questions.*.category' => 'nullable|string',
         ]);
 
+        $companyId = $this->getCompanyId();
+        $this->lookups->assertValid(
+            LookupService::TYPE_SURVEY_TYPE,
+            $validated['type'],
+            $companyId,
+            'type'
+        );
+        foreach ($validated['questions'] as $index => $questionData) {
+            $this->lookups->assertValid(
+                LookupService::TYPE_SURVEY_QUESTION_TYPE,
+                $questionData['question_type'] ?? null,
+                $companyId,
+                "questions.{$index}.question_type"
+            );
+        }
+
         DB::beginTransaction();
         try {
             $survey = Survey::create([
-                'company_id' => $this->getCompanyId(),
+                'company_id' => $companyId,
                 'title' => $validated['title'],
                 'description' => $validated['description'] ?? null,
                 'type' => $validated['type'],

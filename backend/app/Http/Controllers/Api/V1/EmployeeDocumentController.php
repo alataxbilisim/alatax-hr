@@ -154,18 +154,25 @@ class EmployeeDocumentController extends BaseController
             'issue_date' => 'nullable|date',
             'expiry_date' => 'nullable|date',
             'is_visible_to_employee' => 'boolean',
-            'status' => 'sometimes|in:active,archived,expired',
+            'status' => 'sometimes|nullable|string|max:100',
             'notes' => 'nullable|string',
         ]);
 
+        $companyId = $this->getCompanyId();
         if (array_key_exists('category', $validated)) {
             $this->lookups->assertValid(
                 LookupService::TYPE_EMPLOYEE_DOCUMENT_CATEGORY,
                 $validated['category'] ?? null,
-                $this->getCompanyId(),
+                $companyId,
                 'category'
             );
         }
+        $this->lookups->assertValid(
+            LookupService::TYPE_EMPLOYEE_DOCUMENT_STATUS,
+            $validated['status'] ?? null,
+            $companyId,
+            'status'
+        );
 
         $oldValues = $document->toArray();
 

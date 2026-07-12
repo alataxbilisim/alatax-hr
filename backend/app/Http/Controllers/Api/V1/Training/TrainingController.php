@@ -5,11 +5,16 @@ namespace App\Http\Controllers\Api\V1\Training;
 use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\ActivityLog;
 use App\Models\Training;
+use App\Services\LookupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class TrainingController extends BaseController
 {
+    public function __construct(
+        protected LookupService $lookups,
+    ) {}
+
     /**
      * Eğitim listesi
      */
@@ -49,7 +54,7 @@ class TrainingController extends BaseController
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'category' => 'nullable|string|max:100',
-            'type' => 'required|in:online,classroom,hybrid',
+            'type' => 'required|string|max:100',
             'instructor' => 'nullable|string|max:255',
             'location' => 'nullable|string|max:255',
             'duration_hours' => 'nullable|integer|min:1',
@@ -58,9 +63,23 @@ class TrainingController extends BaseController
             'is_mandatory' => 'boolean',
         ]);
 
+        $companyId = $this->getCompanyId();
+        $this->lookups->assertValid(
+            LookupService::TYPE_TRAINING_TYPE,
+            $validated['type'] ?? null,
+            $companyId,
+            'type'
+        );
+        $this->lookups->assertValid(
+            LookupService::TYPE_TRAINING_CATEGORY,
+            $validated['category'] ?? null,
+            $companyId,
+            'category'
+        );
+
         $training = Training::create([
             ...$validated,
-            'company_id' => $this->getCompanyId(),
+            'company_id' => $companyId,
             'is_active' => true,
             'created_by' => auth()->id(),
         ]);
@@ -98,7 +117,7 @@ class TrainingController extends BaseController
             'title' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
             'category' => 'nullable|string|max:100',
-            'type' => 'sometimes|in:online,classroom,hybrid',
+            'type' => 'sometimes|nullable|string|max:100',
             'instructor' => 'nullable|string|max:255',
             'location' => 'nullable|string|max:255',
             'duration_hours' => 'nullable|integer|min:1',
@@ -107,6 +126,20 @@ class TrainingController extends BaseController
             'is_mandatory' => 'boolean',
             'is_active' => 'boolean',
         ]);
+
+        $companyId = $this->getCompanyId();
+        $this->lookups->assertValid(
+            LookupService::TYPE_TRAINING_TYPE,
+            $validated['type'] ?? null,
+            $companyId,
+            'type'
+        );
+        $this->lookups->assertValid(
+            LookupService::TYPE_TRAINING_CATEGORY,
+            $validated['category'] ?? null,
+            $companyId,
+            'category'
+        );
 
         $oldValues = $training->getOriginal();
         $training->update($validated);

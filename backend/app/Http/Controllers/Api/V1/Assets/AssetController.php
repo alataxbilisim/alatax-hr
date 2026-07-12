@@ -2,15 +2,21 @@
 
 namespace App\Http\Controllers\Api\V1\Assets;
 
+use App\Enums\AssetStatus;
 use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\ActivityLog;
 use App\Models\Asset;
 use App\Models\User;
+use App\Services\LookupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class AssetController extends BaseController
 {
+    public function __construct(
+        protected LookupService $lookups,
+    ) {}
+
     /**
      * Varlık listesi
      */
@@ -62,14 +68,22 @@ class AssetController extends BaseController
             'purchase_date' => 'nullable|date',
             'purchase_price' => 'nullable|numeric|min:0',
             'warranty_end_date' => 'nullable|date',
-            'condition' => 'nullable|in:new,good,fair,poor,broken',
+            'condition' => 'nullable|string|max:100',
             'location' => 'nullable|string|max:255',
             'specifications' => 'nullable|array',
         ]);
 
+        $companyId = $this->getCompanyId();
+        $this->lookups->assertValid(
+            LookupService::TYPE_ASSET_CONDITION,
+            $validated['condition'] ?? null,
+            $companyId,
+            'condition'
+        );
+
         $asset = Asset::create([
             ...$validated,
-            'company_id' => $this->getCompanyId(),
+            'company_id' => $companyId,
             'status' => 'available',
             'condition' => $validated['condition'] ?? 'new',
             'created_by' => auth()->id(),
@@ -119,11 +133,25 @@ class AssetController extends BaseController
             'purchase_date' => 'nullable|date',
             'purchase_price' => 'nullable|numeric|min:0',
             'warranty_end_date' => 'nullable|date',
-            'condition' => 'nullable|in:new,good,fair,poor,broken',
-            'status' => 'sometimes|in:available,assigned,maintenance,disposed',
+            'condition' => 'nullable|string|max:100',
+            'status' => 'sometimes|nullable|string|max:100',
             'location' => 'nullable|string|max:255',
             'specifications' => 'nullable|array',
         ]);
+
+        $companyId = $this->getCompanyId();
+        $this->lookups->assertValid(
+            LookupService::TYPE_ASSET_CONDITION,
+            $validated['condition'] ?? null,
+            $companyId,
+            'condition'
+        );
+        $this->lookups->assertValid(
+            LookupService::TYPE_ASSET_STATUS,
+            $validated['status'] ?? null,
+            $companyId,
+            'status'
+        );
 
         $oldValues = $asset->getOriginal();
         $asset->update($validated);
@@ -140,7 +168,7 @@ class AssetController extends BaseController
     {
         $asset = Asset::where('company_id', $this->getCompanyId())->findOrFail($id);
 
-        if ($asset->status === \App\Enums\AssetStatus::Assigned) {
+        if ($asset->status === AssetStatus::Assigned) {
             return $this->error('Zimmetli varlık silinemez. Önce iade alınmalıdır.', 422);
         }
 
@@ -159,7 +187,7 @@ class AssetController extends BaseController
     {
         $asset = Asset::where('company_id', $this->getCompanyId())->findOrFail($id);
 
-        if ($asset->status !== 'available') {
+        if ($asset->status !== AssetStatus::Available) {
             return $this->error('Bu varlık şu anda kullanılabilir değil.', 422);
         }
 
@@ -191,14 +219,22 @@ class AssetController extends BaseController
     {
         $asset = Asset::where('company_id', $this->getCompanyId())->findOrFail($id);
 
-        if ($asset->status !== 'assigned') {
+        if ($asset->status !== AssetStatus::Assigned) {
             return $this->error('Bu varlık zaten zimmetli değil.', 422);
         }
 
         $validated = $request->validate([
-            'condition' => 'required|in:good,fair,poor,broken',
+            'condition' => 'required|string|max:100',
             'notes' => 'nullable|string',
         ]);
+
+        $companyId = $this->getCompanyId();
+        $this->lookups->assertValid(
+            LookupService::TYPE_ASSET_CONDITION,
+            $validated['condition'],
+            $companyId,
+            'condition'
+        );
 
         $currentAssignment = $asset->currentAssignment;
         if ($currentAssignment) {

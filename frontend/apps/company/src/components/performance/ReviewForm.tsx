@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../ui';
 import { performanceApi, usersApi } from '@shared/services/api';
+import { Select } from '@shared/components';
 import toast from 'react-hot-toast';
 
 interface Period {
   id: number;
   name: string;
+  status?: string;
 }
 
 interface User {
@@ -36,7 +38,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      loadData();
+      void loadData();
       setFormData({
         period_id: '',
         employee_id: '',
@@ -51,17 +53,12 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
         performanceApi.periods.list({ per_page: 100 }),
         usersApi.list({ per_page: 100 }),
       ]);
-      const periodsData = periodsRes.data.data?.data || periodsRes.data.data || [];
-      setPeriods(periodsData.filter((p: Period & { status?: string }) => p.status === 'active'));
+      const periodsData: Period[] = periodsRes.data.data?.data || periodsRes.data.data || [];
+      setPeriods(periodsData.filter((p) => p.status === 'active'));
       setUsers(usersRes.data.data?.data || usersRes.data.data || []);
     } catch {
       toast.error('Veriler yüklenemedi');
     }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -93,18 +90,16 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label className="form-label">Dönem *</label>
-          <select
-            name="period_id"
+          <Select
             value={formData.period_id}
-            onChange={handleChange}
-            className="form-input"
-            required
-          >
-            <option value="">Dönem seçin</option>
-            {periods.map(period => (
-              <option key={period.id} value={period.id}>{period.name}</option>
-            ))}
-          </select>
+            onChange={(v) => setFormData((prev) => ({ ...prev, period_id: v }))}
+            options={periods.map((period) => ({
+              value: String(period.id),
+              label: period.name,
+            }))}
+            placeholder="Dönem seçin"
+            aria-label="Dönem"
+          />
           {periods.length === 0 && (
             <small style={{ color: 'var(--warning)' }}>Aktif dönem bulunmuyor. Önce dönem oluşturun ve aktifleştirin.</small>
           )}
@@ -112,41 +107,41 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
 
         <div className="form-group">
           <label className="form-label">Değerlendirilecek Çalışan *</label>
-          <select
-            name="employee_id"
+          <Select
             value={formData.employee_id}
-            onChange={handleChange}
-            className="form-input"
-            required
-          >
-            <option value="">Çalışan seçin</option>
-            {users.map(user => (
-              <option key={user.id} value={user.id}>{user.name} ({user.email})</option>
-            ))}
-          </select>
+            onChange={(v) => setFormData((prev) => ({ ...prev, employee_id: v }))}
+            options={users.map((user) => ({
+              value: String(user.id),
+              label: `${user.name} (${user.email})`,
+            }))}
+            placeholder="Çalışan seçin"
+            aria-label="Çalışan"
+          />
         </div>
 
         <div className="form-group">
           <label className="form-label">Değerlendiren Kişi *</label>
-          <select
-            name="reviewer_id"
+          <Select
             value={formData.reviewer_id}
-            onChange={handleChange}
-            className="form-input"
-            required
-          >
-            <option value="">Değerlendirici seçin</option>
-            {users.map(user => (
-              <option key={user.id} value={user.id}>{user.name}</option>
-            ))}
-          </select>
+            onChange={(v) => setFormData((prev) => ({ ...prev, reviewer_id: v }))}
+            options={users.map((user) => ({
+              value: String(user.id),
+              label: user.name,
+            }))}
+            placeholder="Değerlendirici seçin"
+            aria-label="Değerlendiren"
+          />
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
           <button type="button" className="btn btn-ghost" onClick={onClose} disabled={loading}>
             İptal
           </button>
-          <button type="submit" className="btn btn-primary" disabled={loading || periods.length === 0}>
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={loading || periods.length === 0 || !formData.period_id || !formData.employee_id || !formData.reviewer_id}
+          >
             {loading ? 'Oluşturuluyor...' : 'Değerlendirme Oluştur'}
           </button>
         </div>
@@ -156,4 +151,3 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
 };
 
 export default ReviewForm;
-

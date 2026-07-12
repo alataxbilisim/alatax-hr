@@ -29,6 +29,10 @@ class Document extends Model
         'category_id',
         'description',
         'version',
+        'current_version',
+        'validity_date',
+        'approval_status',
+        'requires_approval',
         'uploaded_by',
         'metadata',
     ];

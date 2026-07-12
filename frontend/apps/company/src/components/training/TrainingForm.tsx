@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../ui';
+import { lookupsApi, type LookupItem } from '@shared/services/api';
+import { Select } from '@shared/components';
+import toast from 'react-hot-toast';
 
 interface Training {
   id?: number;
   title: string;
   description?: string;
   category?: string;
-  type: 'online' | 'classroom' | 'hybrid';
+  type: string;
   duration_hours?: number;
   is_mandatory: boolean;
   is_active: boolean;
@@ -17,63 +20,67 @@ interface TrainingFormProps {
   onClose: () => void;
   onSubmit: (data: Omit<Training, 'id'>) => Promise<void>;
   training?: Training | null;
-  categories: string[];
 }
-
-const typeLabels: Record<string, string> = {
-  online: 'Online',
-  classroom: 'Sınıf İçi',
-  hybrid: 'Hibrit',
-};
 
 const TrainingForm: React.FC<TrainingFormProps> = ({
   isOpen,
   onClose,
   onSubmit,
   training,
-  categories,
 }) => {
   const [loading, setLoading] = useState(false);
+  const [typeOptions, setTypeOptions] = useState<LookupItem[]>([]);
+  const [categoryOptions, setCategoryOptions] = useState<LookupItem[]>([]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     category: '',
-    type: 'classroom' as 'online' | 'classroom' | 'hybrid',
+    type: 'classroom',
     duration_hours: 1,
     is_mandatory: false,
     is_active: true,
   });
 
   useEffect(() => {
-    if (isOpen) {
-      if (training) {
-        setFormData({
-          title: training.title,
-          description: training.description || '',
-          category: training.category || '',
-          type: training.type,
-          duration_hours: training.duration_hours || 1,
-          is_mandatory: training.is_mandatory,
-          is_active: training.is_active ?? true,
-        });
-      } else {
-        setFormData({
-          title: '',
-          description: '',
-          category: '',
-          type: 'classroom',
-          duration_hours: 1,
-          is_mandatory: false,
-          is_active: true,
-        });
-      }
+    if (!isOpen) return;
+
+    Promise.all([
+      lookupsApi.forType('training_type'),
+      lookupsApi.forType('training_category'),
+    ])
+      .then(([typeRes, categoryRes]) => {
+        setTypeOptions(typeRes.data.data ?? []);
+        setCategoryOptions(categoryRes.data.data ?? []);
+      })
+      .catch(() => toast.error('Lookup listeleri yüklenemedi'));
+
+    if (training) {
+      setFormData({
+        title: training.title,
+        description: training.description || '',
+        category: training.category || '',
+        type: training.type,
+        duration_hours: training.duration_hours || 1,
+        is_mandatory: training.is_mandatory,
+        is_active: training.is_active ?? true,
+      });
+    } else {
+      setFormData({
+        title: '',
+        description: '',
+        category: '',
+        type: 'classroom',
+        duration_hours: 1,
+        is_mandatory: false,
+        is_active: true,
+      });
     }
   }, [isOpen, training]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : type === 'number' ? Number(value) : value,
     }));
@@ -83,7 +90,10 @@ const TrainingForm: React.FC<TrainingFormProps> = ({
     e.preventDefault();
     setLoading(true);
     try {
-      await onSubmit(formData);
+      await onSubmit({
+        ...formData,
+        category: formData.category || undefined,
+      });
       onClose();
     } finally {
       setLoading(false);
@@ -126,34 +136,34 @@ const TrainingForm: React.FC<TrainingFormProps> = ({
         <div className="form-row">
           <div className="form-group" style={{ flex: 1 }}>
             <label className="form-label">Kategori</label>
-            <input
-              type="text"
-              name="category"
+            <Select
               value={formData.category}
-              onChange={handleChange}
-              className="form-input"
-              placeholder="Kategori girin"
-              list="category-list"
+              onChange={(v) => setFormData((prev) => ({ ...prev, category: v }))}
+              options={categoryOptions.map((opt) => ({
+                value: opt.value,
+                label: opt.label,
+                color: opt.color,
+              }))}
+              placeholder="Seçiniz..."
+              allowEmpty
+              emptyLabel="Seçiniz..."
+              clearable
+              aria-label="Kategori"
             />
-            <datalist id="category-list">
-              {categories.map(cat => (
-                <option key={cat} value={cat} />
-              ))}
-            </datalist>
           </div>
           <div className="form-group" style={{ flex: 1 }}>
             <label className="form-label">Eğitim Türü *</label>
-            <select
-              name="type"
+            <Select
               value={formData.type}
-              onChange={handleChange}
-              className="form-input"
-              required
-            >
-              {Object.entries(typeLabels).map(([value, label]) => (
-                <option key={value} value={value}>{label}</option>
-              ))}
-            </select>
+              onChange={(v) => setFormData((prev) => ({ ...prev, type: v }))}
+              options={typeOptions.map((opt) => ({
+                value: opt.value,
+                label: opt.label,
+                color: opt.color,
+              }))}
+              placeholder="Seçiniz..."
+              aria-label="Eğitim türü"
+            />
           </div>
         </div>
 
@@ -208,4 +218,3 @@ const TrainingForm: React.FC<TrainingFormProps> = ({
 };
 
 export default TrainingForm;
-

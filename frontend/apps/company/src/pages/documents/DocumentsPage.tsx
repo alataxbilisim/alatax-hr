@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { documentsApi } from '@shared/services/api';
+import { documentsApi, lookupsApi, type LookupItem } from '@shared/services/api';
+import { Select } from '@shared/components';
 import toast from 'react-hot-toast';
 import { DataTable, ConfirmDialog, Modal } from '../../components/ui';
 import DocumentUpload from '../../components/documents/DocumentUpload';
@@ -105,6 +106,17 @@ const DocumentsPage: React.FC = () => {
   // Download state
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
 
+  const [fileTypeOptions, setFileTypeOptions] = useState<LookupItem[]>([]);
+
+  const loadLookups = useCallback(async () => {
+    try {
+      const fileTypeRes = await lookupsApi.forType('document_file_type');
+      setFileTypeOptions(fileTypeRes.data.data ?? []);
+    } catch {
+      console.error('Evrak lookup listeleri yüklenemedi');
+    }
+  }, []);
+
   const loadDocuments = useCallback(async () => {
     try {
       setDocsLoading(true);
@@ -148,7 +160,8 @@ const DocumentsPage: React.FC = () => {
 
   useEffect(() => {
     loadCategories();
-  }, [loadCategories]);
+    void loadLookups();
+  }, [loadCategories, loadLookups]);
 
   useEffect(() => {
     if (activeTab === 'documents') {
@@ -400,15 +413,6 @@ const DocumentsPage: React.FC = () => {
     },
   ];
 
-  const fileTypeOptions = [
-    { value: 'pdf', label: 'PDF' },
-    { value: 'image', label: 'Resim' },
-    { value: 'document', label: 'Word' },
-    { value: 'spreadsheet', label: 'Excel' },
-    { value: 'presentation', label: 'PowerPoint' },
-    { value: 'archive', label: 'Arşiv (ZIP, RAR)' },
-  ];
-
   return (
     <div className="animate-fade-in list-page">
       <div className="page-header">
@@ -490,29 +494,36 @@ const DocumentsPage: React.FC = () => {
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-2)', alignItems: 'flex-end' }}>
                 <div style={{ minWidth: 140, flex: '1 1 140px' }}>
                   <label className="form-label">Kategori</label>
-                  <select
-                    className="form-control"
+                  <Select
                     value={filters.category_id}
-                    onChange={(e) => setFilters({ ...filters, category_id: e.target.value })}
-                  >
-                    <option value="">Tümü</option>
-                    {categories.map((cat) => (
-                      <option key={cat.id} value={cat.id}>{cat.name}</option>
-                    ))}
-                  </select>
+                    onChange={(v) => setFilters({ ...filters, category_id: v })}
+                    options={categories.map((cat) => ({
+                      value: String(cat.id),
+                      label: cat.name,
+                    }))}
+                    placeholder="Tümü"
+                    allowEmpty
+                    emptyLabel="Tümü"
+                    clearable
+                    aria-label="Kategori filtresi"
+                  />
                 </div>
                 <div style={{ minWidth: 140, flex: '1 1 140px' }}>
                   <label className="form-label">Dosya Tipi</label>
-                  <select
-                    className="form-control"
+                  <Select
                     value={filters.file_type}
-                    onChange={(e) => setFilters({ ...filters, file_type: e.target.value })}
-                  >
-                    <option value="">Tümü</option>
-                    {fileTypeOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
-                  </select>
+                    onChange={(v) => setFilters({ ...filters, file_type: v })}
+                    options={fileTypeOptions.map((opt) => ({
+                      value: opt.value,
+                      label: opt.label,
+                      color: opt.color,
+                    }))}
+                    placeholder="Tümü"
+                    allowEmpty
+                    emptyLabel="Tümü"
+                    clearable
+                    aria-label="Dosya tipi filtresi"
+                  />
                 </div>
                 <div style={{ minWidth: 130, flex: '1 1 130px' }}>
                   <label className="form-label">Başlangıç</label>
@@ -684,16 +695,19 @@ const DocumentsPage: React.FC = () => {
         </div>
         <div className="form-group">
           <label className="form-label">Kategori</label>
-          <select
-            className="form-control"
+          <Select
             value={editFormData.category_id}
-            onChange={(e) => setEditFormData({ ...editFormData, category_id: e.target.value })}
-          >
-            <option value="">Kategori seçin</option>
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>{cat.name}</option>
-            ))}
-          </select>
+            onChange={(v) => setEditFormData({ ...editFormData, category_id: v })}
+            options={categories.map((cat) => ({
+              value: String(cat.id),
+              label: cat.name,
+            }))}
+            placeholder="Kategori seçin"
+            allowEmpty
+            emptyLabel="Kategori seçin"
+            clearable
+            aria-label="Kategori"
+          />
         </div>
         <div className="form-group">
           <label className="form-label">Açıklama</label>

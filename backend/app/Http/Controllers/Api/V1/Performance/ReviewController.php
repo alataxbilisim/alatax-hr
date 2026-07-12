@@ -7,6 +7,7 @@ use App\Models\ActivityLog;
 use App\Models\PerformanceReview;
 use App\Models\PerformanceScore;
 use App\Services\DataScopeService;
+use App\Services\LookupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -14,6 +15,7 @@ class ReviewController extends BaseController
 {
     public function __construct(
         protected DataScopeService $dataScope,
+        protected LookupService $lookups,
     ) {}
 
     /**
@@ -32,7 +34,13 @@ class ReviewController extends BaseController
             $query->where('period_id', $request->period_id);
         }
 
-        if ($request->has('status')) {
+        if ($request->filled('status')) {
+            $this->lookups->assertValid(
+                LookupService::TYPE_PERFORMANCE_REVIEW_STATUS,
+                $request->string('status')->toString(),
+                $this->getCompanyId(),
+                'status'
+            );
             $query->where('status', $request->status);
         }
 

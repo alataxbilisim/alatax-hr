@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../ui';
+import { lookupsApi, type LookupItem } from '@shared/services/api';
+import { Select } from '@shared/components';
+import toast from 'react-hot-toast';
 
 interface Training {
   id: number;
@@ -16,7 +19,7 @@ interface Session {
   start_date: string;
   end_date?: string;
   max_participants?: number;
-  status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
+  status: string;
 }
 
 interface SessionFormProps {
@@ -27,13 +30,6 @@ interface SessionFormProps {
   trainings: Training[];
 }
 
-const statusLabels: Record<string, string> = {
-  scheduled: 'Planlandı',
-  in_progress: 'Devam Ediyor',
-  completed: 'Tamamlandı',
-  cancelled: 'İptal Edildi',
-};
-
 const SessionForm: React.FC<SessionFormProps> = ({
   isOpen,
   onClose,
@@ -42,6 +38,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
   trainings,
 }) => {
   const [loading, setLoading] = useState(false);
+  const [statusOptions, setStatusOptions] = useState<LookupItem[]>([]);
   const [formData, setFormData] = useState({
     training_id: '',
     title: '',
@@ -51,55 +48,60 @@ const SessionForm: React.FC<SessionFormProps> = ({
     start_date: '',
     end_date: '',
     max_participants: '',
-    status: 'scheduled' as Session['status'],
+    status: 'scheduled',
   });
 
   useEffect(() => {
-    if (isOpen) {
-      if (session) {
-        setFormData({
-          training_id: String(session.training_id),
-          title: session.title,
-          description: session.description || '',
-          instructor_name: session.instructor_name || '',
-          location: session.location || '',
-          start_date: session.start_date?.slice(0, 16) || '',
-          end_date: session.end_date?.slice(0, 16) || '',
-          max_participants: session.max_participants ? String(session.max_participants) : '',
-          status: session.status,
-        });
-      } else {
-        setFormData({
-          training_id: '',
-          title: '',
-          description: '',
-          instructor_name: '',
-          location: '',
-          start_date: '',
-          end_date: '',
-          max_participants: '',
-          status: 'scheduled',
-        });
-      }
+    if (!isOpen) return;
+
+    lookupsApi.forType('training_session_status')
+      .then((res) => setStatusOptions(res.data.data ?? []))
+      .catch(() => toast.error('Lookup listeleri yüklenemedi'));
+
+    if (session) {
+      setFormData({
+        training_id: String(session.training_id),
+        title: session.title,
+        description: session.description || '',
+        instructor_name: session.instructor_name || '',
+        location: session.location || '',
+        start_date: session.start_date?.slice(0, 16) || '',
+        end_date: session.end_date?.slice(0, 16) || '',
+        max_participants: session.max_participants ? String(session.max_participants) : '',
+        status: session.status,
+      });
+    } else {
+      setFormData({
+        training_id: '',
+        title: '',
+        description: '',
+        instructor_name: '',
+        location: '',
+        start_date: '',
+        end_date: '',
+        max_participants: '',
+        status: 'scheduled',
+      });
     }
   }, [isOpen, session]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
-    // Eğitim seçildiğinde başlık otomatik oluştur
-    if (name === 'training_id' && value && !formData.title) {
-      const training = trainings.find(t => t.id === Number(value));
-      if (training) {
-        const date = new Date().toLocaleDateString('tr-TR');
-        setFormData(prev => ({
-          ...prev,
-          training_id: value,
-          title: `${training.title} - ${date}`,
-        }));
+  const handleTrainingChange = (value: string) => {
+    setFormData((prev) => {
+      const next = { ...prev, training_id: value };
+      if (value && !prev.title) {
+        const training = trainings.find((t) => t.id === Number(value));
+        if (training) {
+          const date = new Date().toLocaleDateString('tr-TR');
+          next.title = `${training.title} - ${date}`;
+        }
       }
-    }
+      return next;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -133,18 +135,16 @@ const SessionForm: React.FC<SessionFormProps> = ({
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label className="form-label">Eğitim *</label>
-          <select
-            name="training_id"
+          <Select
             value={formData.training_id}
-            onChange={handleChange}
-            className="form-input"
-            required
-          >
-            <option value="">Eğitim seçin</option>
-            {trainings.map(t => (
-              <option key={t.id} value={t.id}>{t.title}</option>
-            ))}
-          </select>
+            onChange={handleTrainingChange}
+            options={trainings.map((t) => ({
+              value: String(t.id),
+              label: t.title,
+            }))}
+            placeholder="Eğitim seçin"
+            aria-label="Eğitim"
+          />
         </div>
 
         <div className="form-group">
@@ -234,16 +234,17 @@ const SessionForm: React.FC<SessionFormProps> = ({
           </div>
           <div className="form-group" style={{ flex: 1 }}>
             <label className="form-label">Durum</label>
-            <select
-              name="status"
+            <Select
               value={formData.status}
-              onChange={handleChange}
-              className="form-input"
-            >
-              {Object.entries(statusLabels).map(([value, label]) => (
-                <option key={value} value={value}>{label}</option>
-              ))}
-            </select>
+              onChange={(v) => setFormData((prev) => ({ ...prev, status: v }))}
+              options={statusOptions.map((opt) => ({
+                value: opt.value,
+                label: opt.label,
+                color: opt.color,
+              }))}
+              placeholder="Seçiniz..."
+              aria-label="Durum"
+            />
           </div>
         </div>
 
@@ -261,4 +262,3 @@ const SessionForm: React.FC<SessionFormProps> = ({
 };
 
 export default SessionForm;
-

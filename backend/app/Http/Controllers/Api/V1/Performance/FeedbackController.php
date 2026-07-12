@@ -8,12 +8,17 @@ use App\Models\ContinuousFeedback;
 use App\Models\FeedbackProvider;
 use App\Models\FeedbackResponse;
 use App\Models\PerformanceReview;
+use App\Services\LookupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class FeedbackController extends BaseController
 {
+    public function __construct(
+        protected LookupService $lookups,
+    ) {}
+
     /**
      * 360 Değerlendirme için geri bildirim sağlayıcıları ekle
      */
@@ -295,7 +300,13 @@ class FeedbackController extends BaseController
             $query->where('from_user_id', $request->from_user_id);
         }
 
-        if ($request->has('type')) {
+        if ($request->filled('type')) {
+            $this->lookups->assertValid(
+                LookupService::TYPE_CONTINUOUS_FEEDBACK_TYPE,
+                $request->string('type')->toString(),
+                $this->getCompanyId(),
+                'type'
+            );
             $query->where('type', $request->type);
         }
 
@@ -320,15 +331,23 @@ class FeedbackController extends BaseController
     {
         $validated = $request->validate([
             'to_user_id' => 'required|exists:users,id',
-            'type' => 'required|in:praise,suggestion,concern,coaching',
+            'type' => 'required|string|max:100',
             'content' => 'required|string|max:2000',
             'tags' => 'nullable|array',
             'is_public' => 'boolean',
             'is_anonymous' => 'boolean',
         ]);
 
+        $companyId = $this->getCompanyId();
+        $this->lookups->assertValid(
+            LookupService::TYPE_CONTINUOUS_FEEDBACK_TYPE,
+            $validated['type'],
+            $companyId,
+            'type'
+        );
+
         $feedback = ContinuousFeedback::create([
-            'company_id' => $this->getCompanyId(),
+            'company_id' => $companyId,
             'from_user_id' => auth()->id(),
             'to_user_id' => $validated['to_user_id'],
             'type' => $validated['type'],

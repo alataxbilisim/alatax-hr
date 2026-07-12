@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { portalApi } from '@shared/services/api';
+import { portalApi, lookupsApi, type LookupItem } from '@shared/services/api';
+import { Select } from '@shared/components';
 import toast from 'react-hot-toast';
 import { BsPlus, BsReceipt, BsX, BsTrash } from 'react-icons/bs';
 
@@ -38,15 +39,23 @@ interface ExpenseSummary {
   paid_this_month: number;
 }
 
+const statusClassMap: Record<string, string> = {
+  draft: 'cancelled',
+  submitted: 'pending',
+  approved: 'approved',
+  rejected: 'rejected',
+  paid: 'approved',
+};
+
 const ExpensesPage: React.FC = () => {
   const [claims, setClaims] = useState<ExpenseClaim[]>([]);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
+  const [statusLookups, setStatusLookups] = useState<LookupItem[]>([]);
   const [summary, setSummary] = useState<ExpenseSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // Form state
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -61,19 +70,21 @@ const ExpensesPage: React.FC = () => {
   }]);
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, []);
 
   const loadData = async () => {
     try {
-      const [claimsRes, categoriesRes, summaryRes] = await Promise.all([
+      const [claimsRes, categoriesRes, summaryRes, statusRes] = await Promise.all([
         portalApi.expenses.list(),
         portalApi.expenses.categories(),
         portalApi.expenses.summary(),
+        lookupsApi.forType('expense_claim_status'),
       ]);
       setClaims(claimsRes.data.data.data || []);
       setCategories(categoriesRes.data.data || []);
       setSummary(summaryRes.data.data);
+      setStatusLookups(statusRes.data.data ?? []);
     } catch {
       toast.error('Veriler yüklenemedi');
     } finally {
@@ -82,15 +93,9 @@ const ExpensesPage: React.FC = () => {
   };
 
   const getStatusBadge = (status: string) => {
-    const statusMap: Record<string, { label: string; class: string }> = {
-      draft: { label: 'Taslak', class: 'cancelled' },
-      submitted: { label: 'Beklemede', class: 'pending' },
-      approved: { label: 'Onaylandı', class: 'approved' },
-      rejected: { label: 'Reddedildi', class: 'rejected' },
-      paid: { label: 'Ödendi', class: 'approved' },
-    };
-    const s = statusMap[status] || { label: status, class: '' };
-    return <span className={`request-status ${s.class}`}>{s.label}</span>;
+    const label = statusLookups.find((o) => o.value === status)?.label || status;
+    const className = statusClassMap[status] || '';
+    return <span className={`request-status ${className}`}>{label}</span>;
   };
 
   const formatCurrency = (amount: number) => {
@@ -126,7 +131,7 @@ const ExpensesPage: React.FC = () => {
       return;
     }
 
-    const validItems = items.filter(item => 
+    const validItems = items.filter((item) =>
       item.expense_category_id && item.description && item.amount
     );
 
@@ -139,7 +144,7 @@ const ExpensesPage: React.FC = () => {
     try {
       const data = {
         ...formData,
-        items: validItems.map(item => ({
+        items: validItems.map((item) => ({
           ...item,
           expense_category_id: Number(item.expense_category_id),
           amount: parseFloat(item.amount),
@@ -147,16 +152,15 @@ const ExpensesPage: React.FC = () => {
       };
 
       const response = await portalApi.expenses.create(data);
-      
+
       if (!asDraft) {
-        // Submit immediately
         await portalApi.expenses.submit(response.data.data.id);
       }
 
       toast.success(asDraft ? 'Masraf talebi kaydedildi' : 'Masraf talebi gönderildi');
       setShowModal(false);
       resetForm();
-      loadData();
+      void loadData();
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       toast.error(err.response?.data?.message || 'Masraf talebi oluşturulamadı');
@@ -185,7 +189,7 @@ const ExpensesPage: React.FC = () => {
     try {
       await portalApi.expenses.cancel(id);
       toast.success('Masraf talebi iptal edildi');
-      loadData();
+      void loadData();
     } catch {
       toast.error('İptal işlemi başarısız');
     }
@@ -205,7 +209,6 @@ const ExpensesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Summary Cards */}
       {summary && (
         <div className="row mb-4">
           <div className="col-6 col-lg-3 mb-3">
@@ -244,7 +247,6 @@ const ExpensesPage: React.FC = () => {
             </div>
           ) : claims.length > 0 ? (
             <>
-              {/* Desktop Table */}
               <div className="table-responsive desktop-only">
                 <table className="table table-hover mb-0">
                   <thead>
@@ -271,7 +273,7 @@ const ExpensesPage: React.FC = () => {
                           {(claim.status === 'draft' || claim.status === 'submitted') && (
                             <button
                               className="btn btn-sm btn-ghost text-danger"
-                              onClick={() => handleCancel(claim.id)}
+                              onClick={() => void handleCancel(claim.id)}
                             >
                               İptal
                             </button>
@@ -283,7 +285,6 @@ const ExpensesPage: React.FC = () => {
                 </table>
               </div>
 
-              {/* Mobile Cards */}
               <div className="mobile-card-list has-data">
                 {claims.map((claim) => (
                   <div key={claim.id} className="mobile-card">
@@ -316,7 +317,7 @@ const ExpensesPage: React.FC = () => {
                       <div className="mobile-card-footer">
                         <button
                           className="btn btn-outline-primary btn-sm"
-                          onClick={() => handleCancel(claim.id)}
+                          onClick={() => void handleCancel(claim.id)}
                         >
                           İptal Et
                         </button>
@@ -339,12 +340,10 @@ const ExpensesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile FAB */}
       <button className="fab" onClick={() => setShowModal(true)} aria-label="Yeni Masraf">
         <BsPlus size={24} />
       </button>
 
-      {/* Modal */}
       {showModal && (
         <div className="modal-mobile open">
           <div className="modal-mobile-header">
@@ -353,7 +352,7 @@ const ExpensesPage: React.FC = () => {
               <BsX size={24} />
             </button>
           </div>
-          <form onSubmit={(e) => handleSubmit(e, true)}>
+          <form onSubmit={(e) => void handleSubmit(e, true)}>
             <div className="modal-mobile-body">
               <div className="mb-3">
                 <label className="form-label">Başlık *</label>
@@ -406,17 +405,17 @@ const ExpensesPage: React.FC = () => {
                       )}
                     </div>
                     <div className="mb-2">
-                      <select
-                        className="form-control"
+                      <Select
                         value={item.expense_category_id}
-                        onChange={(e) => updateItem(index, 'expense_category_id', e.target.value)}
-                        required
-                      >
-                        <option value="">Kategori Seçin *</option>
-                        {categories.map((cat) => (
-                          <option key={cat.id} value={cat.id}>{cat.name}</option>
-                        ))}
-                      </select>
+                        onChange={(v) => updateItem(index, 'expense_category_id', v)}
+                        options={categories.map((cat) => ({
+                          value: String(cat.id),
+                          label: cat.name,
+                        }))}
+                        allowEmpty
+                        placeholder="Kategori Seçin *"
+                        aria-label={`Masraf kategorisi ${index + 1}`}
+                      />
                     </div>
                     <div className="mb-2">
                       <input
@@ -490,7 +489,7 @@ const ExpensesPage: React.FC = () => {
                 type="button"
                 className="btn btn-primary"
                 disabled={submitting}
-                onClick={(e) => handleSubmit(e, false)}
+                onClick={(e) => void handleSubmit(e, false)}
               >
                 {submitting ? 'Gönderiliyor...' : 'Gönder'}
               </button>
@@ -503,4 +502,3 @@ const ExpensesPage: React.FC = () => {
 };
 
 export default ExpensesPage;
-

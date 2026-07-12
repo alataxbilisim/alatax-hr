@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Modal } from '../ui';
 import { documentsApi } from '@shared/services/api';
+import { Select } from '@shared/components';
 import toast from 'react-hot-toast';
 import { BsCloudUpload, BsFileEarmark, BsX } from 'react-icons/bs';
 
@@ -266,17 +267,24 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
       {/* Category */}
       <div className="form-group">
         <label className="form-label">Kategori</label>
-        <select
-          name="category_id"
-          className="form-control"
+        <Select
           value={formData.category_id}
-          onChange={handleChange}
-        >
-          <option value="">Kategori seçin (isteğe bağlı)</option>
-          {categories.map((cat) => (
-            <option key={cat.id} value={cat.id}>{cat.name}</option>
-          ))}
-        </select>
+          onChange={(v) => {
+            setFormData((prev) => ({ ...prev, category_id: v }));
+            if (errors.category_id) {
+              setErrors((prev) => ({ ...prev, category_id: '' }));
+            }
+          }}
+          options={categories.map((cat) => ({
+            value: String(cat.id),
+            label: cat.name,
+          }))}
+          placeholder="Kategori seçin (isteğe bağlı)"
+          allowEmpty
+          emptyLabel="Kategori seçin (isteğe bağlı)"
+          clearable
+          aria-label="Kategori"
+        />
       </div>
 
       {/* Description */}

@@ -388,4 +388,277 @@ class LookupTest extends TestCase
                 ->json('data.label')
         );
     }
+
+    /** @test */
+    public function asset_status_and_condition_seeded_with_disposed(): void
+    {
+        Sanctum::actingAs($this->adminUser);
+
+        $statusValues = collect($this->getJson('/api/v1/lookups/asset_status')->assertOk()->json('data'))
+            ->pluck('value')
+            ->all();
+        $this->assertEqualsCanonicalizing(
+            ['available', 'assigned', 'maintenance', 'disposed'],
+            $statusValues
+        );
+        $this->assertNotContains('retired', $statusValues);
+
+        $conditionValues = collect($this->getJson('/api/v1/lookups/asset_condition')->assertOk()->json('data'))
+            ->pluck('value')
+            ->all();
+        $this->assertEqualsCanonicalizing(
+            ['new', 'good', 'fair', 'poor', 'broken'],
+            $conditionValues
+        );
+
+        $this->lookups->assertValid(LookupService::TYPE_ASSET_STATUS, 'disposed', $this->company->id, 'status');
+        $this->lookups->assertValid(LookupService::TYPE_ASSET_CONDITION, 'broken', $this->company->id, 'condition');
+    }
+
+    /** @test */
+    public function expense_claim_status_hybrid_matches_model_constants(): void
+    {
+        Sanctum::actingAs($this->adminUser);
+
+        $values = collect($this->getJson('/api/v1/lookups/expense_claim_status')->assertOk()->json('data'))
+            ->pluck('value')
+            ->all();
+
+        $this->assertEqualsCanonicalizing(
+            ['draft', 'submitted', 'approved', 'rejected', 'paid'],
+            $values
+        );
+
+        $this->postJson('/api/v1/lookups-manage', [
+            'lookup_type' => 'expense_claim_status',
+            'value' => 'archived',
+            'label' => 'Arşiv',
+        ])->assertStatus(403);
+
+        $draft = Lookup::whereNull('company_id')
+            ->where('lookup_type', 'expense_claim_status')
+            ->where('value', 'draft')
+            ->firstOrFail();
+
+        $this->putJson("/api/v1/lookups-manage/{$draft->id}", [
+            'label' => 'Taslak Kayıt',
+        ])->assertOk();
+
+        $this->assertSame(
+            'Taslak Kayıt',
+            $this->getJson('/api/v1/lookups-resolve?lookup_type=expense_claim_status&value=draft')
+                ->json('data.label')
+        );
+    }
+
+    /** @test */
+    public function employee_request_priority_and_status_seeded(): void
+    {
+        Sanctum::actingAs($this->adminUser);
+
+        $priorities = collect($this->getJson('/api/v1/lookups/employee_request_priority')->assertOk()->json('data'))
+            ->pluck('value')
+            ->all();
+        $this->assertEqualsCanonicalizing(['low', 'normal', 'high', 'urgent'], $priorities);
+
+        $statuses = collect($this->getJson('/api/v1/lookups/employee_request_status')->assertOk()->json('data'))
+            ->pluck('value')
+            ->all();
+        $this->assertEqualsCanonicalizing(
+            ['pending', 'in_review', 'approved', 'rejected', 'cancelled'],
+            $statuses
+        );
+
+        $this->postJson('/api/v1/lookups-manage', [
+            'lookup_type' => 'employee_request_status',
+            'value' => 'escalated',
+            'label' => 'Eskalasyon',
+        ])->assertStatus(403);
+
+        $this->lookups->assertValid(
+            LookupService::TYPE_EMPLOYEE_REQUEST_PRIORITY,
+            'urgent',
+            $this->company->id,
+            'priority'
+        );
+        $this->lookups->assertValid(
+            LookupService::TYPE_EMPLOYEE_REQUEST_STATUS,
+            'in_review',
+            $this->company->id,
+            'status'
+        );
+    }
+
+    /** @test */
+    public function performance_and_onboarding_lookups_seeded(): void
+    {
+        Sanctum::actingAs($this->adminUser);
+
+        $periodStatuses = collect($this->getJson('/api/v1/lookups/performance_period_status')->assertOk()->json('data'))
+            ->pluck('value')
+            ->all();
+        $this->assertEqualsCanonicalizing(['draft', 'active', 'closed'], $periodStatuses);
+
+        $reviewStatuses = collect($this->getJson('/api/v1/lookups/performance_review_status')->assertOk()->json('data'))
+            ->pluck('value')
+            ->all();
+        $this->assertEqualsCanonicalizing(['draft', 'submitted', 'approved', 'rejected'], $reviewStatuses);
+
+        $feedbackTypes = collect($this->getJson('/api/v1/lookups/continuous_feedback_type')->assertOk()->json('data'))
+            ->pluck('value')
+            ->all();
+        $this->assertEqualsCanonicalizing(['praise', 'suggestion', 'concern', 'coaching'], $feedbackTypes);
+        $this->assertNotContains('appreciation', $feedbackTypes);
+        $this->assertNotContains('other', $feedbackTypes);
+
+        $processStatuses = collect($this->getJson('/api/v1/lookups/onboarding_process_status')->assertOk()->json('data'))
+            ->pluck('value')
+            ->all();
+        $this->assertEqualsCanonicalizing(
+            ['pending', 'in_progress', 'completed', 'cancelled'],
+            $processStatuses
+        );
+
+        $taskStatuses = collect($this->getJson('/api/v1/lookups/onboarding_task_status')->assertOk()->json('data'))
+            ->pluck('value')
+            ->all();
+        $this->assertEqualsCanonicalizing(
+            ['pending', 'in_progress', 'completed', 'skipped'],
+            $taskStatuses
+        );
+
+        $this->postJson('/api/v1/lookups-manage', [
+            'lookup_type' => 'performance_period_status',
+            'value' => 'archived',
+            'label' => 'Arşiv',
+        ])->assertStatus(403);
+
+        $this->postJson('/api/v1/lookups-manage', [
+            'lookup_type' => 'onboarding_task_status',
+            'value' => 'blocked',
+            'label' => 'Bloke',
+        ])->assertStatus(403);
+
+        $this->lookups->assertValid(
+            LookupService::TYPE_PERFORMANCE_PERIOD_STATUS,
+            'active',
+            $this->company->id,
+            'status'
+        );
+        $this->lookups->assertValid(
+            LookupService::TYPE_PERFORMANCE_REVIEW_STATUS,
+            'submitted',
+            $this->company->id,
+            'status'
+        );
+        $this->lookups->assertValid(
+            LookupService::TYPE_CONTINUOUS_FEEDBACK_TYPE,
+            'praise',
+            $this->company->id,
+            'type'
+        );
+        $this->lookups->assertValid(
+            LookupService::TYPE_ONBOARDING_PROCESS_STATUS,
+            'in_progress',
+            $this->company->id,
+            'status'
+        );
+        $this->lookups->assertValid(
+            LookupService::TYPE_ONBOARDING_TASK_STATUS,
+            'skipped',
+            $this->company->id,
+            'status'
+        );
+    }
+
+    /** @test */
+    public function document_training_survey_lookups_seeded(): void
+    {
+        Sanctum::actingAs($this->adminUser);
+
+        $approval = collect($this->getJson('/api/v1/lookups/document_approval_status')->assertOk()->json('data'))
+            ->pluck('value')
+            ->all();
+        $this->assertEqualsCanonicalizing(['draft', 'pending', 'approved', 'rejected'], $approval);
+
+        $this->postJson('/api/v1/lookups-manage', [
+            'lookup_type' => 'document_approval_status',
+            'value' => 'archived',
+            'label' => 'Arşiv',
+        ])->assertStatus(403);
+
+        $fileTypes = collect($this->getJson('/api/v1/lookups/document_file_type')->assertOk()->json('data'))
+            ->pluck('value')
+            ->all();
+        $this->assertEqualsCanonicalizing(
+            ['pdf', 'image', 'document', 'spreadsheet', 'presentation', 'archive'],
+            $fileTypes
+        );
+        $this->postJson('/api/v1/lookups-manage', [
+            'lookup_type' => 'document_file_type',
+            'value' => 'video',
+            'label' => 'Video',
+        ])->assertStatus(403);
+
+        $empDocStatus = collect($this->getJson('/api/v1/lookups/employee_document_status')->assertOk()->json('data'))
+            ->pluck('value')
+            ->all();
+        $this->assertEqualsCanonicalizing(['active', 'archived', 'expired'], $empDocStatus);
+
+        $trainingTypes = collect($this->getJson('/api/v1/lookups/training_type')->assertOk()->json('data'))
+            ->pluck('value')
+            ->all();
+        $this->assertEqualsCanonicalizing(['online', 'classroom', 'hybrid'], $trainingTypes);
+
+        $sessionStatuses = collect($this->getJson('/api/v1/lookups/training_session_status')->assertOk()->json('data'))
+            ->pluck('value')
+            ->all();
+        $this->assertEqualsCanonicalizing(
+            ['scheduled', 'in_progress', 'completed', 'cancelled'],
+            $sessionStatuses
+        );
+        $this->postJson('/api/v1/lookups-manage', [
+            'lookup_type' => 'training_session_status',
+            'value' => 'postponed',
+            'label' => 'Ertelendi',
+        ])->assertStatus(403);
+
+        $categories = collect($this->getJson('/api/v1/lookups/training_category')->assertOk()->json('data'))
+            ->pluck('value')
+            ->all();
+        $this->assertEqualsCanonicalizing(
+            ['general', 'technical', 'soft_skills', 'compliance', 'leadership', 'safety'],
+            $categories
+        );
+
+        $surveyTypes = collect($this->getJson('/api/v1/lookups/survey_type')->assertOk()->json('data'))
+            ->pluck('value')
+            ->all();
+        $this->assertEqualsCanonicalizing(
+            ['engagement', 'satisfaction', 'pulse', 'enps', 'onboarding', 'exit', 'custom'],
+            $surveyTypes
+        );
+
+        $questionTypes = collect($this->getJson('/api/v1/lookups/survey_question_type')->assertOk()->json('data'))
+            ->pluck('value')
+            ->all();
+        $this->assertEqualsCanonicalizing(
+            ['single_choice', 'multiple_choice', 'rating', 'nps', 'text', 'scale', 'matrix'],
+            $questionTypes
+        );
+        $this->postJson('/api/v1/lookups-manage', [
+            'lookup_type' => 'survey_question_type',
+            'value' => 'file_upload',
+            'label' => 'Dosya',
+        ])->assertStatus(403);
+
+        $this->lookups->assertValid(LookupService::TYPE_DOCUMENT_APPROVAL_STATUS, 'pending', $this->company->id, 'approval_status');
+        $this->lookups->assertValid(LookupService::TYPE_EMPLOYEE_DOCUMENT_STATUS, 'archived', $this->company->id, 'status');
+        $this->lookups->assertValid(LookupService::TYPE_TRAINING_TYPE, 'hybrid', $this->company->id, 'type');
+        $this->lookups->assertValid(LookupService::TYPE_TRAINING_CATEGORY, 'safety', $this->company->id, 'category');
+        $this->lookups->assertValid(LookupService::TYPE_TRAINING_SESSION_STATUS, 'in_progress', $this->company->id, 'status');
+        $this->lookups->assertValid(LookupService::TYPE_SURVEY_TYPE, 'enps', $this->company->id, 'type');
+        $this->lookups->assertValid(LookupService::TYPE_SURVEY_QUESTION_TYPE, 'matrix', $this->company->id, 'question_type');
+        $this->lookups->assertValid(LookupService::TYPE_DOCUMENT_FILE_TYPE, 'pdf', $this->company->id, 'file_type');
+    }
 }

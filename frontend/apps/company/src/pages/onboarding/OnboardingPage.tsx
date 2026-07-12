@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { onboardingApi } from '@shared/services/api';
+import { onboardingApi, lookupsApi, type LookupItem } from '@shared/services/api';
 import toast from 'react-hot-toast';
 import { DataTable, ConfirmDialog, EmptyState } from '../../components/ui';
 import TemplateForm from '../../components/onboarding/TemplateForm';
@@ -38,7 +38,7 @@ interface Process {
   user: { id: number; name: string };
   template?: { id: number; name: string };
   assigned_to?: { id: number; name: string };
-  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+  status: string;
   progress: number;
   start_date: string;
   target_end_date?: string;
@@ -55,25 +55,16 @@ const statusBadgeClass: Record<string, string> = {
   cancelled: 'badge-danger',
 };
 
-const statusLabels: Record<string, string> = {
-  pending: 'Bekliyor',
-  in_progress: 'Devam Ediyor',
-  completed: 'Tamamlandı',
-  cancelled: 'İptal Edildi',
-};
-
 const OnboardingPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>('processes');
 
-  // Processes state
   const [processes, setProcesses] = useState<Process[]>([]);
   const [processesLoading, setProcessesLoading] = useState(true);
   const [processPage, setProcessPage] = useState(1);
   const [processTotalPages, setProcessTotalPages] = useState(1);
   const [processFormOpen, setProcessFormOpen] = useState(false);
 
-  // Templates state
   const [templates, setTemplates] = useState<Template[]>([]);
   const [templatesLoading, setTemplatesLoading] = useState(true);
   const [templatePage, setTemplatePage] = useState(1);
@@ -81,10 +72,23 @@ const OnboardingPage: React.FC = () => {
   const [templateFormOpen, setTemplateFormOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
 
-  // Delete state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{ type: 'template' | 'process'; item: Template | Process } | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const [processStatusOptions, setProcessStatusOptions] = useState<LookupItem[]>([]);
+
+  const loadLookups = useCallback(async () => {
+    try {
+      const statusRes = await lookupsApi.forType('onboarding_process_status');
+      setProcessStatusOptions(statusRes.data.data ?? []);
+    } catch {
+      console.error('Onboarding lookup listeleri yüklenemedi');
+    }
+  }, []);
+
+  const processStatusLabel = (value: string) =>
+    processStatusOptions.find((o) => o.value === value)?.label || value;
 
   const loadProcesses = useCallback(async () => {
     try {
@@ -115,16 +119,16 @@ const OnboardingPage: React.FC = () => {
   }, [templatePage]);
 
   useEffect(() => {
+    void loadLookups();
+  }, [loadLookups]);
+
+  useEffect(() => {
     if (activeTab === 'processes') {
       loadProcesses();
     } else {
       loadTemplates();
     }
   }, [activeTab, loadProcesses, loadTemplates]);
-
-  
-
-  
 
   const handleTemplateSubmit = async (data: Omit<Template, 'id'>) => {
     if (selectedTemplate) {
@@ -214,8 +218,8 @@ const OnboardingPage: React.FC = () => {
       key: 'status',
       title: 'Durum',
       render: (process: Process) => (
-        <span className={`badge ${statusBadgeClass[process.status]}`}>
-          {statusLabels[process.status]}
+        <span className={`badge ${statusBadgeClass[process.status] || 'badge-secondary'}`}>
+          {processStatusLabel(process.status)}
         </span>
       ),
     },
