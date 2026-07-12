@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { employeesApi, customFieldsApi, lookupsApi, type LookupItem } from '@shared/services/api';
 import { getErrorMessage } from '@shared/services/apiHelpers';
-import { CustomFieldRenderer, CustomFieldDefinition } from '@shared/components';
+import { CustomFieldRenderer, CustomFieldDefinition, Select } from '@shared/components';
 import type { CustomFieldValue } from '@shared/types/modules';
 import toast from 'react-hot-toast';
 import { BsSave, BsX, BsPersonBadge, BsBuilding, BsBriefcase, BsCurrencyDollar, BsShieldCheck, BsGear } from 'react-icons/bs';
@@ -338,17 +338,17 @@ const EmployeeForm: React.FC = () => {
 
                 <div className="form-group">
                   <label className="form-label">Durum</label>
-                  <select
-                    className="form-select"
-                    value={formData.status}
-                    onChange={(e) => handleChange('status', e.target.value)}
-                  >
-                    {statusOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
+                  <Select
+                    value={formData.status || ''}
+                    onChange={(v) => handleChange('status', v)}
+                    options={statusOptions.map((opt) => ({
+                      value: opt.value,
+                      label: opt.label,
+                      color: opt.color,
+                    }))}
+                    placeholder="Seçiniz..."
+                    aria-label="Durum"
+                  />
                 </div>
 
                 {/* Portal Erişimi */}
@@ -656,18 +656,17 @@ const EmployeeForm: React.FC = () => {
 
                 <div className="form-group">
                   <label className="form-label">Çalışma Tipi</label>
-                  <select
-                    className="form-select"
+                  <Select
                     value={formData.work_type || ''}
-                    onChange={(e) => handleChange('work_type', e.target.value)}
-                  >
-                    <option value="">Seçiniz...</option>
-                    {workTypeOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(v) => handleChange('work_type', v)}
+                    options={workTypeOptions.map((opt) => ({
+                      value: opt.value,
+                      label: opt.label,
+                      color: opt.color,
+                    }))}
+                    placeholder="Seçiniz..."
+                    aria-label="Çalışma Tipi"
+                  />
                 </div>
               </div>
             )}

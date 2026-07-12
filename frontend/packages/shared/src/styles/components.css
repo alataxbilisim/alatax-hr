@@ -988,3 +988,183 @@ textarea:focus {
   z-index: 3;
 }
 
+/* ====================================
+   AX SELECT (Radix — Lookup Engine yüzü)
+   ==================================== */
+.ax-select-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  width: 100%;
+  height: var(--control-height);
+  padding: 0 var(--sp-3);
+  font-size: var(--fs-body);
+  line-height: 1.25;
+  color: var(--text-primary);
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.ax-select-trigger:hover:not(:disabled) {
+  border-color: var(--border-secondary, var(--input-border));
+}
+
+.ax-select-trigger:focus,
+.ax-select-trigger[data-state='open'] {
+  outline: none;
+  border-color: var(--input-focus-border);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+.ax-select-trigger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ax-select-trigger.is-invalid {
+  border-color: var(--danger);
+}
+
+.ax-select-trigger-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Uzun etiket: trigger'da ellipsis; title attribute tooltip */
+.ax-select-value-text {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex: 1;
+  text-align: left;
+}
+
+.ax-select-trigger [data-placeholder] {
+  color: var(--input-placeholder);
+}
+
+.ax-select-icon {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+.ax-select-swatch {
+  flex-shrink: 0;
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-primary);
+}
+
+.ax-select-content {
+  z-index: 1000;
+  overflow: hidden;
+  background: var(--surface-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  min-width: var(--radix-select-trigger-width);
+  max-width: min(90vw, 28rem);
+  animation: ax-select-in var(--transition-fast) ease-out;
+}
+
+.ax-select-content[data-side='top'] {
+  animation-name: ax-select-in-up;
+}
+
+@keyframes ax-select-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ax-select-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ax-select-viewport {
+  padding: var(--sp-1);
+  max-height: min(16rem, var(--radix-select-content-available-height, 16rem));
+}
+
+.ax-select-scroll-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: calc(var(--control-height) * 0.75);
+  color: var(--text-secondary);
+  background: var(--surface-primary);
+  cursor: default;
+}
+
+.ax-select-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: var(--control-height);
+  padding: 0 calc(var(--sp-3) + 1.25rem) 0 var(--sp-3);
+  font-size: var(--fs-body);
+  color: var(--text-primary);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+}
+
+.ax-select-item[data-highlighted] {
+  background: var(--bg-hover);
+}
+
+.ax-select-item[data-state='checked'] {
+  background: var(--primary-soft);
+  color: var(--text-primary);
+}
+
+.ax-select-item[data-disabled] {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.ax-select-item-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+  flex: 1;
+  /* Açık menüde tam metin — wrap serbest */
+  white-space: normal;
+  word-break: break-word;
+}
+
+.ax-select-item-check {
+  position: absolute;
+  right: var(--sp-2);
+  display: inline-flex;
+  color: var(--primary);
+  font-size: 1rem;
+}
+

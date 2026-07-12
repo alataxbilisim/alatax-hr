@@ -492,3 +492,18 @@ Kullanım varsa → `is_active=false` (pasif). Pasif değer yeni formlarda seçi
 | Kalan ~46 combobox + kanban hibrit | ⏳ sonraki dalgalar |
 
 **Görsel kontrol (kullanıcı):** Personel formunda Durum API’den; Yönetim lookup rename → liste/badge `status_label` yeni metin.
+
+---
+
+## Ortak Select (Radix) — ADIM 4
+
+| Madde | Durum |
+|-------|--------|
+| `@radix-ui/react-select` → `@alatax/shared` | ✅ |
+| `@shared/components/Select` (token, density, ellipsis+title, color swatch, portal) | ✅ |
+| `searchable` iskelet (default kapalı) | ✅ |
+| Pilot: Personel Durum + Çalışma Tipi → ortak Select | ✅ |
+| Yazı sığma (trigger truncate) + açık menü token | ✅ (görsel onay bekleniyor) |
+| Kalan ~106 native `<select>` | ⏳ yayılım dalgaları |
+
+**DUR — görsel kontrol:** Personel formunda Durum/Çalışma Tipi aç; uzun etiket + menü tasarımına bak.

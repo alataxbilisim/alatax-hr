@@ -1,6 +1,5 @@
-// Main entry point for shared package
-// components: CustomFieldDefinition types/modules.ts ile çakışmasın diye yalnızca component re-export
-export { CustomFieldRenderer } from './components';
+export { CustomFieldRenderer, Select } from './components';
+export type { SelectOption, SelectProps } from './components';
 export * from './hooks';
 export * from './services';
 export * from './utils';
