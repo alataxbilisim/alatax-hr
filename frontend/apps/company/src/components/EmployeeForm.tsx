@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { employeesApi, customFieldsApi } from '@shared/services/api';
+import { employeesApi, customFieldsApi, lookupsApi, type LookupItem } from '@shared/services/api';
 import { getErrorMessage } from '@shared/services/apiHelpers';
 import { CustomFieldRenderer, CustomFieldDefinition } from '@shared/components';
 import type { CustomFieldValue } from '@shared/types/modules';
@@ -75,6 +75,8 @@ const EmployeeForm: React.FC = () => {
   const [customFields, setCustomFields] = useState<CustomFieldDefinition[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [managers, setManagers] = useState<Manager[]>([]);
+  const [statusOptions, setStatusOptions] = useState<LookupItem[]>([]);
+  const [workTypeOptions, setWorkTypeOptions] = useState<LookupItem[]>([]);
   
   const [formData, setFormData] = useState<EmployeeFormData>({
     employee_code: '',
@@ -112,6 +114,20 @@ const EmployeeForm: React.FC = () => {
     }
   }, []);
 
+  const loadLookups = useCallback(async () => {
+    try {
+      const [statusRes, workTypeRes] = await Promise.all([
+        lookupsApi.forType('employee_status'),
+        lookupsApi.forType('work_type'),
+      ]);
+      setStatusOptions(statusRes.data.data ?? []);
+      setWorkTypeOptions(workTypeRes.data.data ?? []);
+    } catch (error) {
+      console.error('Lookup listeleri yüklenemedi:', error);
+      toast.error('Durum / çalışma tipi listeleri yüklenemedi');
+    }
+  }, []);
+
   const loadEmployee = useCallback(async () => {
     try {
       setLoading(true);
@@ -137,10 +153,11 @@ const EmployeeForm: React.FC = () => {
     loadDepartments();
     loadManagers();
     loadCustomFields();
+    loadLookups();
     if (id) {
       loadEmployee();
     }
-  }, [id, loadDepartments, loadManagers, loadCustomFields, loadEmployee]);
+  }, [id, loadDepartments, loadManagers, loadCustomFields, loadLookups, loadEmployee]);
 
   
 
@@ -326,10 +343,11 @@ const EmployeeForm: React.FC = () => {
                     value={formData.status}
                     onChange={(e) => handleChange('status', e.target.value)}
                   >
-                    <option value="active">Aktif</option>
-                    <option value="on_leave">İzinli</option>
-                    <option value="suspended">Askıda</option>
-                    <option value="terminated">İşten Çıkmış</option>
+                    {statusOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -644,10 +662,11 @@ const EmployeeForm: React.FC = () => {
                     onChange={(e) => handleChange('work_type', e.target.value)}
                   >
                     <option value="">Seçiniz...</option>
-                    <option value="full_time">Tam Zamanlı</option>
-                    <option value="part_time">Yarı Zamanlı</option>
-                    <option value="remote">Uzaktan</option>
-                    <option value="hybrid">Hibrit</option>
+                    {workTypeOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>

@@ -16,7 +16,7 @@ import {
   BsCheckSquare,
   BsSquare,
 } from 'react-icons/bs';
-import { employeesApi } from '@shared/services/api';
+import { employeesApi, lookupsApi, type LookupItem } from '@shared/services/api';
 import { getErrorMessage } from '@shared/services/apiHelpers';
 import { toggleDensity } from '@shared/store/slices/themeSlice';
 import toast from 'react-hot-toast';
@@ -36,6 +36,8 @@ interface Employee {
   position?: string;
   title?: string;
   status: string;
+  status_label?: string;
+  status_color?: string;
   hire_date?: string;
   contract_type?: string;
   user?: {
@@ -78,6 +80,7 @@ const EmployeesPage: React.FC = () => {
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [bulkStatusDialogOpen, setBulkStatusDialogOpen] = useState(false);
   const [newBulkStatus, setNewBulkStatus] = useState('');
+  const [statusOptions, setStatusOptions] = useState<LookupItem[]>([]);
 
   const loadDepartments = useCallback(async () => {
     try {
@@ -85,6 +88,15 @@ const EmployeesPage: React.FC = () => {
       setDepartments(response.data.data);
     } catch (error) {
       console.error('Departmanlar yüklenemedi:', error);
+    }
+  }, []);
+
+  const loadStatusLookups = useCallback(async () => {
+    try {
+      const response = await lookupsApi.forType('employee_status');
+      setStatusOptions(response.data.data ?? []);
+    } catch (error) {
+      console.error('Durum lookup yüklenemedi:', error);
     }
   }, []);
 
@@ -117,7 +129,8 @@ const EmployeesPage: React.FC = () => {
 
   useEffect(() => {
     loadDepartments();
-  }, [loadDepartments]);
+    loadStatusLookups();
+  }, [loadDepartments, loadStatusLookups]);
 
   useEffect(() => {
     loadEmployees();
@@ -206,16 +219,20 @@ const EmployeesPage: React.FC = () => {
   const hasActiveFilters = Boolean(search || statusFilter || departmentFilter || contractTypeFilter);
   const advancedFilterCount = [statusFilter, departmentFilter, contractTypeFilter].filter(Boolean).length;
 
-  const getStatusBadge = (status: string) => {
-    const statusMap: Record<string, { label: string; className: string }> = {
-      active: { label: 'Aktif', className: 'badge-success' },
-      on_leave: { label: 'İzinli', className: 'badge-warning' },
-      suspended: { label: 'Askıda', className: 'badge-danger' },
-      terminated: { label: 'İşten Çıkmış', className: 'badge-secondary' },
-    };
+  const getStatusBadge = (employee: Employee) => {
+    const label = employee.status_label
+      || statusOptions.find((o) => o.value === employee.status)?.label
+      || employee.status;
+    const className =
+      employee.status === 'active'
+        ? 'badge-success'
+        : employee.status === 'on_leave'
+          ? 'badge-warning'
+          : employee.status === 'suspended'
+            ? 'badge-danger'
+            : 'badge-secondary';
 
-    const statusInfo = statusMap[status] || { label: status, className: 'badge-secondary' };
-    return <span className={`badge ${statusInfo.className}`}>{statusInfo.label}</span>;
+    return <span className={`badge ${className}`}>{label}</span>;
   };
 
   const columns: Column<Employee>[] = useMemo(
@@ -288,7 +305,7 @@ const EmployeesPage: React.FC = () => {
         key: 'status',
         title: 'Durum',
         width: '100px',
-        render: (e) => getStatusBadge(e.status),
+        render: (e) => getStatusBadge(e),
       },
       {
         key: 'portal',
@@ -345,7 +362,7 @@ const EmployeesPage: React.FC = () => {
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps -- handlers stable enough for list render
-    [employees, selectedIds, navigate]
+    [employees, selectedIds, navigate, statusOptions]
   );
 
   return (
@@ -462,10 +479,11 @@ const EmployeesPage: React.FC = () => {
                 }}
               >
                 <option value="">Tümü</option>
-                <option value="active">Aktif</option>
-                <option value="on_leave">İzinli</option>
-                <option value="suspended">Askıda</option>
-                <option value="terminated">İşten Çıkmış</option>
+                {statusOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
@@ -567,10 +585,11 @@ const EmployeesPage: React.FC = () => {
                   onChange={(e) => setNewBulkStatus(e.target.value)}
                 >
                   <option value="">Seçiniz...</option>
-                  <option value="active">Aktif</option>
-                  <option value="on_leave">İzinli</option>
-                  <option value="suspended">Askıda</option>
-                  <option value="terminated">İşten Çıkmış</option>
+                  {statusOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>

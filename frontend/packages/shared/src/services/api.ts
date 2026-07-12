@@ -1162,3 +1162,33 @@ export const customFieldsApi = {
   getEntityTypes: () => api.get('/custom-fields/entity-types'),
 };
 
+/** Lookup Engine — form dropdown (GET /lookups/{type}) + yönetim CRUD */
+export interface LookupItem {
+  id: number;
+  company_id: number | null;
+  lookup_type: string;
+  value: string;
+  label: string;
+  color: string | null;
+  sort_order: number;
+  is_active: boolean;
+  is_system: boolean;
+  is_hybrid: boolean;
+  parent_lookup_id: number | null;
+  meta: Record<string, unknown> | null;
+  is_company_override: boolean;
+}
+
+export const lookupsApi = {
+  forType: (type: string) => api.get(`/lookups/${type}`),
+  resolve: (lookupType: string, value: string) =>
+    api.get('/lookups-resolve', { params: { lookup_type: lookupType, value } }),
+  manageList: (lookupType: string, activeOnly = false) =>
+    api.get('/lookups-manage', { params: { lookup_type: lookupType, active_only: activeOnly } }),
+  create: <T extends object>(data: T) => api.post('/lookups-manage', data),
+  update: <T extends object>(id: number, data: T) => api.put(`/lookups-manage/${id}`, data),
+  delete: (id: number) => api.delete(`/lookups-manage/${id}`),
+  reorder: (lookupType: string, items: Array<{ value: string; sort_order: number }>) =>
+    api.post('/lookups-manage/reorder', { lookup_type: lookupType, items }),
+};
+

@@ -475,3 +475,20 @@ Kullanım varsa → `is_active=false` (pasif). Pasif değer yeni formlarda seçi
 ---
 
 **DUR (görsel kontrol).** Altyapı + pilot sonrası: Personel Durum dropdown API’den; lookup label rename → form + mevcut kayıtta yeni label.
+
+---
+
+## Uygulama durumu (ADIM 3 — çekirdek + pilot)
+
+| Madde | Durum |
+|-------|--------|
+| Kararlar + K-A/K-B/K-C dokümante | ✅ |
+| `lookups` migration + Model + LookupSeeder | ✅ |
+| LookupService (`forType`, `resolve`, kullanım) | ✅ |
+| CRUD API + `management.lookups.*` | ✅ |
+| Sistem seed (para/şehir/kan/ülke) | ✅ |
+| Pilot: `employee_status` + `work_type` (Personel + İşe Alım employment_type) | ✅ |
+| LookupTest (K-A, K-B, sistem 403, tenant, permission) | ✅ (12) |
+| Kalan ~46 combobox + kanban hibrit | ⏳ sonraki dalgalar |
+
+**Görsel kontrol (kullanıcı):** Personel formunda Durum API’den; Yönetim lookup rename → liste/badge `status_label` yeni metin.

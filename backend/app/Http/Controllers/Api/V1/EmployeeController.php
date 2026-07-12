@@ -18,6 +18,7 @@ use App\Models\User;
 use App\Services\DataScopeService;
 use App\Services\EmployeeImportService;
 use App\Services\EmployeeSensitiveFieldService;
+use App\Services\LookupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -31,6 +32,7 @@ class EmployeeController extends BaseController
     public function __construct(
         protected DataScopeService $dataScope,
         protected EmployeeSensitiveFieldService $sensitiveFields,
+        protected LookupService $lookups,
     ) {}
 
     /**
@@ -265,7 +267,7 @@ class EmployeeController extends BaseController
             'contract_start_date' => 'nullable|date',
             'contract_end_date' => 'nullable|date|after:contract_start_date',
             'contract_type' => 'nullable|in:permanent,temporary,intern,contract',
-            'work_type' => 'nullable|in:full_time,part_time,remote,hybrid',
+            'work_type' => 'nullable|string|max:100',
 
             // Maaş bilgileri
             'gross_salary' => 'nullable|numeric|min:0',
@@ -278,8 +280,8 @@ class EmployeeController extends BaseController
             'sgk_number' => 'nullable|string|max:20',
             'sgk_start_date' => 'nullable|date',
 
-            // Durum
-            'status' => 'nullable|in:active,on_leave,suspended,terminated',
+            // Durum — LookupEngine employee_status value (K-A)
+            'status' => 'nullable|string|max:100',
             'notes' => 'nullable|string',
             'custom_fields' => 'nullable|array',
 
@@ -287,6 +289,10 @@ class EmployeeController extends BaseController
             'create_portal_access' => 'boolean',
             'portal_email' => 'nullable|required_if:create_portal_access,true|email|unique:users,email',
         ]);
+
+        $this->lookups->assertValid(LookupService::TYPE_EMPLOYEE_STATUS, $validated['status'] ?? null, $this->getCompanyId(), 'status');
+        $this->lookups->assertValid(LookupService::TYPE_WORK_TYPE, $validated['work_type'] ?? null, $this->getCompanyId(), 'work_type');
+        $this->lookups->assertValid(LookupService::TYPE_CURRENCY, $validated['currency'] ?? null, $this->getCompanyId(), 'currency');
 
         $strip = $this->sensitiveFields->stripUnauthorizedWrite($request->user(), $validated);
         $validated = $strip['data'];
@@ -425,7 +431,7 @@ class EmployeeController extends BaseController
             'contract_start_date' => 'nullable|date',
             'contract_end_date' => 'nullable|date|after:contract_start_date',
             'contract_type' => 'nullable|in:permanent,temporary,intern,contract',
-            'work_type' => 'nullable|in:full_time,part_time,remote,hybrid',
+            'work_type' => 'nullable|string|max:100',
             'gross_salary' => 'nullable|numeric|min:0',
             'net_salary' => 'nullable|numeric|min:0',
             'currency' => 'nullable|string|max:3',
@@ -433,12 +439,16 @@ class EmployeeController extends BaseController
             'iban' => 'nullable|string|max:34',
             'sgk_number' => 'nullable|string|max:20',
             'sgk_start_date' => 'nullable|date',
-            'status' => 'nullable|in:active,on_leave,suspended,terminated',
+            'status' => 'nullable|string|max:100',
             'termination_date' => 'nullable|date',
             'termination_reason' => 'nullable|string',
             'notes' => 'nullable|string',
             'custom_fields' => 'nullable|array',
         ]);
+
+        $this->lookups->assertValid(LookupService::TYPE_EMPLOYEE_STATUS, $validated['status'] ?? null, $this->getCompanyId(), 'status');
+        $this->lookups->assertValid(LookupService::TYPE_WORK_TYPE, $validated['work_type'] ?? null, $this->getCompanyId(), 'work_type');
+        $this->lookups->assertValid(LookupService::TYPE_CURRENCY, $validated['currency'] ?? null, $this->getCompanyId(), 'currency');
 
         $strip = $this->sensitiveFields->stripUnauthorizedWrite($request->user(), $validated);
         $validated = $strip['data'];
@@ -695,9 +705,16 @@ class EmployeeController extends BaseController
             'ids' => 'required|array|min:1',
             'ids.*' => 'integer|exists:employees,id',
             'data' => 'required|array',
-            'data.status' => 'nullable|in:active,on_leave,suspended,terminated',
+            'data.status' => 'nullable|string|max:100',
             'data.department_id' => 'nullable|exists:departments,id',
         ]);
+
+        $this->lookups->assertValid(
+            LookupService::TYPE_EMPLOYEE_STATUS,
+            $validated['data']['status'] ?? null,
+            $this->getCompanyId(),
+            'data.status'
+        );
 
         $employees = Employee::where('company_id', $this->getCompanyId())
             ->whereIn('id', $validated['ids'])

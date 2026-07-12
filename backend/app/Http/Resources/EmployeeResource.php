@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Services\EmployeeSensitiveFieldService;
+use App\Services\LookupService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -18,6 +19,11 @@ class EmployeeResource extends JsonResource
         /** @var \App\Models\User|null $user */
         $user = $request->user();
         $fields = app(EmployeeSensitiveFieldService::class);
+        $lookups = app(LookupService::class);
+        $companyId = $this->company_id;
+
+        $statusResolved = $lookups->resolve(LookupService::TYPE_EMPLOYEE_STATUS, $this->status, $companyId);
+        $workTypeResolved = $lookups->resolve(LookupService::TYPE_WORK_TYPE, $this->work_type, $companyId);
 
         $data = [
             'id' => $this->id,
@@ -47,8 +53,11 @@ class EmployeeResource extends JsonResource
             'contract_end_date' => $this->contract_end_date,
             'contract_type' => $this->contract_type,
             'work_type' => $this->work_type,
+            'work_type_label' => $workTypeResolved['label'] ?? null,
             'currency' => $this->currency,
             'status' => $this->status,
+            'status_label' => $statusResolved['label'] ?? null,
+            'status_color' => $statusResolved['color'] ?? null,
             'termination_date' => $this->termination_date,
             'termination_reason' => $this->termination_reason,
             'notes' => $this->notes,

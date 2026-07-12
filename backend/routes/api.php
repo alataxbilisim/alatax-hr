@@ -319,6 +319,23 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:employees.departments.delete');
         });
 
+        // Lookups — form okuma (auth) + yönetim CRUD
+        Route::get('/lookups/{type}', [\App\Http\Controllers\Api\V1\LookupController::class, 'forType'])
+            ->where('type', '[a-z0-9_]+');
+        Route::get('/lookups-resolve', [\App\Http\Controllers\Api\V1\LookupController::class, 'resolve']);
+        Route::middleware('company_admin')->prefix('lookups-manage')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\V1\LookupController::class, 'index'])
+                ->middleware('permission:management.lookups.view');
+            Route::post('/', [\App\Http\Controllers\Api\V1\LookupController::class, 'store'])
+                ->middleware('permission:management.lookups.create');
+            Route::post('/reorder', [\App\Http\Controllers\Api\V1\LookupController::class, 'reorder'])
+                ->middleware('permission:management.lookups.edit');
+            Route::put('/{id}', [\App\Http\Controllers\Api\V1\LookupController::class, 'update'])
+                ->middleware('permission:management.lookups.edit');
+            Route::delete('/{id}', [\App\Http\Controllers\Api\V1\LookupController::class, 'destroy'])
+                ->middleware('permission:management.lookups.delete');
+        });
+
         // Custom Fields (global admin UI)
         Route::middleware('company_admin')->prefix('custom-fields')->group(function () {
             Route::get('/', [\App\Http\Controllers\Api\V1\CustomFieldController::class, 'index'])

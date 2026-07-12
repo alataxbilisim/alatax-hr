@@ -5,12 +5,17 @@ namespace App\Http\Controllers\Api\V1\Recruitment;
 use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\ActivityLog;
 use App\Models\JobPosition;
+use App\Services\LookupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class JobPositionController extends BaseController
 {
+    public function __construct(
+        private readonly LookupService $lookups
+    ) {}
+
     /**
      * İş pozisyonları listesi
      */
@@ -74,7 +79,7 @@ class JobPositionController extends BaseController
             'responsibilities' => 'nullable|string',
             'department' => 'nullable|string|max:100',
             'location' => 'nullable|string|max:100',
-            'employment_type' => 'sometimes|in:full_time,part_time,contract,internship,remote',
+            'employment_type' => 'sometimes|nullable|string|max:100',
             'experience_level' => 'sometimes|in:entry,mid,senior,lead,manager',
             'salary_min' => 'nullable|numeric|min:0',
             'salary_max' => 'nullable|numeric|min:0|gte:salary_min',
@@ -89,6 +94,13 @@ class JobPositionController extends BaseController
         if (! $companyId) {
             return $this->error('Bu işlem için bir firmaya bağlı olmanız gerekiyor.', 403);
         }
+
+        $this->lookups->assertValid(
+            LookupService::TYPE_WORK_TYPE,
+            $validated['employment_type'] ?? null,
+            $companyId,
+            'employment_type'
+        );
 
         $validated['slug'] = Str::slug($validated['title']).'-'.uniqid();
         $validated['company_id'] = $companyId;
@@ -113,7 +125,7 @@ class JobPositionController extends BaseController
             'responsibilities' => 'sometimes|nullable|string',
             'department' => 'sometimes|nullable|string|max:100',
             'location' => 'sometimes|nullable|string|max:100',
-            'employment_type' => 'sometimes|in:full_time,part_time,contract,internship,remote',
+            'employment_type' => 'sometimes|nullable|string|max:100',
             'experience_level' => 'sometimes|in:entry,mid,senior,lead,manager',
             'salary_min' => 'sometimes|nullable|numeric|min:0',
             'salary_max' => 'sometimes|nullable|numeric|min:0',
@@ -123,6 +135,13 @@ class JobPositionController extends BaseController
             'positions_count' => 'sometimes|integer|min:1',
             'application_deadline' => 'sometimes|nullable|date',
         ]);
+
+        $this->lookups->assertValid(
+            LookupService::TYPE_WORK_TYPE,
+            $validated['employment_type'] ?? null,
+            $this->getCompanyId(),
+            'employment_type'
+        );
 
         // Yayınlama
         if (isset($validated['status']) && $validated['status'] === 'active' && $position->status !== 'active') {

@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             PermissionSeeder::class,
             SuperAdminSeeder::class,
             LeaveTypeSeeder::class,
+            LookupSeeder::class,
         ]);
     }
 }

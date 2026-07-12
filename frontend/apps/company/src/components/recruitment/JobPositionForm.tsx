@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../ui';
-import { recruitmentApi } from '@shared/services/api';
+import { recruitmentApi, lookupsApi, type LookupItem } from '@shared/services/api';
 import toast from 'react-hot-toast';
 
 interface JobPositionFormValues {
@@ -8,7 +8,7 @@ interface JobPositionFormValues {
   title: string;
   department: string;
   location: string;
-  employment_type: 'full_time' | 'part_time' | 'contract' | 'internship' | 'remote';
+  employment_type: string;
   experience_level: 'entry' | 'mid' | 'senior' | 'lead' | 'manager';
   description: string;
   requirements: string;
@@ -36,13 +36,8 @@ interface JobPositionFormProps {
   };
 }
 
-const EMPLOYMENT_TYPES = ['full_time', 'part_time', 'contract', 'internship', 'remote'] as const;
 const EXPERIENCE_LEVELS = ['entry', 'mid', 'senior', 'lead', 'manager'] as const;
 const STATUSES = ['draft', 'active', 'paused', 'closed'] as const;
-
-function toEmploymentType(value: string | undefined): JobPositionFormValues['employment_type'] {
-  return EMPLOYMENT_TYPES.find((v) => v === value) ?? 'full_time';
-}
 
 function toExperienceLevel(value: string | undefined): JobPositionFormValues['experience_level'] {
   return EXPERIENCE_LEVELS.find((v) => v === value) ?? 'mid';
@@ -60,6 +55,7 @@ const JobPositionForm: React.FC<JobPositionFormProps> = ({
 }) => {
   const isEditing = !!position?.id;
   const [loading, setLoading] = useState(false);
+  const [workTypeOptions, setWorkTypeOptions] = useState<LookupItem[]>([]);
   const [formData, setFormData] = useState<JobPositionFormValues>({
     title: '',
     department: '',
@@ -75,36 +71,41 @@ const JobPositionForm: React.FC<JobPositionFormProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (isOpen) {
-      if (position) {
-        setFormData({
-          title: position.title || '',
-          department: position.department || '',
-          location: position.location || '',
-          employment_type: toEmploymentType(position.employment_type),
-          experience_level: toExperienceLevel(position.experience_level),
-          description: position.description || '',
-          requirements: position.requirements || '',
-          salary_min: position.salary_min,
-          salary_max: position.salary_max,
-          status: toPositionStatus(position.status),
-        });
-      } else {
-        setFormData({
-          title: '',
-          department: '',
-          location: '',
-          employment_type: 'full_time',
-          experience_level: 'mid',
-          description: '',
-          requirements: '',
-          salary_min: undefined,
-          salary_max: undefined,
-          status: 'draft',
-        });
-      }
-      setErrors({});
+    if (!isOpen) return;
+
+    lookupsApi
+      .forType('work_type')
+      .then((res) => setWorkTypeOptions(res.data.data ?? []))
+      .catch(() => toast.error('Çalışma tipi listesi yüklenemedi'));
+
+    if (position) {
+      setFormData({
+        title: position.title || '',
+        department: position.department || '',
+        location: position.location || '',
+        employment_type: position.employment_type || 'full_time',
+        experience_level: toExperienceLevel(position.experience_level),
+        description: position.description || '',
+        requirements: position.requirements || '',
+        salary_min: position.salary_min,
+        salary_max: position.salary_max,
+        status: toPositionStatus(position.status),
+      });
+    } else {
+      setFormData({
+        title: '',
+        department: '',
+        location: '',
+        employment_type: 'full_time',
+        experience_level: 'mid',
+        description: '',
+        requirements: '',
+        salary_min: undefined,
+        salary_max: undefined,
+        status: 'draft',
+      });
     }
+    setErrors({});
   }, [isOpen, position]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -169,14 +170,6 @@ const JobPositionForm: React.FC<JobPositionFormProps> = ({
       setLoading(false);
     }
   };
-
-  const employmentTypes = [
-    { value: 'full_time', label: 'Tam Zamanlı' },
-    { value: 'part_time', label: 'Yarı Zamanlı' },
-    { value: 'contract', label: 'Sözleşmeli' },
-    { value: 'internship', label: 'Stajyer' },
-    { value: 'remote', label: 'Uzaktan' },
-  ];
 
   const experienceLevels = [
     { value: 'entry', label: 'Giriş Seviye' },
@@ -264,7 +257,7 @@ const JobPositionForm: React.FC<JobPositionFormProps> = ({
               value={formData.employment_type}
               onChange={handleChange}
             >
-              {employmentTypes.map((t) => (
+              {workTypeOptions.map((t) => (
                 <option key={t.value} value={t.value}>{t.label}</option>
               ))}
             </select>

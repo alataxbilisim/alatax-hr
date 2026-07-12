@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\EmploymentType;
 use App\Enums\ExperienceLevel;
 use App\Enums\JobPositionStatus;
 use App\Traits\BelongsToCompany;
@@ -46,7 +45,7 @@ class JobPosition extends Model
         'positions_count' => 'integer',
         'application_deadline' => 'date',
         'published_at' => 'datetime',
-        'employment_type' => EmploymentType::class,
+        // employment_type: LookupService TYPE_WORK_TYPE value (string referans, K-A)
         'experience_level' => ExperienceLevel::class,
         'status' => JobPositionStatus::class,
     ];
