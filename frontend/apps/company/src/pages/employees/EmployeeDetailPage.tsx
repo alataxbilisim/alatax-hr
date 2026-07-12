@@ -20,7 +20,7 @@ import {
 import { employeesApi } from '@shared/services/api';
 import { getErrorMessage } from '@shared/services/apiHelpers';
 import toast from 'react-hot-toast';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@shared/i18n';
 import { ConfirmDialog, Modal } from '../../components/ui';
 import {
   GeneralTab,

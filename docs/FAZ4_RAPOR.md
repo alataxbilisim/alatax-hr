@@ -6,17 +6,52 @@
 
 ---
 
-## ÖZET TABLO (gece otonom — güncellenir)
+## ÖZET TABLO — Gece otonom (12 Temmuz 2026)
 
-| Adım | Durum | Not |
-|------|--------|-----|
-| 0 Radix Select boş değer | ✅ | `4995e61` sentinel + clearable |
-| 1 Grup 2 İşe Alım/kanban | 🔄 | application_stage hibrit + Select |
-| 2 Grup 3 kalan modüller | ⏳ | |
-| 3 Lookup Yönetim UI | ⏳ | |
-| 4 Custom Field onarımı | ⏳ | |
-| 5 2FA challenge UI | ⏳ | |
-| 6 Deploy + Test turu | ⏳ | |
+| Adım | Durum | Commit / not |
+|------|--------|----------------|
+| 0 Radix Select boş değer | ✅ | `4995e61` |
+| 1 Grup 2 İşe Alım/kanban | ✅ | `279e060` (+ docs `12c1175`) |
+| 2 Grup 3 kalan modüller | ✅ | `f306873` (tek commit — ortak LookupService) |
+| 3 Lookup Yönetim UI | ✅ | `3cd5792` → `/lookups` |
+| 4 Custom Field onarımı | ✅ | `b07f182` (mesaj yanıltıcı: CF+2FA karışık) + `2598300` detay/test |
+| 5 2FA challenge UI | ✅ | `b07f182` içinde (Company+SA+Portal) |
+| 6 Deploy + Test turu | ✅ | `docs/DEPLOY_UBUNTU.md`, `docs/TEST_TURU.md` (bu commit) |
+
+### Commit listesi (Grup1 opak sonrası)
+
+```
+2598300 feat(faz4): custom field detay gösterimi + validation test
+b07f182 feat(faz4): Lookup Yönetim UI — Listeler sayfası  ← aslında CF validasyon + 2FA UI
+3cd5792 feat(faz4): Lookup Yönetim UI — Listeler sayfası  ← gerçek Listeler sayfası
+f306873 feat(faz4): Grup 3 kalan modüller — Lookup+Select yayılımı
+12c1175 docs(faz4): ADIM 0-1 özet + Grup 2 rapor
+279e060 feat(faz4): Grup 2 İşe Alım — application_stage hibrit kanban + Select
+4995e61 fix(faz4): radix select boş değer sentinel + clearable
+357120d feat(faz4): Lookup+Select yayılım Grup 1 + dropdown opak menü
+```
+
+### CI
+
+- Push: `origin/faz4-form-engine`
+- Actions: https://github.com/alataxbilisim/alatax-hr/actions?query=branch%3Afaz4-form-engine  
+- Yerel: LookupTest **21 passed** (sqlite); 3 SPA tsc (i18n fix sonrası doğrulanacak)
+
+### KARAR BEKLENENLER
+
+1. **Başvuru kaynağı** FE↔BE etiket seti uyumsuz (`website` vs `job_board`) — dokunulmadı.
+2. **hired → onboarding** otomatik tetik kodda yok; yeni otomasyon icat edilmedi.
+3. **survey_question_type** SYSTEM yapıldı (düşük risk); genişletme istenirse firma tipine alınabilir.
+4. **expense_categories / request_types / shifts Company CRUD** — bilerek ADIM 3 Listeler dışı bırakıldı (zengin tablo UI sonraki).
+5. **Commit mesajı `b07f182`:** Listeler değil; CF+2FA içerir — history rewrite yok.
+
+### Yarın önce şunlara bak (kullanıcı)
+
+1. Dropdown menü opak mı + boş değer/Tümü/clearable Radix hatasız mı?
+2. Kanban kolonları Listeler’den label/renk değişince güncelleniyor mu (status kodu sabit)?
+3. `/lookups` CRUD: sistem kilit / hibrit kısıt / K-B pasif?
+4. 2FA’lı hesap ile login challenge → verify uçtan uca?
+5. Personel detay özel alan sekmesi + zorunlu custom field 422?
 
 ---
 

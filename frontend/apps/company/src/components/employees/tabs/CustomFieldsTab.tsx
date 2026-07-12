@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@shared/i18n';
 import { BsListCheck } from 'react-icons/bs';
 import { CustomFieldRenderer, type CustomFieldDefinition } from '@shared/components';
 import { customFieldsApi } from '@shared/services/api';
