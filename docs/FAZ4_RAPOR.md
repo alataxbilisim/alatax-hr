@@ -11,13 +11,32 @@
 **Amaç:** Gece eklenen 6 özelliğin CI derlemesi değil, **mantık** kanıtı. Yeni özellik yok; test derinleştirme + bulunan kırık düzeltme.  
 **KARAR BEKLENENLER’e dokunulmadı:** başvuru kaynağı FE↔BE, hired→onboarding otomasyonu, expense/request CRUD.
 
-### Suite özeti (yerel sqlite)
+### Suite özeti
 
 | Kapsam | Sonuç |
 |--------|--------|
-| Doğrulama filtresi (`ApplicationStageKanbanTest` + `LookupTest` + `EmployeeCustomFieldValidationTest` + `Totp2faTest`) | **43 passed** (237 assertions) |
+| Doğrulama filtresi (Kanban+Lookup+CF+2FA) — host sqlite | **43 passed** (237 assertions) |
 | Select empty contract (`assert-select-empty-contract.mjs`) | **PASSED** |
-| Tam backend suite | **215 passed**, 6 failed (`TimesheetTest` break start/end — gece işiyle **ilgisiz**, önceden var), 1 risky |
+| Tam suite Docker Postgres (CI eşdeğeri) | **221 passed**, 1 risky (875 assertions) — ~7 dk |
+| Host sqlite tam suite | Timesheet fail (date `where` sqlite) — CI Postgres’te geçiyor; bu turda dokunulmadı |
+
+### Commit
+
+`test(faz4): gece işi doğrulama — kanban/2fa/customfield/lookup/select testleri` (`ba772a5`)  
++ `fix(faz4): CI engelleri — pint style + portal 2FA login lint` (`255f110`)  
++ SurveyTest LookupSeeder (Grup 3 regressiyon)
+
+### CI
+
+| Run | SHA | Süre | Sonuç |
+|-----|-----|------|--------|
+| [#58](https://github.com/alataxbilisim/alatax-hr/actions/runs/29206290752) | `ba772a5` | ~46s | ❌ Pint + Portal lint |
+| [#59](https://github.com/alataxbilisim/alatax-hr/actions/runs/29206447447) | `255f110` | **2m 50s** | FE ✅ / BE ❌ `SurveyTest` (lookup seed yok → type 422) |
+| Sonraki | SurveyTest fix + rapor | beklenir | — |
+
+**Ek kırık:** Grup 3 sonrası `SurveyTest` LookupSeeder’sız `satisfaction` gönderiyordu. Fix: setUp’a `LookupSeeder` (test zayıflatılmadı).
+
+https://github.com/alataxbilisim/alatax-hr/actions?query=branch%3Afaz4-form-engine
 
 ### 1. Kanban hibrit (`application_stage`) — kritik
 
@@ -66,18 +85,6 @@
 | Soru | Öncesi | Sonrası |
 |------|--------|---------|
 | Boş submit ≠ ilk öğe? | Kodda sentinel vardı; otomatik sözleşme testi yoktu | **YENİ** `frontend/packages/shared/scripts/assert-select-empty-contract.mjs` — boş/sanitize, allowEmpty→sentinel, zorunlu boş→undefined, filtre “Tümü”→boş |
-
-### Commit
-
-`test(faz4): gece işi doğrulama — kanban/2fa/customfield/lookup/select testleri`
-
-### CI
-
-- Run: https://github.com/alataxbilisim/alatax-hr/actions/runs/29206290752 (`ba772a5`) — **failure** (~46s): Pint (Grup 3 controller style) + Portal lint (`_result` unused in 2FA LoginPage).
-- Follow-up fix commit: Pint 3 controller + Portal login lint; yeni run beklenir.
-
-Push sonrası Actions: https://github.com/alataxbilisim/alatax-hr/actions?query=branch%3Afaz4-form-engine  
-Not: Yerel Timesheet flake CI PHPUnit’a ulaşmadan Pint/Lint’te duruyordu; bu turda o engeller açıldı. Timesheet 6 fail yerel sqlite’da hâlâ var — CI Postgres’te ayrıca izlenecek.
 
 ---
 

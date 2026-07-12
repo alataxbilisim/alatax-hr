@@ -10,6 +10,7 @@ use App\Models\Module;
 use App\Models\Survey;
 use App\Models\SurveyQuestion;
 use App\Models\User;
+use Database\Seeders\LookupSeeder;
 use Database\Seeders\PermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
@@ -30,6 +31,7 @@ class SurveyTest extends TestCase
         parent::setUp();
 
         $this->seed(PermissionSeeder::class);
+        $this->seed(LookupSeeder::class);
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
         $this->company = Company::factory()->create([
