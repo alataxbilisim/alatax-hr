@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { leavesApi } from '@shared/services/api';
+import { leavesApi, lookupsApi, type LookupItem } from '@shared/services/api';
+import { Select } from '@shared/components';
 import toast from 'react-hot-toast';
 import { DataTable, ConfirmDialog, Modal } from '../../components/ui';
 import LeaveRequestForm from '../../components/leaves/LeaveRequestForm';
@@ -79,6 +80,7 @@ const LeavesPage: React.FC = () => {
   const [requestTotalPages, setRequestTotalPages] = useState(1);
   const [requestFormOpen, setRequestFormOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('');
+  const [statusOptions, setStatusOptions] = useState<LookupItem[]>([]);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<LeaveRequest | null>(null);
 
@@ -144,6 +146,19 @@ const LeavesPage: React.FC = () => {
     }
   }, []);
 
+  const loadStatusLookups = useCallback(async () => {
+    try {
+      const response = await lookupsApi.forType('leave_request_status');
+      setStatusOptions(response.data.data ?? []);
+    } catch {
+      console.error('İzin durum lookup yüklenemedi');
+    }
+  }, []);
+
+  useEffect(() => {
+    loadStatusLookups();
+  }, [loadStatusLookups]);
+
   useEffect(() => {
     if (activeTab === 'requests') {
       loadRequests();
@@ -204,14 +219,15 @@ const LeavesPage: React.FC = () => {
   };
 
   const getStatusBadge = (status: string) => {
-    const statusMap: Record<string, { label: string; class: string }> = {
-      pending: { label: 'Bekliyor', class: 'badge-warning' },
-      approved: { label: 'Onaylandı', class: 'badge-success' },
-      rejected: { label: 'Reddedildi', class: 'badge-danger' },
-      cancelled: { label: 'İptal', class: 'badge-secondary' },
+    const classMap: Record<string, string> = {
+      pending: 'badge-warning',
+      approved: 'badge-success',
+      rejected: 'badge-danger',
+      cancelled: 'badge-secondary',
     };
-    const s = statusMap[status] || { label: status, class: 'badge-secondary' };
-    return <span className={`badge ${s.class}`}>{s.label}</span>;
+    const label = statusOptions.find((o) => o.value === status)?.label || status;
+    const className = classMap[status] || 'badge-secondary';
+    return <span className={`badge ${className}`}>{label}</span>;
   };
 
   const requestColumns = [
@@ -325,18 +341,21 @@ const LeavesPage: React.FC = () => {
           <>
             <div className="list-filter-bar">
               <BsFilter size={16} style={{ color: 'var(--text-tertiary)', flexShrink: 0 }} />
-              <select
-                className="form-control"
-                style={{ width: 'auto', minWidth: 150 }}
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-              >
-                <option value="">Tüm Durumlar</option>
-                <option value="pending">Bekleyen</option>
-                <option value="approved">Onaylanan</option>
-                <option value="rejected">Reddedilen</option>
-                <option value="cancelled">İptal</option>
-              </select>
+              <div style={{ minWidth: 150 }}>
+                <Select
+                  value={statusFilter}
+                  onChange={setStatusFilter}
+                  options={statusOptions.map((opt) => ({
+                    value: opt.value,
+                    label: opt.label,
+                    color: opt.color,
+                  }))}
+                  allowEmpty
+                  emptyLabel="Tüm Durumlar"
+                  placeholder="Tüm Durumlar"
+                  aria-label="Durum filtresi"
+                />
+              </div>
             </div>
             <DataTable
               columns={requestColumns}

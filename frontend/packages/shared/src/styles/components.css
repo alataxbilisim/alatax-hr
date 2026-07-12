@@ -1068,10 +1068,12 @@ textarea:focus {
 }
 
 .ax-select-content {
-  z-index: 1000;
+  /* Portal menü — OPAK arka plan (surface-primary rgba şeffaf; okunamaz) */
+  z-index: 1100;
   overflow: hidden;
-  background: var(--surface-primary);
-  border: 1px solid var(--border-primary);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border-secondary, var(--border-primary));
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-xl);
   min-width: var(--radix-select-trigger-width);
@@ -1116,7 +1118,7 @@ textarea:focus {
   justify-content: center;
   height: calc(var(--control-height) * 0.75);
   color: var(--text-secondary);
-  background: var(--surface-primary);
+  background: var(--bg-elevated);
   cursor: default;
 }
 

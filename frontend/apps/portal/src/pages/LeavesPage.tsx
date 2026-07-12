@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { portalApi } from '@shared/services/api';
+import { Select } from '@shared/components';
 import toast from 'react-hot-toast';
 import { BsPlus, BsCalendarCheck, BsX } from 'react-icons/bs';
 
@@ -265,19 +266,17 @@ const LeavesPage: React.FC = () => {
             <div className="modal-mobile-body">
               <div className="mb-3">
                 <label className="form-label">İzin Türü *</label>
-                <select
-                  className="form-control"
+                <Select
                   value={formData.leave_type_id}
-                  onChange={(e) => setFormData({ ...formData, leave_type_id: e.target.value })}
-                  required
-                >
-                  <option value="">Seçiniz</option>
-                  {leaveTypes.map((type) => (
-                    <option key={type.id} value={type.id}>
-                      {type.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(v) => setFormData({ ...formData, leave_type_id: v })}
+                  options={leaveTypes.map((type) => ({
+                    value: String(type.id),
+                    label: type.name,
+                  }))}
+                  allowEmpty
+                  placeholder="Seçiniz"
+                  aria-label="İzin türü"
+                />
               </div>
               <div className="mb-3">
                 <label className="form-label">Başlangıç Tarihi *</label>

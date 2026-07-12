@@ -12,6 +12,7 @@ import {
 } from 'react-icons/bs';
 import { departmentsApi } from '@shared/services/api';
 import { getErrorMessage } from '@shared/services/apiHelpers';
+import { Select } from '@shared/components';
 import toast from 'react-hot-toast';
 import { Modal, ConfirmDialog, DataTable } from '../../components/ui';
 import type { Column } from '../../components/ui/DataTable';
@@ -392,34 +393,37 @@ const DepartmentsPage: React.FC = () => {
 
           <div className="form-group">
             <label className="form-label">Üst Departman</label>
-            <select
-              className="form-select"
-              value={formData.parent_id || ''}
-              onChange={(e) => setFormData({ ...formData, parent_id: e.target.value ? Number(e.target.value) : null })}
-            >
-              <option value="">Yok (Kök Departman)</option>
-              {allDepartments
-                .filter(d => d.id !== selectedDepartment?.id)
-                .map((dept) => (
-                  <option key={dept.id} value={dept.id}>{dept.name}</option>
-                ))
+            <Select
+              value={formData.parent_id ? String(formData.parent_id) : ''}
+              onChange={(v) =>
+                setFormData({ ...formData, parent_id: v ? Number(v) : null })
               }
-            </select>
+              options={allDepartments
+                .filter((d) => d.id !== selectedDepartment?.id)
+                .map((dept) => ({
+                  value: String(dept.id),
+                  label: dept.name,
+                }))}
+              allowEmpty
+              emptyLabel="Yok (Kök Departman)"
+              aria-label="Üst Departman"
+            />
           </div>
           <div className="form-group">
             <label className="form-label">Departman Yöneticisi</label>
-            <select
-              className="form-select"
-              value={formData.manager_id || ''}
-              onChange={(e) => setFormData({ ...formData, manager_id: e.target.value ? Number(e.target.value) : null })}
-            >
-              <option value="">Seçiniz...</option>
-              {managers.map((manager) => (
-                <option key={manager.id} value={manager.id}>
-                  {manager.user?.name || manager.employee_code}
-                </option>
-              ))}
-            </select>
+            <Select
+              value={formData.manager_id ? String(formData.manager_id) : ''}
+              onChange={(v) =>
+                setFormData({ ...formData, manager_id: v ? Number(v) : null })
+              }
+              options={managers.map((manager) => ({
+                value: String(manager.id),
+                label: manager.user?.name || manager.employee_code || String(manager.id),
+              }))}
+              allowEmpty
+              placeholder="Seçiniz..."
+              aria-label="Departman Yöneticisi"
+            />
           </div>
 
           <div className="form-check" style={{ gridColumn: '1 / -1' }}>

@@ -77,6 +77,13 @@ const EmployeeForm: React.FC = () => {
   const [managers, setManagers] = useState<Manager[]>([]);
   const [statusOptions, setStatusOptions] = useState<LookupItem[]>([]);
   const [workTypeOptions, setWorkTypeOptions] = useState<LookupItem[]>([]);
+  const [genderOptions, setGenderOptions] = useState<LookupItem[]>([]);
+  const [maritalOptions, setMaritalOptions] = useState<LookupItem[]>([]);
+  const [bloodOptions, setBloodOptions] = useState<LookupItem[]>([]);
+  const [educationOptions, setEducationOptions] = useState<LookupItem[]>([]);
+  const [relationOptions, setRelationOptions] = useState<LookupItem[]>([]);
+  const [contractOptions, setContractOptions] = useState<LookupItem[]>([]);
+  const [currencyOptions, setCurrencyOptions] = useState<LookupItem[]>([]);
   
   const [formData, setFormData] = useState<EmployeeFormData>({
     employee_code: '',
@@ -116,15 +123,30 @@ const EmployeeForm: React.FC = () => {
 
   const loadLookups = useCallback(async () => {
     try {
-      const [statusRes, workTypeRes] = await Promise.all([
-        lookupsApi.forType('employee_status'),
-        lookupsApi.forType('work_type'),
-      ]);
-      setStatusOptions(statusRes.data.data ?? []);
-      setWorkTypeOptions(workTypeRes.data.data ?? []);
+      const types = [
+        'employee_status',
+        'work_type',
+        'gender',
+        'marital_status',
+        'blood_type',
+        'education_level',
+        'emergency_relation',
+        'contract_type',
+        'currency',
+      ] as const;
+      const results = await Promise.all(types.map((t) => lookupsApi.forType(t)));
+      setStatusOptions(results[0].data.data ?? []);
+      setWorkTypeOptions(results[1].data.data ?? []);
+      setGenderOptions(results[2].data.data ?? []);
+      setMaritalOptions(results[3].data.data ?? []);
+      setBloodOptions(results[4].data.data ?? []);
+      setEducationOptions(results[5].data.data ?? []);
+      setRelationOptions(results[6].data.data ?? []);
+      setContractOptions(results[7].data.data ?? []);
+      setCurrencyOptions(results[8].data.data ?? []);
     } catch (error) {
       console.error('Lookup listeleri yüklenemedi:', error);
-      toast.error('Durum / çalışma tipi listeleri yüklenemedi');
+      toast.error('Seçenek listeleri yüklenemedi');
     }
   }, []);
 
@@ -281,37 +303,34 @@ const EmployeeForm: React.FC = () => {
 
                 <div className="form-group">
                   <label className="form-label">Departman</label>
-                  <select
-                    className="form-select"
-                    value={formData.department_id || ''}
-                    onChange={(e) => handleChange('department_id', e.target.value ? Number(e.target.value) : undefined)}
-                  >
-                    <option value="">Seçiniz...</option>
-                    {departments.map((dept) => (
-                      <option key={dept.id} value={dept.id}>
-                        {dept.name}
-                      </option>
-                    ))}
-                  </select>
+                  <Select
+                    value={formData.department_id ? String(formData.department_id) : ''}
+                    onChange={(v) => handleChange('department_id', v ? Number(v) : undefined)}
+                    options={departments.map((dept) => ({
+                      value: String(dept.id),
+                      label: dept.name,
+                    }))}
+                    allowEmpty
+                    placeholder="Seçiniz..."
+                    aria-label="Departman"
+                  />
                 </div>
 
                 <div className="form-group">
                   <label className="form-label">Yönetici</label>
-                  <select
-                    className="form-select"
-                    value={formData.manager_id || ''}
-                    onChange={(e) => handleChange('manager_id', e.target.value ? Number(e.target.value) : undefined)}
-                  >
-                    <option value="">Seçiniz...</option>
-                    {managers
-                      .filter(m => m.id !== Number(id)) // Kendini seçemesin
-                      .map((manager) => (
-                        <option key={manager.id} value={manager.id}>
-                          {manager.user?.name || manager.employee_code} 
-                          {manager.position ? ` - ${manager.position}` : ''}
-                        </option>
-                      ))}
-                  </select>
+                  <Select
+                    value={formData.manager_id ? String(formData.manager_id) : ''}
+                    onChange={(v) => handleChange('manager_id', v ? Number(v) : undefined)}
+                    options={managers
+                      .filter((m) => m.id !== Number(id))
+                      .map((manager) => ({
+                        value: String(manager.id),
+                        label: `${manager.user?.name || manager.employee_code}${manager.position ? ` - ${manager.position}` : ''}`,
+                      }))}
+                    allowEmpty
+                    placeholder="Seçiniz..."
+                    aria-label="Yönetici"
+                  />
                 </div>
 
                 <div className="form-group">
@@ -424,68 +443,46 @@ const EmployeeForm: React.FC = () => {
 
                 <div className="form-group">
                   <label className="form-label">Cinsiyet</label>
-                  <select
-                    className="form-select"
+                  <Select
                     value={formData.gender || ''}
-                    onChange={(e) => handleChange('gender', e.target.value)}
-                  >
-                    <option value="">Seçiniz...</option>
-                    <option value="male">Erkek</option>
-                    <option value="female">Kadın</option>
-                    <option value="other">Diğer</option>
-                  </select>
+                    onChange={(v) => handleChange('gender', v)}
+                    options={genderOptions.map((o) => ({ value: o.value, label: o.label, color: o.color }))}
+                    allowEmpty
+                    aria-label="Cinsiyet"
+                  />
                 </div>
 
                 <div className="form-group">
                   <label className="form-label">Medeni Durum</label>
-                  <select
-                    className="form-select"
+                  <Select
                     value={formData.marital_status || ''}
-                    onChange={(e) => handleChange('marital_status', e.target.value)}
-                  >
-                    <option value="">Seçiniz...</option>
-                    <option value="single">Bekar</option>
-                    <option value="married">Evli</option>
-                    <option value="divorced">Boşanmış</option>
-                    <option value="widowed">Dul</option>
-                  </select>
+                    onChange={(v) => handleChange('marital_status', v)}
+                    options={maritalOptions.map((o) => ({ value: o.value, label: o.label, color: o.color }))}
+                    allowEmpty
+                    aria-label="Medeni Durum"
+                  />
                 </div>
 
                 <div className="form-group">
                   <label className="form-label">Kan Grubu</label>
-                  <select
-                    className="form-select"
+                  <Select
                     value={formData.blood_type || ''}
-                    onChange={(e) => handleChange('blood_type', e.target.value)}
-                  >
-                    <option value="">Seçiniz...</option>
-                    <option value="A Rh+">A Rh+</option>
-                    <option value="A Rh-">A Rh-</option>
-                    <option value="B Rh+">B Rh+</option>
-                    <option value="B Rh-">B Rh-</option>
-                    <option value="AB Rh+">AB Rh+</option>
-                    <option value="AB Rh-">AB Rh-</option>
-                    <option value="0 Rh+">0 Rh+</option>
-                    <option value="0 Rh-">0 Rh-</option>
-                  </select>
+                    onChange={(v) => handleChange('blood_type', v)}
+                    options={bloodOptions.map((o) => ({ value: o.value, label: o.label, color: o.color }))}
+                    allowEmpty
+                    aria-label="Kan Grubu"
+                  />
                 </div>
 
                 <div className="form-group">
                   <label className="form-label">Eğitim Seviyesi</label>
-                  <select
-                    className="form-select"
+                  <Select
                     value={formData.education_level || ''}
-                    onChange={(e) => handleChange('education_level', e.target.value)}
-                  >
-                    <option value="">Seçiniz...</option>
-                    <option value="İlkokul">İlkokul</option>
-                    <option value="Ortaokul">Ortaokul</option>
-                    <option value="Lise">Lise</option>
-                    <option value="Önlisans">Önlisans</option>
-                    <option value="Lisans">Lisans</option>
-                    <option value="Yüksek Lisans">Yüksek Lisans</option>
-                    <option value="Doktora">Doktora</option>
-                  </select>
+                    onChange={(v) => handleChange('education_level', v)}
+                    options={educationOptions.map((o) => ({ value: o.value, label: o.label, color: o.color }))}
+                    allowEmpty
+                    aria-label="Eğitim Seviyesi"
+                  />
                 </div>
               </div>
             )}
@@ -586,20 +583,13 @@ const EmployeeForm: React.FC = () => {
 
                     <div className="form-group">
                       <label className="form-label">Yakınlık Derecesi</label>
-                      <select
-                        className="form-select"
+                      <Select
                         value={formData.emergency_contact_relation || ''}
-                        onChange={(e) => handleChange('emergency_contact_relation', e.target.value)}
-                      >
-                        <option value="">Seçiniz...</option>
-                        <option value="Eş">Eş</option>
-                        <option value="Anne">Anne</option>
-                        <option value="Baba">Baba</option>
-                        <option value="Kardeş">Kardeş</option>
-                        <option value="Çocuk">Çocuk</option>
-                        <option value="Arkadaş">Arkadaş</option>
-                        <option value="Diğer">Diğer</option>
-                      </select>
+                        onChange={(v) => handleChange('emergency_contact_relation', v)}
+                        options={relationOptions.map((o) => ({ value: o.value, label: o.label, color: o.color }))}
+                        allowEmpty
+                        aria-label="Yakınlık Derecesi"
+                      />
                     </div>
                   </div>
                 </div>
@@ -641,17 +631,13 @@ const EmployeeForm: React.FC = () => {
 
                 <div className="form-group">
                   <label className="form-label">Sözleşme Tipi</label>
-                  <select
-                    className="form-select"
+                  <Select
                     value={formData.contract_type || ''}
-                    onChange={(e) => handleChange('contract_type', e.target.value)}
-                  >
-                    <option value="">Seçiniz...</option>
-                    <option value="permanent">Süresiz (Belirsiz Süreli)</option>
-                    <option value="temporary">Süreli (Belirli Süreli)</option>
-                    <option value="intern">Stajyer</option>
-                    <option value="contract">Sözleşmeli</option>
-                  </select>
+                    onChange={(v) => handleChange('contract_type', v)}
+                    options={contractOptions.map((o) => ({ value: o.value, label: o.label, color: o.color }))}
+                    allowEmpty
+                    aria-label="Sözleşme Tipi"
+                  />
                 </div>
 
                 <div className="form-group">
@@ -702,16 +688,12 @@ const EmployeeForm: React.FC = () => {
 
                 <div className="form-group">
                   <label className="form-label">Para Birimi</label>
-                  <select
-                    className="form-select"
-                    value={formData.currency}
-                    onChange={(e) => handleChange('currency', e.target.value)}
-                  >
-                    <option value="TRY">TRY - Türk Lirası</option>
-                    <option value="USD">USD - Amerikan Doları</option>
-                    <option value="EUR">EUR - Euro</option>
-                    <option value="GBP">GBP - İngiliz Sterlini</option>
-                  </select>
+                  <Select
+                    value={formData.currency || 'TRY'}
+                    onChange={(v) => handleChange('currency', v)}
+                    options={currencyOptions.map((o) => ({ value: o.value, label: o.label, color: o.color }))}
+                    aria-label="Para Birimi"
+                  />
                 </div>
 
                 <div className="form-group">

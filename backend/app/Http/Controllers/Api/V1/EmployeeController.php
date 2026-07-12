@@ -244,9 +244,9 @@ class EmployeeController extends BaseController
             // Kişisel bilgiler
             'birth_date' => 'nullable|date',
             'national_id' => 'nullable|string|max:20',
-            'gender' => 'nullable|in:male,female,other',
-            'marital_status' => 'nullable|in:single,married,divorced,widowed',
-            'blood_type' => 'nullable|string|max:10',
+            'gender' => 'nullable|string|max:100',
+            'marital_status' => 'nullable|string|max:100',
+            'blood_type' => 'nullable|string|max:20',
             'education_level' => 'nullable|string|max:50',
 
             // İletişim
@@ -266,7 +266,7 @@ class EmployeeController extends BaseController
             'hire_date' => 'nullable|date',
             'contract_start_date' => 'nullable|date',
             'contract_end_date' => 'nullable|date|after:contract_start_date',
-            'contract_type' => 'nullable|in:permanent,temporary,intern,contract',
+            'contract_type' => 'nullable|string|max:100',
             'work_type' => 'nullable|string|max:100',
 
             // Maaş bilgileri
@@ -290,9 +290,16 @@ class EmployeeController extends BaseController
             'portal_email' => 'nullable|required_if:create_portal_access,true|email|unique:users,email',
         ]);
 
-        $this->lookups->assertValid(LookupService::TYPE_EMPLOYEE_STATUS, $validated['status'] ?? null, $this->getCompanyId(), 'status');
-        $this->lookups->assertValid(LookupService::TYPE_WORK_TYPE, $validated['work_type'] ?? null, $this->getCompanyId(), 'work_type');
-        $this->lookups->assertValid(LookupService::TYPE_CURRENCY, $validated['currency'] ?? null, $this->getCompanyId(), 'currency');
+        $companyId = $this->getCompanyId();
+        $this->lookups->assertValid(LookupService::TYPE_EMPLOYEE_STATUS, $validated['status'] ?? null, $companyId, 'status');
+        $this->lookups->assertValid(LookupService::TYPE_WORK_TYPE, $validated['work_type'] ?? null, $companyId, 'work_type');
+        $this->lookups->assertValid(LookupService::TYPE_CURRENCY, $validated['currency'] ?? null, $companyId, 'currency');
+        $this->lookups->assertValid(LookupService::TYPE_GENDER, $validated['gender'] ?? null, $companyId, 'gender');
+        $this->lookups->assertValid(LookupService::TYPE_MARITAL_STATUS, $validated['marital_status'] ?? null, $companyId, 'marital_status');
+        $this->lookups->assertValid(LookupService::TYPE_BLOOD_TYPE, $validated['blood_type'] ?? null, $companyId, 'blood_type');
+        $this->lookups->assertValid(LookupService::TYPE_EDUCATION_LEVEL, $validated['education_level'] ?? null, $companyId, 'education_level');
+        $this->lookups->assertValid(LookupService::TYPE_EMERGENCY_RELATION, $validated['emergency_contact_relation'] ?? null, $companyId, 'emergency_contact_relation');
+        $this->lookups->assertValid(LookupService::TYPE_CONTRACT_TYPE, $validated['contract_type'] ?? null, $companyId, 'contract_type');
 
         $strip = $this->sensitiveFields->stripUnauthorizedWrite($request->user(), $validated);
         $validated = $strip['data'];
@@ -414,9 +421,9 @@ class EmployeeController extends BaseController
             'manager_id' => 'nullable|exists:employees,id',
             'birth_date' => 'nullable|date',
             'national_id' => 'nullable|string|max:20',
-            'gender' => 'nullable|in:male,female,other',
-            'marital_status' => 'nullable|in:single,married,divorced,widowed',
-            'blood_type' => 'nullable|string|max:10',
+            'gender' => 'nullable|string|max:100',
+            'marital_status' => 'nullable|string|max:100',
+            'blood_type' => 'nullable|string|max:20',
             'education_level' => 'nullable|string|max:50',
             'personal_email' => 'nullable|email|max:255',
             'personal_phone' => 'nullable|string|max:20',
@@ -430,7 +437,7 @@ class EmployeeController extends BaseController
             'hire_date' => 'nullable|date',
             'contract_start_date' => 'nullable|date',
             'contract_end_date' => 'nullable|date|after:contract_start_date',
-            'contract_type' => 'nullable|in:permanent,temporary,intern,contract',
+            'contract_type' => 'nullable|string|max:100',
             'work_type' => 'nullable|string|max:100',
             'gross_salary' => 'nullable|numeric|min:0',
             'net_salary' => 'nullable|numeric|min:0',
@@ -446,9 +453,16 @@ class EmployeeController extends BaseController
             'custom_fields' => 'nullable|array',
         ]);
 
-        $this->lookups->assertValid(LookupService::TYPE_EMPLOYEE_STATUS, $validated['status'] ?? null, $this->getCompanyId(), 'status');
-        $this->lookups->assertValid(LookupService::TYPE_WORK_TYPE, $validated['work_type'] ?? null, $this->getCompanyId(), 'work_type');
-        $this->lookups->assertValid(LookupService::TYPE_CURRENCY, $validated['currency'] ?? null, $this->getCompanyId(), 'currency');
+        $companyId = $this->getCompanyId();
+        $this->lookups->assertValid(LookupService::TYPE_EMPLOYEE_STATUS, $validated['status'] ?? null, $companyId, 'status');
+        $this->lookups->assertValid(LookupService::TYPE_WORK_TYPE, $validated['work_type'] ?? null, $companyId, 'work_type');
+        $this->lookups->assertValid(LookupService::TYPE_CURRENCY, $validated['currency'] ?? null, $companyId, 'currency');
+        $this->lookups->assertValid(LookupService::TYPE_GENDER, $validated['gender'] ?? null, $companyId, 'gender');
+        $this->lookups->assertValid(LookupService::TYPE_MARITAL_STATUS, $validated['marital_status'] ?? null, $companyId, 'marital_status');
+        $this->lookups->assertValid(LookupService::TYPE_BLOOD_TYPE, $validated['blood_type'] ?? null, $companyId, 'blood_type');
+        $this->lookups->assertValid(LookupService::TYPE_EDUCATION_LEVEL, $validated['education_level'] ?? null, $companyId, 'education_level');
+        $this->lookups->assertValid(LookupService::TYPE_EMERGENCY_RELATION, $validated['emergency_contact_relation'] ?? null, $companyId, 'emergency_contact_relation');
+        $this->lookups->assertValid(LookupService::TYPE_CONTRACT_TYPE, $validated['contract_type'] ?? null, $companyId, 'contract_type');
 
         $strip = $this->sensitiveFields->stripUnauthorizedWrite($request->user(), $validated);
         $validated = $strip['data'];

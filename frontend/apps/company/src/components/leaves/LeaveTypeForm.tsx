@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../ui';
-import { leavesApi } from '@shared/services/api';
+import { leavesApi, lookupsApi, type LookupItem } from '@shared/services/api';
+import { Select } from '@shared/components';
 import toast from 'react-hot-toast';
 
 interface LeaveType {
@@ -11,7 +12,7 @@ interface LeaveType {
   is_paid: boolean;
   default_days: number;
   requires_document: boolean;
-  gender_restriction: 'all' | 'male' | 'female';
+  gender_restriction: string;
   max_days_at_once?: number;
   min_days_notice: number;
   is_active: boolean;
@@ -32,6 +33,7 @@ const LeaveTypeForm: React.FC<LeaveTypeFormProps> = ({
 }) => {
   const isEditing = !!leaveType?.id;
   const [loading, setLoading] = useState(false);
+  const [genderOptions, setGenderOptions] = useState<LookupItem[]>([]);
   const [formData, setFormData] = useState<LeaveType>({
     name: '',
     code: '',
@@ -48,6 +50,7 @@ const LeaveTypeForm: React.FC<LeaveTypeFormProps> = ({
 
   useEffect(() => {
     if (isOpen) {
+      loadGenderLookups();
       if (leaveType) {
         setFormData({
           name: leaveType.name || '',
@@ -79,7 +82,16 @@ const LeaveTypeForm: React.FC<LeaveTypeFormProps> = ({
     }
   }, [isOpen, leaveType]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const loadGenderLookups = async () => {
+    try {
+      const response = await lookupsApi.forType('leave_gender_restriction');
+      setGenderOptions(response.data.data ?? []);
+    } catch {
+      console.error('Cinsiyet kısıtlaması lookup yüklenemedi');
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
     
@@ -240,16 +252,17 @@ const LeaveTypeForm: React.FC<LeaveTypeFormProps> = ({
         {/* Gender Restriction */}
         <div className="form-group">
           <label className="form-label">Cinsiyet Kısıtlaması</label>
-          <select
-            name="gender_restriction"
-            className="form-select"
+          <Select
             value={formData.gender_restriction}
-            onChange={handleChange}
-          >
-            <option value="all">Tüm Çalışanlar</option>
-            <option value="male">Sadece Erkek</option>
-            <option value="female">Sadece Kadın</option>
-          </select>
+            onChange={(v) => setFormData((prev) => ({ ...prev, gender_restriction: v || 'all' }))}
+            options={genderOptions.map((opt) => ({
+              value: opt.value,
+              label: opt.label,
+              color: opt.color,
+            }))}
+            placeholder="Seçiniz..."
+            aria-label="Cinsiyet kısıtlaması"
+          />
         </div>
 
         {/* Options */}

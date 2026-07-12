@@ -5,11 +5,16 @@ namespace App\Http\Controllers\Api\V1\Leaves;
 use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\ActivityLog;
 use App\Models\LeaveType;
+use App\Services\LookupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class LeaveTypeController extends BaseController
 {
+    public function __construct(
+        protected LookupService $lookups,
+    ) {}
+
     /**
      * Display a listing of the resource.
      */
@@ -33,12 +38,19 @@ class LeaveTypeController extends BaseController
             'is_paid' => 'boolean',
             'default_days' => 'integer|min:0',
             'requires_document' => 'boolean',
-            'gender_restriction' => 'in:all,male,female',
+            'gender_restriction' => 'nullable|string|max:100',
             'max_days_at_once' => 'nullable|integer|min:1',
             'min_days_notice' => 'integer|min:0',
             'approval_flow' => 'nullable|array',
             'is_active' => 'boolean',
         ]);
+
+        $this->lookups->assertValid(
+            LookupService::TYPE_LEAVE_GENDER_RESTRICTION,
+            $validated['gender_restriction'] ?? null,
+            $this->getCompanyId(),
+            'gender_restriction'
+        );
 
         $leaveType = LeaveType::create($validated);
 
@@ -67,12 +79,21 @@ class LeaveTypeController extends BaseController
             'is_paid' => 'sometimes|boolean',
             'default_days' => 'sometimes|integer|min:0',
             'requires_document' => 'sometimes|boolean',
-            'gender_restriction' => 'sometimes|in:all,male,female',
+            'gender_restriction' => 'sometimes|nullable|string|max:100',
             'max_days_at_once' => 'sometimes|nullable|integer|min:1',
             'min_days_notice' => 'sometimes|integer|min:0',
             'approval_flow' => 'sometimes|nullable|array',
             'is_active' => 'sometimes|boolean',
         ]);
+
+        if (array_key_exists('gender_restriction', $validated)) {
+            $this->lookups->assertValid(
+                LookupService::TYPE_LEAVE_GENDER_RESTRICTION,
+                $validated['gender_restriction'] ?? null,
+                $this->getCompanyId(),
+                'gender_restriction'
+            );
+        }
 
         $oldValues = $leaveType->getOriginal();
         $leaveType->update($validated);

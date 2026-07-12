@@ -1,5 +1,6 @@
 import React from 'react';
 import type { CustomFieldValue } from '../types/modules';
+import { Select } from './Select';
 
 export interface CustomFieldDefinition {
   id: number;
@@ -93,20 +94,18 @@ export const CustomFieldRenderer: React.FC<CustomFieldRendererProps> = ({
 
       case 'select':
         return (
-          <select
-            className="form-select"
-            value={value}
-            onChange={(e) => onChange(field.field_key, e.target.value)}
-            required={field.is_required}
+          <Select
+            value={String(value ?? '')}
+            onChange={(v) => onChange(field.field_key, v)}
+            options={(field.field_options ?? []).map((option) => ({
+              value: option.value,
+              label: option.label,
+            }))}
+            allowEmpty
+            placeholder="Seçiniz..."
             disabled={readonly}
-          >
-            <option value="">Seçiniz...</option>
-            {field.field_options?.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+            aria-label={field.field_label}
+          />
         );
 
       case 'checkbox':

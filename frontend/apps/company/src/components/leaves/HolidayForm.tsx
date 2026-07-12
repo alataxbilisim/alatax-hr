@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../ui';
-import { leavesApi } from '@shared/services/api';
+import { leavesApi, lookupsApi, type LookupItem } from '@shared/services/api';
+import { Select } from '@shared/components';
 import toast from 'react-hot-toast';
 
 interface Holiday {
@@ -8,7 +9,7 @@ interface Holiday {
   name: string;
   date: string;
   end_date?: string;
-  type: 'national' | 'company' | 'regional';
+  type: string;
   is_recurring: boolean;
   is_half_day: boolean;
   description?: string;
@@ -21,6 +22,9 @@ interface HolidayFormProps {
   holiday?: Holiday;
 }
 
+/** Form üzerinden yalnızca şirket/bölgesel tatil eklenir */
+const FORM_ALLOWED_TYPES = new Set(['company', 'regional']);
+
 const HolidayForm: React.FC<HolidayFormProps> = ({
   isOpen,
   onClose,
@@ -29,6 +33,7 @@ const HolidayForm: React.FC<HolidayFormProps> = ({
 }) => {
   const isEditing = !!holiday?.id;
   const [loading, setLoading] = useState(false);
+  const [typeOptions, setTypeOptions] = useState<LookupItem[]>([]);
   const [formData, setFormData] = useState<Holiday>({
     name: '',
     date: '',
@@ -42,6 +47,7 @@ const HolidayForm: React.FC<HolidayFormProps> = ({
 
   useEffect(() => {
     if (isOpen) {
+      loadTypeLookups();
       if (holiday) {
         setFormData({
           name: holiday.name || '',
@@ -67,7 +73,19 @@ const HolidayForm: React.FC<HolidayFormProps> = ({
     }
   }, [isOpen, holiday]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const loadTypeLookups = async () => {
+    try {
+      const response = await lookupsApi.forType('holiday_type');
+      const items = (response.data.data ?? []).filter((opt: LookupItem) =>
+        FORM_ALLOWED_TYPES.has(opt.value)
+      );
+      setTypeOptions(items);
+    } catch {
+      console.error('Tatil tipi lookup yüklenemedi');
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
 
@@ -199,15 +217,17 @@ const HolidayForm: React.FC<HolidayFormProps> = ({
         {/* Type */}
         <div className="form-group">
           <label className="form-label">Tatil Tipi *</label>
-          <select
-            name="type"
-            className="form-select"
+          <Select
             value={formData.type}
-            onChange={handleChange}
-          >
-            <option value="company">Şirket Tatili</option>
-            <option value="regional">Bölgesel Tatil</option>
-          </select>
+            onChange={(v) => setFormData((prev) => ({ ...prev, type: v || 'company' }))}
+            options={typeOptions.map((opt) => ({
+              value: opt.value,
+              label: opt.label,
+              color: opt.color,
+            }))}
+            placeholder="Seçiniz..."
+            aria-label="Tatil tipi"
+          />
         </div>
 
         {/* Options */}
@@ -259,4 +279,3 @@ const HolidayForm: React.FC<HolidayFormProps> = ({
 };
 
 export default HolidayForm;
-

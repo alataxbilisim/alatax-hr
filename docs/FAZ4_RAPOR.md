@@ -2,7 +2,7 @@
 
 **Branch:** `faz4-form-engine` (temel: `faz3-tasarim` / `b83da8b`; Faz 3 kodu üstünde)  
 **Tarih:** 12 Temmuz 2026  
-**Kapsam:** ADIM 1–2 teşhis/envanter + **ADIM 3 Lookup Engine çekirdek + Personel pilot**.
+**Kapsam:** ADIM 1–2 teşhis/envanter + ADIM 3 Lookup Engine + ADIM 4 Radix Select + **Grup 1: Personel (kalan) + İzin**.
 
 ---
 
@@ -507,3 +507,69 @@ Kullanım varsa → `is_active=false` (pasif). Pasif değer yeni formlarda seçi
 | Kalan ~106 native `<select>` | ⏳ yayılım dalgaları |
 
 **DUR — görsel kontrol:** Personel formunda Durum/Çalışma Tipi aç; uzun etiket + menü tasarımına bak.
+
+---
+
+## Grup 1 yayılımı — Personel (kalan) + İzin
+
+**Dalga:** ortak Select + basit → Lookup Engine; zengin entity → kendi API + Select.
+
+### Yeni / genişletilen `lookup_type`
+
+| Type | Sınıf | Not |
+|------|-------|-----|
+| `gender` | firma default | male/female/other |
+| `marital_status` | firma default | |
+| `education_level` | firma default | value = TR etiket (mevcut veri uyumu) |
+| `emergency_relation` | firma default | value = TR etiket |
+| `contract_type` | firma default | |
+| `employee_document_category` | firma default | |
+| `leave_request_status` | **HİBRİT** | kod sabit (pending/approved/rejected/cancelled), etiket/renk firma |
+| `leave_gender_restriction` | **HİBRİT** | `GenderRestriction` enum + iş kuralı — kod sabit |
+| `holiday_type` | firma default | UI create: yalnız company/regional (BE kısıtı) |
+| `blood_type`, `currency` | **SİSTEM** (önceki) | salt okunur |
+
+### Personel — dönüştürülen dropdown’lar
+
+| Alan | Kaynak | Select |
+|------|--------|--------|
+| Durum, çalışma tipi (pilot) | Lookup | ✅ |
+| Cinsiyet, medeni, kan, eğitim, yakınlık, sözleşme, para | Lookup | ✅ |
+| Departman, yönetici | API (zengin) | ✅ |
+| Liste filtre: durum / departman / sözleşme + toplu durum | Lookup / API | ✅ |
+| Belge kategorisi (DocumentsTab) | Lookup | ✅ |
+| CustomFieldRenderer select | field_options (Lookup değil) | ✅ |
+| Departman formu: üst dept + yönetici | API | ✅ |
+
+**Sayı (Personel bu dalga):** ~14 native→Select; ~9 basit lookup bağlama (+pilot 2).
+
+### İzin — dönüştürülen dropdown’lar
+
+| Alan | Sınıf | Kaynak |
+|------|-------|--------|
+| İzin türü (talep formu + portal) | ZENGİN | `leave_types` API + Select |
+| Talep durumu (filtre/badge) | HİBRİT | `leave_request_status` |
+| Cinsiyet kısıtı (tür formu) | HİBRİT | `leave_gender_restriction` |
+| Tatil tipi | BASİT (+ BE create kısıtı) | `holiday_type` |
+| Hakediş tipi | motor/enum — Lookup **değil** | statik options + Select |
+| Yıl / kullanıcı filtreleri | sistem / zengin | Select |
+
+**Sayı (İzin bu dalga):** LeavesPage + LeaveRequestForm + LeaveTypeForm + Holiday* + Accrual* + Balances/Reports + Portal Leaves — native `<select>` kalmadı (modül klasörlerinde).
+
+### Belirsizlik / bilinçli kararlar
+
+1. **`leave_gender_restriction` → HİBRİT:** Enum cast + uygunluk kuralları nedeniyle yeni value eklenemez; etiket firma. (Basit “firma serbestçe eklesin” değildi.)
+2. **`holiday_type`:** Lookup’ta national/religious var; şirket UI/BE create yalnızca `company|regional` (sistem tatilleri ayrı).
+3. **`accrual_type`:** Lookup’a alınmadı (politika motoru).
+4. **Belge durumu** (`active/archived/expired`): bu dalgada dokunulmadı — sonraki mikro-dalga veya Grup X.
+5. **Personel rapor widget select’leri:** Grup 1 dışı (rapor builder).
+
+### Test / doğrulama
+
+- LookupTest: Grup1 seed + hibrit store/delete 403 + etiket override → **15 passed** (sqlite in-memory; phpunit.xml pgsql driver yoksa env override)
+- Seed: `php artisan db:seed --class=LookupSeeder` ✅
+- 3 SPA lint ✅ + build ✅
+
+**DUR — görsel kontrol (kullanıcı):** Personel formu (kişisel + iş + belge + özel alan select) + İzin talep/tür/tatil dropdown’ları tutarlı mı; izin türleri API’den geliyor mu; durum filtreleri lookup label. **SelectContent opak menü** (`--bg-elevated`) — şeffaflık bug düzeltildi.
+
+**Kalan sonraki gruplar:** İşe Alım (kanban hibrit) + Masraf/Varlık/Doküman/Performans/Eğitim/Anket.

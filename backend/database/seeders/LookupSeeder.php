@@ -7,9 +7,10 @@ use App\Services\LookupService;
 use Illuminate\Database\Seeder;
 
 /**
- * Lookup Engine seed — idempotent (updateOrCreate).
+ * Lookup Engine seed — idempotent.
  * Sistem: currency, city_tr, blood_type, country.
- * Firma default (company_id=null, is_system=false): employee_status, work_type.
+ * Firma default: employee_*, contract, work_type…
+ * Hibrit: leave_request_status (meta.hybrid).
  */
 class LookupSeeder extends Seeder
 {
@@ -17,6 +18,15 @@ class LookupSeeder extends Seeder
     {
         $this->seedEmployeeStatus();
         $this->seedWorkType();
+        $this->seedGender();
+        $this->seedMaritalStatus();
+        $this->seedEducationLevel();
+        $this->seedEmergencyRelation();
+        $this->seedContractType();
+        $this->seedEmployeeDocumentCategory();
+        $this->seedLeaveRequestStatus();
+        $this->seedLeaveGenderRestriction();
+        $this->seedHolidayType();
         $this->seedCurrency();
         $this->seedBloodType();
         $this->seedCountries();
@@ -25,45 +35,156 @@ class LookupSeeder extends Seeder
 
     private function seedEmployeeStatus(): void
     {
-        $items = [
+        foreach ([
             ['value' => 'active', 'label' => 'Aktif', 'color' => '#10b981', 'sort_order' => 10],
             ['value' => 'on_leave', 'label' => 'İzinli', 'color' => '#f59e0b', 'sort_order' => 20],
             ['value' => 'suspended', 'label' => 'Askıda', 'color' => '#ef4444', 'sort_order' => 30],
             ['value' => 'terminated', 'label' => 'İşten Çıkmış', 'color' => '#64748b', 'sort_order' => 40],
-        ];
-
-        foreach ($items as $item) {
-            $this->upsertDefault(LookupService::TYPE_EMPLOYEE_STATUS, $item, isSystem: false);
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_EMPLOYEE_STATUS, $item, false);
         }
     }
 
     private function seedWorkType(): void
     {
-        $items = [
-            ['value' => 'full_time', 'label' => 'Tam Zamanlı', 'color' => null, 'sort_order' => 10],
-            ['value' => 'part_time', 'label' => 'Yarı Zamanlı', 'color' => null, 'sort_order' => 20],
-            ['value' => 'remote', 'label' => 'Uzaktan', 'color' => null, 'sort_order' => 30],
-            ['value' => 'hybrid', 'label' => 'Hibrit', 'color' => null, 'sort_order' => 40],
-            ['value' => 'contract', 'label' => 'Sözleşmeli', 'color' => null, 'sort_order' => 50],
-            ['value' => 'internship', 'label' => 'Stajyer', 'color' => null, 'sort_order' => 60],
-        ];
+        foreach ([
+            ['value' => 'full_time', 'label' => 'Tam Zamanlı', 'sort_order' => 10],
+            ['value' => 'part_time', 'label' => 'Yarı Zamanlı', 'sort_order' => 20],
+            ['value' => 'remote', 'label' => 'Uzaktan', 'sort_order' => 30],
+            ['value' => 'hybrid', 'label' => 'Hibrit', 'sort_order' => 40],
+            ['value' => 'contract', 'label' => 'Sözleşmeli', 'sort_order' => 50],
+            ['value' => 'internship', 'label' => 'Stajyer', 'sort_order' => 60],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_WORK_TYPE, $item, false);
+        }
+    }
 
-        foreach ($items as $item) {
-            $this->upsertDefault(LookupService::TYPE_WORK_TYPE, $item, isSystem: false);
+    private function seedGender(): void
+    {
+        foreach ([
+            ['value' => 'male', 'label' => 'Erkek', 'sort_order' => 10],
+            ['value' => 'female', 'label' => 'Kadın', 'sort_order' => 20],
+            ['value' => 'other', 'label' => 'Diğer', 'sort_order' => 30],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_GENDER, $item, false);
+        }
+    }
+
+    private function seedMaritalStatus(): void
+    {
+        foreach ([
+            ['value' => 'single', 'label' => 'Bekar', 'sort_order' => 10],
+            ['value' => 'married', 'label' => 'Evli', 'sort_order' => 20],
+            ['value' => 'divorced', 'label' => 'Boşanmış', 'sort_order' => 30],
+            ['value' => 'widowed', 'label' => 'Dul', 'sort_order' => 40],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_MARITAL_STATUS, $item, false);
+        }
+    }
+
+    private function seedEducationLevel(): void
+    {
+        // Mevcut employee kayıtları TR etiketi value olarak tutuyor — K-A uyumu
+        foreach ([
+            ['value' => 'İlkokul', 'label' => 'İlkokul', 'sort_order' => 10],
+            ['value' => 'Ortaokul', 'label' => 'Ortaokul', 'sort_order' => 20],
+            ['value' => 'Lise', 'label' => 'Lise', 'sort_order' => 30],
+            ['value' => 'Önlisans', 'label' => 'Önlisans', 'sort_order' => 40],
+            ['value' => 'Lisans', 'label' => 'Lisans', 'sort_order' => 50],
+            ['value' => 'Yüksek Lisans', 'label' => 'Yüksek Lisans', 'sort_order' => 60],
+            ['value' => 'Doktora', 'label' => 'Doktora', 'sort_order' => 70],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_EDUCATION_LEVEL, $item, false);
+        }
+    }
+
+    private function seedEmergencyRelation(): void
+    {
+        foreach ([
+            ['value' => 'Eş', 'label' => 'Eş', 'sort_order' => 10],
+            ['value' => 'Anne', 'label' => 'Anne', 'sort_order' => 20],
+            ['value' => 'Baba', 'label' => 'Baba', 'sort_order' => 30],
+            ['value' => 'Kardeş', 'label' => 'Kardeş', 'sort_order' => 40],
+            ['value' => 'Çocuk', 'label' => 'Çocuk', 'sort_order' => 50],
+            ['value' => 'Arkadaş', 'label' => 'Arkadaş', 'sort_order' => 60],
+            ['value' => 'Diğer', 'label' => 'Diğer', 'sort_order' => 70],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_EMERGENCY_RELATION, $item, false);
+        }
+    }
+
+    private function seedContractType(): void
+    {
+        foreach ([
+            ['value' => 'permanent', 'label' => 'Süresiz (Belirsiz Süreli)', 'sort_order' => 10],
+            ['value' => 'temporary', 'label' => 'Süreli (Belirli Süreli)', 'sort_order' => 20],
+            ['value' => 'intern', 'label' => 'Stajyer', 'sort_order' => 30],
+            ['value' => 'contract', 'label' => 'Sözleşmeli', 'sort_order' => 40],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_CONTRACT_TYPE, $item, false);
+        }
+    }
+
+    private function seedEmployeeDocumentCategory(): void
+    {
+        foreach ([
+            ['value' => 'id_card', 'label' => 'Kimlik', 'sort_order' => 10],
+            ['value' => 'contract', 'label' => 'Sözleşme', 'sort_order' => 20],
+            ['value' => 'certificate', 'label' => 'Sertifika', 'sort_order' => 30],
+            ['value' => 'education', 'label' => 'Eğitim', 'sort_order' => 40],
+            ['value' => 'health', 'label' => 'Sağlık', 'sort_order' => 50],
+            ['value' => 'other', 'label' => 'Diğer', 'sort_order' => 60],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_EMPLOYEE_DOCUMENT_CATEGORY, $item, false);
+        }
+    }
+
+    private function seedLeaveRequestStatus(): void
+    {
+        $meta = ['hybrid' => true];
+        foreach ([
+            ['value' => 'pending', 'label' => 'Bekleyen', 'color' => '#f59e0b', 'sort_order' => 10],
+            ['value' => 'approved', 'label' => 'Onaylanan', 'color' => '#10b981', 'sort_order' => 20],
+            ['value' => 'rejected', 'label' => 'Reddedilen', 'color' => '#ef4444', 'sort_order' => 30],
+            ['value' => 'cancelled', 'label' => 'İptal', 'color' => '#64748b', 'sort_order' => 40],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_LEAVE_REQUEST_STATUS, $item, false, $meta);
+        }
+    }
+
+    private function seedLeaveGenderRestriction(): void
+    {
+        $meta = ['hybrid' => true];
+        foreach ([
+            ['value' => 'all', 'label' => 'Herkes', 'sort_order' => 10],
+            ['value' => 'male', 'label' => 'Erkek', 'sort_order' => 20],
+            ['value' => 'female', 'label' => 'Kadın', 'sort_order' => 30],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_LEAVE_GENDER_RESTRICTION, $item, false, $meta);
+        }
+    }
+
+    private function seedHolidayType(): void
+    {
+        foreach ([
+            ['value' => 'national', 'label' => 'Resmi Tatil', 'sort_order' => 10],
+            ['value' => 'religious', 'label' => 'Dini Tatil', 'sort_order' => 20],
+            ['value' => 'company', 'label' => 'Şirket Tatili', 'sort_order' => 30],
+            ['value' => 'regional', 'label' => 'Bölgesel', 'sort_order' => 40],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_HOLIDAY_TYPE, $item, false);
         }
     }
 
     private function seedCurrency(): void
     {
-        $items = [
+        foreach ([
             ['value' => 'TRY', 'label' => 'TRY (₺)', 'sort_order' => 10],
             ['value' => 'USD', 'label' => 'USD ($)', 'sort_order' => 20],
             ['value' => 'EUR', 'label' => 'EUR (€)', 'sort_order' => 30],
             ['value' => 'GBP', 'label' => 'GBP (£)', 'sort_order' => 40],
-        ];
-
-        foreach ($items as $item) {
-            $this->upsertDefault(LookupService::TYPE_CURRENCY, $item, isSystem: true);
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_CURRENCY, $item, true);
         }
     }
 
@@ -75,13 +196,13 @@ class LookupSeeder extends Seeder
                 'value' => $type,
                 'label' => $type,
                 'sort_order' => ($i + 1) * 10,
-            ], isSystem: true);
+            ], true);
         }
     }
 
     private function seedCountries(): void
     {
-        $items = [
+        foreach ([
             ['value' => 'TR', 'label' => 'Türkiye', 'sort_order' => 10],
             ['value' => 'DE', 'label' => 'Almanya', 'sort_order' => 20],
             ['value' => 'US', 'label' => 'Amerika Birleşik Devletleri', 'sort_order' => 30],
@@ -90,10 +211,8 @@ class LookupSeeder extends Seeder
             ['value' => 'NL', 'label' => 'Hollanda', 'sort_order' => 60],
             ['value' => 'AZ', 'label' => 'Azerbaycan', 'sort_order' => 70],
             ['value' => 'CY', 'label' => 'Kıbrıs', 'sort_order' => 80],
-        ];
-
-        foreach ($items as $item) {
-            $this->upsertDefault(LookupService::TYPE_COUNTRY, $item, isSystem: true);
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_COUNTRY, $item, true);
         }
     }
 
@@ -117,31 +236,43 @@ class LookupSeeder extends Seeder
                 'value' => $city,
                 'label' => $city,
                 'sort_order' => ($i + 1) * 10,
-            ], isSystem: true);
+            ], true);
         }
     }
 
     /**
      * @param  array{value: string, label: string, color?: ?string, sort_order: int}  $item
+     * @param  array<string, mixed>|null  $meta
      */
-    private function upsertDefault(string $type, array $item, bool $isSystem): void
+    private function upsertDefault(string $type, array $item, bool $isSystem, ?array $meta = null): void
     {
-        Lookup::withTrashed()->updateOrCreate(
-            [
-                'company_id' => null,
-                'lookup_type' => $type,
-                'value' => $item['value'],
-            ],
-            [
-                'label' => $item['label'],
-                'color' => $item['color'] ?? null,
-                'sort_order' => $item['sort_order'],
-                'is_active' => true,
-                'is_system' => $isSystem,
-                'parent_lookup_id' => null,
-                'meta' => null,
-                'deleted_at' => null,
-            ]
-        );
+        $row = Lookup::withTrashed()
+            ->whereNull('company_id')
+            ->where('lookup_type', $type)
+            ->where('value', $item['value'])
+            ->first();
+
+        $payload = [
+            'label' => $item['label'],
+            'color' => $item['color'] ?? null,
+            'sort_order' => $item['sort_order'],
+            'is_active' => true,
+            'is_system' => $isSystem,
+            'parent_lookup_id' => null,
+            'meta' => $meta,
+            'deleted_at' => null,
+        ];
+
+        if ($row) {
+            $row->fill($payload)->save();
+
+            return;
+        }
+
+        Lookup::create(array_merge([
+            'company_id' => null,
+            'lookup_type' => $type,
+            'value' => $item['value'],
+        ], $payload));
     }
 }

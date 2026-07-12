@@ -85,8 +85,13 @@ class LookupController extends BaseController
         ]);
 
         // Sistem tiplerine ekleme yasak
-        if ($this->isSystemType($validated['lookup_type'])) {
+        if ($this->lookups->isSystemType($validated['lookup_type'])) {
             return $this->error('Sistem lookup değerleri eklenemez', 403);
+        }
+
+        // Hibrit: yeni value eklenemez (kod sabit)
+        if ($this->lookups->isHybridType($validated['lookup_type'])) {
+            return $this->error('Hibrit lookup değerleri eklenemez (yalnızca etiket/renk/sıra)', 403);
         }
 
         $value = $validated['value'] ?? Str::slug($validated['label'], '_');
@@ -135,7 +140,7 @@ class LookupController extends BaseController
         }
 
         // Platform default (company_id null) → override oluştur
-        if ($row->company_id === null && $this->isSystemType($row->lookup_type)) {
+        if ($row->company_id === null && $this->lookups->isSystemType($row->lookup_type)) {
             return $this->error('Sistem lookup düzenlenemez', 403);
         }
 
@@ -176,12 +181,11 @@ class LookupController extends BaseController
             return $this->error('Bu kayda erişim yok', 403);
         }
 
-        if ($row->isHybrid()) {
-            return $this->error('Hibrit lookup silinemez (yalnızca pasifleştirilebilir)', 403);
+        if ($row->isHybrid() || $this->lookups->isHybridType($row->lookup_type)) {
+            return $this->error('Hibrit lookup silinemez (yalnızca etiket/renk düzenlenir)', 403);
         }
 
-        // Sistem tipi platform satırı (currency vb.) — is_system zaten yakalandı; ekstra güvenlik
-        if ($row->company_id === null && $this->isSystemType($row->lookup_type)) {
+        if ($row->company_id === null && $this->lookups->isSystemType($row->lookup_type)) {
             return $this->error('Sistem lookup silinemez', 403);
         }
 
@@ -223,7 +227,7 @@ class LookupController extends BaseController
             'items.*.sort_order' => 'required|integer|min:0',
         ]);
 
-        if ($this->isSystemType($validated['lookup_type'])) {
+        if ($this->lookups->isSystemType($validated['lookup_type'])) {
             return $this->error('Sistem lookup sıralanamaz', 403);
         }
 
@@ -243,15 +247,5 @@ class LookupController extends BaseController
         $rows = $this->lookups->forType($validated['lookup_type'], $companyId, activeOnly: false);
 
         return $this->success($rows->map->toApiArray()->values(), 'Sıra güncellendi');
-    }
-
-    private function isSystemType(string $type): bool
-    {
-        return in_array($type, [
-            LookupService::TYPE_CURRENCY,
-            LookupService::TYPE_CITY_TR,
-            LookupService::TYPE_BLOOD_TYPE,
-            LookupService::TYPE_COUNTRY,
-        ], true);
     }
 }

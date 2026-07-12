@@ -5,11 +5,16 @@ namespace App\Http\Controllers\Api\V1\Leaves;
 use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\ActivityLog;
 use App\Models\Holiday;
+use App\Services\LookupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class HolidayController extends BaseController
 {
+    public function __construct(
+        protected LookupService $lookups,
+    ) {}
+
     /**
      * Tatil listesi
      */
@@ -50,14 +55,25 @@ class HolidayController extends BaseController
             'name' => 'required|string|max:255',
             'date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:date',
-            'type' => 'required|string|in:company,regional',
+            'type' => 'required|string|max:100',
             'is_recurring' => 'boolean',
             'is_half_day' => 'boolean',
             'description' => 'nullable|string',
         ]);
 
+        $companyId = $this->getCompanyId();
+        $this->lookups->assertValid(
+            LookupService::TYPE_HOLIDAY_TYPE,
+            $validated['type'],
+            $companyId,
+            'type'
+        );
+        if (! in_array($validated['type'], ['company', 'regional'], true)) {
+            return $this->error('Firma tatilleri yalnızca şirket veya bölgesel olabilir', 422);
+        }
+
         $holiday = Holiday::create([
-            'company_id' => $this->getCompanyId(),
+            'company_id' => $companyId,
             'name' => $validated['name'],
             'date' => $validated['date'],
             'end_date' => $validated['end_date'] ?? null,
@@ -86,12 +102,21 @@ class HolidayController extends BaseController
             'name' => 'sometimes|required|string|max:255',
             'date' => 'sometimes|required|date',
             'end_date' => 'nullable|date|after_or_equal:date',
-            'type' => 'sometimes|required|string|in:company,regional',
+            'type' => 'sometimes|required|string|max:100',
             'is_recurring' => 'boolean',
             'is_half_day' => 'boolean',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
         ]);
+
+        if (array_key_exists('type', $validated)) {
+            $this->lookups->assertValid(
+                LookupService::TYPE_HOLIDAY_TYPE,
+                $validated['type'],
+                $this->getCompanyId(),
+                'type'
+            );
+        }
 
         $oldValues = $holiday->toArray();
         $holiday->update(array_merge($validated, ['updated_by' => auth()->id()]));

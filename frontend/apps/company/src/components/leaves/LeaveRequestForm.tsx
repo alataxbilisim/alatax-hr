@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../ui';
 import { leavesApi, customFieldsApi } from '@shared/services/api';
+import { Select } from '@shared/components';
 import toast from 'react-hot-toast';
 import { BsUpload } from 'react-icons/bs';
 
@@ -38,7 +39,7 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
   const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
   const [formData, setFormData] = useState({
-    leave_type_id: 0,
+    leave_type_id: '',
     start_date: '',
     end_date: '',
     reason: '',
@@ -52,7 +53,7 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
       loadLeaveTypes();
       loadCustomFields();
       setFormData({
-        leave_type_id: 0,
+        leave_type_id: '',
         start_date: '',
         end_date: '',
         reason: '',
@@ -92,7 +93,7 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
@@ -247,16 +248,15 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
       
       case 'select':
         return (
-          <select
-            className={`form-select ${error ? 'is-invalid' : ''}`}
+          <Select
             value={(value as string) || ''}
-            onChange={(e) => handleCustomFieldChange(field, e.target.value)}
-          >
-            <option value="">Seçin...</option>
-            {(field.options || []).map((opt) => (
-              <option key={opt} value={opt}>{opt}</option>
-            ))}
-          </select>
+            onChange={(v) => handleCustomFieldChange(field, v)}
+            options={(field.options || []).map((opt) => ({ value: opt, label: opt }))}
+            allowEmpty
+            placeholder="Seçin..."
+            error={!!error}
+            aria-label={field.label}
+          />
         );
       
       case 'checkbox':
@@ -320,19 +320,25 @@ const LeaveRequestForm: React.FC<LeaveRequestFormProps> = ({
         {/* Leave Type */}
         <div className="form-group">
           <label className="form-label">İzin Türü *</label>
-          <select
-            name="leave_type_id"
-            className={`form-select ${errors.leave_type_id ? 'is-invalid' : ''}`}
+          <Select
             value={formData.leave_type_id}
-            onChange={handleChange}
-          >
-            <option value="">Seçin...</option>
-            {leaveTypes.filter(t => t.is_active).map((type) => (
-              <option key={type.id} value={type.id}>
-                {type.name} ({type.default_days} gün)
-              </option>
-            ))}
-          </select>
+            onChange={(v) => {
+              setFormData((prev) => ({ ...prev, leave_type_id: v }));
+              if (errors.leave_type_id) {
+                setErrors((prev) => ({ ...prev, leave_type_id: '' }));
+              }
+            }}
+            options={leaveTypes
+              .filter((t) => t.is_active)
+              .map((type) => ({
+                value: String(type.id),
+                label: `${type.name} (${type.default_days} gün)`,
+              }))}
+            allowEmpty
+            placeholder="Seçin..."
+            error={!!errors.leave_type_id}
+            aria-label="İzin türü"
+          />
           {errors.leave_type_id && <div className="form-error">{errors.leave_type_id}</div>}
         </div>
 

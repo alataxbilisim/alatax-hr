@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { leavesApi } from '@shared/services/api';
+import { Select } from '@shared/components';
 import toast from 'react-hot-toast';
 import { BsBarChart, BsDownload, BsCalendar3, BsPeople } from 'react-icons/bs';
 
@@ -137,7 +138,15 @@ const LeaveReportsTab: React.FC = () => {
     toast.success('Excel export özelliği yakında eklenecek');
   };
 
-  const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i);
+  const years = useMemo(
+    () => Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i),
+    []
+  );
+
+  const yearOptions = useMemo(
+    () => years.map((year) => ({ value: String(year), label: String(year) })),
+    [years]
+  );
 
   const getMaxDays = () => {
     return Math.max(...monthlyStats.map(m => m.total_days), 1);
@@ -152,16 +161,14 @@ const LeaveReportsTab: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <BsCalendar3 size={16} style={{ color: 'var(--text-tertiary)' }} />
-                <select
-                  className="form-select"
-                  style={{ width: 'auto', minWidth: '100px' }}
-                  value={selectedYear}
-                  onChange={(e) => setSelectedYear(Number(e.target.value))}
-                >
-                  {years.map((year) => (
-                    <option key={year} value={year}>{year}</option>
-                  ))}
-                </select>
+                <div style={{ minWidth: 100 }}>
+                  <Select
+                    value={String(selectedYear)}
+                    onChange={(v) => setSelectedYear(Number(v))}
+                    options={yearOptions}
+                    aria-label="Yıl filtresi"
+                  />
+                </div>
               </div>
             </div>
             <button className="btn btn-secondary" onClick={handleExport}>

@@ -289,4 +289,64 @@ class LookupTest extends TestCase
         // company_admin middleware geçebilir; permission middleware 403
         $this->assertContains($response->status(), [403, 401]);
     }
+
+    /** @test */
+    public function grup1_personel_lookup_types_are_seeded(): void
+    {
+        Sanctum::actingAs($this->adminUser);
+
+        foreach (['gender', 'marital_status', 'education_level', 'emergency_relation', 'contract_type', 'employee_document_category', 'blood_type', 'currency'] as $type) {
+            $values = collect($this->getJson("/api/v1/lookups/{$type}")->assertOk()->json('data'))->pluck('value');
+            $this->assertNotEmpty($values, $type);
+        }
+
+        $genders = collect($this->getJson('/api/v1/lookups/gender')->json('data'))->pluck('value');
+        $this->assertTrue($genders->contains('male'));
+        $this->assertTrue($genders->contains('female'));
+    }
+
+    /** @test */
+    public function hybrid_leave_request_status_cannot_add_or_delete_value(): void
+    {
+        Sanctum::actingAs($this->adminUser);
+
+        $this->postJson('/api/v1/lookups-manage', [
+            'lookup_type' => 'leave_request_status',
+            'value' => 'draft',
+            'label' => 'Taslak',
+        ])->assertStatus(403);
+
+        $pending = Lookup::whereNull('company_id')
+            ->where('lookup_type', 'leave_request_status')
+            ->where('value', 'pending')
+            ->firstOrFail();
+
+        $this->deleteJson("/api/v1/lookups-manage/{$pending->id}")->assertStatus(403);
+
+        // Etiket override serbest
+        $this->putJson("/api/v1/lookups-manage/{$pending->id}", [
+            'label' => 'Onay Bekliyor',
+        ])->assertOk();
+
+        $this->assertSame(
+            'Onay Bekliyor',
+            $this->getJson('/api/v1/lookups-resolve?lookup_type=leave_request_status&value=pending')
+                ->json('data.label')
+        );
+    }
+
+    /** @test */
+    public function hybrid_leave_gender_restriction_cannot_add_value(): void
+    {
+        Sanctum::actingAs($this->adminUser);
+
+        $this->postJson('/api/v1/lookups-manage', [
+            'lookup_type' => 'leave_gender_restriction',
+            'value' => 'other',
+            'label' => 'Diğer',
+        ])->assertStatus(403);
+
+        $values = collect($this->getJson('/api/v1/lookups/leave_gender_restriction')->json('data'))->pluck('value');
+        $this->assertEqualsCanonicalizing(['all', 'male', 'female'], $values->all());
+    }
 }

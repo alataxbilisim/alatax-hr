@@ -7,15 +7,16 @@ use App\Models\ActivityLog;
 use App\Models\Employee;
 use App\Models\EmployeeDocument;
 use App\Services\DataScopeService;
+use App\Services\LookupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
 
 class EmployeeDocumentController extends BaseController
 {
     public function __construct(
         protected DataScopeService $dataScope,
+        protected LookupService $lookups,
     ) {}
 
     /**
@@ -89,15 +90,20 @@ class EmployeeDocumentController extends BaseController
             'file' => 'required|file|max:10240|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,gif',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
-            'category' => [
-                'required',
-                Rule::in(['id_card', 'contract', 'certificate', 'education', 'health', 'other']),
-            ],
+            'category' => 'required|string|max:100',
             'issue_date' => 'nullable|date',
             'expiry_date' => 'nullable|date|after:issue_date',
             'is_visible_to_employee' => 'boolean',
             'notes' => 'nullable|string',
         ]);
+
+        $companyId = $this->getCompanyId();
+        $this->lookups->assertValid(
+            LookupService::TYPE_EMPLOYEE_DOCUMENT_CATEGORY,
+            $validated['category'],
+            $companyId,
+            'category'
+        );
 
         $file = $request->file('file');
         $fileName = $file->getClientOriginalName();
@@ -144,16 +150,22 @@ class EmployeeDocumentController extends BaseController
         $validated = $request->validate([
             'title' => 'sometimes|string|max:255',
             'description' => 'nullable|string|max:1000',
-            'category' => [
-                'sometimes',
-                Rule::in(['id_card', 'contract', 'certificate', 'education', 'health', 'other']),
-            ],
+            'category' => 'sometimes|string|max:100',
             'issue_date' => 'nullable|date',
             'expiry_date' => 'nullable|date',
             'is_visible_to_employee' => 'boolean',
             'status' => 'sometimes|in:active,archived,expired',
             'notes' => 'nullable|string',
         ]);
+
+        if (array_key_exists('category', $validated)) {
+            $this->lookups->assertValid(
+                LookupService::TYPE_EMPLOYEE_DOCUMENT_CATEGORY,
+                $validated['category'] ?? null,
+                $this->getCompanyId(),
+                'category'
+            );
+        }
 
         $oldValues = $document->toArray();
 

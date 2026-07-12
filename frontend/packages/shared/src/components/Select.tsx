@@ -2,6 +2,9 @@ import * as React from 'react';
 import * as SelectPrimitive from '@radix-ui/react-select';
 import { BsCheck, BsChevronDown, BsChevronUp } from 'react-icons/bs';
 
+/** Radix Item value boş string kabul etmez — boş seçim için iç sentinel */
+const EMPTY_VALUE = '__ax_empty__';
+
 export interface SelectOption {
   value: string;
   label: string;
@@ -21,6 +24,9 @@ export interface SelectProps {
   id?: string;
   name?: string;
   className?: string;
+  /** Boş seçeneği göster (opsiyonel alanlar) */
+  allowEmpty?: boolean;
+  emptyLabel?: string;
   /** İleride uzun listeler için; şimdilik kapalı iskelet */
   searchable?: boolean;
   'aria-label'?: string;
@@ -30,8 +36,7 @@ export interface SelectProps {
 /**
  * Ortak Select — Radix Select wrapper.
  * Lookup Engine yüzü: value referans tutar, label/color options'tan gelir.
- * RHF: <Controller render={({ field }) => <Select value={field.value} onChange={field.onChange} ... />} />
- * veya value/onChange ile yerel state (mevcut Personel formu deseni).
+ * RHF: Controller + value/onChange; yerel state aynı props.
  */
 export const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
   (
@@ -45,22 +50,36 @@ export const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
       id,
       name,
       className,
+      allowEmpty = false,
+      emptyLabel,
       searchable: _searchable = false,
       'aria-label': ariaLabel,
       'aria-labelledby': ariaLabelledBy,
     },
     ref
   ) => {
-    void _searchable; // iskelet — ileride filtre UI
+    void _searchable;
 
     const selected = options.find((o) => o.value === value);
-    const triggerLabel = selected?.label ?? '';
-    const rootValue = value && value !== '' ? value : undefined;
+    const isEmpty = value === undefined || value === '';
+    const rootValue = isEmpty
+      ? (allowEmpty ? EMPTY_VALUE : undefined)
+      : value;
+
+    const items: SelectOption[] = allowEmpty
+      ? [{ value: EMPTY_VALUE, label: emptyLabel ?? placeholder }, ...options]
+      : options;
 
     return (
       <SelectPrimitive.Root
         value={rootValue}
-        onValueChange={(v) => onChange?.(v)}
+        onValueChange={(v) => {
+          if (v === EMPTY_VALUE) {
+            onChange?.('');
+            return;
+          }
+          onChange?.(v);
+        }}
         disabled={disabled}
         name={name}
       >
@@ -72,7 +91,7 @@ export const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
             .join(' ')}
           aria-label={ariaLabel}
           aria-labelledby={ariaLabelledBy}
-          title={triggerLabel || undefined}
+          title={selected?.label || undefined}
         >
           <span className="ax-select-trigger-inner">
             {selected?.color ? (
@@ -102,7 +121,7 @@ export const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
               <BsChevronUp aria-hidden />
             </SelectPrimitive.ScrollUpButton>
             <SelectPrimitive.Viewport className="ax-select-viewport">
-              {options.map((opt) => (
+              {items.map((opt) => (
                 <SelectPrimitive.Item
                   key={opt.value}
                   value={opt.value}

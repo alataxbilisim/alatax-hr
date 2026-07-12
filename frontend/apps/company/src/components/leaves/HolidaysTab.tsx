@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { leavesApi } from '@shared/services/api';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { leavesApi, lookupsApi, type LookupItem } from '@shared/services/api';
+import { Select } from '@shared/components';
 import toast from 'react-hot-toast';
 import { ConfirmDialog } from '../ui';
 import HolidayForm from './HolidayForm';
@@ -10,7 +11,7 @@ interface Holiday {
   name: string;
   date: string;
   end_date?: string;
-  type: 'national' | 'company' | 'regional';
+  type: string;
   country_code?: string;
   is_recurring: boolean;
   is_half_day: boolean;
@@ -23,6 +24,7 @@ const HolidaysTab: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [typeFilter, setTypeFilter] = useState<string>('');
+  const [typeOptions, setTypeOptions] = useState<LookupItem[]>([]);
 
   // Form modal
   const [formOpen, setFormOpen] = useState(false);
@@ -33,12 +35,31 @@ const HolidaysTab: React.FC = () => {
   const [holidayToDelete, setHolidayToDelete] = useState<Holiday | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
+  const years = useMemo(
+    () => Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i),
+    []
+  );
+
+  const yearOptions = useMemo(
+    () => years.map((year) => ({ value: String(year), label: String(year) })),
+    [years]
+  );
+
+  const loadTypeLookups = useCallback(async () => {
+    try {
+      const response = await lookupsApi.forType('holiday_type');
+      setTypeOptions(response.data.data ?? []);
+    } catch {
+      console.error('Tatil tipi lookup yüklenemedi');
+    }
+  }, []);
+
   const loadHolidays = useCallback(async () => {
     try {
       setLoading(true);
       const params: Record<string, unknown> = { year: selectedYear };
       if (typeFilter) params.type = typeFilter;
-      
+
       const response = await leavesApi.holidays.list(params);
       setHolidays(response.data.data || []);
     } catch {
@@ -49,10 +70,12 @@ const HolidaysTab: React.FC = () => {
   }, [selectedYear, typeFilter]);
 
   useEffect(() => {
+    loadTypeLookups();
+  }, [loadTypeLookups]);
+
+  useEffect(() => {
     loadHolidays();
   }, [loadHolidays]);
-
-  
 
   const handleCreate = () => {
     setSelectedHoliday(undefined);
@@ -87,13 +110,15 @@ const HolidaysTab: React.FC = () => {
   };
 
   const getTypeBadge = (type: string) => {
-    const typeMap: Record<string, { label: string; class: string }> = {
-      national: { label: 'Resmi', class: 'badge-danger' },
-      company: { label: 'Şirket', class: 'badge-primary' },
-      regional: { label: 'Bölgesel', class: 'badge-warning' },
+    const classMap: Record<string, string> = {
+      national: 'badge-danger',
+      company: 'badge-primary',
+      regional: 'badge-warning',
+      religious: 'badge-info',
     };
-    const t = typeMap[type] || { label: type, class: 'badge-secondary' };
-    return <span className={`badge ${t.class}`}>{t.label}</span>;
+    const label = typeOptions.find((o) => o.value === type)?.label || type;
+    const className = classMap[type] || 'badge-secondary';
+    return <span className={`badge ${className}`}>{label}</span>;
   };
 
   const formatDate = (dateStr: string) => {
@@ -104,8 +129,6 @@ const HolidaysTab: React.FC = () => {
     });
   };
 
-  const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i);
-
   return (
     <div>
       {/* Header */}
@@ -115,28 +138,30 @@ const HolidaysTab: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <BsFilter size={16} style={{ color: 'var(--text-tertiary)' }} />
-                <select
-                  className="form-select"
-                  style={{ width: 'auto', minWidth: '100px' }}
-                  value={selectedYear}
-                  onChange={(e) => setSelectedYear(Number(e.target.value))}
-                >
-                  {years.map((year) => (
-                    <option key={year} value={year}>{year}</option>
-                  ))}
-                </select>
+                <div style={{ minWidth: 100 }}>
+                  <Select
+                    value={String(selectedYear)}
+                    onChange={(v) => setSelectedYear(Number(v))}
+                    options={yearOptions}
+                    aria-label="Yıl filtresi"
+                  />
+                </div>
               </div>
-              <select
-                className="form-select"
-                style={{ width: 'auto', minWidth: '150px' }}
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-              >
-                <option value="">Tüm Tipler</option>
-                <option value="national">Resmi Tatil</option>
-                <option value="company">Şirket Tatili</option>
-                <option value="regional">Bölgesel</option>
-              </select>
+              <div style={{ minWidth: 150 }}>
+                <Select
+                  value={typeFilter}
+                  onChange={setTypeFilter}
+                  options={typeOptions.map((opt) => ({
+                    value: opt.value,
+                    label: opt.label,
+                    color: opt.color,
+                  }))}
+                  allowEmpty
+                  emptyLabel="Tüm Tipler"
+                  placeholder="Tüm Tipler"
+                  aria-label="Tatil tipi filtresi"
+                />
+              </div>
             </div>
             <button className="btn btn-primary" onClick={handleCreate}>
               <BsPlus size={18} />
@@ -271,4 +296,3 @@ const HolidaysTab: React.FC = () => {
 };
 
 export default HolidaysTab;
-

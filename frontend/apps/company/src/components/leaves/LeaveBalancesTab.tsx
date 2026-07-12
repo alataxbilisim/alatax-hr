@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { leavesApi, usersApi } from '@shared/services/api';
+import { Select } from '@shared/components';
 import toast from 'react-hot-toast';
 import { Modal } from '../ui';
 import { BsPencil, BsSearch, BsCalendar3 } from 'react-icons/bs';
@@ -134,7 +135,15 @@ const LeaveBalancesTab: React.FC = () => {
     return acc;
   }, {} as Record<number, { user?: User; balances: LeaveBalance[] }>);
 
-  const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i);
+  const years = useMemo(
+    () => Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i),
+    []
+  );
+
+  const yearOptions = useMemo(
+    () => years.map((year) => ({ value: String(year), label: String(year) })),
+    [years]
+  );
 
   return (
     <div>
@@ -144,29 +153,30 @@ const LeaveBalancesTab: React.FC = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <BsCalendar3 size={16} style={{ color: 'var(--text-tertiary)' }} />
-              <select
-                className="form-select"
-                style={{ width: 'auto', minWidth: '100px' }}
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(Number(e.target.value))}
-              >
-                {years.map((year) => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
+              <div style={{ minWidth: 100 }}>
+                <Select
+                  value={String(selectedYear)}
+                  onChange={(v) => setSelectedYear(Number(v))}
+                  options={yearOptions}
+                  aria-label="Yıl filtresi"
+                />
+              </div>
             </div>
 
-            <select
-              className="form-select"
-              style={{ width: 'auto', minWidth: '200px' }}
-              value={selectedUserId}
-              onChange={(e) => setSelectedUserId(e.target.value ? Number(e.target.value) : '')}
-            >
-              <option value="">Tüm Personeller</option>
-              {users.map((user) => (
-                <option key={user.id} value={user.id}>{user.name}</option>
-              ))}
-            </select>
+            <div style={{ minWidth: 200 }}>
+              <Select
+                value={selectedUserId === '' ? '' : String(selectedUserId)}
+                onChange={(v) => setSelectedUserId(v ? Number(v) : '')}
+                options={users.map((user) => ({
+                  value: String(user.id),
+                  label: user.name,
+                }))}
+                allowEmpty
+                emptyLabel="Tüm Personeller"
+                placeholder="Tüm Personeller"
+                aria-label="Personel filtresi"
+              />
+            </div>
 
             <div style={{ position: 'relative', flex: 1, maxWidth: '300px' }}>
               <BsSearch

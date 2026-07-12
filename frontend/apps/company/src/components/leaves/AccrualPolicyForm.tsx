@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../ui';
 import { leavesApi } from '@shared/services/api';
+import { Select } from '@shared/components';
 import toast from 'react-hot-toast';
 import { BsPlus, BsTrash } from 'react-icons/bs';
 
@@ -42,6 +43,14 @@ interface AccrualPolicyFormProps {
   onSuccess: () => void;
   policy?: AccrualPolicy;
 }
+
+const ACCRUAL_TYPE_OPTIONS = [
+  { value: 'annual', label: 'Yıllık - Yılda bir kez verilir' },
+  { value: 'monthly', label: 'Aylık - Her ay birikim olur' },
+  { value: 'per_pay_period', label: 'Dönemsel - Maaş dönemi başına' },
+  { value: 'hourly', label: 'Saatlik - Çalışılan saat başına' },
+  { value: 'custom', label: 'Özel - Manuel yönetim' },
+];
 
 const AccrualPolicyForm: React.FC<AccrualPolicyFormProps> = ({
   isOpen,
@@ -131,7 +140,7 @@ const AccrualPolicyForm: React.FC<AccrualPolicyFormProps> = ({
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
 
@@ -230,14 +239,6 @@ const AccrualPolicyForm: React.FC<AccrualPolicyFormProps> = ({
     }
   };
 
-  const accrualTypes = [
-    { value: 'annual', label: 'Yıllık - Yılda bir kez verilir' },
-    { value: 'monthly', label: 'Aylık - Her ay birikim olur' },
-    { value: 'per_pay_period', label: 'Dönemsel - Maaş dönemi başına' },
-    { value: 'hourly', label: 'Saatlik - Çalışılan saat başına' },
-    { value: 'custom', label: 'Özel - Manuel yönetim' },
-  ];
-
   return (
     <Modal
       isOpen={isOpen}
@@ -275,19 +276,23 @@ const AccrualPolicyForm: React.FC<AccrualPolicyFormProps> = ({
           <div className="col-md-6">
             <div className="form-group">
               <label className="form-label">İzin Türü *</label>
-              <select
-                name="leave_type_id"
-                className={`form-select ${errors.leave_type_id ? 'is-invalid' : ''}`}
-                value={formData.leave_type_id}
-                onChange={handleChange}
-              >
-                <option value="">Seçin...</option>
-                {leaveTypes.map((type) => (
-                  <option key={type.id} value={type.id}>
-                    {type.name} {type.code && `(${type.code})`}
-                  </option>
-                ))}
-              </select>
+              <Select
+                value={formData.leave_type_id ? String(formData.leave_type_id) : ''}
+                onChange={(v) => {
+                  setFormData((prev) => ({ ...prev, leave_type_id: v ? Number(v) : 0 }));
+                  if (errors.leave_type_id) {
+                    setErrors((prev) => ({ ...prev, leave_type_id: '' }));
+                  }
+                }}
+                options={leaveTypes.map((type) => ({
+                  value: String(type.id),
+                  label: type.code ? `${type.name} (${type.code})` : type.name,
+                }))}
+                allowEmpty
+                placeholder="Seçin..."
+                error={!!errors.leave_type_id}
+                aria-label="İzin türü"
+              />
               {errors.leave_type_id && <div className="form-error">{errors.leave_type_id}</div>}
             </div>
           </div>
@@ -312,16 +317,18 @@ const AccrualPolicyForm: React.FC<AccrualPolicyFormProps> = ({
             <div className="col-md-6">
               <div className="form-group">
                 <label className="form-label">Hakediş Tipi *</label>
-                <select
-                  name="accrual_type"
-                  className="form-select"
+                <Select
                   value={formData.accrual_type}
-                  onChange={handleChange}
-                >
-                  {accrualTypes.map((type) => (
-                    <option key={type.value} value={type.value}>{type.label}</option>
-                  ))}
-                </select>
+                  onChange={(v) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      accrual_type: (v || 'annual') as AccrualPolicy['accrual_type'],
+                    }))
+                  }
+                  options={ACCRUAL_TYPE_OPTIONS}
+                  placeholder="Seçiniz..."
+                  aria-label="Hakediş tipi"
+                />
               </div>
             </div>
             <div className="col-md-6">

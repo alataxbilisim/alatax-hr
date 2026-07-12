@@ -18,6 +18,7 @@ import {
 } from 'react-icons/bs';
 import { employeesApi, lookupsApi, type LookupItem } from '@shared/services/api';
 import { getErrorMessage } from '@shared/services/apiHelpers';
+import { Select } from '@shared/components';
 import { toggleDensity } from '@shared/store/slices/themeSlice';
 import toast from 'react-hot-toast';
 import { ConfirmDialog, DataTable } from '../../components/ui';
@@ -81,6 +82,7 @@ const EmployeesPage: React.FC = () => {
   const [bulkStatusDialogOpen, setBulkStatusDialogOpen] = useState(false);
   const [newBulkStatus, setNewBulkStatus] = useState('');
   const [statusOptions, setStatusOptions] = useState<LookupItem[]>([]);
+  const [contractOptions, setContractOptions] = useState<LookupItem[]>([]);
 
   const loadDepartments = useCallback(async () => {
     try {
@@ -93,8 +95,12 @@ const EmployeesPage: React.FC = () => {
 
   const loadStatusLookups = useCallback(async () => {
     try {
-      const response = await lookupsApi.forType('employee_status');
-      setStatusOptions(response.data.data ?? []);
+      const [statusRes, contractRes] = await Promise.all([
+        lookupsApi.forType('employee_status'),
+        lookupsApi.forType('contract_type'),
+      ]);
+      setStatusOptions(statusRes.data.data ?? []);
+      setContractOptions(contractRes.data.data ?? []);
     } catch (error) {
       console.error('Durum lookup yüklenemedi:', error);
     }
@@ -470,54 +476,56 @@ const EmployeesPage: React.FC = () => {
           <div className="list-filter-advanced">
             <div>
               <label className="form-label">Durum</label>
-              <select
-                className="form-select"
+              <Select
                 value={statusFilter}
-                onChange={(e) => {
-                  setStatusFilter(e.target.value);
+                onChange={(v) => {
+                  setStatusFilter(v);
                   setCurrentPage(1);
                 }}
-              >
-                <option value="">Tümü</option>
-                {statusOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+                options={statusOptions.map((opt) => ({
+                  value: opt.value,
+                  label: opt.label,
+                  color: opt.color,
+                }))}
+                allowEmpty
+                emptyLabel="Tümü"
+                aria-label="Durum filtresi"
+              />
             </div>
             <div>
               <label className="form-label">Departman</label>
-              <select
-                className="form-select"
+              <Select
                 value={departmentFilter}
-                onChange={(e) => {
-                  setDepartmentFilter(e.target.value);
+                onChange={(v) => {
+                  setDepartmentFilter(v);
                   setCurrentPage(1);
                 }}
-              >
-                <option value="">Tümü</option>
-                {departments.map((dept) => (
-                  <option key={dept.id} value={dept.id}>{dept.name}</option>
-                ))}
-              </select>
+                options={departments.map((dept) => ({
+                  value: String(dept.id),
+                  label: dept.name,
+                }))}
+                allowEmpty
+                emptyLabel="Tümü"
+                aria-label="Departman filtresi"
+              />
             </div>
             <div>
               <label className="form-label">Sözleşme Tipi</label>
-              <select
-                className="form-select"
+              <Select
                 value={contractTypeFilter}
-                onChange={(e) => {
-                  setContractTypeFilter(e.target.value);
+                onChange={(v) => {
+                  setContractTypeFilter(v);
                   setCurrentPage(1);
                 }}
-              >
-                <option value="">Tümü</option>
-                <option value="permanent">Süresiz</option>
-                <option value="temporary">Süreli</option>
-                <option value="intern">Stajyer</option>
-                <option value="contract">Sözleşmeli</option>
-              </select>
+                options={contractOptions.map((opt) => ({
+                  value: opt.value,
+                  label: opt.label,
+                  color: opt.color,
+                }))}
+                allowEmpty
+                emptyLabel="Tümü"
+                aria-label="Sözleşme tipi filtresi"
+              />
             </div>
           </div>
         )}
@@ -579,18 +587,18 @@ const EmployeesPage: React.FC = () => {
               </p>
               <div className="form-group">
                 <label className="form-label">Yeni Durum</label>
-                <select
-                  className="form-select"
+                <Select
                   value={newBulkStatus}
-                  onChange={(e) => setNewBulkStatus(e.target.value)}
-                >
-                  <option value="">Seçiniz...</option>
-                  {statusOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setNewBulkStatus}
+                  options={statusOptions.map((opt) => ({
+                    value: opt.value,
+                    label: opt.label,
+                    color: opt.color,
+                  }))}
+                  allowEmpty
+                  placeholder="Seçiniz..."
+                  aria-label="Yeni Durum"
+                />
               </div>
             </div>
             <div className="modal-footer">

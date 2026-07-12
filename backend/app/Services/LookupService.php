@@ -3,7 +3,9 @@
 namespace App\Services;
 
 use App\Models\Employee;
+use App\Models\EmployeeDocument;
 use App\Models\JobPosition;
+use App\Models\LeaveRequest;
 use App\Models\Lookup;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
@@ -17,6 +19,24 @@ class LookupService
 
     public const TYPE_WORK_TYPE = 'work_type';
 
+    public const TYPE_GENDER = 'gender';
+
+    public const TYPE_MARITAL_STATUS = 'marital_status';
+
+    public const TYPE_EDUCATION_LEVEL = 'education_level';
+
+    public const TYPE_EMERGENCY_RELATION = 'emergency_relation';
+
+    public const TYPE_CONTRACT_TYPE = 'contract_type';
+
+    public const TYPE_EMPLOYEE_DOCUMENT_CATEGORY = 'employee_document_category';
+
+    public const TYPE_LEAVE_REQUEST_STATUS = 'leave_request_status';
+
+    public const TYPE_LEAVE_GENDER_RESTRICTION = 'leave_gender_restriction';
+
+    public const TYPE_HOLIDAY_TYPE = 'holiday_type';
+
     public const TYPE_CURRENCY = 'currency';
 
     public const TYPE_CITY_TR = 'city_tr';
@@ -24,6 +44,22 @@ class LookupService
     public const TYPE_BLOOD_TYPE = 'blood_type';
 
     public const TYPE_COUNTRY = 'country';
+
+    /** @var list<string> */
+    public const SYSTEM_TYPES = [
+        self::TYPE_CURRENCY,
+        self::TYPE_CITY_TR,
+        self::TYPE_BLOOD_TYPE,
+        self::TYPE_COUNTRY,
+    ];
+
+    /** Hibrit: value sabit, label/renk/sıra firma (meta.hybrid) */
+    /** @var list<string> */
+    public const HYBRID_TYPES = [
+        self::TYPE_LEAVE_REQUEST_STATUS,
+        // GenderRestriction enum + izin uygunluk kuralları — kod sabit
+        self::TYPE_LEAVE_GENDER_RESTRICTION,
+    ];
 
     /** @var array<string, list<array{model: class-string, column: string}>> */
     private const USAGE_MAP = [
@@ -33,6 +69,33 @@ class LookupService
         self::TYPE_WORK_TYPE => [
             ['model' => Employee::class, 'column' => 'work_type'],
             ['model' => JobPosition::class, 'column' => 'employment_type'],
+        ],
+        self::TYPE_GENDER => [
+            ['model' => Employee::class, 'column' => 'gender'],
+        ],
+        self::TYPE_MARITAL_STATUS => [
+            ['model' => Employee::class, 'column' => 'marital_status'],
+        ],
+        self::TYPE_EDUCATION_LEVEL => [
+            ['model' => Employee::class, 'column' => 'education_level'],
+        ],
+        self::TYPE_EMERGENCY_RELATION => [
+            ['model' => Employee::class, 'column' => 'emergency_contact_relation'],
+        ],
+        self::TYPE_CONTRACT_TYPE => [
+            ['model' => Employee::class, 'column' => 'contract_type'],
+        ],
+        self::TYPE_CURRENCY => [
+            ['model' => Employee::class, 'column' => 'currency'],
+        ],
+        self::TYPE_BLOOD_TYPE => [
+            ['model' => Employee::class, 'column' => 'blood_type'],
+        ],
+        self::TYPE_EMPLOYEE_DOCUMENT_CATEGORY => [
+            ['model' => EmployeeDocument::class, 'column' => 'category'],
+        ],
+        self::TYPE_LEAVE_REQUEST_STATUS => [
+            ['model' => LeaveRequest::class, 'column' => 'status'],
         ],
     ];
 
@@ -157,6 +220,16 @@ class LookupService
         }
 
         return false;
+    }
+
+    public function isSystemType(string $type): bool
+    {
+        return in_array($type, self::SYSTEM_TYPES, true);
+    }
+
+    public function isHybridType(string $type): bool
+    {
+        return in_array($type, self::HYBRID_TYPES, true);
     }
 
     /**

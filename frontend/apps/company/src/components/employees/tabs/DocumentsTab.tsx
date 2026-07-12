@@ -1,6 +1,7 @@
-import React, { useState, useRef } from 'react';
-import { employeesApi } from '@shared/services/api';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { employeesApi, lookupsApi, type LookupItem } from '@shared/services/api';
 import { getErrorMessage } from '@shared/services/apiHelpers';
+import { Select } from '@shared/components';
 import toast from 'react-hot-toast';
 import { Modal, ConfirmDialog } from '../../ui';
 import {
@@ -33,23 +34,14 @@ interface DocumentsTabProps {
   onRefresh: () => void;
 }
 
-const categoryLabels: Record<string, string> = {
-  id_card: 'Kimlik',
-  contract: 'Sözleşme',
-  certificate: 'Sertifika',
-  education: 'Eğitim',
-  health: 'Sağlık',
-  other: 'Diğer',
-};
-
 const DocumentsTab: React.FC<DocumentsTabProps> = ({ employeeId, documents, onRefresh }) => {
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [loading, setLoading] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState('');
-  
-  // Form state
+  const [categoryOptions, setCategoryOptions] = useState<LookupItem[]>([]);
+
   const [file, setFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
     title: '',
@@ -59,11 +51,27 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employeeId, documents, onRe
     expiry_date: '',
     is_visible_to_employee: true,
   });
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const loadCategories = useCallback(async () => {
+    try {
+      const res = await lookupsApi.forType('employee_document_category');
+      setCategoryOptions(res.data.data ?? []);
+    } catch {
+      console.error('Belge kategori lookup yüklenemedi');
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadCategories();
+  }, [loadCategories]);
+
+  const categoryLabel = (value: string) =>
+    categoryOptions.find((o) => o.value === value)?.label || value;
+
   const filteredDocuments = categoryFilter
-    ? documents.filter(d => d.category === categoryFilter)
+    ? documents.filter((d) => d.category === categoryFilter)
     : documents;
 
   const formatDate = (date?: string) => {
@@ -135,7 +143,7 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employeeId, documents, onRe
 
   const handleDelete = async () => {
     if (!selectedDocument) return;
-    
+
     try {
       await employeesApi.documents.delete(employeeId, selectedDocument.id);
       toast.success('Belge silindi');
@@ -152,7 +160,7 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employeeId, documents, onRe
     setFormData({
       title: '',
       description: '',
-      category: 'other',
+      category: categoryOptions[0]?.value || 'other',
       issue_date: '',
       expiry_date: '',
       is_visible_to_employee: true,
@@ -161,20 +169,22 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employeeId, documents, onRe
 
   return (
     <div>
-      {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <select
-            className="form-select"
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            style={{ width: 'auto' }}
-          >
-            <option value="">Tüm Kategoriler</option>
-            {Object.entries(categoryLabels).map(([key, label]) => (
-              <option key={key} value={key}>{label}</option>
-            ))}
-          </select>
+          <div style={{ minWidth: 180 }}>
+            <Select
+              value={categoryFilter}
+              onChange={setCategoryFilter}
+              options={categoryOptions.map((o) => ({
+                value: o.value,
+                label: o.label,
+                color: o.color,
+              }))}
+              allowEmpty
+              emptyLabel="Tüm Kategoriler"
+              aria-label="Belge kategorisi filtresi"
+            />
+          </div>
           <span style={{ color: 'var(--text-tertiary)', fontSize: '0.875rem' }}>
             {filteredDocuments.length} belge
           </span>
@@ -184,7 +194,6 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employeeId, documents, onRe
         </button>
       </div>
 
-      {/* Belgeler Listesi */}
       {filteredDocuments.length === 0 ? (
         <div className="card">
           <div className="card-body" style={{ textAlign: 'center', padding: '3rem' }}>
@@ -221,7 +230,7 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employeeId, documents, onRe
                       )}
                     </td>
                     <td>
-                      <span className="badge badge-secondary">{categoryLabels[doc.category] || doc.category}</span>
+                      <span className="badge badge-secondary">{categoryLabel(doc.category)}</span>
                     </td>
                     <td>
                       <div style={{ fontSize: '0.875rem' }}>{doc.file_name}</div>
@@ -241,34 +250,27 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employeeId, documents, onRe
                         '-'
                       )}
                     </td>
-                    <td>
-                      <div style={{ fontSize: '0.875rem' }}>{formatDate(doc.created_at)}</div>
-                      {doc.uploaded_by && (
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
-                          {doc.uploaded_by.name}
-                        </div>
-                      )}
-                    </td>
-                    <td>
-                      <div className="btn-group btn-group-sm">
-                        <button
-                          className="btn btn-secondary"
-                          onClick={() => handleDownload(doc)}
-                          title="İndir"
-                        >
-                          <BsDownload />
-                        </button>
-                        <button
-                          className="btn btn-danger"
-                          onClick={() => {
-                            setSelectedDocument(doc);
-                            setDeleteDialogOpen(true);
-                          }}
-                          title="Sil"
-                        >
-                          <BsTrash />
-                        </button>
-                      </div>
+                    <td>{formatDate(doc.created_at)}</td>
+                    <td className="text-end">
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => handleDownload(doc)}
+                        title="İndir"
+                      >
+                        <BsDownload />
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-sm text-danger"
+                        onClick={() => {
+                          setSelectedDocument(doc);
+                          setDeleteDialogOpen(true);
+                        }}
+                        title="Sil"
+                      >
+                        <BsTrash />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -278,15 +280,34 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employeeId, documents, onRe
         </div>
       )}
 
-      {/* Yükleme Modal */}
       <Modal
         isOpen={uploadModalOpen}
-        onClose={() => { setUploadModalOpen(false); resetForm(); }}
+        onClose={() => {
+          setUploadModalOpen(false);
+          resetForm();
+        }}
         title="Belge Yükle"
         size="md"
+        footer={
+          <>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => {
+                setUploadModalOpen(false);
+                resetForm();
+              }}
+              disabled={loading}
+            >
+              İptal
+            </button>
+            <button type="button" className="btn btn-primary" onClick={handleUpload} disabled={loading}>
+              {loading ? 'Yükleniyor...' : 'Yükle'}
+            </button>
+          </>
+        }
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {/* Dosya Seçimi */}
           <div className="form-group">
             <label className="form-label">Dosya *</label>
             <input
@@ -316,15 +337,16 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employeeId, documents, onRe
 
           <div className="form-group">
             <label className="form-label">Kategori *</label>
-            <select
-              className="form-select"
+            <Select
               value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-            >
-              {Object.entries(categoryLabels).map(([key, label]) => (
-                <option key={key} value={key}>{label}</option>
-              ))}
-            </select>
+              onChange={(v) => setFormData({ ...formData, category: v })}
+              options={categoryOptions.map((o) => ({
+                value: o.value,
+                label: o.label,
+                color: o.color,
+              }))}
+              aria-label="Belge kategorisi"
+            />
           </div>
 
           <div className="form-group">
@@ -362,34 +384,23 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employeeId, documents, onRe
             <input
               type="checkbox"
               className="form-check-input"
-              id="is_visible"
+              id="is_visible_to_employee"
               checked={formData.is_visible_to_employee}
               onChange={(e) => setFormData({ ...formData, is_visible_to_employee: e.target.checked })}
             />
-            <label className="form-check-label" htmlFor="is_visible">
-              Personel portalında görünsün
+            <label className="form-check-label" htmlFor="is_visible_to_employee">
+              Personele görünür
             </label>
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
-            <button className="btn btn-secondary" onClick={() => { setUploadModalOpen(false); resetForm(); }}>
-              İptal
-            </button>
-            <button
-              className="btn btn-primary"
-              onClick={handleUpload}
-              disabled={!file || !formData.title || loading}
-            >
-              {loading ? 'Yükleniyor...' : 'Yükle'}
-            </button>
           </div>
         </div>
       </Modal>
 
-      {/* Silme Dialog */}
       <ConfirmDialog
         isOpen={deleteDialogOpen}
-        onClose={() => { setDeleteDialogOpen(false); setSelectedDocument(null); }}
+        onClose={() => {
+          setDeleteDialogOpen(false);
+          setSelectedDocument(null);
+        }}
         onConfirm={handleDelete}
         title="Belgeyi Sil"
         message={`"${selectedDocument?.title}" belgesini silmek istediğinizden emin misiniz?`}
@@ -401,4 +412,3 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employeeId, documents, onRe
 };
 
 export default DocumentsTab;
-
