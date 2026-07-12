@@ -5,6 +5,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../store';
 import { logout } from '@shared/store/slices/authSlice';
 import { toggleTheme, toggleSidebar, setSidebarOpen } from '@shared/store/slices/themeSlice';
+import { useTranslation } from '@shared/i18n';
 import {
   BsBoxArrowRight,
   BsSun,
@@ -13,13 +14,41 @@ import {
   BsList,
   BsX,
   BsChevronRight,
-  BsGear,
+  BsPersonGear,
 } from 'react-icons/bs';
 import ModuleRail from '../components/layout/ModuleRail';
-import { moduleGroups, type ModuleGroup } from '../components/layout/moduleNav';
+import {
+  moduleGroups,
+  operationalModuleGroups,
+  pinnedModuleGroups,
+  getFilteredMenuItems,
+  type ModuleGroup,
+} from '../components/layout/moduleNav';
 import ContextSidebar from '../components/layout/ContextSidebar';
 
 function findModuleIdByPath(pathname: string): string {
+  // /account → account (kişisel)
+  if (pathname.startsWith('/account')) {
+    return 'account';
+  }
+
+  // Yönetim yolları (operasyonel basePath'ten önce)
+  const management = pinnedModuleGroups.find((m) => m.id === 'management');
+  if (management) {
+    const mgmtPaths = [
+      '/settings',
+      '/webhooks',
+      '/users',
+      '/roles',
+      '/branches',
+      '/audit-logs',
+      '/lookups',
+    ];
+    if (mgmtPaths.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+      return 'management';
+    }
+  }
+
   const byBasePath = moduleGroups
     .filter((module) => module.basePath && pathname.startsWith(module.basePath))
     .sort((a, b) => (b.basePath?.length ?? 0) - (a.basePath?.length ?? 0));
@@ -29,8 +58,8 @@ function findModuleIdByPath(pathname: string): string {
 
   const byItem = moduleGroups.find((module) =>
     module.items.some(
-      (item) => pathname === item.path || pathname.startsWith(`${item.path}/`),
-    ),
+      (item) => pathname === item.path || pathname.startsWith(`${item.path}/`)
+    )
   );
   return byItem?.id ?? 'dashboard';
 }
@@ -43,6 +72,41 @@ const CompanyMobileDrawer: React.FC<{
   const [open, setOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useTranslation('common');
+  const { user } = useSelector((state: RootState) => state.auth);
+
+  const hasModuleAccess = (module: ModuleGroup): boolean => {
+    if (!user) return false;
+    if (user.type === 'company_admin' || user.type === 'super_admin') return true;
+    if (!module.permissionModule) return true;
+    const permissions = user.permissions || [];
+    const permModule = module.permissionModule;
+    if (permissions.includes('*') || permissions.includes(`${permModule}.*`)) return true;
+    return permissions.some((p: string) => p.startsWith(`${permModule}.`));
+  };
+
+  const allModules = [
+    ...operationalModuleGroups.filter((m) => {
+      if (m.moduleKey && !activeModules.includes(m.moduleKey)) return false;
+      if (!hasModuleAccess(m)) return false;
+      return (
+        getFilteredMenuItems(
+          m,
+          user as { type: string; permissions: string[] } | null
+        ).length > 0
+      );
+    }),
+    ...pinnedModuleGroups.filter((m) => {
+      if (m.id === 'account') return !!user;
+      if (!hasModuleAccess(m)) return false;
+      return (
+        getFilteredMenuItems(
+          m,
+          user as { type: string; permissions: string[] } | null
+        ).length > 0
+      );
+    }),
+  ];
 
   const toggleButton = (
     <button
@@ -70,25 +134,28 @@ const CompanyMobileDrawer: React.FC<{
 
       <div className={`mobile-sidebar-sheet ${open ? 'open' : ''}`}>
         <div className="mobile-sheet-header">
-          <span>Menü</span>
+          <span>{t('nav.menu')}</span>
           <button type="button" onClick={() => setOpen(false)}>
             <BsX size={24} />
           </button>
         </div>
         <div className="mobile-sheet-content">
-          {moduleGroups
-            .filter((m) => !m.moduleKey || activeModules.includes(m.moduleKey))
-            .map((module) => (
+          {allModules.map((module) => {
+            const items = getFilteredMenuItems(
+              module,
+              user as { type: string; permissions: string[] } | null
+            );
+            return (
               <div key={module.id} className="mobile-module-group">
                 <div
                   className="mobile-module-header"
                   style={{ '--module-color': module.color } as React.CSSProperties}
                 >
                   <module.icon />
-                  <span>{module.label}</span>
+                  <span>{t(module.labelKey)}</span>
                 </div>
                 <div className="mobile-module-items">
-                  {module.items.map((item) => (
+                  {items.map((item) => (
                     <a
                       key={item.path}
                       href={item.path}
@@ -99,12 +166,13 @@ const CompanyMobileDrawer: React.FC<{
                         setOpen(false);
                       }}
                     >
-                      {item.label}
+                      {t(item.labelKey)}
                     </a>
                   ))}
                 </div>
               </div>
-            ))}
+            );
+          })}
         </div>
       </div>
     </>
@@ -115,6 +183,7 @@ const MainLayout: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation('common');
   const { user } = useSelector((state: RootState) => state.auth);
   const { mode, sidebarOpen } = useSelector((state: RootState) => state.theme);
 
@@ -127,7 +196,7 @@ const MainLayout: React.FC = () => {
 
   const activeModule = useMemo(
     () => findModuleIdByPath(location.pathname),
-    [location.pathname],
+    [location.pathname]
   );
 
   const currentModule: ModuleGroup | null =
@@ -143,8 +212,14 @@ const MainLayout: React.FC = () => {
     } else {
       dispatch(setSidebarOpen(true));
       const module = moduleGroups.find((m) => m.id === moduleId);
-      if (module && module.items.length > 0) {
-        navigate(module.items[0].path);
+      if (module) {
+        const visible = getFilteredMenuItems(
+          module,
+          user as { type: string; permissions: string[] } | null
+        );
+        if (visible.length > 0) {
+          navigate(visible[0].path);
+        }
       }
     }
   };
@@ -156,35 +231,41 @@ const MainLayout: React.FC = () => {
   const getBreadcrumb = () => {
     const pathSegments = location.pathname.split('/').filter(Boolean);
     const labels: Record<string, string> = {
-      dashboard: 'Dashboard',
-      users: 'Kullanıcılar',
-      roles: 'Roller',
-      leaves: 'İzin Yönetimi',
-      types: 'Türler',
-      balances: 'Bakiyeler',
-      documents: 'Evrak Yönetimi',
-      categories: 'Kategoriler',
-      recruitment: 'İşe Alım',
-      positions: 'Pozisyonlar',
-      applications: 'Başvurular',
-      interviews: 'Mülakatlar',
-      'cv-pool': 'CV Havuzu',
-      reports: 'Raporlar',
-      'custom-fields': 'Özel Alanlar',
-      onboarding: 'Onboarding',
-      templates: 'Şablonlar',
-      performance: 'Performans',
-      periods: 'Dönemler',
-      criteria: 'Kriterler',
-      training: 'Eğitim',
-      sessions: 'Oturumlar',
-      assets: 'Varlık Yönetimi',
-      assignments: 'Atamalar',
-      surveys: 'Anketler',
-      analytics: 'Analitik',
-      settings: 'Ayarlar',
-      lookups: 'Listeler',
-      'audit-logs': 'Log & Denetim',
+      dashboard: t('nav.dashboard'),
+      account: t('nav.account'),
+      profile: t('account.profile'),
+      security: t('account.security'),
+      preferences: t('account.preferences'),
+      users: t('studio.users'),
+      roles: t('studio.roles'),
+      leaves: t('nav.leaves'),
+      types: t('studio.leaveTypes'),
+      balances: t('nav.leavesBalances'),
+      documents: t('nav.documents'),
+      categories: t('nav.documentsCategories'),
+      recruitment: t('nav.recruitment'),
+      positions: t('nav.recruitmentPositions'),
+      applications: t('nav.recruitmentApplications'),
+      interviews: t('nav.recruitmentInterviews'),
+      'cv-pool': t('nav.recruitmentCvPool'),
+      reports: t('nav.analyticsReports'),
+      'custom-fields': t('studio.customFields'),
+      onboarding: t('nav.onboarding'),
+      templates: t('nav.onboardingTemplates'),
+      performance: t('nav.performance'),
+      periods: t('nav.performancePeriods'),
+      criteria: t('nav.performanceCriteria'),
+      training: t('nav.training'),
+      sessions: t('nav.trainingSessions'),
+      assets: t('nav.assets'),
+      assignments: t('nav.assetsAssignments'),
+      surveys: t('nav.surveys'),
+      analytics: t('nav.analytics'),
+      settings: t('studio.companySettings'),
+      lookups: t('studio.lookups'),
+      'audit-logs': t('studio.auditLogs'),
+      webhooks: t('studio.webhooks'),
+      branches: t('studio.branches'),
     };
 
     return pathSegments.map((segment) => labels[segment] || segment);
@@ -234,8 +315,8 @@ const MainLayout: React.FC = () => {
               type="button"
               className="header-toggle desktop-only"
               onClick={handleContextToggle}
-              title={sidebarOpen ? 'Menüyü Daralt' : 'Menüyü Genişlet'}
-              aria-label={sidebarOpen ? 'Menüyü Daralt' : 'Menüyü Genişlet'}
+              title={sidebarOpen ? t('nav.collapseMenu') : t('nav.expandMenu')}
+              aria-label={sidebarOpen ? t('nav.collapseMenu') : t('nav.expandMenu')}
             >
               <BsList size={20} />
             </button>
@@ -259,7 +340,7 @@ const MainLayout: React.FC = () => {
               type="button"
               className="header-btn"
               onClick={handleThemeToggle}
-              title={mode === 'dark' ? 'Açık Tema' : 'Koyu Tema'}
+              title={mode === 'dark' ? t('account.themeLight') : t('account.themeDark')}
             >
               {mode === 'dark' ? <BsSun size={18} /> : <BsMoon size={18} />}
             </button>
@@ -273,7 +354,7 @@ const MainLayout: React.FC = () => {
                 type="button"
                 className="header-btn user-btn"
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
-                title="Hesap"
+                title={t('account.settingsMenu')}
               >
                 <div className="user-avatar-small">
                   {user?.name?.charAt(0).toUpperCase() || 'U'}
@@ -287,12 +368,18 @@ const MainLayout: React.FC = () => {
                     <div style={{ fontWeight: 600, fontSize: '0.8125rem', color: 'var(--text-primary)' }}>{user?.name}</div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{user?.email}</div>
                   </div>
-                  <div className="dropdown-item" onClick={() => navigate('/settings')}>
-                    <BsGear /> Ayarlar
+                  <div
+                    className="dropdown-item"
+                    onClick={() => {
+                      setUserMenuOpen(false);
+                      navigate('/account/profile');
+                    }}
+                  >
+                    <BsPersonGear /> {t('account.settingsMenu')}
                   </div>
                   <div className="dropdown-divider" />
                   <div className="dropdown-item danger" onClick={handleLogout}>
-                    <BsBoxArrowRight /> Çıkış Yap
+                    <BsBoxArrowRight /> {t('nav.logout')}
                   </div>
                 </div>
               )}

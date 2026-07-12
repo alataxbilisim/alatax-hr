@@ -133,6 +133,25 @@ export const authApi = {
     api.post('/auth/forgot-password', data),
   resetPassword: (data: { token: string; email: string; password: string; password_confirmation: string }) => 
     api.post('/auth/reset-password', data),
+  /** Self-service 2FA (management.users.edit gerekmez) */
+  getSelf2FAStatus: () =>
+    api.get<ApiResponse<{ two_factor_enabled: boolean; has_secret: boolean }>>('/auth/2fa/status'),
+  enableSelf2FA: () =>
+    api.post<ApiResponse<{
+      secret: string;
+      qr_code_url: string;
+      qr_code_svg?: string;
+      recovery_codes: string[];
+      two_factor_enabled: boolean;
+    }>>('/auth/2fa/enable'),
+  confirmSelf2FA: (data: { code: string }) =>
+    api.post<ApiResponse<{ two_factor_enabled: boolean }>>('/auth/2fa/confirm', data),
+  disableSelf2FA: (data: { code?: string; password?: string }) =>
+    api.post<ApiResponse<null>>('/auth/2fa/disable', data),
+  getSelfRecoveryCodes: () =>
+    api.get<ApiResponse<{ remaining_count: number; message: string }>>('/auth/2fa/recovery-codes'),
+  regenerateSelfRecoveryCodes: (data: { code?: string; password?: string }) =>
+    api.post<ApiResponse<{ recovery_codes: string[] }>>('/auth/2fa/recovery-codes/regenerate', data),
 };
 
 // Dashboard API
@@ -1207,7 +1226,10 @@ export const lookupsApi = {
   resolve: (lookupType: string, value: string) =>
     api.get('/lookups-resolve', { params: { lookup_type: lookupType, value } }),
   manageList: (lookupType: string, activeOnly = false) =>
-    api.get('/lookups-manage', { params: { lookup_type: lookupType, active_only: activeOnly } }),
+    // Query string'de boolean "false" Laravel `boolean` kuralını kırar → 0/1 gönder
+    api.get('/lookups-manage', {
+      params: { lookup_type: lookupType, active_only: activeOnly ? 1 : 0 },
+    }),
   create: <T extends object>(data: T) => api.post('/lookups-manage', data),
   update: <T extends object>(id: number, data: T) => api.put(`/lookups-manage/${id}`, data),
   delete: (id: number) => api.delete(`/lookups-manage/${id}`),

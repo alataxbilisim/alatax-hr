@@ -31,12 +31,25 @@ class LookupController extends BaseController
      */
     public function index(Request $request): JsonResponse
     {
+        // Axios/query: "true"/"false" string → Laravel `boolean` kuralı reddeder; normalize et
+        if ($request->has('active_only')) {
+            $request->merge([
+                'active_only' => filter_var(
+                    $request->input('active_only'),
+                    FILTER_VALIDATE_BOOLEAN,
+                    FILTER_NULL_ON_FAILURE
+                ),
+            ]);
+        }
+
         $validated = $request->validate([
             'lookup_type' => 'required|string|max:64',
-            'active_only' => 'sometimes|boolean',
+            'active_only' => 'sometimes|nullable|boolean',
         ]);
 
-        $activeOnly = $request->boolean('active_only', false);
+        $activeOnly = array_key_exists('active_only', $validated)
+            ? (bool) $validated['active_only']
+            : false;
         $rows = $this->lookups->forType(
             $validated['lookup_type'],
             $this->getCompanyId(),

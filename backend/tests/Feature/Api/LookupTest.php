@@ -97,6 +97,28 @@ class LookupTest extends TestCase
     }
 
     /** @test */
+    public function manage_list_accepts_query_string_false_and_returns_employee_status(): void
+    {
+        Sanctum::actingAs($this->adminUser);
+
+        // Axios boolean → "false" string (eski FE bug); normalize sonrası 200
+        $asFalseString = $this->getJson(
+            '/api/v1/lookups-manage?lookup_type=employee_status&active_only=false'
+        );
+        $asFalseString->assertOk();
+        $values = collect($asFalseString->json('data'))->pluck('value')->all();
+        $this->assertContains('active', $values);
+        $this->assertContains('on_leave', $values);
+        $this->assertContains('suspended', $values);
+
+        $asZero = $this->getJson(
+            '/api/v1/lookups-manage?lookup_type=employee_status&active_only=0'
+        );
+        $asZero->assertOk();
+        $this->assertNotEmpty($asZero->json('data'));
+    }
+
+    /** @test */
     public function resolve_returns_label_for_value(): void
     {
         Sanctum::actingAs($this->adminUser);

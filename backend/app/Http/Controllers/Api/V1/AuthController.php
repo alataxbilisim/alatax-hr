@@ -251,6 +251,7 @@ class AuthController extends BaseController
             'preferences' => 'sometimes|array',
             'preferences.theme' => 'sometimes|in:dark,light',
             'preferences.locale' => 'sometimes|in:tr,en',
+            'preferences.density' => 'sometimes|in:comfortable,compact',
         ]);
 
         // Avatar yükleme
@@ -310,6 +311,206 @@ class AuthController extends BaseController
         ActivityLog::log('password_change', $user, 'Şifre değiştirildi');
 
         return $this->success(null, 'Şifreniz başarıyla güncellendi');
+    }
+
+    /**
+     * Self-service 2FA: kurulum başlat (secret + QR + recovery — henüz aktif değil)
+     */
+    public function enableSelf2FA(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($user->two_factor_enabled) {
+            return $this->error('2FA zaten etkin. Önce devre dışı bırakın.', 400);
+        }
+
+        $secret = $this->twoFactor->generateSecret();
+        $plainRecovery = $this->twoFactor->generateRecoveryCodes();
+        $hashedRecovery = $this->twoFactor->hashRecoveryCodes($plainRecovery);
+        $otpAuthUrl = $this->twoFactor->getOtpAuthUrl($user, $secret);
+
+        User::withoutAuditing(fn () => $user->update([
+            'two_factor_secret' => $this->twoFactor->encryptSecret($secret),
+            'two_factor_recovery_codes' => $this->twoFactor->storeEncryptedRecoveryHashes($hashedRecovery),
+            'two_factor_enabled' => false,
+        ]));
+
+        ActivityLog::log('two_factor_setup', $user, "2FA etkinleştirme başlatıldı: {$user->name}");
+
+        return $this->success([
+            'secret' => $secret,
+            'qr_code_url' => $otpAuthUrl,
+            'qr_code_svg' => $this->twoFactor->generateQrSvg($otpAuthUrl),
+            'recovery_codes' => $plainRecovery,
+            'two_factor_enabled' => false,
+        ], '2FA etkinleştirme başlatıldı. Authenticator uygulamasına ekleyip doğrulama kodunu girin.');
+    }
+
+    /**
+     * Self-service 2FA: ilk TOTP doğrulaması → 2FA aktif
+     */
+    public function confirmSelf2FA(Request $request): JsonResponse
+    {
+        $request->validate([
+            'code' => 'required|string|size:6',
+        ]);
+
+        $user = $request->user();
+
+        if (! $user->two_factor_secret) {
+            return $this->error('2FA secret bulunamadı. Önce enable çağırın.', 400);
+        }
+
+        if ($user->two_factor_enabled) {
+            return $this->error('2FA zaten etkin', 400);
+        }
+
+        $secret = $this->twoFactor->decryptSecret($user->two_factor_secret);
+
+        if (! $this->twoFactor->verifyTotp($secret, $request->code)) {
+            ActivityLog::log(
+                'two_factor_failed',
+                $user,
+                "2FA etkinleştirme doğrulaması başarısız: {$user->name}",
+                null,
+                null,
+                false,
+                'Geçersiz TOTP'
+            );
+
+            return $this->error('Geçersiz doğrulama kodu', 400);
+        }
+
+        User::withoutAuditing(fn () => $user->update([
+            'two_factor_enabled' => true,
+        ]));
+
+        ActivityLog::log('two_factor_enable', $user, "2FA etkinleştirildi: {$user->name}");
+
+        return $this->success([
+            'two_factor_enabled' => true,
+        ], '2FA başarıyla etkinleştirildi');
+    }
+
+    /**
+     * Self-service 2FA kapat — kendi TOTP kodu VEYA şifre
+     */
+    public function disableSelf2FA(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'code' => 'required_without:password|nullable|string',
+            'password' => 'required_without:code|nullable|string',
+        ]);
+
+        $confirmed = false;
+
+        if (! empty($validated['password'])) {
+            $confirmed = Hash::check($validated['password'], $user->password);
+        } elseif (! empty($validated['code']) && $user->two_factor_secret) {
+            $secret = $this->twoFactor->decryptSecret($user->two_factor_secret);
+            $confirmed = $this->twoFactor->verifyTotp($secret, $validated['code']);
+        }
+
+        if (! $confirmed) {
+            ActivityLog::log(
+                'two_factor_failed',
+                $user,
+                "2FA kapatma doğrulaması başarısız: {$user->name}",
+                null,
+                null,
+                false,
+                'Geçersiz kod veya şifre'
+            );
+
+            return $this->error('Geçersiz doğrulama kodu veya şifre', 403);
+        }
+
+        User::withoutAuditing(fn () => $user->update([
+            'two_factor_enabled' => false,
+            'two_factor_secret' => null,
+            'two_factor_recovery_codes' => null,
+        ]));
+
+        ActivityLog::log('two_factor_disable', $user, "2FA devre dışı bırakıldı: {$user->name}");
+
+        return $this->success(null, '2FA devre dışı bırakıldı');
+    }
+
+    /**
+     * Self-service 2FA durumu
+     */
+    public function self2FAStatus(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        return $this->success([
+            'two_factor_enabled' => (bool) $user->two_factor_enabled,
+            'has_secret' => ! empty($user->two_factor_secret),
+        ]);
+    }
+
+    /**
+     * Self-service recovery: kalan kod sayısı (düz metin döndürülmez)
+     */
+    public function getSelfRecoveryCodes(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if (! $user->two_factor_enabled) {
+            return $this->error('2FA etkin değil', 400);
+        }
+
+        $hashes = $this->twoFactor->decryptRecoveryHashes($user->two_factor_recovery_codes);
+
+        return $this->success([
+            'remaining_count' => $hashes ? count($hashes) : 0,
+            'message' => 'Recovery kodları yalnızca üretim anında gösterilir. Yenilemek için regenerate kullanın.',
+        ]);
+    }
+
+    /**
+     * Self-service recovery kodlarını yenile
+     */
+    public function regenerateSelfRecoveryCodes(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if (! $user->two_factor_enabled || ! $user->two_factor_secret) {
+            return $this->error('2FA etkin değil', 400);
+        }
+
+        $validated = $request->validate([
+            'code' => 'required_without:password|nullable|string',
+            'password' => 'required_without:code|nullable|string',
+        ]);
+
+        $confirmed = false;
+
+        if (! empty($validated['password'])) {
+            $confirmed = Hash::check($validated['password'], $user->password);
+        } elseif (! empty($validated['code'])) {
+            $secret = $this->twoFactor->decryptSecret($user->two_factor_secret);
+            $confirmed = $this->twoFactor->verifyTotp($secret, $validated['code']);
+        }
+
+        if (! $confirmed) {
+            return $this->error('Geçersiz doğrulama kodu veya şifre', 403);
+        }
+
+        $plainRecovery = $this->twoFactor->generateRecoveryCodes();
+        $hashedRecovery = $this->twoFactor->hashRecoveryCodes($plainRecovery);
+
+        User::withoutAuditing(fn () => $user->update([
+            'two_factor_recovery_codes' => $this->twoFactor->storeEncryptedRecoveryHashes($hashedRecovery),
+        ]));
+
+        ActivityLog::log('two_factor_recovery_regen', $user, "2FA recovery code'ları yenilendi: {$user->name}");
+
+        return $this->success([
+            'recovery_codes' => $plainRecovery,
+        ], 'Recovery code\'lar yenilendi. Bu kodları güvenli yerde saklayın.');
     }
 
     /**

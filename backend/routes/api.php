@@ -37,6 +37,14 @@ Route::prefix('v1')->group(function () {
             Route::get('/me', [\App\Http\Controllers\Api\V1\AuthController::class, 'me']);
             Route::put('/profile', [\App\Http\Controllers\Api\V1\AuthController::class, 'updateProfile']);
             Route::put('/password', [\App\Http\Controllers\Api\V1\AuthController::class, 'updatePassword']);
+
+            // Self-service 2FA (yalnızca auth user; management.users.edit gerekmez)
+            Route::get('/2fa/status', [\App\Http\Controllers\Api\V1\AuthController::class, 'self2FAStatus']);
+            Route::post('/2fa/enable', [\App\Http\Controllers\Api\V1\AuthController::class, 'enableSelf2FA']);
+            Route::post('/2fa/confirm', [\App\Http\Controllers\Api\V1\AuthController::class, 'confirmSelf2FA']);
+            Route::post('/2fa/disable', [\App\Http\Controllers\Api\V1\AuthController::class, 'disableSelf2FA']);
+            Route::get('/2fa/recovery-codes', [\App\Http\Controllers\Api\V1\AuthController::class, 'getSelfRecoveryCodes']);
+            Route::post('/2fa/recovery-codes/regenerate', [\App\Http\Controllers\Api\V1\AuthController::class, 'regenerateSelfRecoveryCodes']);
         });
 
         // Dashboard

@@ -1580,6 +1580,44 @@ textarea.form-control {
   border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+/* Pinned modules (Ayarlar + Yönetim) — rail altı */
+.rail-pinned-separator {
+  height: 1px;
+  margin: 0.25rem 0.75rem;
+  background: var(--border-primary, rgba(255, 255, 255, 0.12));
+  flex-shrink: 0;
+}
+
+.rail-pinned {
+  padding: 0.5rem 0 0.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.context-nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  margin-bottom: 0.5rem;
+}
+
+.context-nav-group-label {
+  padding: 0.5rem 0.75rem 0.25rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  user-select: none;
+}
+
+.context-sidebar.collapsed .context-nav-group-label {
+  display: none;
+}
+
 .rail-company-badge {
   width: 36px;
   height: 36px;

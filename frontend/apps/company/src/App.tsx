@@ -32,8 +32,11 @@ import RoleDetailPage from './pages/users/RoleDetailPage';
 // Company Settings
 import SettingsPage from './pages/settings/SettingsPage';
 import WebhooksPage from './pages/settings/WebhooksPage';
-import CustomFieldsPage from './pages/settings/CustomFieldsPage';
+import CustomFieldsIndexPage from './pages/settings/CustomFieldsIndexPage';
 import LookupsPage from './pages/lookups/LookupsPage';
+import AccountProfilePage from './pages/account/AccountProfilePage';
+import AccountSecurityPage from './pages/account/AccountSecurityPage';
+import AccountPreferencesPage from './pages/account/AccountPreferencesPage';
 import BranchesPage from './pages/branches/BranchesPage';
 import BranchDetailPage from './pages/branches/BranchDetailPage';
 import PermissionProtectedRoute from './components/routing/PermissionProtectedRoute';
@@ -606,7 +609,13 @@ const App: React.FC = () => {
           />
           <Route
             path="/settings/custom-fields"
-            element={<ProtectedRoute><CustomFieldsPage /></ProtectedRoute>}
+            element={
+              <ProtectedRoute>
+                <PermissionProtectedRoute module="management" page="custom_fields" action="view">
+                  <CustomFieldsIndexPage />
+                </PermissionProtectedRoute>
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/branches"
@@ -615,6 +624,21 @@ const App: React.FC = () => {
           <Route
             path="/branches/:id"
             element={<ProtectedRoute><BranchDetailPage /></ProtectedRoute>}
+          />
+
+          {/* Kişisel hesap — permission gerekmez */}
+          <Route path="/account" element={<ProtectedRoute><Navigate to="/account/profile" replace /></ProtectedRoute>} />
+          <Route
+            path="/account/profile"
+            element={<ProtectedRoute><AccountProfilePage /></ProtectedRoute>}
+          />
+          <Route
+            path="/account/security"
+            element={<ProtectedRoute><AccountSecurityPage /></ProtectedRoute>}
+          />
+          <Route
+            path="/account/preferences"
+            element={<ProtectedRoute><AccountPreferencesPage /></ProtectedRoute>}
           />
         </Route>
 

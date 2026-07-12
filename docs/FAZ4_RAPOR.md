@@ -88,6 +88,176 @@ https://github.com/alataxbilisim/alatax-hr/actions?query=branch%3Afaz4-form-engi
 
 ---
 
+## Ayarlar Stüdyosu Bilgi Mimarisi (12 Temmuz 2026)
+
+**Durum:** Teşhis + IA kararları uygulandı — **iskelet kuruldu** (12 Temmuz 2026 gecesi).  
+**Kaynaklar:** `moduleNav.ts`, `App.tsx`, `SettingsPage.tsx`, Portal `ProfilePage`, `themeSlice`, `PermissionSeeder`, `docs/ROADMAP.md` §Faz 4.
+
+### İskelet kurulumu (shipped)
+
+**Kararlar uygulandı:**
+1. İsimler: **Ayarlar** (kişisel) + **Yönetim** (stüdyo)
+2. ModuleRail: her iki pin **altta**, operasyonel modüllerden görsel ayırıcı ile
+3. Modül Ayarları: placeholder deep-link’ler (izin türleri / kategoriler / modül CF)
+4. CF: modül sayfaları birincil; `/settings/custom-fields` = index + deep-link
+5. 2FA: self (`/auth/2fa/*`) + admin (`/users/{id}/2fa/*`)
+6. Kişisel: yalnızca profil / güvenlik / tercihler (bildirim stub yok)
+
+**Backend:** `AuthController` self-2FA (enable/confirm/disable/status/recovery); `preferences.density` validation; feature test `AccountSelfTwoFactorTest`.
+
+**Frontend:** `operationalModuleGroups` + `pinnedModuleGroups`; ContextSidebar grup başlıkları; `/account/*` sayfaları; header → `/account/profile`; i18n `nav` / `account` / `studio`.
+
+**Doğrulama:** `AccountSelfTwoFactorTest` + `Totp2faTest` = 16 passed (Docker pgsql); 3 SPA lint OK; `@alatax/company` tsc+build OK.
+
+**DUR — görsel kontrol:** Rail altı Ayarlar+Yönetim ayracı; Yönetim sidebar grupları (Firma / Kullanıcı & Yetki / Özelleştirme / Modül Ayarları); `/account/security` self-2FA akışı; `/settings/custom-fields` index kartları; kısıtlı rolle Yönetim/grup görünürlüğü.
+
+### ADIM 1 — Teşhis (mevcut — arşiv)
+
+#### 1.1 ModuleRail — tek “Yönetim” grubu
+
+Kaynak: `frontend/apps/company/src/components/layout/moduleNav.ts` → `id: 'management'`.
+
+| Menü etiketi | Route | Nav permission | Route guard (App.tsx) | Sayfa |
+|--------------|-------|----------------|----------------------|-------|
+| Kullanıcılar | `/users` | `management.users.*` | yalnızca `ProtectedRoute` | `UsersPage` (+ `/users/:id`) |
+| Roller | `/roles` | `management.roles.*` | ProtectedRoute | `RolesPage` (+ `/roles/:id`) |
+| Şubeler | `/branches` | `management.branches.*` | ProtectedRoute | `BranchesPage` (+ `/branches/:id`) |
+| Log & Denetim | `/audit-logs` | `management.audit_logs.*` | + `ModuleProtectedRoute(audit-logs)` | `ActivityLogsPage` |
+| **Ayarlar** | `/settings` | `management.settings.*` | ProtectedRoute | `SettingsPage` (**firma** sekmeleri) |
+| Listeler | `/lookups` | `management.lookups.*` | + `PermissionProtectedRoute(…lookups.view)` | `LookupsPage` |
+| Webhook'lar | `/webhooks` | `management.webhooks.*` | ProtectedRoute | `WebhooksPage` |
+
+**Menüde yok / dağınık:**
+
+| Ne | Nerede | Permission |
+|----|--------|------------|
+| Özel alanlar (global orphan) | `/settings/custom-fields` — **sidebar linki yok** | `management.custom_fields.*` |
+| Özel alanlar (modül) | `/employees|leaves|documents|recruitment|performance|training|assets/custom-fields` | `{module}.custom_fields.*` |
+| İzin türleri / tatil / politika | İzinler menüsü (`/leaves/types` vb.) | `leaves.*` |
+| Doküman / varlık kategorileri | ilgili modül menüsü | `documents.categories` / `assets.categories` |
+| Workflow UI | PermissionSeeder’da `management.workflows.*` var; **Company menü/route yok** | — |
+| API Keys | SettingsPage sekmesi; ayrı `management.api_keys.*` | settings sayfası içinde |
+
+Header kullanıcı menüsü “Ayarlar” → **aynı** `/settings` (firma). Kişisel hedefe gitmiyor.
+
+#### 1.2 Kişisel ayarlar — nerede?
+
+| Özellik | Company | Portal | Backend |
+|---------|---------|--------|---------|
+| Profil (ad/iletişim/foto) | **UI yok** | `/profile` (`ProfilePage`) | Company: `PUT /auth/profile`; Portal: `/portal/profile` (+ avatar) |
+| Şifre | **UI yok** | Profil içinde | `PUT /auth/password` / portal password |
+| 2FA enable/disable | **Self UI yok**; admin → `UserDetailPage` (`/users/{id}/2fa/*`) | Login challenge var; yönetim UI yok | Admin-scoped 2FA API; self-service endpoint ayrı değil |
+| Tema | Header `toggleTheme` | Header toggle | Redux + `localStorage.theme`; `preferences.theme` API’de var ama toggle **yazmıyor** |
+| Density | EmployeesPage geçici | Yok | `localStorage.density`; API `preferences.density` **validation yok** |
+| Dil | Firma Settings “Genel Ayarlar” (`language`) | Yok | i18n sabit `tr`; kişisel `preferences.locale` API’de kısmen |
+| Bildirim tercihi (kişisel) | Yok | Yok | Firma bildirim sekmesi var; kullanıcı olay×kanal (4C) henüz yok |
+
+#### 1.3 Dağınık → nereye taşınmalı? (özet)
+
+| Bugün | Hedef kova |
+|-------|------------|
+| `/settings` (firma sekmeleri) + Webhooks | **YÖNETİM → FİRMA** |
+| Users / Roles / Branches / Audit | **YÖNETİM → KULLANICI & YETKİ** |
+| `/lookups`, orphan `/settings/custom-fields`, modül `*/custom-fields` | **YÖNETİM → ÖZELLEŞTİRME** |
+| Leaves types/holidays/policies, doc/asset categories, ileride kanban… | **YÖNETİM → MODÜL AYARLARI** (sonraki dalga; route korunabilir) |
+| Header “Ayarlar” → `/settings` | **AYARLAR (kişisel)** hub |
+| Portal profil/şifre deseni | Company kişisel sayfalar için örnek |
+
+---
+
+### ADIM 2 — Önerilen bilgi mimarisi (tasarım)
+
+#### A) AYARLAR — kişisel (ModuleRail ikonu; herkes)
+
+Self-scope: yalnızca `auth()->id()`. Yeni permission **gerekmez** (veya tek `account.self` — **KARAR**).
+
+| Sayfa | Önerilen path | İçerik | API (mevcut/hedef) |
+|-------|---------------|--------|---------------------|
+| Profilim | `/account/profile` | ad, e-posta (salt?), telefon, foto | `PUT /auth/profile` (+ avatar gerekirse) |
+| Güvenlik | `/account/security` | şifre; 2FA aç/kapat/recovery | `PUT /auth/password`; **self 2FA** (bugün admin API — genişletme veya policy: self) |
+| Tercihler | `/account/preferences` | tema, density, dil | `preferences` + localStorage sync |
+| Bildirimler | `/account/notifications` | olay×kanal (4C gelince) | şimdilik stub / “yakında” |
+
+Header menü: Profilim / Güvenlik / Tercihler → bu hub; **firma** `/settings` buradan çıkmaz.
+
+#### B) YÖNETİM — Ayarlar Stüdyosu (ModuleRail; rol filtreli)
+
+Mevcut `management` grubunun **yeniden gruplanmış** hali. Route’lar **korunur**; ContextSidebar’da **grup başlıkları**.
+
+```
+YÖNETİM
+├── FİRMA
+│   ├── Genel bilgiler          /settings?tab=general     management.settings.*
+│   ├── SMTP / SMS              /settings?tab=smtp|sms    management.settings.*
+│   ├── Bildirimler (firma)     /settings?tab=notifications
+│   ├── Lisans / Modüller       /settings?tab=license|modules
+│   ├── API Keys                /settings?tab=api-keys    management.api_keys.*
+│   └── Webhook'lar             /webhooks                 management.webhooks.*
+├── KULLANICI & YETKİ
+│   ├── Kullanıcılar            /users                    management.users.*
+│   ├── Roller                  /roles                    management.roles.*
+│   ├── Şubeler                 /branches                 management.branches.*
+│   └── Log & Denetim           /audit-logs               management.audit_logs.*
+├── ÖZELLEŞTİRME
+│   ├── Listeler (Lookup)       /lookups                  management.lookups.*
+│   ├── Özel Alanlar            /settings/custom-fields   management.custom_fields.*
+│   │                           (+ deep-link: /{mod}/custom-fields)
+│   ├── Form düzeni             (sonra — Form Engine)
+│   └── İş akışları             (sonra)                   management.workflows.*
+└── MODÜL AYARLARI (sonraki dalga — menü iskeleti şimdi, taşıma sonra)
+    ├── İzin: türler/tatil/politika   /leaves/types|…
+    ├── İşe alım: aşamalar            /lookups?type=application_stage
+    ├── Evrak / Varlık kategorileri   /documents|assets/categories
+    └── … (lisanslı modül sırasıyla)
+```
+
+**Permission:** İskelet için mevcut `management.*` yeterli. Kişisel AYARLAR RBAC şart değil. Modül ayarları kendi `{module}.{page}.*` ile kalır.
+
+---
+
+### ADIM 3 — İskelet planı (henüz kod yok)
+
+#### ModuleRail konumu
+
+| Seçenek | Açıklama |
+|---------|----------|
+| **A (öneri)** | Rail’de **Dashboard’dan sonra** iki sabit ikon: kişisel + Yönetim; operasyonel modüller altında |
+| B | İkisi rail **altına** pin |
+| C | Kişisel yalnızca header avatar; rail’de sadece Yönetim yeniden gruplu |
+
+#### Taşıma (route koruyarak)
+
+1. `moduleNav.ts`: Yönetim items → `group` metadata.
+2. `ContextSidebar`: grup başlığı (minimal UI).
+3. Orphan CF → Özelleştirme menü girişi.
+4. Header “Ayarlar” → `/account`.
+5. Modül sayfalarını silmeden stüdyoya deep-link.
+
+#### Bu tur vs sonraki
+
+| Bu turda (onay sonrası) | Sonraki dalga |
+|-------------------------|---------------|
+| ModuleRail: AYARLAR + YÖNETİM | Modül ayarlarını stüdyoya fiziksel taşıma |
+| Yönetim 3–4 gruba ayırma | Form Engine / bildirim şablonları / liste görünümleri |
+| Orphan CF + Listeler → Özelleştirme | İzin türleri “sadece stüdyo” mı çift menü mü |
+| Kişisel: Profil + Güvenlik (+ Tercihler sync) | Kişisel bildirim (4C), density API |
+| Header link düzeltmesi | Workflow UI, KVKK/veri |
+
+---
+
+### KARAR NOKTALARI (onay beklenir)
+
+1. **Adlandırma:** Kişisel = «Ayarlar» mı «Hesabım» mı? Stüdyo rail = «Yönetim» mi «Stüdyo» mu?
+2. **Rail konumu:** A / B / C?
+3. **Modül ayarları çift menü:** İzin Türleri hem İzinler’de hem Stüdyo’da mı (öneri: **evet, aynı route**)?
+4. **Özel alanlar:** Tek global `/settings/custom-fields` + entity filtresi mi, yoksa modül sayfaları birincil + stüdyoda indeks mi?
+5. **2FA self:** Admin `UserDetail` kalsın + kişisel Güvenlik’te self mi?
+6. **Bu tur kapsamı:** İskelet + kişisel üç sayfa yeterli mi; bildirim stub da mı?
+
+Onay örneği: `1=Hesabım+Yönetim, 2=A, 3=çift menü, 4=global CF+deep-link, 5=self+admin, 6=iskelet+kişisel üç sayfa`.
+
+---
+
 ## ÖZET TABLO — Gece otonom (12 Temmuz 2026)
 
 | Adım | Durum | Commit / not |
