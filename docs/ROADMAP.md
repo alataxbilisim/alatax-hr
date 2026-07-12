@@ -207,10 +207,39 @@ Fark yaratacak 4 şey:
 - [ ] Mevcut `application_forms` (form builder) ve `request_types.form_fields` bu motora rapte edilir (iki ayrı form altyapısı kalmaz)
 
 **4B. Workflow Engine v2**
+
+#### YAPILANDIRILABILIR ONAY ZİNCİRİ (Workflow Engine v2) — kullanıcı vizyonu
+
+**Yeri:** Lookup Engine + Ayarlar Stüdyosu iskeleti sonrası; Faz 4’ün **2. büyük parçası** (Form Engine ile yan yana / hemen ardından). Bu Faz 4’ün **en karmaşık** bileşeni — ayrı ve dikkatli ele alınır. Bildirim Merkezi (**4C**) ile entegre edilir.
+
+**Vizyon:** Firma **her** onay akışını Ayarlar Stüdyosu → **Modül Ayarları** altında **elle** tasarlar (maksimum esneklik). Akış örnekleri: izin, işe alım, masraf, puantaj/shift, personel değişikliği, doküman onayı…
+
+| Yetenek | Açıklama |
+|---------|----------|
+| Çok adımlı zincir | Her adıma onaycı: **ROL** (`hr_manager`), **KİŞİ** (belirli kullanıcı), veya **DİNAMİK** (“talep edenin departman yöneticisi”, “bir üst yönetici”, “CEO’ya kadar”) |
+| Sıra modeli | Araştırma tercihi: **hibrit** — seviyeler arası **sıralı**, seviye içi **paralel** |
+| Koşullu adımlar | Örn. “izin > 10 gün → GM adımı”, “pozisyon direktör → CEO onayı” (Horilla/Treegarden: departman + eşik) |
+| Eskalasyon | Onaycı X saatte yanıtlamazsa üstüne yükselir |
+| Vekalet | Onaycı yoksa (izinde) vekiline yönlenir — Faz 2 `delegation` temeli |
+| Reddetme | Talep sahibine gerekçeyle döner; yeniden gönderilebilir |
+| Departman kapsamı | Departman yöneticisi kendi departman taleplerini görür/onaylar — Faz 2 DataScope `department` **hazır** |
+
+**Mevcut temel (Faz 2):** `ApprovalRecord` + Policy (atanan/vekil), `WorkflowService::canApprove`, delegation, DataScope (`own` / `team` / `department` / `branch` / `company`). Bugün **tek seviyeli**; v2 → **çok seviyeli + firma-yapılandırılabilir + koşullu**.
+
+**Motor gereksinimi (yalnızca şema değil):** talep → zinciri başlat → sıradaki onaycıya bildir → onay/red → sonraki adım / geri dön → koşul değerlendir → eskalasyon/vekalet. Kurumsal workflow engine; 4C bildirimleriyle olay üretimi zorunlu.
+
+**Departman erişimi (ilgili vizyon — bağlama Faz 6):** Departman yöneticisi/yetkilisi **talep halinde** yönetim alanına erişir; DataScope `department` + rol ile kendi dept kapsamında: CV havuzu, ilan aksiyonları, personel, puantaj/shift. Her modüle bağlama → **Faz 6** derinleştirme.
+
+**UI yeri:** Ayarlar Stüdyosu → Modül Ayarları → ilgili akışın zincir editörü (sürükle-bırak adım + koşul builder).
+
+**Teknik checklist (korunan + genişleyen):**
 - [ ] Önce borç kapatma: WorkflowService.php:222 + ApprovalRecord.php:184 bildirim TODO'ları (onay isteği/sonucu bildirimleri)
-- [ ] Genelleştirme: tetikleyici (kayıt oluştu/güncellendi/durum değişti/tarih geldi) + koşul builder (alan-operatör-değer, custom field dahil) + aksiyonlar (bildirim gönder, alan güncelle, onay akışı başlat, görev/talep oluştur, webhook çağır)
-- [ ] Onay akışları mevcut motor üzerinden korunur (approval_workflows/steps/records/delegations); workflow UI'ı Ayarlar Stüdyosu'na taşınır
-- [ ] Zamanlanmış tetikleyiciler için Laravel Scheduler devreye alınır (routes/console.php şu an boş): aylık izin hakedişi, devir işlemleri, doküman/sertifika süre uyarıları, deneme süresi hatırlatmaları
+- [ ] Zincir veri modeli: çok adımlı adımlar (rol / kişi / dinamik çözücü), seviye içi paralel, koşullu adım kuralları (alan-operatör-değer, custom field dahil)
+- [ ] Çalıştırma motoru: başlat → bildir → onay/red → sonraki / geri → koşul → eskalasyon zamanlayıcı → vekalet
+- [ ] Genelleştirme (üst katman): tetikleyici (kayıt oluştu/güncellendi/durum değişti/tarih geldi) + aksiyonlar (bildirim, alan güncelle, onay başlat, görev, webhook)
+- [ ] Mevcut `approval_workflows` / steps / records / delegations korunarak genişletilir; UI Ayarlar Stüdyosu’na taşınır
+- [ ] Zamanlanmış tetikleyiciler: Laravel Scheduler (routes/console.php): aylık izin hakedişi, devir, doküman/sertifika uyarıları, deneme süresi; eskalasyon SLA job’ları
+- [ ] Feature testler: çok adımlı happy path, koşul dallanması, red+yeniden gönder, vekalet, tenant izolasyonu, yetkisiz onaycı 403
 
 **4C. Bildirim Merkezi**
 - [ ] Kanal soyutlaması: in-app (var) + e-posta (firma SMTP — var) + SMS (SmsService — var) tek servis arkasında
@@ -247,6 +276,8 @@ Fark yaratacak 4 şey:
 ### FAZ 6 — Modül Derinleştirme + Türkiye Uyumu (8–12 hafta)
 
 **Amaç:** Modülleri "satılabilir" kaliteye çekmek. Her modül için standart geçiş paketi: **Form Engine'e bağlan + izin matrisi + dataset kaydı + varsayılan raporlar + bildirim olayları + eksikler**.
+
+**Departman erişimi (Faz 4B vizyonunun bağlanması):** Departman yöneticisi/yetkilisi talep halinde yönetim ekranlarına DataScope `department` + rol ile erişir (CV havuzu, ilan, personel, puantaj/shift — kendi dept). Zincir motoru 4B’de; **modül ekranlarına bağlama bu fazda**.
 
 **6A. Pilot çekirdeği (öncelik sırasıyla — pilot kapısı bu blokta):**
 - [ ] **Personel/Özlük:** Türkiye alan seti (TCKN doğrulama, SGK sicil, İŞKUR meslek kodu, eğitim durumu, engel oranı, yabancı çalışma izni, BES katılım); işten çıkış (offboarding) akışı: çıkış nedeni (SGK kodları), çıkış checklist'i, zimmet iadesi entegrasyonu, ibraname şablonu
