@@ -54,5 +54,10 @@
     "fieldSort": "Sıra",
     "fieldActive": "Aktif",
     "clearColor": "Temizle"
+  },
+  "customFields": {
+    "tab": "Özel Alanlar",
+    "title": "Özel Alanlar",
+    "empty": "Bu personel için tanımlanmış özel alan yok"
   }
 }

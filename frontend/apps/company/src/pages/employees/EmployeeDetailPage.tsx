@@ -15,10 +15,12 @@ import {
   BsThreeDotsVertical,
   BsKey,
   BsKeyFill,
+  BsListCheck,
 } from 'react-icons/bs';
 import { employeesApi } from '@shared/services/api';
 import { getErrorMessage } from '@shared/services/apiHelpers';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { ConfirmDialog, Modal } from '../../components/ui';
 import {
   GeneralTab,
@@ -38,8 +40,6 @@ import type {
   ActivityLog,
 } from '../../components/employees/tabs';
 import type { CustomFieldValue } from '@shared/types/modules';
-import { useTranslation } from 'react-i18next';
-import { BsListCheck } from 'react-icons/bs';
 
 interface EmployeeDocumentRow {
   id: number;
@@ -121,18 +121,8 @@ interface TabItem {
   icon: React.ReactNode;
 }
 
-const tabs: TabItem[] = [
-  { id: 'general', label: 'Genel', icon: <BsPersonBadge /> },
-  { id: 'personal', label: 'Kişisel', icon: <BsBuilding /> },
-  { id: 'work', label: 'İş Bilgileri', icon: <BsBriefcase /> },
-  { id: 'documents', label: 'Belgeler', icon: <BsFileEarmark /> },
-  { id: 'leaves', label: 'İzinler', icon: <BsCalendarCheck /> },
-  { id: 'trainings', label: 'Eğitimler', icon: <BsBook /> },
-  { id: 'assets', label: 'Zimmetler', icon: <BsLaptop /> },
-  { id: 'history', label: 'Geçmiş', icon: <BsClockHistory /> },
-];
-
 const EmployeeDetailPage: React.FC = () => {
+  const { t } = useTranslation('common');
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [employee, setEmployee] = useState<Employee | null>(null);
@@ -150,6 +140,18 @@ const EmployeeDetailPage: React.FC = () => {
   const [portalAccessModalOpen, setPortalAccessModalOpen] = useState(false);
   const [revokeAccessDialogOpen, setRevokeAccessDialogOpen] = useState(false);
   const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
+
+  const tabs: TabItem[] = [
+    { id: 'general', label: 'Genel', icon: <BsPersonBadge /> },
+    { id: 'personal', label: 'Kişisel', icon: <BsBuilding /> },
+    { id: 'work', label: 'İş Bilgileri', icon: <BsBriefcase /> },
+    { id: 'custom', label: t('customFields.tab'), icon: <BsListCheck /> },
+    { id: 'documents', label: 'Belgeler', icon: <BsFileEarmark /> },
+    { id: 'leaves', label: 'İzinler', icon: <BsCalendarCheck /> },
+    { id: 'trainings', label: 'Eğitimler', icon: <BsBook /> },
+    { id: 'assets', label: 'Zimmetler', icon: <BsLaptop /> },
+    { id: 'history', label: 'Geçmiş', icon: <BsClockHistory /> },
+  ];
   
   // Portal erişimi form
   const [portalForm, setPortalForm] = useState({ email: '', name: '' });
@@ -403,6 +405,10 @@ const EmployeeDetailPage: React.FC = () => {
         {activeTab === 'personal' && <PersonalTab employee={employee} />}
 
         {activeTab === 'work' && <WorkTab employee={employee} />}
+
+        {activeTab === 'custom' && (
+          <CustomFieldsTab values={employee.custom_fields || {}} />
+        )}
 
         {activeTab === 'documents' && (
           <DocumentsTab
