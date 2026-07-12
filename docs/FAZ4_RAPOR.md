@@ -10,8 +10,8 @@
 
 | Adım | Durum | Not |
 |------|--------|-----|
-| 0 Radix Select boş değer | 🔄 | sentinel + clearable |
-| 1 Grup 2 İşe Alım/kanban | ⏳ | |
+| 0 Radix Select boş değer | ✅ | `4995e61` sentinel + clearable |
+| 1 Grup 2 İşe Alım/kanban | 🔄 | application_stage hibrit + Select |
 | 2 Grup 3 kalan modüller | ⏳ | |
 | 3 Lookup Yönetim UI | ⏳ | |
 | 4 Custom Field onarımı | ⏳ | |
@@ -34,6 +34,32 @@
 **Grup 1 audit:** native `<option value="">` Select kullanımlarında yok; hepsi `allowEmpty` + sentinel. Filtrelerde `clearable` eklendi (Personel, İzin, Belgeler).
 
 **Manuel test:** opsiyonel alan boş submit → `''`; filtre Tümü + X temizle; console Radix hatası yok.
+
+**Commit:** `4995e61` fix(faz4): radix select boş değer sentinel + clearable
+
+---
+
+## ADIM 1 — Grup 2 İşe Alım + kanban hibrit
+
+| Type | Sınıf | Not |
+|------|-------|-----|
+| `application_stage` | **HİBRİT** | JobApplicationStatus enum birebir (9 kod); kanban kolonları |
+| `experience_level` | firma | pozisyon formu |
+| `job_position_status` | firma | draft/active/paused/closed |
+| `interview_type` | firma | |
+| `interview_status` | **HİBRİT** | workflow |
+| `interview_recommendation` | firma | |
+| `work_type` | (pilot) | employment_type teyit ✅ |
+
+**BE:** `ApplicationController::updateStatus` eski `in:` listesi → Lookup assertValid (enum hizası). JobPosition + Interview lookup validasyon.
+
+**FE:** ApplicationsPage kanban lookup kolonları; DetailModal/JobPositionForm/InterviewsPage Select.
+
+**K-A:** label/renk override status value değiştirmez. Durum geçişi kod sabit.
+
+**KARAR BEKLENİYOR:** başvuru kaynağı (`website` vs `job_board`) FE↔BE etiket uyumsuzluğu — bu dalgada dokunulmadı.
+
+**Not:** hired→onboarding otomatik tetik mevcut kodda ayrı otomasyon yok; status `hired` kodu korunur (yeni otomasyon icat edilmedi).
 
 ---
 
