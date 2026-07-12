@@ -32,7 +32,7 @@
 |-----|-----|------|--------|
 | [#58](https://github.com/alataxbilisim/alatax-hr/actions/runs/29206290752) | `ba772a5` | ~46s | ❌ Pint + Portal lint |
 | [#59](https://github.com/alataxbilisim/alatax-hr/actions/runs/29206447447) | `255f110` | **2m 50s** | FE ✅ / BE ❌ `SurveyTest` (lookup seed yok → type 422) |
-| Sonraki | SurveyTest fix + rapor | beklenir | — |
+| [#60](https://github.com/alataxbilisim/alatax-hr/actions/runs/29207293046) | `0f4e70b` | **~3m 6s** (20:12:53→20:15:59Z) | ✅ **yeşil** — Backend Pint+PHPUnit + Frontend lint+build |
 
 **Ek kırık:** Grup 3 sonrası `SurveyTest` LookupSeeder’sız `satisfaction` gönderiyordu. Fix: setUp’a `LookupSeeder` (test zayıflatılmadı).
 
