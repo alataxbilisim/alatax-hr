@@ -181,6 +181,7 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ employeeId, documents, onRe
                 color: o.color,
               }))}
               allowEmpty
+              clearable
               emptyLabel="Tüm Kategoriler"
               aria-label="Belge kategorisi filtresi"
             />

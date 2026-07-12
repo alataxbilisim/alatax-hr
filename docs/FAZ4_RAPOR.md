@@ -2,7 +2,38 @@
 
 **Branch:** `faz4-form-engine` (temel: `faz3-tasarim` / `b83da8b`; Faz 3 kodu üstünde)  
 **Tarih:** 12 Temmuz 2026  
-**Kapsam:** ADIM 1–2 teşhis/envanter + ADIM 3 Lookup Engine + ADIM 4 Radix Select + **Grup 1: Personel (kalan) + İzin**.
+**Kapsam:** Lookup Engine + Select yayılım + otonom ADIM 0–6 (gece çalışması).
+
+---
+
+## ÖZET TABLO (gece otonom — güncellenir)
+
+| Adım | Durum | Not |
+|------|--------|-----|
+| 0 Radix Select boş değer | 🔄 | sentinel + clearable |
+| 1 Grup 2 İşe Alım/kanban | ⏳ | |
+| 2 Grup 3 kalan modüller | ⏳ | |
+| 3 Lookup Yönetim UI | ⏳ | |
+| 4 Custom Field onarımı | ⏳ | |
+| 5 2FA challenge UI | ⏳ | |
+| 6 Deploy + Test turu | ⏳ | |
+
+---
+
+## ADIM 0 — Radix Select güvenlik (boş değer)
+
+**Bilinen tuzak:** `SelectItem value=""` runtime hata; kontrollü boş native-like davranış yoksa ilk öğe sızabilir.
+
+**Çözüm (`@shared/components/Select`):**
+- İç sentinel: `SELECT_EMPTY_VALUE` (`__ax_empty__`) — dış API `''`
+- `allowEmpty` → menüde boş satır (Tümü / Seçiniz); `onChange('')`
+- `clearable` → trigger X ile temizle
+- `options` içindeki `''` / sentinel value **filtrelenir** (güvenlik ağı)
+- `allowEmpty=false` + boş value → Radix `value=undefined` (ilk öğeyi seçmez)
+
+**Grup 1 audit:** native `<option value="">` Select kullanımlarında yok; hepsi `allowEmpty` + sentinel. Filtrelerde `clearable` eklendi (Personel, İzin, Belgeler).
+
+**Manuel test:** opsiyonel alan boş submit → `''`; filtre Tümü + X temizle; console Radix hatası yok.
 
 ---
 

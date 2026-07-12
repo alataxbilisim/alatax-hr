@@ -351,6 +351,7 @@ const LeavesPage: React.FC = () => {
                     color: opt.color,
                   }))}
                   allowEmpty
+                  clearable
                   emptyLabel="Tüm Durumlar"
                   placeholder="Tüm Durumlar"
                   aria-label="Durum filtresi"

@@ -1,9 +1,12 @@
 import * as React from 'react';
 import * as SelectPrimitive from '@radix-ui/react-select';
-import { BsCheck, BsChevronDown, BsChevronUp } from 'react-icons/bs';
+import { BsCheck, BsChevronDown, BsChevronUp, BsX } from 'react-icons/bs';
 
-/** Radix Item value boş string kabul etmez — boş seçim için iç sentinel */
-const EMPTY_VALUE = '__ax_empty__';
+/**
+ * Radix SelectItem value="" ÇALIŞMA ZAMANINDA HATA fırlatır.
+ * Boş/temiz seçim için sentinel; dış API her zaman '' döner.
+ */
+export const SELECT_EMPTY_VALUE = '__ax_empty__';
 
 export interface SelectOption {
   value: string;
@@ -24,19 +27,36 @@ export interface SelectProps {
   id?: string;
   name?: string;
   className?: string;
-  /** Boş seçeneği göster (opsiyonel alanlar) */
+  /**
+   * Boş seçeneği menüde göster (filtre "Tümü", opsiyonel alan "Seçiniz").
+   * Item value asla "" olmaz — sentinel kullanılır; onChange('') üretir.
+   */
   allowEmpty?: boolean;
   emptyLabel?: string;
+  /**
+   * Seçim varken trigger'da X ile temizle → onChange('').
+   * allowEmpty olmadan da kullanılabilir (zorunlu alanlarda nadiren).
+   */
+  clearable?: boolean;
   /** İleride uzun listeler için; şimdilik kapalı iskelet */
   searchable?: boolean;
   'aria-label'?: string;
   'aria-labelledby'?: string;
 }
 
+function sanitizeOptions(options: SelectOption[]): SelectOption[] {
+  return options.filter((opt) => opt.value !== '' && opt.value !== SELECT_EMPTY_VALUE);
+}
+
 /**
  * Ortak Select — Radix Select wrapper.
  * Lookup Engine yüzü: value referans tutar, label/color options'tan gelir.
  * RHF: Controller + value/onChange; yerel state aynı props.
+ *
+ * Boş değer sözleşmesi:
+ * - Dışarı: value="" / onChange('') = seçim yok
+ * - İçeri: SELECT_EMPTY_VALUE item + controlled mapping
+ * - Opsiyonel submit: boş bırakılırsa ilk öğe GİTMEZ (kontrollü sentinel)
  */
 export const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
   (
@@ -52,6 +72,7 @@ export const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
       className,
       allowEmpty = false,
       emptyLabel,
+      clearable = false,
       searchable: _searchable = false,
       'aria-label': ariaLabel,
       'aria-labelledby': ariaLabelledBy,
@@ -60,21 +81,39 @@ export const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
   ) => {
     void _searchable;
 
-    const selected = options.find((o) => o.value === value);
+    const safeOptions = React.useMemo(() => sanitizeOptions(options), [options]);
+    const selected = safeOptions.find((o) => o.value === value);
     const isEmpty = value === undefined || value === '';
+    const showClear = clearable && !disabled && !isEmpty;
+
+    // allowEmpty yokken boş value → uncontrolled placeholder (ilk öğeyi seçme)
     const rootValue = isEmpty
-      ? (allowEmpty ? EMPTY_VALUE : undefined)
+      ? allowEmpty
+        ? SELECT_EMPTY_VALUE
+        : undefined
       : value;
 
     const items: SelectOption[] = allowEmpty
-      ? [{ value: EMPTY_VALUE, label: emptyLabel ?? placeholder }, ...options]
-      : options;
+      ? [
+          {
+            value: SELECT_EMPTY_VALUE,
+            label: emptyLabel ?? placeholder,
+          },
+          ...safeOptions,
+        ]
+      : safeOptions;
+
+    const handleClear = (e: React.MouseEvent | React.KeyboardEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onChange?.('');
+    };
 
     return (
       <SelectPrimitive.Root
         value={rootValue}
         onValueChange={(v) => {
-          if (v === EMPTY_VALUE) {
+          if (v === SELECT_EMPTY_VALUE) {
             onChange?.('');
             return;
           }
@@ -83,32 +122,51 @@ export const Select = React.forwardRef<HTMLButtonElement, SelectProps>(
         disabled={disabled}
         name={name}
       >
-        <SelectPrimitive.Trigger
-          ref={ref}
-          id={id}
-          className={['ax-select-trigger', error ? 'is-invalid' : '', className]
-            .filter(Boolean)
-            .join(' ')}
-          aria-label={ariaLabel}
-          aria-labelledby={ariaLabelledBy}
-          title={selected?.label || undefined}
-        >
-          <span className="ax-select-trigger-inner">
-            {selected?.color ? (
-              <span
-                className="ax-select-swatch"
-                style={{ background: selected.color }}
-                aria-hidden
-              />
-            ) : null}
-            <span className="ax-select-value-text">
-              <SelectPrimitive.Value placeholder={placeholder} />
+        <div className={['ax-select-wrap', showClear ? 'has-clear' : ''].filter(Boolean).join(' ')}>
+          <SelectPrimitive.Trigger
+            ref={ref}
+            id={id}
+            className={['ax-select-trigger', error ? 'is-invalid' : '', className]
+              .filter(Boolean)
+              .join(' ')}
+            aria-label={ariaLabel}
+            aria-labelledby={ariaLabelledBy}
+            title={selected?.label || undefined}
+          >
+            <span className="ax-select-trigger-inner">
+              {selected?.color ? (
+                <span
+                  className="ax-select-swatch"
+                  style={{ background: selected.color }}
+                  aria-hidden
+                />
+              ) : null}
+              <span className="ax-select-value-text">
+                <SelectPrimitive.Value placeholder={placeholder} />
+              </span>
             </span>
-          </span>
-          <SelectPrimitive.Icon className="ax-select-icon" asChild>
-            <BsChevronDown aria-hidden />
-          </SelectPrimitive.Icon>
-        </SelectPrimitive.Trigger>
+            <SelectPrimitive.Icon className="ax-select-icon" asChild>
+              <BsChevronDown aria-hidden />
+            </SelectPrimitive.Icon>
+          </SelectPrimitive.Trigger>
+
+          {showClear ? (
+            <button
+              type="button"
+              className="ax-select-clear"
+              aria-label="Seçimi temizle"
+              tabIndex={0}
+              onClick={handleClear}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  handleClear(e);
+                }
+              }}
+            >
+              <BsX aria-hidden />
+            </button>
+          ) : null}
+        </div>
 
         <SelectPrimitive.Portal>
           <SelectPrimitive.Content

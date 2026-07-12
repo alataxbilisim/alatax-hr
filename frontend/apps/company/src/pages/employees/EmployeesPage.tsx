@@ -488,6 +488,7 @@ const EmployeesPage: React.FC = () => {
                   color: opt.color,
                 }))}
                 allowEmpty
+                clearable
                 emptyLabel="Tümü"
                 aria-label="Durum filtresi"
               />
@@ -505,6 +506,7 @@ const EmployeesPage: React.FC = () => {
                   label: dept.name,
                 }))}
                 allowEmpty
+                clearable
                 emptyLabel="Tümü"
                 aria-label="Departman filtresi"
               />
@@ -523,6 +525,7 @@ const EmployeesPage: React.FC = () => {
                   color: opt.color,
                 }))}
                 allowEmpty
+                clearable
                 emptyLabel="Tümü"
                 aria-label="Sözleşme tipi filtresi"
               />
