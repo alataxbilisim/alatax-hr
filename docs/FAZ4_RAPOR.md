@@ -88,6 +88,143 @@ https://github.com/alataxbilisim/alatax-hr/actions?query=branch%3Afaz4-form-engi
 
 ---
 
+## Faz 4B Onay Zinciri Motoru Tasarımı (13 Temmuz 2026)
+
+**Durum:** Teşhis + mimari tasarım — **KOD YOK**. ROADMAP §4B vizyonu referans.  
+**Kaynaklar:** `ApprovalWorkflow` / `ApprovalStep` / `ApprovalRecord` / `ApprovalDelegation`, `WorkflowService`, `LeaveRequestPolicy` / `ExpenseClaimPolicy`, `2024_12_24_000001_create_approval_workflows_table.php`, `docs/ROADMAP.md` §4B, `docs/AKIS_SPEC.md` §0.
+
+### ADIM 1 — Mevcut temel (Faz 2) — koddan
+
+#### 1.1 Şema (zaten var)
+
+| Tablo | Rol | Kritik alanlar |
+|-------|-----|----------------|
+| `approval_workflows` | Firma akış tanımı | `company_id`, `entity_type`, `name`, `is_active`, `is_default`, `conditions` (jsonb) |
+| `approval_steps` | Sıralı adımlar | `step_order`, `approver_type` (direct_manager / department_head / specific_user / specific_role / hr / cfo / ceo), `specific_user_id`, `specific_role`, `timeout_hours`, `timeout_action` (escalate/auto_approve/auto_reject), `can_skip` |
+| `approval_records` | Çalışan onay satırı | morph `approvable_*`, `approval_workflow_id`, `approval_step_id`, `approver_id`, `status` (pending/approved/rejected/skipped/escalated), `step_order`, `is_current`, `escalated_at`/`escalated_to`, `comment` |
+| `approval_delegations` | Vekalet | `delegator_id`, `delegate_id`, tarih aralığı, `entity_type` nullable |
+
+**Çok adım:** Şema **destekliyor** (`step_order` + `moveToNextStep` → sonraki `ApprovalRecord`).  
+**Paralel adım / koşul-adım / skip-level “CEO’ya kadar”:** şemada **yok** (veya yetersiz).  
+**Eskalasyon:** kolonlar var; **scheduler/job yok**.
+
+#### 1.2 Motor vs üretim (iki dünya)
+
+| Dünya | Ne | Durum |
+|-------|-----|--------|
+| A — Workflow API | `WorkflowService::startWorkflow` → `/api/v1/approvals/{id}/approve` | Tablolar + CRUD + Policy hazır; **`startWorkflow` hiçbir modülde çağrılmıyor** (ölü motor) |
+| B — Modül route | `POST /leaves/requests/{id}/approve`, expense approve… | **Üretim yolu**; Policy hibrit (aktif record varsa `canApprove`, yoksa DataScope team/department/company) |
+
+**canApprove:** `pending`+`is_current` → Spatie `admin` / `approver_id` / aktif vekil.  
+**findApprover bug:** `User->manager` / `Department->head` kullanılıyor; gerçek hiyerarşi `Employee.manager_id` (employee→employee) + `Department.manager_id` (→user). **4B öncesi düzeltilmeli.**
+
+#### 1.3 Modül kullanımı
+
+| Modül | Bugün | Workflow kolonları |
+|-------|-------|-------------------|
+| İzin | Controller doğrudan `LeaveRequest::approve` — `startWorkflow` yok | `approval_workflow_id`, `current_step`, `workflow_status` var |
+| Masraf | Doğrudan status; Policy hazır | morph var, workflow FK yok |
+| Doküman / performans / puantaj / işe alım | Kendi status/flag | Workflow bağlı değil |
+| Frontend | Workflow UI / api client **yok**; `management.workflows.*` seed’de var |
+
+**Verdict:** Tek-seviyeli **DataScope onay** + iskelet çok-adımlı motor (bağlanmamış). Vizyon = motoru **canlandır + genişlet + Stüdyo UI**.
+
+---
+
+### ADIM 2 — Veri modeli önerisi (yazılmadı; öneri)
+
+**Strateji (önerilen): GENİŞLET, yeni paralel evren kurma.** Mevcut `approval_workflows` / `_steps` / `_records` / `_delegations` korunur; eksik alanlar migration ile eklenir. İsimler kullanıcı vizyonundaki `approval_flows` ile eşdeğer — rename zorunlu değil (breaking); Stüdyo’da “Akış” etiketi kullanılır.
+
+| Vizyon adı | Mevcut / öneri | Değişiklik |
+|------------|----------------|------------|
+| `approval_flows` | = `approval_workflows` | `version`, `priority` (koşullu seçim sırası); `conditions` jsonb net şema |
+| `approval_flow_steps` | = `approval_steps` | `condition` jsonb (adım-seviye), `parallel_group` (aynı order = paralel), `approver_type` genişlet (`skip_level_n`, `dynamic_manager_chain`), `escalation_target` |
+| `approval_instances` | Kısmen leave `workflow_status` + records | Opsiyonel yeni tablo **veya** entity kolonları standart trait: `workflow_status`, `approval_workflow_id`, `current_step` — **KARAR** |
+| `approval_step_actions` | ≈ `approval_records` satır geçmişi | Record zaten aksiyon; gerekirse `action` enum ayrımı + audit zenginleştir |
+| Vekalet | `approval_delegations` | Koru; motor her çözümlemede `findActiveDelegate` |
+
+**Faz 1 kuralları:** string + PHP enum + CHECK; koşullar/config **jsonb**; her tabloda `company_id` + BelongsToCompany; softDeletes workflow tanımında kalsın.
+
+**Köprü önerisi:** Leave/Expense `approve` endpoint’leri → içeride `WorkflowService` (record varsa) veya `startWorkflow` yoksa hata / otomatik tek-adım default flow seed. İki dünyayı birleştir.
+
+---
+
+### ADIM 3 — Motor mantığı (pseudo-flow)
+
+```
+TALEP OLUŞTU (örn. LeaveRequest::store)
+  → context = { total_days, department_id, requester_id, … }
+  → flow = findForRequest(company, entity_type, context)  // conditions + is_default
+  → yoksa: seed default 1-adım (direct_manager) VEYA onWorkflowCompleted (politika KARAR)
+  → instance: entity.workflow_status = in_progress; current_step = 1
+  → step = first (veya parallel_group)
+  → her onaycı = resolve(approver_type) → applyDelegation → ApprovalRecord(pending, is_current)
+  → notify(approver)  // 4C veya geçici in-app
+
+ONAY
+  → canApprove? → record.approved
+  → parallel_group içinde tüm required pending bitti mi?
+      hayır → bekle
+      evet → next step / next group
+          → yok → onWorkflowCompleted() (bakiye düş vb.) + notify(requester)
+          → var → resolve + records + notify
+
+RED
+  → record.rejected; entity.workflow_status = rejected; onWorkflowRejected()
+  → notify(requester + reason); yeniden gönder → yeni instance veya reset (KARAR)
+
+ESKALASYON (scheduler)
+  → pending + timeout_hours aşıldı → timeout_action
+      escalate → üst yönetici / escalation_target; escalated_at
+      auto_approve / auto_reject
+
+DİNAMİK ÇÖZÜM
+  direct_manager    = requester.employee.manager.user_id
+  department_head   = requester.employee.department.manager_id (User)
+  skip_level_n      = manager zincirinde N adım
+  specific_role     = Spatie role holders ∩ DataScope (opsiyonel dept filtresi)
+```
+
+---
+
+### ADIM 4 — Kapsam + sıra (parçalama)
+
+| Dalga | İçerik | Çıktı |
+|-------|--------|--------|
+| **B0** | `findApprover` düzelt; entity mapping (`ExpenseClaim`); Leave `store` → `startWorkflow`; leave approve → `/approvals` veya service köprüsü | İzin gerçekten workflow’dan geçer |
+| **B1** | Sıralı çok-adım (tek onaycı/adım) + seed default flow + feature test | 2–3 adımlı izin zinciri |
+| **B2** | Dinamik onaycı (manager / dept head / skip-level) | Hiyerarşi doğru |
+| **B3** | Adım/flow koşulları (days>10 → ekstra adım) | Vizyon “GM eşiği” |
+| **B4** | Paralel grup + eskalasyon job + vekalet polish | SLA + hibrit sıra |
+| **B5** | Ayarlar Stüdyosu → Modül Ayarları görsel tasarımcı | Firma elle kurar |
+| **B6+** | Expense / document / … bağlama | Yayılım |
+
+**Pilot modül:** **İzin** (`leave_request`) — en somut, kolonlar hazır, bakiye sonucu net.
+
+**Bildirim (4C bağımlılığı):**
+- B0–B1: mevcut `ActivityLog` + basit in-app/mail stub (TODO kapat, 4C beklenmez).
+- 4C gelince: olay kataloğu `approval.requested|approved|rejected|escalated` → şablon/kanal.
+
+**Departman erişimi:** DataScope `department` onay listesinde kalır; “yönetici panel erişimi” **Faz 6** (ROADMAP).
+
+---
+
+### KARAR NOKTALARI (onay beklenir)
+
+1. **Şema:** Mevcut tabloları genişlet (öneri) mi, `approval_flows` diye rename/yeni mi?
+2. **Instance:** Ayrı `approval_instances` tablosu mu, entity trait kolonları yeter mi?
+3. **Workflow yokken:** Talep oluşturunca otomatik 1-adım default seed mi, yoksa “yapılandırılmamış → reddet/engelle” mi?
+4. **Köprü:** Modül `/approve` kalsın (içeride WorkflowService) mi, UI tamamen `/approvals/{id}` mi?
+5. **Paralel:** `parallel_group` int yeterli mi, yoksa ayrı junction?
+6. **Bildirim:** B0’da stub OK mi, yoksa 4C’yi önce mi?
+7. **Pilot sırası:** B0→B1→B2→B3→B4→B5 onayı?
+
+Onay örneği: `1=genişlet, 2=trait kolonları, 3=default seed, 4=modül endpoint köprü, 5=parallel_group, 6=stub, 7=B0-B5 sıra OK`.
+
+**Sonraki:** Onay sonrası taze oturumda B0 kodu (bağlantı + findApprover fix) — bu turda uygulama yok.
+
+---
+
 ## Ayarlar Stüdyosu Bilgi Mimarisi (12 Temmuz 2026)
 
 **Durum:** Teşhis + IA kararları uygulandı — **iskelet kuruldu** (12 Temmuz 2026 gecesi).  
