@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { recruitmentApi } from '@shared/services/api';
+import { recruitmentApi, lookupsApi, type LookupItem } from '@shared/services/api';
 import toast from 'react-hot-toast';
 import ApplicationDetailModal from './ApplicationDetailModal';
 import {
@@ -13,62 +13,108 @@ import {
 
 interface Application {
   id: number;
-  job_position: { id: number; title: string };
-  full_name: string;
+  applicant_name: string;
   email: string;
-  phone?: string;
-  status: 'pending' | 'reviewing' | 'interview' | 'offered' | 'hired' | 'rejected';
-  rating?: number;
-  notes?: string;
+  phone?: string | null;
+  position: { id: number; title: string } | null;
+  status: string;
+  rating?: number | null;
+  notes?: string | null;
   created_at: string;
 }
 
-const statusColumns = [
-  { key: 'new', label: 'Yeni', color: '#94a3b8' },
-  { key: 'reviewing', label: 'İnceleniyor', color: '#f59e0b' },
-  { key: 'shortlisted', label: 'Ön Seçim', color: '#8b5cf6' },
-  { key: 'interview_scheduled', label: 'Mülakat Planlandı', color: '#3b82f6' },
-  { key: 'interviewed', label: 'Mülakat Yapıldı', color: '#0ea5e9' },
-  { key: 'offer_sent', label: 'Teklif Gönderildi', color: '#6366f1' },
-  { key: 'hired', label: 'İşe Alındı', color: '#10b981' },
-  { key: 'rejected', label: 'Reddedildi', color: '#ef4444' },
-];
+/** API hem applicant_name/position hem legacy full_name/job_position dönebilir */
+interface ApplicationApiRow {
+  id: number;
+  applicant_name?: string;
+  full_name?: string;
+  applicant_email?: string;
+  email?: string;
+  applicant_phone?: string | null;
+  phone?: string | null;
+  position?: { id: number; title: string } | null;
+  job_position?: { id: number; title: string } | null;
+  status: string;
+  rating?: number | null;
+  notes?: string | null;
+  created_at: string;
+}
+
+interface StatusColumn {
+  key: string;
+  label: string;
+  color: string;
+}
+
+function normalizeApplication(row: ApplicationApiRow): Application {
+  return {
+    id: row.id,
+    applicant_name: row.applicant_name || row.full_name || '',
+    email: row.applicant_email || row.email || '',
+    phone: row.applicant_phone ?? row.phone ?? null,
+    position: row.position ?? row.job_position ?? null,
+    status: row.status,
+    rating: row.rating,
+    notes: row.notes,
+    created_at: row.created_at,
+  };
+}
+
+function toStatusColumns(items: LookupItem[]): StatusColumn[] {
+  return items.map((item) => ({
+    key: item.value,
+    label: item.label,
+    color: item.color || '#94a3b8',
+  }));
+}
 
 const ApplicationsPage: React.FC = () => {
   const navigate = useNavigate();
   const [applications, setApplications] = useState<Application[]>([]);
+  const [statusColumns, setStatusColumns] = useState<StatusColumn[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
-  
-  // Detail modal
+
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedApplicationId, setSelectedApplicationId] = useState<number | null>(null);
 
-  useEffect(() => {
-    loadApplications();
+  const loadStatusLookups = useCallback(async () => {
+    try {
+      const response = await lookupsApi.forType('application_stage');
+      setStatusColumns(toStatusColumns(response.data.data ?? []));
+    } catch {
+      toast.error('Başvuru aşamaları yüklenemedi');
+    }
   }, []);
 
-  const handleViewDetail = (applicationId: number) => {
-    setSelectedApplicationId(applicationId);
-    setDetailModalOpen(true);
-  };
-
-  const loadApplications = async () => {
+  const loadApplications = useCallback(async () => {
     try {
       setLoading(true);
       const response = await recruitmentApi.applications.list({ per_page: 100 });
       const data = response.data.data;
 
+      let rows: ApplicationApiRow[] = [];
       if (Array.isArray(data)) {
-        setApplications(data);
-      } else if (data?.data) {
-        setApplications(data.data);
+        rows = data;
+      } else if (data?.data && Array.isArray(data.data)) {
+        rows = data.data;
       }
+      setApplications(rows.map(normalizeApplication));
     } catch {
       toast.error('Başvurular yüklenemedi');
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    void loadStatusLookups();
+    void loadApplications();
+  }, [loadStatusLookups, loadApplications]);
+
+  const handleViewDetail = (applicationId: number) => {
+    setSelectedApplicationId(applicationId);
+    setDetailModalOpen(true);
   };
 
   const handleStatusChange = async (app: Application, newStatus: string) => {
@@ -76,7 +122,7 @@ const ApplicationsPage: React.FC = () => {
     try {
       await recruitmentApi.applications.updateStatus(app.id, { status: newStatus });
       toast.success('Durum güncellendi');
-      loadApplications();
+      void loadApplications();
     } catch {
       toast.error('Durum güncellenemedi');
     } finally {
@@ -88,7 +134,7 @@ const ApplicationsPage: React.FC = () => {
     try {
       await recruitmentApi.applications.rate(app.id, rating);
       toast.success('Puanlama kaydedildi');
-      loadApplications();
+      void loadApplications();
     } catch {
       toast.error('Puanlama kaydedilemedi');
     }
@@ -182,7 +228,7 @@ interface ApplicationCardProps {
   onRate: (app: Application, rating: number) => void;
   onViewDetail: (id: number) => void;
   isLoading: boolean;
-  statusColumns: typeof statusColumns;
+  statusColumns: StatusColumn[];
 }
 
 const ApplicationCard: React.FC<ApplicationCardProps> = ({
@@ -194,6 +240,8 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
   statusColumns,
 }) => {
   const [showActions, setShowActions] = useState(false);
+  const displayName = application.applicant_name || 'Aday';
+  const positionTitle = application.position?.title || '';
 
   return (
     <div
@@ -204,11 +252,11 @@ const ApplicationCard: React.FC<ApplicationCardProps> = ({
     >
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 'var(--sp-2)', gap: 'var(--sp-2)' }}>
         <div style={{ minWidth: 0 }}>
-          <div className="kanban-card-name">{application.full_name}</div>
-          <div className="kanban-card-meta">{application.job_position.title}</div>
+          <div className="kanban-card-name">{displayName}</div>
+          <div className="kanban-card-meta">{positionTitle}</div>
         </div>
         <div className="kanban-card-avatar" aria-hidden>
-          {application.full_name.charAt(0)}
+          {displayName.charAt(0)}
         </div>
       </div>
 

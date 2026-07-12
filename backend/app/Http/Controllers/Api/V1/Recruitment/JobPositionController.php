@@ -80,7 +80,7 @@ class JobPositionController extends BaseController
             'department' => 'nullable|string|max:100',
             'location' => 'nullable|string|max:100',
             'employment_type' => 'sometimes|nullable|string|max:100',
-            'experience_level' => 'sometimes|in:entry,mid,senior,lead,manager',
+            'experience_level' => 'sometimes|nullable|string|max:100',
             'salary_min' => 'nullable|numeric|min:0',
             'salary_max' => 'nullable|numeric|min:0|gte:salary_min',
             'salary_visible' => 'sometimes|boolean',
@@ -100,6 +100,12 @@ class JobPositionController extends BaseController
             $validated['employment_type'] ?? null,
             $companyId,
             'employment_type'
+        );
+        $this->lookups->assertValid(
+            LookupService::TYPE_EXPERIENCE_LEVEL,
+            $validated['experience_level'] ?? null,
+            $companyId,
+            'experience_level'
         );
 
         $validated['slug'] = Str::slug($validated['title']).'-'.uniqid();
@@ -126,21 +132,34 @@ class JobPositionController extends BaseController
             'department' => 'sometimes|nullable|string|max:100',
             'location' => 'sometimes|nullable|string|max:100',
             'employment_type' => 'sometimes|nullable|string|max:100',
-            'experience_level' => 'sometimes|in:entry,mid,senior,lead,manager',
+            'experience_level' => 'sometimes|nullable|string|max:100',
             'salary_min' => 'sometimes|nullable|numeric|min:0',
             'salary_max' => 'sometimes|nullable|numeric|min:0',
             'salary_visible' => 'sometimes|boolean',
             'form_id' => 'sometimes|nullable|exists:application_forms,id',
-            'status' => 'sometimes|in:draft,active,paused,closed',
+            'status' => 'sometimes|nullable|string|max:100',
             'positions_count' => 'sometimes|integer|min:1',
             'application_deadline' => 'sometimes|nullable|date',
         ]);
 
+        $companyId = $this->getCompanyId();
         $this->lookups->assertValid(
             LookupService::TYPE_WORK_TYPE,
             $validated['employment_type'] ?? null,
-            $this->getCompanyId(),
+            $companyId,
             'employment_type'
+        );
+        $this->lookups->assertValid(
+            LookupService::TYPE_EXPERIENCE_LEVEL,
+            $validated['experience_level'] ?? null,
+            $companyId,
+            'experience_level'
+        );
+        $this->lookups->assertValid(
+            LookupService::TYPE_JOB_POSITION_STATUS,
+            $validated['status'] ?? null,
+            $companyId,
+            'status'
         );
 
         // Yayınlama

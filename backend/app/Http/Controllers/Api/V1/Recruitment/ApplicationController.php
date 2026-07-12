@@ -6,11 +6,15 @@ use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\ActivityLog;
 use App\Models\ApplicationStatusLog;
 use App\Models\JobApplication;
+use App\Services\LookupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ApplicationController extends BaseController
 {
+    public function __construct(
+        protected LookupService $lookups,
+    ) {}
     /**
      * Başvuru listesi
      */
@@ -113,11 +117,21 @@ class ApplicationController extends BaseController
         }
 
         $validated = $request->validate([
-            'status' => 'required|string|in:new,reviewing,interview,testing,offer,accepted,rejected,pool',
+            'status' => 'required|string|max:100',
             'notes' => 'nullable|string',
         ]);
 
-        $oldStatus = $application->status;
+        $companyId = $this->getCompanyId();
+        $this->lookups->assertValid(
+            LookupService::TYPE_APPLICATION_STAGE,
+            $validated['status'],
+            $companyId,
+            'status'
+        );
+
+        $oldStatus = $application->status instanceof \BackedEnum
+            ? $application->status->value
+            : (string) $application->status;
         $application->update(['status' => $validated['status']]);
 
         // Durum log kaydı

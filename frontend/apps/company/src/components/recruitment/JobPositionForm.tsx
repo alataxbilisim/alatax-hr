@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../ui';
 import { recruitmentApi, lookupsApi, type LookupItem } from '@shared/services/api';
+import { Select } from '@shared/components';
 import toast from 'react-hot-toast';
 
 interface JobPositionFormValues {
@@ -9,12 +10,12 @@ interface JobPositionFormValues {
   department: string;
   location: string;
   employment_type: string;
-  experience_level: 'entry' | 'mid' | 'senior' | 'lead' | 'manager';
+  experience_level: string;
   description: string;
   requirements: string;
   salary_min?: number;
   salary_max?: number;
-  status: 'draft' | 'active' | 'paused' | 'closed';
+  status: string;
 }
 
 interface JobPositionFormProps {
@@ -36,17 +37,6 @@ interface JobPositionFormProps {
   };
 }
 
-const EXPERIENCE_LEVELS = ['entry', 'mid', 'senior', 'lead', 'manager'] as const;
-const STATUSES = ['draft', 'active', 'paused', 'closed'] as const;
-
-function toExperienceLevel(value: string | undefined): JobPositionFormValues['experience_level'] {
-  return EXPERIENCE_LEVELS.find((v) => v === value) ?? 'mid';
-}
-
-function toPositionStatus(value: string | undefined): JobPositionFormValues['status'] {
-  return STATUSES.find((v) => v === value) ?? 'draft';
-}
-
 const JobPositionForm: React.FC<JobPositionFormProps> = ({
   isOpen,
   onClose,
@@ -56,6 +46,8 @@ const JobPositionForm: React.FC<JobPositionFormProps> = ({
   const isEditing = !!position?.id;
   const [loading, setLoading] = useState(false);
   const [workTypeOptions, setWorkTypeOptions] = useState<LookupItem[]>([]);
+  const [experienceOptions, setExperienceOptions] = useState<LookupItem[]>([]);
+  const [statusOptions, setStatusOptions] = useState<LookupItem[]>([]);
   const [formData, setFormData] = useState<JobPositionFormValues>({
     title: '',
     department: '',
@@ -73,10 +65,17 @@ const JobPositionForm: React.FC<JobPositionFormProps> = ({
   useEffect(() => {
     if (!isOpen) return;
 
-    lookupsApi
-      .forType('work_type')
-      .then((res) => setWorkTypeOptions(res.data.data ?? []))
-      .catch(() => toast.error('Çalışma tipi listesi yüklenemedi'));
+    Promise.all([
+      lookupsApi.forType('work_type'),
+      lookupsApi.forType('experience_level'),
+      lookupsApi.forType('job_position_status'),
+    ])
+      .then(([workRes, expRes, statusRes]) => {
+        setWorkTypeOptions(workRes.data.data ?? []);
+        setExperienceOptions(expRes.data.data ?? []);
+        setStatusOptions(statusRes.data.data ?? []);
+      })
+      .catch(() => toast.error('Lookup listeleri yüklenemedi'));
 
     if (position) {
       setFormData({
@@ -84,12 +83,12 @@ const JobPositionForm: React.FC<JobPositionFormProps> = ({
         department: position.department || '',
         location: position.location || '',
         employment_type: position.employment_type || 'full_time',
-        experience_level: toExperienceLevel(position.experience_level),
+        experience_level: position.experience_level || 'mid',
         description: position.description || '',
         requirements: position.requirements || '',
         salary_min: position.salary_min,
         salary_max: position.salary_max,
-        status: toPositionStatus(position.status),
+        status: position.status || 'draft',
       });
     } else {
       setFormData({
@@ -108,12 +107,19 @@ const JobPositionForm: React.FC<JobPositionFormProps> = ({
     setErrors({});
   }, [isOpen, position]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: type === 'number' ? (value ? Number(value) : undefined) : value,
     }));
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const setSelectField = (name: keyof Pick<JobPositionFormValues, 'employment_type' | 'experience_level' | 'status'>, value: string) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
@@ -171,21 +177,6 @@ const JobPositionForm: React.FC<JobPositionFormProps> = ({
     }
   };
 
-  const experienceLevels = [
-    { value: 'entry', label: 'Giriş Seviye' },
-    { value: 'mid', label: 'Orta Seviye' },
-    { value: 'senior', label: 'Kıdemli' },
-    { value: 'lead', label: 'Lider' },
-    { value: 'manager', label: 'Yönetici' },
-  ];
-
-  const statusOptions = [
-    { value: 'draft', label: 'Taslak' },
-    { value: 'active', label: 'Aktif / Yayında' },
-    { value: 'paused', label: 'Duraklatıldı' },
-    { value: 'closed', label: 'Kapalı' },
-  ];
-
   return (
     <Modal
       isOpen={isOpen}
@@ -194,10 +185,10 @@ const JobPositionForm: React.FC<JobPositionFormProps> = ({
       size="lg"
       footer={
         <>
-          <button className="btn btn-secondary" onClick={onClose} disabled={loading}>
+          <button type="button" className="btn btn-secondary" onClick={onClose} disabled={loading}>
             İptal
           </button>
-          <button className="btn btn-primary" onClick={handleSubmit} disabled={loading}>
+          <button type="button" className="btn btn-primary" onClick={handleSubmit} disabled={loading}>
             {loading ? 'Kaydediliyor...' : isEditing ? 'Güncelle' : 'Oluştur'}
           </button>
         </>
@@ -251,30 +242,32 @@ const JobPositionForm: React.FC<JobPositionFormProps> = ({
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
           <div className="form-group">
             <label className="form-label">Çalışma Şekli</label>
-            <select
-              name="employment_type"
-              className="form-control"
+            <Select
               value={formData.employment_type}
-              onChange={handleChange}
-            >
-              {workTypeOptions.map((t) => (
-                <option key={t.value} value={t.value}>{t.label}</option>
-              ))}
-            </select>
+              onChange={(v) => setSelectField('employment_type', v)}
+              options={workTypeOptions.map((opt) => ({
+                value: opt.value,
+                label: opt.label,
+                color: opt.color,
+              }))}
+              placeholder="Seçiniz..."
+              aria-label="Çalışma şekli"
+            />
           </div>
 
           <div className="form-group">
             <label className="form-label">Deneyim Seviyesi</label>
-            <select
-              name="experience_level"
-              className="form-control"
+            <Select
               value={formData.experience_level}
-              onChange={handleChange}
-            >
-              {experienceLevels.map((l) => (
-                <option key={l.value} value={l.value}>{l.label}</option>
-              ))}
-            </select>
+              onChange={(v) => setSelectField('experience_level', v)}
+              options={experienceOptions.map((opt) => ({
+                value: opt.value,
+                label: opt.label,
+                color: opt.color,
+              }))}
+              placeholder="Seçiniz..."
+              aria-label="Deneyim seviyesi"
+            />
           </div>
         </div>
 
@@ -335,16 +328,17 @@ const JobPositionForm: React.FC<JobPositionFormProps> = ({
         {/* Status */}
         <div className="form-group">
           <label className="form-label">Durum</label>
-          <select
-            name="status"
-            className="form-control"
+          <Select
             value={formData.status}
-            onChange={handleChange}
-          >
-            {statusOptions.map((s) => (
-              <option key={s.value} value={s.value}>{s.label}</option>
-            ))}
-          </select>
+            onChange={(v) => setSelectField('status', v)}
+            options={statusOptions.map((opt) => ({
+              value: opt.value,
+              label: opt.label,
+              color: opt.color,
+            }))}
+            placeholder="Seçiniz..."
+            aria-label="Pozisyon durumu"
+          />
         </div>
       </form>
     </Modal>
@@ -352,4 +346,3 @@ const JobPositionForm: React.FC<JobPositionFormProps> = ({
 };
 
 export default JobPositionForm;
-

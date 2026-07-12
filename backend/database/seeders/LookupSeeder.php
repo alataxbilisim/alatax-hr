@@ -27,6 +27,12 @@ class LookupSeeder extends Seeder
         $this->seedLeaveRequestStatus();
         $this->seedLeaveGenderRestriction();
         $this->seedHolidayType();
+        $this->seedApplicationStage();
+        $this->seedExperienceLevel();
+        $this->seedJobPositionStatus();
+        $this->seedInterviewType();
+        $this->seedInterviewStatus();
+        $this->seedInterviewRecommendation();
         $this->seedCurrency();
         $this->seedBloodType();
         $this->seedCountries();
@@ -173,6 +179,91 @@ class LookupSeeder extends Seeder
             ['value' => 'regional', 'label' => 'Bölgesel', 'sort_order' => 40],
         ] as $item) {
             $this->upsertDefault(LookupService::TYPE_HOLIDAY_TYPE, $item, false);
+        }
+    }
+
+    /** JobApplicationStatus enum ile birebir — kanban hibrit */
+    private function seedApplicationStage(): void
+    {
+        $meta = ['hybrid' => true];
+        foreach ([
+            ['value' => 'new', 'label' => 'Yeni', 'color' => '#94a3b8', 'sort_order' => 10],
+            ['value' => 'reviewing', 'label' => 'İnceleniyor', 'color' => '#f59e0b', 'sort_order' => 20],
+            ['value' => 'shortlisted', 'label' => 'Ön Seçim', 'color' => '#8b5cf6', 'sort_order' => 30],
+            ['value' => 'interview_scheduled', 'label' => 'Mülakat Planlandı', 'color' => '#3b82f6', 'sort_order' => 40],
+            ['value' => 'interviewed', 'label' => 'Mülakat Yapıldı', 'color' => '#0ea5e9', 'sort_order' => 50],
+            ['value' => 'offer_sent', 'label' => 'Teklif Gönderildi', 'color' => '#6366f1', 'sort_order' => 60],
+            ['value' => 'hired', 'label' => 'İşe Alındı', 'color' => '#10b981', 'sort_order' => 70],
+            ['value' => 'rejected', 'label' => 'Reddedildi', 'color' => '#ef4444', 'sort_order' => 80],
+            ['value' => 'withdrawn', 'label' => 'Çekildi', 'color' => '#6b7280', 'sort_order' => 90],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_APPLICATION_STAGE, $item, false, $meta);
+        }
+    }
+
+    private function seedExperienceLevel(): void
+    {
+        foreach ([
+            ['value' => 'entry', 'label' => 'Başlangıç', 'sort_order' => 10],
+            ['value' => 'mid', 'label' => 'Orta', 'sort_order' => 20],
+            ['value' => 'senior', 'label' => 'Kıdemli', 'sort_order' => 30],
+            ['value' => 'lead', 'label' => 'Lead', 'sort_order' => 40],
+            ['value' => 'manager', 'label' => 'Yönetici', 'sort_order' => 50],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_EXPERIENCE_LEVEL, $item, false);
+        }
+    }
+
+    private function seedJobPositionStatus(): void
+    {
+        foreach ([
+            ['value' => 'draft', 'label' => 'Taslak', 'sort_order' => 10],
+            ['value' => 'active', 'label' => 'Aktif', 'color' => '#10b981', 'sort_order' => 20],
+            ['value' => 'paused', 'label' => 'Duraklatıldı', 'color' => '#f59e0b', 'sort_order' => 30],
+            ['value' => 'closed', 'label' => 'Kapalı', 'color' => '#64748b', 'sort_order' => 40],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_JOB_POSITION_STATUS, $item, false);
+        }
+    }
+
+    private function seedInterviewType(): void
+    {
+        foreach ([
+            ['value' => 'phone', 'label' => 'Telefon', 'sort_order' => 10],
+            ['value' => 'video', 'label' => 'Video', 'sort_order' => 20],
+            ['value' => 'onsite', 'label' => 'Yüz Yüze', 'sort_order' => 30],
+            ['value' => 'technical', 'label' => 'Teknik', 'sort_order' => 40],
+            ['value' => 'hr', 'label' => 'İK', 'sort_order' => 50],
+            ['value' => 'panel', 'label' => 'Panel', 'sort_order' => 60],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_INTERVIEW_TYPE, $item, false);
+        }
+    }
+
+    private function seedInterviewStatus(): void
+    {
+        $meta = ['hybrid' => true];
+        foreach ([
+            ['value' => 'scheduled', 'label' => 'Planlandı', 'color' => '#3b82f6', 'sort_order' => 10],
+            ['value' => 'completed', 'label' => 'Tamamlandı', 'color' => '#10b981', 'sort_order' => 20],
+            ['value' => 'cancelled', 'label' => 'İptal', 'color' => '#ef4444', 'sort_order' => 30],
+            ['value' => 'no_show', 'label' => 'Gelmedi', 'color' => '#f59e0b', 'sort_order' => 40],
+            ['value' => 'rescheduled', 'label' => 'Ertelendi', 'color' => '#8b5cf6', 'sort_order' => 50],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_INTERVIEW_STATUS, $item, false, $meta);
+        }
+    }
+
+    private function seedInterviewRecommendation(): void
+    {
+        foreach ([
+            ['value' => 'strong_hire', 'label' => 'Kesinlikle Alınsın', 'color' => '#10b981', 'sort_order' => 10],
+            ['value' => 'hire', 'label' => 'Alınsın', 'color' => '#34d399', 'sort_order' => 20],
+            ['value' => 'no_decision', 'label' => 'Kararsız', 'color' => '#94a3b8', 'sort_order' => 30],
+            ['value' => 'no_hire', 'label' => 'Alınmasın', 'color' => '#f59e0b', 'sort_order' => 40],
+            ['value' => 'strong_no_hire', 'label' => 'Kesinlikle Alınmasın', 'color' => '#ef4444', 'sort_order' => 50],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_INTERVIEW_RECOMMENDATION, $item, false);
         }
     }
 

@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { recruitmentApi, usersApi } from '@shared/services/api';
+import { recruitmentApi, usersApi, lookupsApi, type LookupItem } from '@shared/services/api';
+import { Select } from '@shared/components';
 import toast from 'react-hot-toast';
 import { DataTable, Modal, ConfirmDialog } from '../../components/ui';
 import {
@@ -53,19 +54,34 @@ interface User {
   email: string;
 }
 
-interface Application {
+interface ApplicationOption {
   id: number;
   applicant_name: string;
-  email: string;
-  job_position: { id: number; title: string };
+  position_title: string;
 }
 
-const statusConfig: Record<string, { label: string; class: string; icon: React.ReactNode }> = {
-  scheduled: { label: 'Planlandı', class: 'badge-info', icon: <BsClock /> },
-  completed: { label: 'Tamamlandı', class: 'badge-success', icon: <BsCheckCircle /> },
-  cancelled: { label: 'İptal', class: 'badge-danger', icon: <BsXCircle /> },
-  no_show: { label: 'Gelmedi', class: 'badge-warning', icon: <BsXCircle /> },
-  rescheduled: { label: 'Ertelendi', class: 'badge-secondary', icon: <BsClock /> },
+interface ApplicationApiRow {
+  id: number;
+  applicant_name?: string;
+  full_name?: string;
+  position?: { id: number; title: string } | null;
+  job_position?: { id: number; title: string } | null;
+}
+
+const statusIconMap: Record<string, React.ReactNode> = {
+  scheduled: <BsClock />,
+  completed: <BsCheckCircle />,
+  cancelled: <BsXCircle />,
+  no_show: <BsXCircle />,
+  rescheduled: <BsClock />,
+};
+
+const statusBadgeClassMap: Record<string, string> = {
+  scheduled: 'badge-info',
+  completed: 'badge-success',
+  cancelled: 'badge-danger',
+  no_show: 'badge-warning',
+  rescheduled: 'badge-secondary',
 };
 
 const typeIcons: Record<string, React.ReactNode> = {
@@ -77,6 +93,14 @@ const typeIcons: Record<string, React.ReactNode> = {
   panel: <BsPersonVideo />,
 };
 
+function normalizeApplicationOption(row: ApplicationApiRow): ApplicationOption {
+  return {
+    id: row.id,
+    applicant_name: row.applicant_name || row.full_name || '',
+    position_title: row.position?.title || row.job_position?.title || '',
+  };
+}
+
 const InterviewsPage: React.FC = () => {
   const navigate = useNavigate();
   const [interviews, setInterviews] = useState<Interview[]>([]);
@@ -87,24 +111,23 @@ const InterviewsPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
-  // Form modal
   const [formOpen, setFormOpen] = useState(false);
   const [selectedInterview, setSelectedInterview] = useState<Interview | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // Complete modal
   const [completeOpen, setCompleteOpen] = useState(false);
   const [interviewToComplete, setInterviewToComplete] = useState<Interview | null>(null);
 
-  // Delete dialog
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [interviewToDelete, setInterviewToDelete] = useState<Interview | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  // Form data
-  const [applications, setApplications] = useState<Application[]>([]);
+  const [applications, setApplications] = useState<ApplicationOption[]>([]);
   const [users, setUsers] = useState<User[]>([]);
-  const [interviewTypes, setInterviewTypes] = useState<Record<string, string>>({});
+  const [statusOptions, setStatusOptions] = useState<LookupItem[]>([]);
+  const [typeOptions, setTypeOptions] = useState<LookupItem[]>([]);
+  const [recommendationOptions, setRecommendationOptions] = useState<LookupItem[]>([]);
+
   const [formData, setFormData] = useState({
     job_application_id: '',
     title: '',
@@ -117,12 +140,34 @@ const InterviewsPage: React.FC = () => {
     interviewer_id: '',
   });
 
-  // Complete form data
   const [completeData, setCompleteData] = useState({
     overall_rating: 3,
     recommendation: 'no_decision',
     feedback: '',
   });
+
+  const statusLabelMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    statusOptions.forEach((opt) => {
+      map[opt.value] = opt.label;
+    });
+    return map;
+  }, [statusOptions]);
+
+  const loadLookups = useCallback(async () => {
+    try {
+      const [statusRes, typeRes, recRes] = await Promise.all([
+        lookupsApi.forType('interview_status'),
+        lookupsApi.forType('interview_type'),
+        lookupsApi.forType('interview_recommendation'),
+      ]);
+      setStatusOptions(statusRes.data.data ?? []);
+      setTypeOptions(typeRes.data.data ?? []);
+      setRecommendationOptions(recRes.data.data ?? []);
+    } catch {
+      toast.error('Mülakat lookup listeleri yüklenemedi');
+    }
+  }, []);
 
   const loadInterviews = useCallback(async () => {
     try {
@@ -152,33 +197,35 @@ const InterviewsPage: React.FC = () => {
 
   const loadFormData = useCallback(async () => {
     try {
-      const [appsRes, usersRes, typesRes] = await Promise.all([
+      const [appsRes, usersRes] = await Promise.all([
         recruitmentApi.applications.list({ per_page: 100, status: 'reviewing' }),
         usersApi.list({ per_page: 100 }),
-        recruitmentApi.interviews.getTypes(),
       ]);
 
-      setApplications(appsRes.data.data?.data || appsRes.data.data || []);
-      setUsers(usersRes.data.data?.data || usersRes.data.data || []);
-      setInterviewTypes(typesRes.data.data || {});
+      const appsRaw = appsRes.data.data?.data || appsRes.data.data || [];
+      const appsList: ApplicationApiRow[] = Array.isArray(appsRaw) ? appsRaw : [];
+      setApplications(appsList.map(normalizeApplicationOption));
+
+      const usersRaw = usersRes.data.data?.data || usersRes.data.data || [];
+      setUsers(Array.isArray(usersRaw) ? usersRaw : []);
     } catch {
       console.error('Form verileri yüklenemedi');
     }
   }, []);
 
   useEffect(() => {
-    loadInterviews();
+    void loadLookups();
+  }, [loadLookups]);
+
+  useEffect(() => {
+    void loadInterviews();
   }, [loadInterviews]);
 
   useEffect(() => {
     if (formOpen) {
-      loadFormData();
+      void loadFormData();
     }
   }, [formOpen, loadFormData]);
-
-  
-
-  
 
   const handleOpenForm = (interview?: Interview) => {
     if (interview) {
@@ -199,7 +246,7 @@ const InterviewsPage: React.FC = () => {
       setFormData({
         job_application_id: '',
         title: '',
-        type: 'onsite',
+        type: typeOptions[0]?.value || 'onsite',
         scheduled_at: '',
         duration_minutes: 60,
         location: '',
@@ -233,7 +280,7 @@ const InterviewsPage: React.FC = () => {
         toast.success('Mülakat oluşturuldu');
       }
       setFormOpen(false);
-      loadInterviews();
+      void loadInterviews();
     } catch {
       toast.error('İşlem başarısız');
     } finally {
@@ -250,7 +297,7 @@ const InterviewsPage: React.FC = () => {
       toast.success('Mülakat tamamlandı');
       setCompleteOpen(false);
       setInterviewToComplete(null);
-      loadInterviews();
+      void loadInterviews();
     } catch {
       toast.error('İşlem başarısız');
     } finally {
@@ -262,7 +309,7 @@ const InterviewsPage: React.FC = () => {
     try {
       await recruitmentApi.interviews.cancel(interview.id, {});
       toast.success('Mülakat iptal edildi');
-      loadInterviews();
+      void loadInterviews();
     } catch {
       toast.error('İptal işlemi başarısız');
     }
@@ -277,7 +324,7 @@ const InterviewsPage: React.FC = () => {
       toast.success('Mülakat silindi');
       setDeleteOpen(false);
       setInterviewToDelete(null);
-      loadInterviews();
+      void loadInterviews();
     } catch {
       toast.error('Silme işlemi başarısız');
     } finally {
@@ -289,7 +336,9 @@ const InterviewsPage: React.FC = () => {
     setInterviewToComplete(interview);
     setCompleteData({
       overall_rating: 3,
-      recommendation: 'no_decision',
+      recommendation: recommendationOptions.find((o) => o.value === 'no_decision')?.value
+        || recommendationOptions[0]?.value
+        || 'no_decision',
       feedback: '',
     });
     setCompleteOpen(true);
@@ -362,10 +411,12 @@ const InterviewsPage: React.FC = () => {
       title: 'Durum',
       width: '120px',
       render: (i: Interview) => {
-        const s = statusConfig[i.status] || { label: i.status, class: 'badge-secondary', icon: null };
+        const label = statusLabelMap[i.status] || i.status;
+        const badgeClass = statusBadgeClassMap[i.status] || 'badge-secondary';
+        const icon = statusIconMap[i.status] || null;
         return (
-          <span className={`badge ${s.class}`} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-            {s.icon} {s.label}
+          <span className={`badge ${badgeClass}`} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+            {icon} {label}
           </span>
         );
       },
@@ -394,6 +445,7 @@ const InterviewsPage: React.FC = () => {
           {i.status === 'scheduled' && (
             <>
               <button
+                type="button"
                 className="btn btn-success btn-icon btn-sm"
                 onClick={() => openCompleteModal(i)}
                 title="Tamamla"
@@ -401,6 +453,7 @@ const InterviewsPage: React.FC = () => {
                 <BsCheckCircle />
               </button>
               <button
+                type="button"
                 className="btn btn-warning btn-icon btn-sm"
                 onClick={() => handleCancel(i)}
                 title="İptal Et"
@@ -410,6 +463,7 @@ const InterviewsPage: React.FC = () => {
             </>
           )}
           <button
+            type="button"
             className="btn btn-ghost btn-icon btn-sm"
             onClick={() => handleOpenForm(i)}
             title="Düzenle"
@@ -417,6 +471,7 @@ const InterviewsPage: React.FC = () => {
             <BsPencil />
           </button>
           <button
+            type="button"
             className="btn btn-ghost btn-icon btn-sm"
             onClick={() => {
               setInterviewToDelete(i);
@@ -432,20 +487,13 @@ const InterviewsPage: React.FC = () => {
     },
   ];
 
-  const recommendationOptions = [
-    { value: 'strong_hire', label: 'Kesinlikle İşe Alınmalı' },
-    { value: 'hire', label: 'İşe Alınmalı' },
-    { value: 'no_decision', label: 'Kararsız' },
-    { value: 'no_hire', label: 'İşe Alınmamalı' },
-    { value: 'strong_no_hire', label: 'Kesinlikle İşe Alınmamalı' },
-  ];
-
   return (
     <div className="animate-fade-in">
       {/* Page Header */}
       <div className="page-header">
         <div className="page-header-content">
           <button
+            type="button"
             className="btn btn-ghost btn-sm"
             onClick={() => navigate('/recruitment/positions')}
             style={{ marginBottom: '0.5rem' }}
@@ -456,7 +504,7 @@ const InterviewsPage: React.FC = () => {
           <p>Mülakat planlaması ve değerlendirmeleri</p>
         </div>
         <div className="page-header-actions">
-          <button className="btn btn-primary" onClick={() => handleOpenForm()}>
+          <button type="button" className="btn btn-primary" onClick={() => handleOpenForm()}>
             <BsPlus size={18} /> Yeni Mülakat
           </button>
         </div>
@@ -465,20 +513,24 @@ const InterviewsPage: React.FC = () => {
       {/* Filters */}
       <div className="card" style={{ marginBottom: '1rem' }}>
         <div className="card-body filter-bar">
-          <div className="form-group" style={{ marginBottom: 0, minWidth: '150px', flex: '0 1 auto' }}>
-            <select
-              className="form-control"
+          <div className="form-group" style={{ marginBottom: 0, minWidth: '180px', flex: '0 1 auto' }}>
+            <Select
               value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
+              onChange={(v) => {
+                setStatusFilter(v);
                 setPage(1);
               }}
-            >
-              <option value="">Tüm Durumlar</option>
-              {Object.entries(statusConfig).map(([key, { label }]) => (
-                <option key={key} value={key}>{label}</option>
-              ))}
-            </select>
+              options={statusOptions.map((opt) => ({
+                value: opt.value,
+                label: opt.label,
+                color: opt.color,
+              }))}
+              allowEmpty
+              clearable
+              emptyLabel="Tüm Durumlar"
+              placeholder="Tüm Durumlar"
+              aria-label="Durum filtresi"
+            />
           </div>
         </div>
       </div>
@@ -510,8 +562,8 @@ const InterviewsPage: React.FC = () => {
         size="lg"
         footer={
           <>
-            <button className="btn btn-secondary" onClick={() => setFormOpen(false)}>İptal</button>
-            <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
+            <button type="button" className="btn btn-secondary" onClick={() => setFormOpen(false)}>İptal</button>
+            <button type="button" className="btn btn-primary" onClick={handleSave} disabled={saving}>
               {saving ? 'Kaydediliyor...' : selectedInterview ? 'Güncelle' : 'Oluştur'}
             </button>
           </>
@@ -521,18 +573,20 @@ const InterviewsPage: React.FC = () => {
           {!selectedInterview && (
             <div className="form-group">
               <label className="form-label">Aday *</label>
-              <select
-                className="form-control"
+              <Select
                 value={formData.job_application_id}
-                onChange={(e) => setFormData({ ...formData, job_application_id: e.target.value })}
-              >
-                <option value="">Seçin...</option>
-                {applications.map((app) => (
-                  <option key={app.id} value={app.id}>
-                    {app.applicant_name} - {app.job_position?.title}
-                  </option>
-                ))}
-              </select>
+                onChange={(v) => setFormData({ ...formData, job_application_id: v })}
+                options={applications.map((app) => ({
+                  value: String(app.id),
+                  label: app.position_title
+                    ? `${app.applicant_name} - ${app.position_title}`
+                    : app.applicant_name,
+                }))}
+                allowEmpty
+                emptyLabel="Seçin..."
+                placeholder="Seçin..."
+                aria-label="Aday"
+              />
             </div>
           )}
 
@@ -549,15 +603,17 @@ const InterviewsPage: React.FC = () => {
             </div>
             <div className="form-group">
               <label className="form-label">Mülakat Tipi *</label>
-              <select
-                className="form-control"
+              <Select
                 value={formData.type}
-                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-              >
-                {Object.entries(interviewTypes).map(([key, label]) => (
-                  <option key={key} value={key}>{label}</option>
-                ))}
-              </select>
+                onChange={(v) => setFormData({ ...formData, type: v })}
+                options={typeOptions.map((opt) => ({
+                  value: opt.value,
+                  label: opt.label,
+                  color: opt.color,
+                }))}
+                placeholder="Seçiniz..."
+                aria-label="Mülakat tipi"
+              />
             </div>
           </div>
 
@@ -586,16 +642,18 @@ const InterviewsPage: React.FC = () => {
 
           <div className="form-group">
             <label className="form-label">Görüşmeci *</label>
-            <select
-              className="form-control"
+            <Select
               value={formData.interviewer_id}
-              onChange={(e) => setFormData({ ...formData, interviewer_id: e.target.value })}
-            >
-              <option value="">Seçin...</option>
-              {users.map((user) => (
-                <option key={user.id} value={user.id}>{user.name}</option>
-              ))}
-            </select>
+              onChange={(v) => setFormData({ ...formData, interviewer_id: v })}
+              options={users.map((user) => ({
+                value: String(user.id),
+                label: user.name,
+              }))}
+              allowEmpty
+              emptyLabel="Seçin..."
+              placeholder="Seçin..."
+              aria-label="Görüşmeci"
+            />
           </div>
 
           <div className="form-grid form-grid-2">
@@ -642,8 +700,8 @@ const InterviewsPage: React.FC = () => {
         size="md"
         footer={
           <>
-            <button className="btn btn-secondary" onClick={() => setCompleteOpen(false)}>İptal</button>
-            <button className="btn btn-success" onClick={handleComplete} disabled={saving}>
+            <button type="button" className="btn btn-secondary" onClick={() => setCompleteOpen(false)}>İptal</button>
+            <button type="button" className="btn btn-success" onClick={handleComplete} disabled={saving}>
               {saving ? 'Kaydediliyor...' : 'Tamamla'}
             </button>
           </>
@@ -674,15 +732,17 @@ const InterviewsPage: React.FC = () => {
 
           <div className="form-group">
             <label className="form-label">Öneri *</label>
-            <select
-              className="form-control"
+            <Select
               value={completeData.recommendation}
-              onChange={(e) => setCompleteData({ ...completeData, recommendation: e.target.value })}
-            >
-              {recommendationOptions.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
+              onChange={(v) => setCompleteData({ ...completeData, recommendation: v })}
+              options={recommendationOptions.map((opt) => ({
+                value: opt.value,
+                label: opt.label,
+                color: opt.color,
+              }))}
+              placeholder="Seçiniz..."
+              aria-label="Öneri"
+            />
           </div>
 
           <div className="form-group">
@@ -714,4 +774,3 @@ const InterviewsPage: React.FC = () => {
 };
 
 export default InterviewsPage;
-

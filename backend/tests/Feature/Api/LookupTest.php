@@ -349,4 +349,43 @@ class LookupTest extends TestCase
         $values = collect($this->getJson('/api/v1/lookups/leave_gender_restriction')->json('data'))->pluck('value');
         $this->assertEqualsCanonicalizing(['all', 'male', 'female'], $values->all());
     }
+
+    /** @test */
+    public function application_stage_hybrid_matches_job_application_status_enum(): void
+    {
+        Sanctum::actingAs($this->adminUser);
+
+        $values = collect($this->getJson('/api/v1/lookups/application_stage')->assertOk()->json('data'))
+            ->pluck('value')
+            ->all();
+
+        foreach ([
+            'new', 'reviewing', 'shortlisted', 'interview_scheduled', 'interviewed',
+            'offer_sent', 'hired', 'rejected', 'withdrawn',
+        ] as $code) {
+            $this->assertContains($code, $values);
+        }
+
+        $this->postJson('/api/v1/lookups-manage', [
+            'lookup_type' => 'application_stage',
+            'value' => 'screening',
+            'label' => 'Tarama',
+        ])->assertStatus(403);
+
+        $new = Lookup::whereNull('company_id')
+            ->where('lookup_type', 'application_stage')
+            ->where('value', 'new')
+            ->firstOrFail();
+
+        $this->putJson("/api/v1/lookups-manage/{$new->id}", [
+            'label' => 'Yeni Başvuru',
+            'color' => '#abcdef',
+        ])->assertOk();
+
+        $this->assertSame(
+            'Yeni Başvuru',
+            $this->getJson('/api/v1/lookups-resolve?lookup_type=application_stage&value=new')
+                ->json('data.label')
+        );
+    }
 }

@@ -6,12 +6,16 @@ use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\ActivityLog;
 use App\Models\Interview;
 use App\Models\JobApplication;
+use App\Services\LookupService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class InterviewController extends BaseController
 {
+    public function __construct(
+        protected LookupService $lookups,
+    ) {}
     /**
      * Mülakat listesi
      */
@@ -119,7 +123,7 @@ class InterviewController extends BaseController
         $validated = $request->validate([
             'job_application_id' => 'required|exists:job_applications,id',
             'title' => 'required|string|max:255',
-            'type' => 'required|in:phone,video,onsite,technical,hr,panel',
+            'type' => 'required|string|max:100',
             'scheduled_at' => 'required|date|after:now',
             'duration_minutes' => 'nullable|integer|min:15|max:480',
             'location' => 'nullable|string|max:255',
@@ -128,11 +132,19 @@ class InterviewController extends BaseController
             'interviewer_id' => 'required|exists:users,id',
         ]);
 
-        $application = JobApplication::where('company_id', $this->getCompanyId())
+        $companyId = $this->getCompanyId();
+        $this->lookups->assertValid(
+            LookupService::TYPE_INTERVIEW_TYPE,
+            $validated['type'],
+            $companyId,
+            'type'
+        );
+
+        $application = JobApplication::where('company_id', $companyId)
             ->findOrFail($validated['job_application_id']);
 
         $interview = Interview::create([
-            'company_id' => $this->getCompanyId(),
+            'company_id' => $companyId,
             'job_application_id' => $validated['job_application_id'],
             'job_position_id' => $application->job_position_id,
             'title' => $validated['title'],
@@ -167,7 +179,7 @@ class InterviewController extends BaseController
 
         $validated = $request->validate([
             'title' => 'sometimes|string|max:255',
-            'type' => 'sometimes|in:phone,video,onsite,technical,hr,panel',
+            'type' => 'sometimes|string|max:100',
             'scheduled_at' => 'sometimes|date',
             'duration_minutes' => 'sometimes|integer|min:15|max:480',
             'location' => 'nullable|string|max:255',
@@ -175,6 +187,15 @@ class InterviewController extends BaseController
             'notes' => 'nullable|string',
             'interviewer_id' => 'sometimes|exists:users,id',
         ]);
+
+        if (array_key_exists('type', $validated)) {
+            $this->lookups->assertValid(
+                LookupService::TYPE_INTERVIEW_TYPE,
+                $validated['type'] ?? null,
+                $this->getCompanyId(),
+                'type'
+            );
+        }
 
         $interview->update($validated);
 
@@ -193,13 +214,20 @@ class InterviewController extends BaseController
 
         $validated = $request->validate([
             'overall_rating' => 'required|integer|min:1|max:5',
-            'recommendation' => 'required|in:strong_hire,hire,no_decision,no_hire,strong_no_hire',
+            'recommendation' => 'required|string|max:100',
             'feedback' => 'nullable|string',
             'scorecards' => 'nullable|array',
             'scorecards.*.criteria_name' => 'required_with:scorecards|string',
             'scorecards.*.score' => 'required_with:scorecards|integer|min:1|max:5',
             'scorecards.*.notes' => 'nullable|string',
         ]);
+
+        $this->lookups->assertValid(
+            LookupService::TYPE_INTERVIEW_RECOMMENDATION,
+            $validated['recommendation'],
+            $this->getCompanyId(),
+            'recommendation'
+        );
 
         $interview->update([
             'status' => 'completed',

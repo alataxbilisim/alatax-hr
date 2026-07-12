@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\Employee;
 use App\Models\EmployeeDocument;
+use App\Models\Interview;
+use App\Models\JobApplication;
 use App\Models\JobPosition;
 use App\Models\LeaveRequest;
 use App\Models\Lookup;
@@ -37,6 +39,18 @@ class LookupService
 
     public const TYPE_HOLIDAY_TYPE = 'holiday_type';
 
+    public const TYPE_APPLICATION_STAGE = 'application_stage';
+
+    public const TYPE_EXPERIENCE_LEVEL = 'experience_level';
+
+    public const TYPE_JOB_POSITION_STATUS = 'job_position_status';
+
+    public const TYPE_INTERVIEW_TYPE = 'interview_type';
+
+    public const TYPE_INTERVIEW_STATUS = 'interview_status';
+
+    public const TYPE_INTERVIEW_RECOMMENDATION = 'interview_recommendation';
+
     public const TYPE_CURRENCY = 'currency';
 
     public const TYPE_CITY_TR = 'city_tr';
@@ -57,8 +71,9 @@ class LookupService
     /** @var list<string> */
     public const HYBRID_TYPES = [
         self::TYPE_LEAVE_REQUEST_STATUS,
-        // GenderRestriction enum + izin uygunluk kuralları — kod sabit
         self::TYPE_LEAVE_GENDER_RESTRICTION,
+        self::TYPE_APPLICATION_STAGE,
+        self::TYPE_INTERVIEW_STATUS,
     ];
 
     /** @var array<string, list<array{model: class-string, column: string}>> */
@@ -96,6 +111,24 @@ class LookupService
         ],
         self::TYPE_LEAVE_REQUEST_STATUS => [
             ['model' => LeaveRequest::class, 'column' => 'status'],
+        ],
+        self::TYPE_APPLICATION_STAGE => [
+            ['model' => JobApplication::class, 'column' => 'status'],
+        ],
+        self::TYPE_EXPERIENCE_LEVEL => [
+            ['model' => JobPosition::class, 'column' => 'experience_level'],
+        ],
+        self::TYPE_JOB_POSITION_STATUS => [
+            ['model' => JobPosition::class, 'column' => 'status'],
+        ],
+        self::TYPE_INTERVIEW_TYPE => [
+            ['model' => Interview::class, 'column' => 'type'],
+        ],
+        self::TYPE_INTERVIEW_STATUS => [
+            ['model' => Interview::class, 'column' => 'status'],
+        ],
+        self::TYPE_INTERVIEW_RECOMMENDATION => [
+            ['model' => Interview::class, 'column' => 'recommendation'],
         ],
     ];
 

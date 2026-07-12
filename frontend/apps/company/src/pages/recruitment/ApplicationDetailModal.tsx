@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { recruitmentApi } from '@shared/services/api';
+import { recruitmentApi, lookupsApi, type LookupItem } from '@shared/services/api';
+import { Select } from '@shared/components';
 import toast from 'react-hot-toast';
 import { Modal } from '../../components/ui';
 import {
@@ -42,22 +43,16 @@ interface ApplicationDetailModalProps {
   onUpdate: () => void;
 }
 
-const statusLabels: Record<string, { label: string; color: string }> = {
-  new: { label: 'Yeni', color: '#94a3b8' },
-  reviewing: { label: 'İnceleniyor', color: '#f59e0b' },
-  shortlisted: { label: 'Ön Seçim', color: '#8b5cf6' },
-  interview_scheduled: { label: 'Mülakat Planlandı', color: '#3b82f6' },
-  interviewed: { label: 'Mülakat Yapıldı', color: '#0ea5e9' },
-  offer_sent: { label: 'Teklif Gönderildi', color: '#6366f1' },
-  hired: { label: 'İşe Alındı', color: '#10b981' },
-  rejected: { label: 'Reddedildi', color: '#ef4444' },
-  withdrawn: { label: 'Çekildi', color: '#6b7280' },
-};
-
-const statusOptions = Object.entries(statusLabels).map(([key, { label }]) => ({
-  value: key,
-  label,
-}));
+function resolveStageMeta(
+  stages: LookupItem[],
+  status: string
+): { label: string; color: string } {
+  const found = stages.find((s) => s.value === status);
+  return {
+    label: found?.label || status,
+    color: found?.color || '#94a3b8',
+  };
+}
 
 const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
   isOpen,
@@ -67,6 +62,7 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
 }) => {
   const [loading, setLoading] = useState(true);
   const [application, setApplication] = useState<ApplicationDetail | null>(null);
+  const [stageOptions, setStageOptions] = useState<LookupItem[]>([]);
   const [activeTab, setActiveTab] = useState<'info' | 'notes' | 'history'>('info');
   const [notes, setNotes] = useState('');
   const [savingNotes, setSavingNotes] = useState(false);
@@ -75,6 +71,15 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
   const [changingStatus, setChangingStatus] = useState(false);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
+
+  const loadStageLookups = useCallback(async () => {
+    try {
+      const response = await lookupsApi.forType('application_stage');
+      setStageOptions(response.data.data ?? []);
+    } catch {
+      toast.error('Başvuru aşamaları yüklenemedi');
+    }
+  }, []);
 
   const loadApplication = useCallback(async () => {
     if (!applicationId) return;
@@ -96,11 +101,10 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
 
   useEffect(() => {
     if (isOpen && applicationId) {
-      loadApplication();
+      void loadStageLookups();
+      void loadApplication();
     }
-  }, [isOpen, applicationId, loadApplication]);
-
-  
+  }, [isOpen, applicationId, loadApplication, loadStageLookups]);
 
   const handleSaveNotes = async () => {
     if (!applicationId) return;
@@ -128,7 +132,7 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
       });
       toast.success('Durum güncellendi');
       setStatusNote('');
-      loadApplication();
+      void loadApplication();
       onUpdate();
     } catch {
       toast.error('Durum güncellenemedi');
@@ -143,7 +147,7 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
     try {
       await recruitmentApi.applications.rate(applicationId, rating);
       toast.success('Puan kaydedildi');
-      loadApplication();
+      void loadApplication();
       onUpdate();
     } catch {
       toast.error('Puanlama başarısız');
@@ -151,6 +155,10 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
   };
 
   if (!isOpen) return null;
+
+  const currentMeta = application
+    ? resolveStageMeta(stageOptions, application.status)
+    : { label: '', color: '#94a3b8' };
 
   return (
     <Modal
@@ -166,10 +174,10 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
       ) : application ? (
         <div>
           {/* Header */}
-          <div style={{ 
-            display: 'flex', 
+          <div style={{
+            display: 'flex',
             flexDirection: 'column',
-            gap: '1rem', 
+            gap: '1rem',
             marginBottom: '1.5rem',
             padding: '1rem',
             background: 'var(--surface-secondary)',
@@ -197,15 +205,15 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
                   {application.position?.title || 'Pozisyon belirtilmemiş'}
                 </div>
               </div>
-              <div 
-                className="badge" 
-                style={{ 
-                  background: statusLabels[application.status]?.color || '#94a3b8',
+              <div
+                className="badge"
+                style={{
+                  background: currentMeta.color,
                   color: 'white',
                   flexShrink: 0,
                 }}
               >
-                {statusLabels[application.status]?.label || application.status}
+                {currentMeta.label}
               </div>
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', fontSize: '0.8125rem', color: 'var(--text-tertiary)' }}>
@@ -240,6 +248,7 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
                   key={star}
+                  type="button"
                   onClick={() => handleRate(star)}
                   style={{
                     background: 'none',
@@ -261,18 +270,21 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
           {/* Tabs */}
           <div className="tabs" style={{ marginBottom: '1rem' }}>
             <button
+              type="button"
               className={`tab ${activeTab === 'info' ? 'active' : ''}`}
               onClick={() => setActiveTab('info')}
             >
               <BsPerson /> Bilgiler
             </button>
             <button
+              type="button"
               className={`tab ${activeTab === 'notes' ? 'active' : ''}`}
               onClick={() => setActiveTab('notes')}
             >
               <BsChatDots /> Notlar
             </button>
             <button
+              type="button"
               className={`tab ${activeTab === 'history' ? 'active' : ''}`}
               onClick={() => setActiveTab('history')}
             >
@@ -290,17 +302,21 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
                     Durum Değiştir
                   </label>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                    <select
-                      className="form-control"
-                      value={newStatus}
-                      onChange={(e) => setNewStatus(e.target.value)}
-                      style={{ flex: '1 1 200px', minWidth: 0 }}
-                    >
-                      {statusOptions.map((opt) => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                      ))}
-                    </select>
+                    <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+                      <Select
+                        value={newStatus}
+                        onChange={setNewStatus}
+                        options={stageOptions.map((opt) => ({
+                          value: opt.value,
+                          label: opt.label,
+                          color: opt.color,
+                        }))}
+                        placeholder="Durum seçin..."
+                        aria-label="Başvuru durumu"
+                      />
+                    </div>
                     <button
+                      type="button"
                       className="btn btn-primary"
                       onClick={handleStatusChange}
                       disabled={changingStatus || newStatus === application.status}
@@ -326,13 +342,13 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
                     </h4>
                     <div style={{ display: 'grid', gap: '0.5rem' }}>
                       {Object.entries(application.form_data).map(([key, value]) => (
-                        <div key={key} style={{ 
-                          display: 'flex', 
+                        <div key={key} style={{
+                          display: 'flex',
                           padding: '0.5rem 0',
                           borderBottom: '1px solid var(--border-primary)',
                         }}>
                           <span style={{ width: '40%', fontWeight: 500, color: 'var(--text-secondary)' }}>
-                            {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                            {key.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
                           </span>
                           <span style={{ color: 'var(--text-primary)' }}>
                             {typeof value === 'object' ? JSON.stringify(value) : String(value)}
@@ -365,6 +381,7 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
                   />
                 </div>
                 <button
+                  type="button"
                   className="btn btn-primary"
                   onClick={handleSaveNotes}
                   disabled={savingNotes}
@@ -378,43 +395,46 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
               <div>
                 {application.status_logs && application.status_logs.length > 0 ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    {application.status_logs.map((log) => (
-                      <div 
-                        key={log.id} 
-                        style={{ 
-                          padding: '0.75rem 1rem',
-                          background: 'var(--surface-secondary)',
-                          borderRadius: 'var(--radius-md)',
-                          borderLeft: `3px solid ${statusLabels[log.status]?.color || '#94a3b8'}`,
-                        }}
-                      >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
-                          <span 
-                            className="badge" 
-                            style={{ 
-                              background: statusLabels[log.status]?.color || '#94a3b8',
-                              color: 'white',
-                              fontSize: '0.6875rem',
-                            }}
-                          >
-                            {statusLabels[log.status]?.label || log.status}
-                          </span>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
-                            {new Date(log.created_at).toLocaleString('tr-TR')}
-                          </span>
+                    {application.status_logs.map((log) => {
+                      const logMeta = resolveStageMeta(stageOptions, log.status);
+                      return (
+                        <div
+                          key={log.id}
+                          style={{
+                            padding: '0.75rem 1rem',
+                            background: 'var(--surface-secondary)',
+                            borderRadius: 'var(--radius-md)',
+                            borderLeft: `3px solid ${logMeta.color}`,
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
+                            <span
+                              className="badge"
+                              style={{
+                                background: logMeta.color,
+                                color: 'white',
+                                fontSize: '0.6875rem',
+                              }}
+                            >
+                              {logMeta.label}
+                            </span>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+                              {new Date(log.created_at).toLocaleString('tr-TR')}
+                            </span>
+                          </div>
+                          {log.notes && (
+                            <p style={{ margin: '0.5rem 0 0', fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
+                              {log.notes}
+                            </p>
+                          )}
+                          {log.user && (
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                              {log.user}
+                            </span>
+                          )}
                         </div>
-                        {log.notes && (
-                          <p style={{ margin: '0.5rem 0 0', fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
-                            {log.notes}
-                          </p>
-                        )}
-                        {log.user && (
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                            {log.user}
-                          </span>
-                        )}
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-tertiary)' }}>
@@ -435,4 +455,3 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
 };
 
 export default ApplicationDetailModal;
-
