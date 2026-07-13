@@ -1070,8 +1070,15 @@ export const employeesApi = {
     api.post('/employees/bulk-update', { ids, data }),
   bulkDelete: (ids: number[]) => 
     api.post('/employees/bulk-delete', { ids }),
-  createPortalAccess: (id: number, data: { email: string; name: string }) => 
-    api.post(`/employees/${id}/portal-access`, data),
+  createPortalAccess: (
+    id: number,
+    data: {
+      email: string;
+      name: string;
+      access_mode?: 'invite' | 'set_password';
+      password?: string;
+    }
+  ) => api.post(`/employees/${id}/portal-access`, data),
   revokePortalAccess: (id: number) => 
     api.delete(`/employees/${id}/portal-access`),
   getCustomFields: () => api.get('/employees/custom-fields'),

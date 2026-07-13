@@ -211,7 +211,12 @@ const EmployeeDetailPage: React.FC = () => {
 
     try {
       setPortalLoading(true);
-      const payload: Record<string, unknown> = {
+      const payload: {
+        email: string;
+        name: string;
+        access_mode: 'invite' | 'set_password';
+        password?: string;
+      } = {
         email: portalForm.email,
         name: portalForm.name,
         access_mode: portalForm.access_mode,
