@@ -52,7 +52,8 @@ api.interceptors.response.use(
             const isPublicAuth =
               path.includes('/login') ||
               path.includes('/forgot-password') ||
-              path.includes('/reset-password');
+              path.includes('/reset-password') ||
+              path.includes('/invite');
             if (!isPublicAuth) {
               window.location.href = '/login';
               toast.error('Oturumunuz sona erdi. Lütfen tekrar giriş yapın.');
@@ -83,7 +84,8 @@ api.interceptors.response.use(
           const isPublicAuth =
             path.includes('/login') ||
             path.includes('/forgot-password') ||
-            path.includes('/reset-password');
+            path.includes('/reset-password') ||
+            path.includes('/invite');
           if (!isPublicAuth) {
             toast.error(response.data?.message || 'Çok fazla istek. Lütfen daha sonra tekrar deneyin.');
           }
@@ -131,8 +133,16 @@ export const authApi = {
     api.put('/auth/password', data),
   forgotPassword: (data: { email: string }) => 
     api.post('/auth/forgot-password', data),
-  resetPassword: (data: { token: string; email: string; password: string; password_confirmation: string }) => 
+  resetPassword: (data: { token: string; email: string; password: string; password_confirmation: string }) =>
     api.post('/auth/reset-password', data),
+  showInvitation: (token: string) =>
+    api.get(`/auth/invitation/${encodeURIComponent(token)}`),
+  acceptInvitation: (data: {
+    token: string;
+    email: string;
+    password: string;
+    password_confirmation: string;
+  }) => api.post('/auth/accept-invitation', data),
   /** Self-service 2FA (management.users.edit gerekmez) */
   getSelf2FAStatus: () =>
     api.get<ApiResponse<{ two_factor_enabled: boolean; has_secret: boolean }>>('/auth/2fa/status'),

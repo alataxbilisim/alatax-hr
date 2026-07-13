@@ -45,6 +45,7 @@ class User extends Authenticatable
         'two_factor_secret',
         'two_factor_recovery_codes',
         'is_active',
+        'must_change_password',
         'last_login_at',
         'last_login_ip',
         'preferences',
@@ -69,7 +70,10 @@ class User extends Authenticatable
             'password' => 'hashed',
             'two_factor_enabled' => 'boolean',
             'is_active' => 'boolean',
+            'must_change_password' => 'boolean',
             'last_login_at' => 'datetime',
+            'invited_at' => 'datetime',
+            'invitation_accepted_at' => 'datetime',
             'preferences' => 'array',
             'type' => UserType::class,
         ];

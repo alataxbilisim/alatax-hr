@@ -85,6 +85,7 @@ const withPermission = (
 import LoginPage from './pages/auth/LoginPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
+import { InviteAcceptPage } from '@shared/components';
 
 // Dashboard
 import DashboardPage from './pages/DashboardPage';
@@ -212,6 +213,7 @@ const App: React.FC = () => {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/invite/:token" element={<InviteAcceptPage panelLabelKey="companyPanel" />} />
         </Route>
 
         {/* Protected Routes */}

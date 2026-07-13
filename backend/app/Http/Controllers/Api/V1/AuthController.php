@@ -5,17 +5,20 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Resources\EmployeeResource;
 use App\Models\ActivityLog;
 use App\Models\User;
+use App\Services\InvitationService;
 use App\Services\TwoFactorService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\Rules\Password as PasswordRule;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends BaseController
 {
     public function __construct(
         protected TwoFactorService $twoFactor,
+        protected InvitationService $invitations,
     ) {}
 
     /**
@@ -326,6 +329,7 @@ class AuthController extends BaseController
 
         User::withoutAuditing(fn () => $user->update([
             'password' => Hash::make($request->password),
+            'must_change_password' => false,
         ]));
 
         // Diğer cihazlardaki token'ları sil
@@ -333,7 +337,9 @@ class AuthController extends BaseController
 
         ActivityLog::log('password_change', $user, 'Şifre değiştirildi');
 
-        return $this->success(null, 'Şifreniz başarıyla güncellendi');
+        return $this->success([
+            'must_change_password' => false,
+        ], 'Şifreniz başarıyla güncellendi');
     }
 
     /**
@@ -594,6 +600,66 @@ class AuthController extends BaseController
     }
 
     /**
+     * Davet önizleme (public) — e-posta maskelenmeden SPA formu doldurur.
+     * public: davet token'ı secret; süresi dolmuş/geçersiz → 422
+     */
+    public function showInvitation(string $token): JsonResponse
+    {
+        try {
+            $preview = $this->invitations->preview($token);
+        } catch (ValidationException $e) {
+            return $this->error(
+                collect($e->errors())->flatten()->first() ?? 'Davet geçersiz',
+                422,
+                $e->errors()
+            );
+        }
+
+        return $this->success($preview, 'Davet geçerli');
+    }
+
+    /**
+     * Davet kabul — şifre belirle, hesabı aktifleştir (public).
+     * public: forgot-password ile aynı throttle grubu
+     */
+    public function acceptInvitation(Request $request): JsonResponse
+    {
+        $request->validate([
+            'token' => 'required|string',
+            'email' => 'required|email',
+            'password' => [
+                'required',
+                'confirmed',
+                PasswordRule::min(8)
+                    ->mixedCase()
+                    ->numbers()
+                    ->symbols(),
+            ],
+        ]);
+
+        try {
+            $user = $this->invitations->accept(
+                $request->string('token')->toString(),
+                $request->string('email')->toString(),
+                $request->string('password')->toString()
+            );
+        } catch (ValidationException $e) {
+            return $this->error(
+                collect($e->errors())->flatten()->first() ?? 'Davet kabul edilemedi',
+                422,
+                $e->errors()
+            );
+        }
+
+        ActivityLog::log('invitation_accepted', $user, 'Davet kabul edildi: '.$user->email);
+
+        return $this->success([
+            'email' => $user->email,
+            'name' => $user->name,
+        ], 'Hesabınız aktifleştirildi. Giriş yapabilirsiniz.');
+    }
+
+    /**
      * Yeni firma kaydı
      */
     public function register(Request $request): JsonResponse
@@ -691,6 +757,7 @@ class AuthController extends BaseController
             'department' => $user->department,
             'type' => $user->type,
             'is_active' => $user->is_active,
+            'must_change_password' => (bool) $user->must_change_password,
             'two_factor_enabled' => (bool) $user->two_factor_enabled,
             'preferences' => $user->preferences ?? ['theme' => 'dark', 'locale' => 'tr'],
             'permissions' => $light ? [] : $user->getAllPermissions()->pluck('name'),

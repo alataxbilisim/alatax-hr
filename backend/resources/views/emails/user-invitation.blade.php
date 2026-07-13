@@ -1,6 +1,12 @@
 <x-mail::message>
 # {{ __('messages.mail.invitation_heading') }}
 
+@if(!empty($companyLogoUrl))
+<div style="text-align:center;margin-bottom:16px;">
+<img src="{{ $companyLogoUrl }}" alt="{{ $company->name }}" style="max-height:48px;max-width:180px;">
+</div>
+@endif
+
 {{ __('messages.mail.hello') }},
 
 {!! __('messages.mail.invitation_intro', ['company' => $company->name, 'app' => config('app.name')]) !!}

@@ -40,6 +40,9 @@ class UserInvitation extends Mailable implements ShouldQueue
                 'email' => $this->email,
                 'invitationUrl' => $invitationUrl,
                 'role' => $this->role,
+                'companyLogoUrl' => $this->company->logo
+                    ? asset('storage/'.$this->company->logo)
+                    : null,
             ],
         );
     }

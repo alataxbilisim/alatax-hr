@@ -8,6 +8,7 @@ use App\Mail\PasswordResetByAdmin;
 use App\Mail\UserInvitation;
 use App\Models\ActivityLog;
 use App\Models\User;
+use App\Services\InvitationService;
 use App\Services\TwoFactorService;
 use App\Support\PanelAccess;
 use Illuminate\Http\JsonResponse;
@@ -24,6 +25,7 @@ class UserController extends BaseController
 {
     public function __construct(
         protected TwoFactorService $twoFactor,
+        protected InvitationService $invitations,
     ) {}
 
     /**
@@ -511,19 +513,21 @@ class UserController extends BaseController
         ]);
 
         // Davet token oluştur
-        $token = Str::random(64);
+        $issue = $this->invitations->issue();
+        $token = $issue['plain'];
 
         // Kullanıcı oluştur (henüz aktif değil, şifre yok) — invite özel log; CRUD observer kapalı
-        $user = User::withoutAuditing(function () use ($company, $validated, $token) {
+        $user = User::withoutAuditing(function () use ($company, $validated, $issue) {
             return User::create([
                 'company_id' => $company->id,
                 'name' => $validated['name'],
                 'email' => $validated['email'],
-                'password' => Hash::make(Str::random(32)), // Geçici şifre
+                'password' => Hash::make(Str::random(32)), // Geçici şifre (giriş kapalı)
                 'type' => 'user',
                 'is_active' => false, // Davet kabul edilene kadar pasif
-                'invitation_token' => Hash::make($token),
-                'invited_at' => now(),
+                'must_change_password' => false,
+                'invitation_token' => $issue['hash'],
+                'invited_at' => $issue['invited_at'],
                 'created_by' => auth()->id(),
             ]);
         });

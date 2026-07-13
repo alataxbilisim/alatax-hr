@@ -14,6 +14,7 @@ import PortalLayout from './layouts/PortalLayout';
 import LoginPage from './pages/LoginPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import { InviteAcceptPage } from '@shared/components';
 import DashboardPage from './pages/DashboardPage';
 import ProfilePage from './pages/ProfilePage';
 import LeavesPage from './pages/LeavesPage';
@@ -108,6 +109,7 @@ const AppRoutes: React.FC = () => {
             </PublicRoute>
           }
         />
+        <Route path="/invite/:token" element={<InviteAcceptPage panelLabelKey="portalPanel" />} />
       </Route>
 
       {/* Protected Routes */}

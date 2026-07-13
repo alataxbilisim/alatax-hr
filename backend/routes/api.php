@@ -22,6 +22,9 @@ Route::prefix('v1')->group(function () {
         Route::post('/register', [\App\Http\Controllers\Api\V1\AuthController::class, 'register']);
         Route::post('/forgot-password', [\App\Http\Controllers\Api\V1\AuthController::class, 'forgotPassword']);
         Route::post('/reset-password', [\App\Http\Controllers\Api\V1\AuthController::class, 'resetPassword']);
+        // public: davet token secret; şifre belirleme (forgot-password deseni)
+        Route::get('/invitation/{token}', [\App\Http\Controllers\Api\V1\AuthController::class, 'showInvitation']);
+        Route::post('/accept-invitation', [\App\Http\Controllers\Api\V1\AuthController::class, 'acceptInvitation']);
     });
 
     // 2FA challenge tamamla — yalnızca 2fa-challenge ability; normal API yok
