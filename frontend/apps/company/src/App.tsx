@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from './store';
 import { checkAuth, logout } from '@shared/store/slices/authSlice';
@@ -27,6 +27,7 @@ const PORTAL_LOGIN_URL =
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, user, isLoading } = useSelector((state: RootState) => state.auth);
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch<AppDispatch>();
   const { t } = useTranslation('auth');
 
@@ -42,7 +43,15 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
       void dispatch(logout());
       window.location.href = `${PORTAL_LOGIN_URL}/login`;
     }
-  }, [isAuthenticated, user, isLoading, navigate, dispatch, t]);
+    if (
+      !isLoading &&
+      isAuthenticated &&
+      user?.must_change_password &&
+      location.pathname !== '/force-password-change'
+    ) {
+      navigate('/force-password-change', { replace: true });
+    }
+  }, [isAuthenticated, user, isLoading, navigate, dispatch, t, location.pathname]);
 
   if (isLoading && !isAuthenticated) {
     return (
@@ -65,6 +74,10 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     return null;
   }
 
+  if (user?.must_change_password && location.pathname !== '/force-password-change') {
+    return <Navigate to="/force-password-change" replace />;
+  }
+
   return <>{children}</>;
 };
 
@@ -85,7 +98,7 @@ const withPermission = (
 import LoginPage from './pages/auth/LoginPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
-import { InviteAcceptPage } from '@shared/components';
+import { InviteAcceptPage, ForcedPasswordChangePage } from '@shared/components';
 
 // Dashboard
 import DashboardPage from './pages/DashboardPage';
@@ -214,6 +227,14 @@ const App: React.FC = () => {
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/invite/:token" element={<InviteAcceptPage panelLabelKey="companyPanel" />} />
+          <Route
+            path="/force-password-change"
+            element={
+              <ProtectedRoute>
+                <ForcedPasswordChangePage panelLabelKey="companyPanel" />
+              </ProtectedRoute>
+            }
+          />
         </Route>
 
         {/* Protected Routes */}

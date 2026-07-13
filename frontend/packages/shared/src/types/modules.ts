@@ -32,6 +32,7 @@ export interface User extends BaseEntity {
   department?: string | null;
   type: 'super_admin' | 'company_admin' | 'user';
   is_active: boolean;
+  must_change_password?: boolean;
   two_factor_enabled?: boolean;
   last_login_at?: string | null;
   preferences?: {

@@ -302,6 +302,7 @@ class UserController extends BaseController
             'department' => $validated['department'] ?? null,
             'type' => $validated['type'] ?? 'user',
             'is_active' => $validated['is_active'] ?? true,
+            'must_change_password' => true,
             'created_by' => auth()->id(),
             'preferences' => ['theme' => 'dark', 'locale' => 'tr'],
         ]);
@@ -581,6 +582,7 @@ class UserController extends BaseController
 
         User::withoutAuditing(fn () => $user->update([
             'password' => Hash::make($validated['password']),
+            'must_change_password' => true,
         ]));
 
         // Kullanıcının tüm token'larını iptal et (güvenlik için)

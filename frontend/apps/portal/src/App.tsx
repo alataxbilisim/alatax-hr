@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
@@ -14,7 +14,7 @@ import PortalLayout from './layouts/PortalLayout';
 import LoginPage from './pages/LoginPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
-import { InviteAcceptPage } from '@shared/components';
+import { InviteAcceptPage, ForcedPasswordChangePage } from '@shared/components';
 import DashboardPage from './pages/DashboardPage';
 import ProfilePage from './pages/ProfilePage';
 import LeavesPage from './pages/LeavesPage';
@@ -44,7 +44,8 @@ const queryClient = new QueryClient({
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, isLoading } = useSelector((state: RootState) => state.auth);
+  const { isAuthenticated, isLoading, user } = useSelector((state: RootState) => state.auth);
+  const location = useLocation();
 
   if (isLoading && !isAuthenticated) {
     return (
@@ -56,6 +57,10 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (user?.must_change_password && location.pathname !== '/force-password-change') {
+    return <Navigate to="/force-password-change" replace />;
   }
 
   return <>{children}</>;
@@ -110,6 +115,14 @@ const AppRoutes: React.FC = () => {
           }
         />
         <Route path="/invite/:token" element={<InviteAcceptPage panelLabelKey="portalPanel" />} />
+        <Route
+          path="/force-password-change"
+          element={
+            <ProtectedRoute>
+              <ForcedPasswordChangePage panelLabelKey="portalPanel" />
+            </ProtectedRoute>
+          }
+        />
       </Route>
 
       {/* Protected Routes */}
