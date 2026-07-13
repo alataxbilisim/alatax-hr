@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { employeesApi, customFieldsApi, lookupsApi, type LookupItem } from '@shared/services/api';
+import { employeesApi, customFieldsApi, lookupsApi, branchesApi, positionsApi, type LookupItem, type PositionCatalogItem } from '@shared/services/api';
 import { getErrorMessage } from '@shared/services/apiHelpers';
 import { CustomFieldRenderer, CustomFieldDefinition, Select } from '@shared/components';
 import type { CustomFieldValue } from '@shared/types/modules';
+import { useTranslation } from '@shared/i18n';
 import toast from 'react-hot-toast';
 import { BsSave, BsX, BsPersonBadge, BsBuilding, BsBriefcase, BsCurrencyDollar, BsShieldCheck, BsGear } from 'react-icons/bs';
 
@@ -11,6 +12,12 @@ interface Department {
   id: number;
   name: string;
   parent_id?: number;
+}
+
+interface BranchOption {
+  id: number;
+  name: string;
+  code?: string | null;
 }
 
 interface Manager {
@@ -28,6 +35,7 @@ interface EmployeeFormData {
   employee_code: string;
   name: string;
   department_id?: number;
+  branch_id?: number;
   title?: string;
   position?: string;
   manager_id?: number;
@@ -68,6 +76,7 @@ interface EmployeeFormData {
 }
 
 const EmployeeForm: React.FC = () => {
+  const { t } = useTranslation('common');
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const isEdit = !!id;
@@ -76,7 +85,9 @@ const EmployeeForm: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [customFields, setCustomFields] = useState<CustomFieldDefinition[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [branches, setBranches] = useState<BranchOption[]>([]);
   const [managers, setManagers] = useState<Manager[]>([]);
+  const [positions, setPositions] = useState<PositionCatalogItem[]>([]);
   const [statusOptions, setStatusOptions] = useState<LookupItem[]>([]);
   const [workTypeOptions, setWorkTypeOptions] = useState<LookupItem[]>([]);
   const [genderOptions, setGenderOptions] = useState<LookupItem[]>([]);
@@ -106,12 +117,38 @@ const EmployeeForm: React.FC = () => {
     }
   }, []);
 
+  const loadBranches = useCallback(async () => {
+    try {
+      const response = await branchesApi.list({ per_page: 100, is_active: true });
+      const raw = response.data.data;
+      const list = Array.isArray(raw) ? raw : raw?.data ?? [];
+      setBranches(
+        (list as BranchOption[]).map((b) => ({
+          id: b.id,
+          name: b.name,
+          code: b.code,
+        }))
+      );
+    } catch (error) {
+      console.error('Şubeler yüklenemedi:', error);
+    }
+  }, []);
+
   const loadManagers = useCallback(async () => {
     try {
       const response = await employeesApi.getManagers();
       setManagers(response.data.data);
     } catch (error) {
       console.error('Yöneticiler yüklenemedi:', error);
+    }
+  }, []);
+
+  const loadPositions = useCallback(async () => {
+    try {
+      const response = await positionsApi.getAll({ active_only: true, per_page: 100 });
+      setPositions(response.data.data || []);
+    } catch (error) {
+      console.error('Pozisyonlar yüklenemedi:', error);
     }
   }, []);
 
@@ -176,13 +213,15 @@ const EmployeeForm: React.FC = () => {
 
   useEffect(() => {
     loadDepartments();
+    loadBranches();
     loadManagers();
+    loadPositions();
     loadCustomFields();
     loadLookups();
     if (id) {
       loadEmployee();
     }
-  }, [id, loadDepartments, loadManagers, loadCustomFields, loadLookups, loadEmployee]);
+  }, [id, loadDepartments, loadBranches, loadManagers, loadPositions, loadCustomFields, loadLookups, loadEmployee]);
 
   
 
@@ -305,6 +344,21 @@ const EmployeeForm: React.FC = () => {
                 </div>
 
                 <div className="form-group">
+                  <label className="form-label">{t('form.branch')}</label>
+                  <Select
+                    value={formData.branch_id ? String(formData.branch_id) : ''}
+                    onChange={(v) => handleChange('branch_id', v ? Number(v) : undefined)}
+                    options={branches.map((b) => ({
+                      value: String(b.id),
+                      label: b.code ? `${b.name} (${b.code})` : b.name,
+                    }))}
+                    allowEmpty
+                    placeholder={t('form.selectPlaceholder')}
+                    aria-label={t('form.branch')}
+                  />
+                </div>
+
+                <div className="form-group">
                   <label className="form-label">Departman</label>
                   <Select
                     value={formData.department_id ? String(formData.department_id) : ''}
@@ -337,13 +391,29 @@ const EmployeeForm: React.FC = () => {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Pozisyon</label>
-                  <input
-                    type="text"
-                    className="form-control"
+                  <label className="form-label">{t('positions.formLabel')}</label>
+                  <Select
                     value={formData.position || ''}
-                    onChange={(e) => handleChange('position', e.target.value)}
-                    placeholder="Yazılım Geliştirici"
+                    onChange={(v) => handleChange('position', v || undefined)}
+                    options={(() => {
+                      const catalog = positions.map((p) => ({
+                        value: p.name,
+                        label: p.sgk_occupation_code
+                          ? `${p.code} — ${p.name} (${p.sgk_occupation_code})`
+                          : `${p.code} — ${p.name}`,
+                      }));
+                      const current = formData.position?.trim();
+                      if (current && !catalog.some((o) => o.value === current)) {
+                        catalog.unshift({
+                          value: current,
+                          label: t('positions.formLegacyOption', { name: current }),
+                        });
+                      }
+                      return catalog;
+                    })()}
+                    allowEmpty
+                    placeholder={t('positions.formPlaceholder')}
+                    aria-label={t('positions.formLabel')}
                   />
                 </div>
 

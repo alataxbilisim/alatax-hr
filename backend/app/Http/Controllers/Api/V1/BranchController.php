@@ -298,19 +298,19 @@ class BranchController extends BaseController
             return $this->notFound('Şube bulunamadı');
         }
 
-        // Employee modelinde branch_id yoksa, User modelinden branch_id ile filtrele
-        $query = \App\Models\Employee::where('company_id', $this->getCompanyId())
-            ->whereHas('user', function ($q) use ($id) {
-                $q->where('branch_id', $id);
-            })
-            ->with(['user:id,name,email,branch_id', 'department:id,name']);
+        $query = Employee::where('company_id', $this->getCompanyId())
+            ->where('branch_id', $id)
+            ->with(['user:id,name,email', 'department:id,name', 'branch:id,name,code']);
 
         // Arama
         if ($request->has('search')) {
             $search = $request->search;
-            $query->whereHas('user', function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
+            $query->where(function ($q) use ($search) {
+                $q->where('employee_code', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($uq) use ($search) {
+                        $uq->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
             });
         }
 

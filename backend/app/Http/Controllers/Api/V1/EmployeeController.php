@@ -21,6 +21,7 @@ use App\Services\EmployeeImportService;
 use App\Services\EmployeeSensitiveFieldService;
 use App\Services\InvitationService;
 use App\Services\LookupService;
+use App\Services\OrganizationChartService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -38,6 +39,7 @@ class EmployeeController extends BaseController
         protected LookupService $lookups,
         protected CustomFieldValidationService $customFieldValidation,
         protected InvitationService $invitations,
+        protected OrganizationChartService $organizationChart,
     ) {}
 
     /**
@@ -47,7 +49,7 @@ class EmployeeController extends BaseController
     {
         $this->authorize('viewAny', Employee::class);
 
-        $query = Employee::with(['user', 'department', 'manager.user'])
+        $query = Employee::with(['user', 'department', 'branch', 'manager.user'])
             ->where('company_id', $this->getCompanyId());
 
         $this->dataScope->scopeForEmployee($query, $request->user());
@@ -69,6 +71,10 @@ class EmployeeController extends BaseController
         // Filtreleme
         if ($request->filled('department_id')) {
             $query->where('department_id', $request->department_id);
+        }
+
+        if ($request->filled('branch_id')) {
+            $query->where('branch_id', $request->branch_id);
         }
 
         if ($request->filled('status')) {
@@ -242,6 +248,7 @@ class EmployeeController extends BaseController
             ],
             'name' => 'required|string|max:255',
             'department_id' => 'nullable|exists:departments,id',
+            'branch_id' => 'nullable|exists:branches,id',
             'title' => 'nullable|string|max:100',
             'position' => 'nullable|string|max:100',
             'manager_id' => 'nullable|exists:employees,id',
@@ -333,6 +340,7 @@ class EmployeeController extends BaseController
                 'company_id' => $this->getCompanyId(),
                 'employee_code' => $validated['employee_code'],
                 'department_id' => $validated['department_id'] ?? null,
+                'branch_id' => $validated['branch_id'] ?? null,
                 'title' => $validated['title'] ?? null,
                 'position' => $validated['position'] ?? null,
                 'manager_id' => $validated['manager_id'] ?? null,
@@ -387,7 +395,7 @@ class EmployeeController extends BaseController
             DB::commit();
 
             return $this->created(
-                new EmployeeResource($employee->load('user', 'department', 'manager')),
+                new EmployeeResource($employee->load('user', 'department', 'branch', 'manager')),
                 'Personel başarıyla oluşturuldu'
             );
         } catch (\Exception $e) {
@@ -416,6 +424,7 @@ class EmployeeController extends BaseController
                 })->ignore($employee->id),
             ],
             'department_id' => 'nullable|exists:departments,id',
+            'branch_id' => 'nullable|exists:branches,id',
             'title' => 'nullable|string|max:100',
             'position' => 'nullable|string|max:100',
             'manager_id' => 'nullable|exists:employees,id',
@@ -487,7 +496,7 @@ class EmployeeController extends BaseController
         // Observer Auditable update log yazar — manuel CRUD log yok
 
         return $this->success(
-            new EmployeeResource($employee->load('user', 'department', 'manager')),
+            new EmployeeResource($employee->load('user', 'department', 'branch', 'manager')),
             'Personel başarıyla güncellendi'
         );
     }
@@ -1022,52 +1031,23 @@ class EmployeeController extends BaseController
     }
 
     /**
-     * Organizasyon şeması için hiyerarşik veri
+     * Organizasyon şeması — mode: people | department | hybrid
      */
-    public function getOrganizationChart(): JsonResponse
+    public function getOrganizationChart(Request $request): JsonResponse
     {
+        $validated = $request->validate([
+            'mode' => ['sometimes', 'string', Rule::in(OrganizationChartService::MODES)],
+        ]);
+
+        $mode = $validated['mode'] ?? OrganizationChartService::MODE_PEOPLE;
         $companyId = $this->getCompanyId();
 
-        // Üst yöneticisi olmayan (root) personelleri bul
-        $rootEmployees = Employee::where('company_id', $companyId)
-            ->where('status', 'active')
-            ->whereNull('manager_id')
-            ->with(['user:id,name,email', 'department:id,name'])
-            ->get();
+        $tree = $this->organizationChart->build((int) $companyId, $mode);
 
-        // Recursive olarak alt çalışanları getir
-        $buildTree = function ($employee) use (&$buildTree, $companyId) {
-            $subordinates = Employee::where('company_id', $companyId)
-                ->where('status', 'active')
-                ->where('manager_id', $employee->id)
-                ->with(['user:id,name,email', 'department:id,name'])
-                ->get();
-
-            $children = [];
-            foreach ($subordinates as $sub) {
-                $children[] = $buildTree($sub);
-            }
-
-            return [
-                'employee' => [
-                    'id' => $employee->id,
-                    'employee_code' => $employee->employee_code,
-                    'position' => $employee->position,
-                    'title' => $employee->title,
-                    'user' => $employee->user,
-                    'department' => $employee->department,
-                ],
-                'children' => $children,
-                'expanded' => true,
-            ];
-        };
-
-        $orgChart = [];
-        foreach ($rootEmployees as $root) {
-            $orgChart[] = $buildTree($root);
-        }
-
-        return $this->success($orgChart);
+        return $this->success([
+            'mode' => $mode,
+            'tree' => $tree,
+        ]);
     }
 
     /**

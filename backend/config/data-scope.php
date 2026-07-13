@@ -11,6 +11,7 @@ return [
         'admin' => 'company',
         'hr_manager' => 'company',
         'hr_specialist' => 'department',
+        'branch_manager' => 'branch',
         'manager' => 'team',
         'employee' => 'own',
     ],

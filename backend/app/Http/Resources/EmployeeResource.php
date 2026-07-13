@@ -30,6 +30,7 @@ class EmployeeResource extends JsonResource
             'company_id' => $this->company_id,
             'user_id' => $this->user_id,
             'department_id' => $this->department_id,
+            'branch_id' => $this->branch_id,
             'employee_code' => $this->employee_code,
             'title' => $this->title,
             'position' => $this->position,
@@ -69,6 +70,7 @@ class EmployeeResource extends JsonResource
             'deleted_at' => $this->when(array_key_exists('deleted_at', $this->resource->getAttributes()), $this->deleted_at),
             'user' => $this->whenLoaded('user'),
             'department' => $this->whenLoaded('department'),
+            'branch' => $this->whenLoaded('branch'),
             'manager' => $this->whenLoaded('manager', function () {
                 return new self($this->manager);
             }),

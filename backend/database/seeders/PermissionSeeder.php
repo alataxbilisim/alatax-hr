@@ -69,6 +69,7 @@ class PermissionSeeder extends Seeder
             'employees' => [
                 'list' => ['view', 'create', 'edit', 'delete', 'export', 'import'],
                 'departments' => ['view', 'create', 'edit', 'delete'],
+                'positions' => ['view', 'create', 'edit', 'delete'], // A5 unvan kataloğu
                 'organization' => ['view'],
                 'custom_fields' => ['view', 'create', 'edit', 'delete'],
                 'reports' => ['view', 'export'],
@@ -364,6 +365,7 @@ class PermissionSeeder extends Seeder
                     // Personel - Görüntüleme ve düzenleme
                     'employees.list.view', 'employees.list.create', 'employees.list.edit',
                     'employees.departments.view',
+                    'employees.positions.view', 'employees.positions.create', 'employees.positions.edit',
                     'employees.organization.view',
                     'employees.documents.view', 'employees.documents.create', 'employees.documents.edit',
 
@@ -426,6 +428,7 @@ class PermissionSeeder extends Seeder
                     // Personel - Sadece görüntüleme
                     'employees.list.view',
                     'employees.departments.view',
+                    'employees.positions.view',
                     'employees.organization.view',
 
                     // İşe Alım - Görüntüleme
@@ -455,6 +458,23 @@ class PermissionSeeder extends Seeder
                     'documents.view',
                     'leaves.view', 'leaves.approve',
                     'performance.view', 'performance.create', 'performance.edit',
+                    'reports.view',
+                ],
+            ],
+            'branch_manager' => [
+                'description' => 'Şube Yöneticisi — yalnızca kendi şubesi (DataScope: branch)',
+                'permissions' => [
+                    'employees.list.view',
+                    'employees.departments.view',
+                    'employees.organization.view',
+                    'management.branches.view',
+                    'leaves.requests.view', 'leaves.requests.approve',
+                    'leaves.calendar.view',
+                    'expenses.claims.view', 'expenses.claims.approve',
+                    'documents.list.view',
+                    'employees.view',
+                    'leaves.view', 'leaves.approve',
+                    'branches.view',
                     'reports.view',
                 ],
             ],
@@ -503,6 +523,9 @@ class PermissionSeeder extends Seeder
             // admin → company data_scope (config fallback ile uyumlu)
             if ($roleName === 'admin' && $role->data_scope === null) {
                 $role->forceFill(['data_scope' => 'company'])->save();
+            }
+            if ($roleName === 'branch_manager' && $role->data_scope === null) {
+                $role->forceFill(['data_scope' => 'branch'])->save();
             }
         }
     }

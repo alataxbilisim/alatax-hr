@@ -188,6 +188,47 @@ class DataScopeServiceTest extends TestCase
         $this->assertFalse($ids->contains($otherEmp->id));
     }
 
+    public function test_branch_scope_filters_by_branch_id(): void
+    {
+        $branchA = \App\Models\Branch::create([
+            'company_id' => $this->company->id,
+            'name' => 'A',
+            'code' => 'A-'.uniqid(),
+            'is_active' => true,
+        ]);
+        $branchB = \App\Models\Branch::create([
+            'company_id' => $this->company->id,
+            'name' => 'B',
+            'code' => 'B-'.uniqid(),
+            'is_active' => true,
+        ]);
+
+        $role = Role::findOrCreate('branch_manager', 'sanctum');
+        $role->forceFill(['data_scope' => 'branch'])->save();
+
+        $actorUser = User::factory()->create([
+            'company_id' => $this->company->id,
+            'type' => UserType::User,
+        ]);
+        $actorUser->assignRole($role);
+        $actorEmp = Employee::factory()->forUser($actorUser)->create(['branch_id' => $branchA->id]);
+        $same = Employee::factory()->create([
+            'company_id' => $this->company->id,
+            'branch_id' => $branchA->id,
+        ]);
+        $other = Employee::factory()->create([
+            'company_id' => $this->company->id,
+            'branch_id' => $branchB->id,
+        ]);
+
+        $ids = $this->service->scopeForEmployee(Employee::query(), $actorUser->fresh())->pluck('id');
+
+        $this->assertTrue($ids->contains($actorEmp->id));
+        $this->assertTrue($ids->contains($same->id));
+        $this->assertFalse($ids->contains($other->id));
+        $this->assertSame(DataScopeLevel::Branch, $this->service->resolve($actorUser->fresh()));
+    }
+
     public function test_company_admin_resolves_to_company_scope(): void
     {
         $admin = User::factory()->create([

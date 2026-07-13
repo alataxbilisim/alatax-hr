@@ -13,9 +13,9 @@ use Illuminate\Database\Eloquent\Builder;
  *
  * team = Employee.manager_id zinciri (kullanıcının employee kaydına bağlı subordinates).
  * department = aynı Employee.department_id.
+ * branch = aynı Employee.branch_id (şube yöneticisi).
  * own = user_id / employee kendi kaydı.
  * company = ek filtre yok (BelongsToCompany zaten firma sınırı koyar).
- * branch = henüz Employee.branch_id yok → boş küme.
  */
 class DataScopeService
 {
@@ -68,12 +68,12 @@ class DataScopeService
             DataScopeLevel::Own => $query->where($userIdColumn, $user->id),
             DataScopeLevel::Team => $query->whereIn($userIdColumn, $this->teamUserIds($user)),
             DataScopeLevel::Department => $query->whereIn($userIdColumn, $this->departmentUserIds($user)),
-            DataScopeLevel::Branch => $query->whereRaw('0 = 1'),
+            DataScopeLevel::Branch => $query->whereIn($userIdColumn, $this->branchUserIds($user)),
         };
     }
 
     /**
-     * Employee tablosu: id / manager_id / department_id üzerinden filtre.
+     * Employee tablosu: id / manager_id / department_id / branch_id üzerinden filtre.
      *
      * @param  Builder<\Illuminate\Database\Eloquent\Model>  $query
      * @return Builder<\Illuminate\Database\Eloquent\Model>
@@ -87,7 +87,7 @@ class DataScopeService
             DataScopeLevel::Own => $query->whereIn('id', $this->ownEmployeeIds($user)),
             DataScopeLevel::Team => $query->whereIn('id', $this->teamEmployeeIds($user)),
             DataScopeLevel::Department => $this->applyDepartmentEmployeeScope($query, $user),
-            DataScopeLevel::Branch => $query->whereRaw('0 = 1'),
+            DataScopeLevel::Branch => $this->applyBranchEmployeeScope($query, $user),
         };
     }
 
@@ -110,7 +110,7 @@ class DataScopeService
             DataScopeLevel::Own => [$user->id],
             DataScopeLevel::Team => $this->teamUserIds($user),
             DataScopeLevel::Department => $this->departmentUserIds($user),
-            DataScopeLevel::Branch => [],
+            DataScopeLevel::Branch => $this->branchUserIds($user),
             default => [$user->id],
         };
 
@@ -134,7 +134,7 @@ class DataScopeService
             DataScopeLevel::Own => $targetUserId === $user->id,
             DataScopeLevel::Team => in_array($targetUserId, $this->teamUserIds($user), true),
             DataScopeLevel::Department => in_array($targetUserId, $this->departmentUserIds($user), true),
-            DataScopeLevel::Branch => false,
+            DataScopeLevel::Branch => in_array($targetUserId, $this->branchUserIds($user), true),
         };
     }
 
@@ -150,7 +150,7 @@ class DataScopeService
             DataScopeLevel::Own => in_array($employee->id, $this->ownEmployeeIds($user), true),
             DataScopeLevel::Team => in_array($employee->id, $this->teamEmployeeIds($user), true),
             DataScopeLevel::Department => $this->isSameDepartment($user, $employee),
-            DataScopeLevel::Branch => false,
+            DataScopeLevel::Branch => $this->isSameBranch($user, $employee),
         };
     }
 
@@ -240,6 +240,55 @@ class DataScopeService
             ->all();
 
         return array_values(array_unique(array_merge([$user->id], $ids)));
+    }
+
+    /**
+     * Branch: aynı branch_id'deki personellerin user_id'leri (+ kendi).
+     *
+     * @return list<int>
+     */
+    public function branchUserIds(User $user): array
+    {
+        $employee = $this->employeeFor($user);
+
+        if (! $employee || ! $employee->branch_id) {
+            return [$user->id];
+        }
+
+        $ids = Employee::query()
+            ->where('branch_id', $employee->branch_id)
+            ->whereNotNull('user_id')
+            ->pluck('user_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        return array_values(array_unique(array_merge([$user->id], $ids)));
+    }
+
+    /**
+     * @param  Builder<\Illuminate\Database\Eloquent\Model>  $query
+     * @return Builder<\Illuminate\Database\Eloquent\Model>
+     */
+    protected function applyBranchEmployeeScope(Builder $query, User $user): Builder
+    {
+        $employee = $this->employeeFor($user);
+
+        if (! $employee || ! $employee->branch_id) {
+            return $query->whereIn('id', $this->ownEmployeeIds($user));
+        }
+
+        return $query->where('branch_id', $employee->branch_id);
+    }
+
+    protected function isSameBranch(User $user, Employee $target): bool
+    {
+        $employee = $this->employeeFor($user);
+
+        if (! $employee || ! $employee->branch_id || ! $target->branch_id) {
+            return in_array($target->id, $this->ownEmployeeIds($user), true);
+        }
+
+        return (int) $employee->branch_id === (int) $target->branch_id;
     }
 
     /**
