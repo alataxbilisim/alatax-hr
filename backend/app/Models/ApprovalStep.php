@@ -101,10 +101,23 @@ class ApprovalStep extends Model
 
     /**
      * Bu adım için onaylayıcıyı bul (vekalet uygulanır).
+     * Dinamik hiyerarşi çözülemezse adım atlanmaz → hr_manager fallback.
      */
     public function findApprover(Model $approvable): ?User
     {
         $approver = $this->getBaseApprover($approvable);
+
+        if (! $approver && $this->usesHierarchyApprover()) {
+            \Illuminate\Support\Facades\Log::warning('approval.approver.unresolved_hr_fallback', [
+                'step_id' => $this->id,
+                'approver_type' => $this->approver_type,
+                'approvable_type' => get_class($approvable),
+                'approvable_id' => $approvable->id,
+                'company_id' => $approvable->company_id,
+            ]);
+
+            $approver = $this->resolveHrManagerFallback((int) $approvable->company_id);
+        }
 
         if (! $approver) {
             return null;
@@ -117,6 +130,27 @@ class ApprovalStep extends Model
         );
 
         return $delegate ?? $approver;
+    }
+
+    /**
+     * Hiyerarşi / departman tipi — çözülemezse sonraki adıma atlama YOK.
+     */
+    public function usesHierarchyApprover(): bool
+    {
+        return in_array($this->approver_type, [
+            self::APPROVER_DYNAMIC_MANAGER,
+            self::APPROVER_DIRECT_MANAGER,
+            self::APPROVER_DYNAMIC_SKIP_MANAGER,
+            self::APPROVER_DEPARTMENT_HEAD,
+        ], true);
+    }
+
+    protected function resolveHrManagerFallback(int $companyId): ?User
+    {
+        return User::where('company_id', $companyId)
+            ->whereHas('roles', fn ($q) => $q->where('name', 'hr_manager'))
+            ->orderBy('id')
+            ->first();
     }
 
     /**

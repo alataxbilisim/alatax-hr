@@ -12,9 +12,16 @@
 |------|-------|-----|
 | **A / B0** Motoru bağla (pilot: İzin) | ✅ | findApprover Employee.manager; `approval_instances`; default seed; leave köprü; event stub |
 | **B / B1** Sıralı çok adım | ✅ | 2+ adım; red→resubmit yeni instance; adım2 erken onay 403 |
-| **C / B2** Dinamik onaycılar + vekalet | ⏸️ | |
-| **D / B3** Koşullu adım | ⏸️ | A–C yeşilse |
+| **C / B2** Dinamik onaycılar + vekalet | ✅ | 3 kademe; unresolved→hr_manager (atlanmaz); vekalet motor bağlı |
+| **D / B3** Koşullu adım | ⏸️ | A–C yeşil — başlıyor |
 | **E** Derin analiz (snapshot/TEST_TURU/ROADMAP) | ⏸️ | en son |
+
+### B2 özeti
+
+- `dynamic_manager` / `dynamic_skip_manager` / `role` / `user` (+ legacy).
+- Yönetici yok: adım atlanmaz; `approval.approver.unresolved_hr_fallback` + `hr_manager` atanır.
+- Vekalet: `findApprover` + `canApprove` — motor uçtan uca test yeşil.
+- Test: `ApprovalWorkflowMotorB2Test` (3).
 
 ### B1 özeti
 
