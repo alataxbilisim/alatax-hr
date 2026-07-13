@@ -64,6 +64,25 @@
 
 ---
 
+## A2 — Davet & şifre ile ekleme
+
+### Adım 0 — Teşhis (kod öncesi)
+
+| Konu | Mevcut | Boşluk |
+|------|--------|--------|
+| Panel kullanıcı oluştur | `UserController::store` — şifre zorunlu, aktif | `must_change_password` yok |
+| Panel davet | `POST /users/invite` + `UserInvitation` mail → `/invite/{token}` | Kabul API + SPA **yok**; token bcrypt hash (lookup zor) |
+| Personel portal | `create_portal_access` → random şifre + mail + API’de `temporary_password` | Davet/anlık seçenek yok; `/invite` ölü link |
+| Forgot-password | `password_reset_tokens` + SPA reset | Çalışıyor — bozulmamalı |
+| Mail | Queued Mailable’lar; firma adı metin; logo yok | Bildirim Merkezi yok → mevcut şablonu genişlet |
+| A0 panel rol | `grantPanelAccess` / Users UI | Davet/şifre ile birlikte seçim yok |
+
+**Karar (uygulama):** mevcut invite kolonlarını + Mailable’ları genişlet; yeni tablo yok. Token → sha256 saklama + 7g expiry + tek kullanımlık. `must_change_password` bayrağı. Public `accept-invitation` + company/portal `/invite/:token`.
+
+**DURUM:** A2 uygulama devam ediyor · push yok (faz sonu tek push).
+
+---
+
 ## Sonraki (henüz yok)
 
-- A2+ yol haritası maddeleri (B0 merge sonrası)
+- A3+ (B0 merge sonrası)
