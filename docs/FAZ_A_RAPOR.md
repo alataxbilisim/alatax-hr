@@ -50,6 +50,7 @@
 | `AccrualPolicyEntitlementTest` | 3→14, 8→20, 16→26, 52y/3→20, 17y/1→20 |
 | `DefaultCompanyHrSeedTest` | register 10 tür + policy + tatil; K-A etiket; idempotent; tenant; overtime lookup |
 | Wave2 / Lookup | korundu (CI) |
+| CI (Backend + Frontend) | ✅ yeşil — [run 29286408860](https://github.com/alataxbilisim/alatax-hr/actions/runs/29286408860) (`0786241`) |
 
 ### Dosyalar
 
@@ -59,7 +60,7 @@
 - `Holiday::seedTurkishHolidays*` genişletmesi
 - `AccrualPolicy::calculateAnnualEntitlement`
 
-**DURUM:** A1 kod + birim/feature testler hazır · ubuntu görsel sonra · CI teyidi commit sonrası.
+**DURUM:** A1 tamam · CI yeşil · ubuntu görsel kontrol sonra.
 
 ---
 
