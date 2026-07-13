@@ -19,7 +19,8 @@
 
 **Kavram:** Panel = portal-self dışı izin / admin / company_admin. Portal-only `employee` rol seti panele giremez, `/users`’ta görünmez. İK (hr_manager) çift erişimli — panel + portal.
 
-**Test:** `PanelAccessControlTest` (5) + LeaveRequestPolicy + PermissionEnforcementWave2 yeşil. FE lint+build 3 SPA ✅.
+**Test:** `PanelAccessControlTest` (5) + LeaveRequestPolicy + PermissionEnforcementWave2 yeşil. FE lint+build 3 SPA ✅.  
+**CI takip:** `fcf90e2` sonrası Backend kırmızı — panel login kapısı `Totp2faTest`’teki panel-izinsiz kullanıcıları 403’ledi; `regularUser`’a `management.users.view` verildi. Yan etki: sqlite Timesheet `where('date')` eşleşmiyordu → `whereDate` + assert düzeltmesi. Host suite: **247 passed**, 1 risky.
 
 **Kullanıcı görsel kontrol:**
 1. Uzun sayfada scroll
@@ -27,6 +28,7 @@
 3. `/employees/new` yetkisiz → Erişim Engeli (403 spam yok)
 4. `/users`’ta portal-only yok; İK/admin var
 
+**DURUM:** Kod hazır · görsel kontrol sizde.
 ---
 
 ## Test Turu Kritik Bulgu Teşhisi (13 Temmuz 2026)
