@@ -1115,7 +1115,8 @@ export const employeesApi = {
   },
   
   // Organizasyon ve Raporlar
-  getOrganizationChart: () => api.get('/employees/organization-chart'),
+  getOrganizationChart: (params?: { mode?: 'people' | 'department' | 'hybrid' }) =>
+    api.get('/employees/organization-chart', { params }),
   getStats: (params?: Record<string, unknown>) => api.get('/employees/stats', { params }),
   exportReport: (params?: Record<string, unknown>) => api.get('/employees/export-report', { params, responseType: 'blob' }),
   
@@ -1211,6 +1212,28 @@ export const departmentsApi = {
   delete: (id: number) => api.delete(`/departments/${id}`),
   getManagers: () => api.get('/departments/managers'),
   getHierarchy: () => api.get('/departments/hierarchy'),
+};
+
+/** A5 — Firma unvan / pozisyon kataloğu (recruitment job-positions değil) */
+export interface PositionCatalogItem {
+  id: number;
+  code: string;
+  name: string;
+  department_id?: number | null;
+  department?: { id: number; name: string; code?: string } | null;
+  sgk_occupation_code?: string | null;
+  description?: string | null;
+  is_active: boolean;
+  is_system: boolean;
+  sort_order?: number;
+}
+
+export const positionsApi = {
+  getAll: (params?: Record<string, unknown>) => api.get('/positions', { params }),
+  getById: (id: number) => api.get(`/positions/${id}`),
+  create: <T extends object>(data: T) => api.post('/positions', data),
+  update: <T extends object>(id: number, data: T) => api.put(`/positions/${id}`, data),
+  delete: (id: number) => api.delete(`/positions/${id}`),
 };
 
 // Custom Fields API (Özel Alanlar)

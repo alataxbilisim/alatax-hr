@@ -1042,7 +1042,11 @@ class EmployeeController extends BaseController
         $mode = $validated['mode'] ?? OrganizationChartService::MODE_PEOPLE;
         $companyId = $this->getCompanyId();
 
-        $tree = $this->organizationChart->build((int) $companyId, $mode);
+        if ($companyId === null) {
+            return $this->error('Firma bilgisi bulunamadı', 403);
+        }
+
+        $tree = $this->organizationChart->build($companyId, $mode);
 
         return $this->success([
             'mode' => $mode,
