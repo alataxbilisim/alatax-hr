@@ -252,6 +252,41 @@ class LeaveRequestController extends BaseController
     }
 
     /**
+     * Reddedilmiş talebi yeniden gönder — yeni onay instance.
+     */
+    public function resubmit(LeaveRequest $leaveRequest): JsonResponse
+    {
+        $this->authorize('update', $leaveRequest);
+
+        if ((int) $leaveRequest->user_id !== (int) auth()->id()) {
+            return $this->error('Bu talebi yalnızca sahibi yeniden gönderebilir', null, 403);
+        }
+
+        if ($leaveRequest->status !== LeaveRequestStatus::Rejected) {
+            return $this->error('Yalnızca reddedilmiş talepler yeniden gönderilebilir', null, 422);
+        }
+
+        LeaveRequest::withoutAuditing(fn () => $leaveRequest->prepareForResubmit());
+
+        $record = $this->workflowService->resubmitWorkflow($leaveRequest->fresh(), [
+            'total_days' => (float) $leaveRequest->total_days,
+            'leave_type_id' => $leaveRequest->leave_type_id,
+            'requester_id' => $leaveRequest->user_id,
+        ]);
+
+        if (! $record) {
+            Log::warning('leave.request.resubmit_without_workflow', [
+                'leave_request_id' => $leaveRequest->id,
+                'company_id' => $leaveRequest->company_id,
+            ]);
+        }
+
+        ActivityLog::log('resubmitted', $leaveRequest, 'İzin talebi yeniden gönderildi: '.$leaveRequest->leaveType->name);
+
+        return $this->success($leaveRequest->fresh()->load(['leaveType', 'user']), 'İzin talebi yeniden gönderildi');
+    }
+
+    /**
      * Cancel a leave request.
      */
     public function cancel(LeaveRequest $leaveRequest): JsonResponse

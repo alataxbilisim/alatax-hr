@@ -102,6 +102,44 @@ class WorkflowService
     }
 
     /**
+     * Reddedilmiş talebi yeniden gönder — YENİ instance; eski kayıtlar korunur.
+     */
+    public function resubmitWorkflow(Model $approvable, array $context = []): ?ApprovalRecord
+    {
+        // Açık instance varsa kapat (güvenlik)
+        ApprovalInstance::query()
+            ->where('approvable_type', get_class($approvable))
+            ->where('approvable_id', $approvable->id)
+            ->whereIn('status', [
+                ApprovalInstance::STATUS_PENDING,
+                ApprovalInstance::STATUS_IN_PROGRESS,
+            ])
+            ->each(function (ApprovalInstance $instance): void {
+                $instance->update([
+                    'status' => ApprovalInstance::STATUS_CANCELLED,
+                    'completed_at' => now(),
+                ]);
+            });
+
+        // Eski current record'ları kapat
+        ApprovalRecord::query()
+            ->where('approvable_type', get_class($approvable))
+            ->where('approvable_id', $approvable->id)
+            ->where('is_current', true)
+            ->update(['is_current' => false]);
+
+        if ($this->approvableHasWorkflowColumns($approvable)) {
+            $approvable->update([
+                'approval_workflow_id' => null,
+                'current_step' => null,
+                'workflow_status' => 'pending',
+            ]);
+        }
+
+        return $this->startWorkflow($approvable, $context);
+    }
+
+    /**
      * Onay işlemi (canApprove kapısı — /approvals kuyruğu).
      */
     public function approve(ApprovalRecord $record, int $approverId, ?string $comment = null): bool

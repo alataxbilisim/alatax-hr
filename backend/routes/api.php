@@ -570,6 +570,8 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:leaves.requests.approve');
             Route::post('/requests/{leave_request}/reject', [\App\Http\Controllers\Api\V1\Leaves\LeaveRequestController::class, 'reject'])
                 ->middleware('permission:leaves.requests.approve');
+            Route::post('/requests/{leave_request}/resubmit', [\App\Http\Controllers\Api\V1\Leaves\LeaveRequestController::class, 'resubmit'])
+                ->middleware('permission:leaves.requests.create');
 
             Route::get('/calendar', [\App\Http\Controllers\Api\V1\Leaves\LeaveCalendarController::class, 'index'])
                 ->middleware('permission:leaves.calendar.view');

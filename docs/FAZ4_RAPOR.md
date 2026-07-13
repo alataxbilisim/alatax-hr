@@ -11,10 +11,17 @@
 | Adım | Durum | Not |
 |------|-------|-----|
 | **A / B0** Motoru bağla (pilot: İzin) | ✅ | findApprover Employee.manager; `approval_instances`; default seed; leave köprü; event stub |
-| **B / B1** Sıralı çok adım | ⏸️ | B0 commit sonrası |
+| **B / B1** Sıralı çok adım | ✅ | 2+ adım; red→resubmit yeni instance; adım2 erken onay 403 |
 | **C / B2** Dinamik onaycılar + vekalet | ⏸️ | |
 | **D / B3** Koşullu adım | ⏸️ | A–C yeşilse |
 | **E** Derin analiz (snapshot/TEST_TURU/ROADMAP) | ⏸️ | en son |
+
+### B1 özeti
+
+- Sıralı adımlar: `moveToNextStep` → sonraki onaycı çözülür + `ApprovalRequested`.
+- Red: herhangi adımda → instance rejected + entity `onWorkflowRejected`.
+- Yeniden gönder: `POST /leaves/requests/{id}/resubmit` → `prepareForResubmit` + `resubmitWorkflow` (yeni instance, eski geçmiş korunur).
+- Test: `ApprovalWorkflowMotorB1Test` (3) + Policy suite yeşil.
 
 ### B0 özeti
 

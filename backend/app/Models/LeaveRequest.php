@@ -208,6 +208,34 @@ class LeaveRequest extends Model
         }
     }
 
+    /**
+     * Red sonrası yeniden gönderim: pending'e al, bakiye pending ekle.
+     */
+    public function prepareForResubmit(): void
+    {
+        $this->update([
+            'status' => self::STATUS_PENDING,
+            'rejected_by' => null,
+            'rejected_at' => null,
+            'rejection_reason' => null,
+            'approved_by' => null,
+            'approved_at' => null,
+            'approval_note' => null,
+            'workflow_status' => self::WORKFLOW_PENDING,
+            'current_step' => null,
+            'approval_workflow_id' => null,
+        ]);
+
+        $balance = LeaveBalance::where('user_id', $this->user_id)
+            ->where('leave_type_id', $this->leave_type_id)
+            ->where('year', $this->start_date->year)
+            ->first();
+
+        if ($balance) {
+            $balance->addPending((float) $this->total_days);
+        }
+    }
+
     public function cancel(): void
     {
         if ($this->status === LeaveRequestStatus::Pending) {
