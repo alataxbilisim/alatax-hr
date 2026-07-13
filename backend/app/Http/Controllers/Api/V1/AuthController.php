@@ -111,6 +111,18 @@ class AuthController extends BaseController
             ], 'Portal girişi başarılı');
         }
 
+        // Company panel: portal-only personel engellenir (izin tabanlı)
+        if (! \App\Support\PanelAccess::has($user)) {
+            return $this->error(
+                'Bu hesap Company paneline erişemez. Personel Portalı üzerinden giriş yapın.',
+                403,
+                [
+                    'code' => 'panel_access_denied',
+                    'portal_url' => rtrim((string) config('app.frontend_urls.portal'), '/'),
+                ]
+            );
+        }
+
         $token = $user->createToken('auth-token')->plainTextToken;
         $user->updateLastLogin($request->ip());
         ActivityLog::log('login', $user, 'Kullanıcı girişi yapıldı');
@@ -191,6 +203,17 @@ class AuthController extends BaseController
                 'token' => $token,
                 'type' => 'portal',
             ], 'Portal girişi başarılı');
+        }
+
+        if (! \App\Support\PanelAccess::has($user)) {
+            return $this->error(
+                'Bu hesap Company paneline erişemez. Personel Portalı üzerinden giriş yapın.',
+                403,
+                [
+                    'code' => 'panel_access_denied',
+                    'portal_url' => rtrim((string) config('app.frontend_urls.portal'), '/'),
+                ]
+            );
         }
 
         $token = $user->createToken('auth-token', ['*'])->plainTextToken;

@@ -6,6 +6,9 @@
   "back": "Geri",
   "error": "Bir hata oluştu",
   "success": "İşlem başarılı",
+  "actions": {
+    "newEmployee": "Yeni Personel"
+  },
   "nav": {
     "dashboard": "Dashboard",
     "dashboardOverview": "Genel Bakış",

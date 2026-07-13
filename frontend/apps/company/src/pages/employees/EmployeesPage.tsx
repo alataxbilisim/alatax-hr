@@ -20,6 +20,8 @@ import { employeesApi, lookupsApi, type LookupItem } from '@shared/services/api'
 import { getErrorMessage } from '@shared/services/apiHelpers';
 import { Select } from '@shared/components';
 import { toggleDensity } from '@shared/store/slices/themeSlice';
+import { usePermission } from '@shared/hooks';
+import { useTranslation } from '@shared/i18n';
 import toast from 'react-hot-toast';
 import { ConfirmDialog, DataTable } from '../../components/ui';
 import type { Column } from '../../components/ui/DataTable';
@@ -61,6 +63,8 @@ interface Employee {
 const EmployeesPage: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
+  const { t } = useTranslation('common');
+  const { canCreate, canEdit, canDelete, canImport, canExport, canView } = usePermission();
   const density = useSelector((state: RootState) => state.theme.density);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -84,14 +88,24 @@ const EmployeesPage: React.FC = () => {
   const [statusOptions, setStatusOptions] = useState<LookupItem[]>([]);
   const [contractOptions, setContractOptions] = useState<LookupItem[]>([]);
 
+  const canCreateEmployee = canCreate('employees', 'list');
+  const canEditEmployee = canEdit('employees', 'list');
+  const canDeleteEmployee = canDelete('employees', 'list');
+  const canImportEmployee = canImport('employees', 'list');
+  const canExportEmployee = canExport('employees', 'list');
+  const canViewDepartments = canView('employees', 'departments');
+
   const loadDepartments = useCallback(async () => {
+    if (!canViewDepartments) {
+      return;
+    }
     try {
       const response = await employeesApi.getDepartments();
       setDepartments(response.data.data);
     } catch (error) {
       console.error('Departmanlar yüklenemedi:', error);
     }
-  }, []);
+  }, [canViewDepartments]);
 
   const loadStatusLookups = useCallback(async () => {
     try {
@@ -344,31 +358,35 @@ const EmployeesPage: React.FC = () => {
             >
               <BsEye />
             </button>
-            <button
-              type="button"
-              className="btn btn-ghost btn-icon"
-              onClick={() => navigate(`/employees/${employee.id}/edit`)}
-              title="Düzenle"
-              aria-label="Düzenle"
-            >
-              <BsPencil />
-            </button>
-            <button
-              type="button"
-              className="btn btn-ghost btn-icon"
-              onClick={() => handleDelete(employee.id)}
-              title="Sil"
-              aria-label="Sil"
-              style={{ color: 'var(--danger)' }}
-            >
-              <BsTrash />
-            </button>
+            {canEditEmployee && (
+              <button
+                type="button"
+                className="btn btn-ghost btn-icon"
+                onClick={() => navigate(`/employees/${employee.id}/edit`)}
+                title="Düzenle"
+                aria-label="Düzenle"
+              >
+                <BsPencil />
+              </button>
+            )}
+            {canDeleteEmployee && (
+              <button
+                type="button"
+                className="btn btn-ghost btn-icon"
+                onClick={() => handleDelete(employee.id)}
+                title="Sil"
+                aria-label="Sil"
+                style={{ color: 'var(--danger)' }}
+              >
+                <BsTrash />
+              </button>
+            )}
           </div>
         ),
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps -- handlers stable enough for list render
-    [employees, selectedIds, navigate, statusOptions]
+    [employees, selectedIds, navigate, statusOptions, canEditEmployee, canDeleteEmployee]
   );
 
   return (
@@ -391,15 +409,21 @@ const EmployeesPage: React.FC = () => {
           >
             Density: {density}
           </button>
-          <button type="button" className="btn btn-secondary btn-sm" onClick={() => setImportModalOpen(true)}>
-            <BsUpload /> Import
-          </button>
-          <button type="button" className="btn btn-secondary btn-sm" onClick={handleExport}>
-            <BsDownload /> Export
-          </button>
-          <button type="button" className="btn btn-primary btn-sm" onClick={() => navigate('/employees/new')}>
-            <BsPlus /> Yeni Personel
-          </button>
+          {canImportEmployee && (
+            <button type="button" className="btn btn-secondary btn-sm" onClick={() => setImportModalOpen(true)}>
+              <BsUpload /> Import
+            </button>
+          )}
+          {canExportEmployee && (
+            <button type="button" className="btn btn-secondary btn-sm" onClick={handleExport}>
+              <BsDownload /> Export
+            </button>
+          )}
+          {canCreateEmployee && (
+            <button type="button" className="btn btn-primary btn-sm" onClick={() => navigate('/employees/new')}>
+              <BsPlus /> {t('actions.newEmployee')}
+            </button>
+          )}
         </div>
       </div>
 

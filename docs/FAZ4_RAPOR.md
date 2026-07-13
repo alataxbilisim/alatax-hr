@@ -6,6 +6,176 @@
 
 ---
 
+## Test Turu Kritik Bulgu Düzeltmeleri (13 Temmuz 2026)
+
+**Durum:** Uygulandı · güvenlik açığı yoktu (BE zaten 403) · UX/erişim/CSS.
+
+| # | Düzeltme | Durum | Kanıt |
+|---|----------|-------|-------|
+| 1 | Scroll `.page-content` → `overflow-y: auto` | ✅ | `company.css`; portal/superadmin’de aynı kırık yok |
+| 2 | Panel erişimi (izin tabanlı) login | ✅ | `PanelAccess` + Auth login 403 `panel_access_denied` + FE yönlendirme |
+| 3 | FE `PermissionProtectedRoute` employees/users/roles | ✅ | `App.tsx` `withPermission`; EmployeesPage buton `usePermission` |
+| 4 | `/users` yalnızca panel erişimli | ✅ | `PanelAccess::constrainUsersQuery` |
+
+**Kavram:** Panel = portal-self dışı izin / admin / company_admin. Portal-only `employee` rol seti panele giremez, `/users`’ta görünmez. İK (hr_manager) çift erişimli — panel + portal.
+
+**Test:** `PanelAccessControlTest` (5) + LeaveRequestPolicy + PermissionEnforcementWave2 yeşil. FE lint+build 3 SPA ✅.
+
+**Kullanıcı görsel kontrol:**
+1. Uzun sayfada scroll
+2. Sadece-portal personel Company login → portal’a yönlenir
+3. `/employees/new` yetkisiz → Erişim Engeli (403 spam yok)
+4. `/users`’ta portal-only yok; İK/admin var
+
+---
+
+## Test Turu Kritik Bulgu Teşhisi (13 Temmuz 2026)
+
+**Kaynak:** Kullanıcı Ubuntu/local test turu · **Branch:** `faz4-form-engine` · **Düzeltme:** yok (yalnızca kök neden).
+
+| # | Bulgu | Sınıf | Backend koruyor mu? |
+|---|--------|-------|---------------------|
+| 1 | Portal personeli Company panel + Kullanıcılar listesinde | **UX / yönlendirme + ürün tasarım belirsizliği** (admin işlem = güvenlik açığı DEĞİL) | Evet — admin endpoint’ler **403** |
+| 2 | Scroll hiçbir sayfada yok | **Global CSS layout** | N/A |
+| 3 | Yetkisiz sayfa açılıyor, API 403 | **FE route/aksiyon guard eksik** (Bulgu 1 ile aynı kök) | Evet — **403** |
+
+---
+
+### BULGU 1 — Personel hem panel hem portal + Kullanıcılar’da
+
+#### 1) Portal erişimi verilince ne oluyor?
+
+| Alan | Değer | Kanıt |
+|------|-------|-------|
+| User.type | **`user`** (`UserType::User`) — `company_admin` **değil** | `EmployeeController` store/portal-access: `type => 'user'` |
+| Spatie rol | **`employee`** | `assignRole('employee')` |
+| Bağlantı | `Employee.user_id` set | aynı |
+| Enum | `super_admin` / `company_admin` / `user` | `backend/app/Enums/UserType.php` |
+
+Portal davet maili `:3003` portal URL’sine gider (`EmployeeInvitation`). Panel daveti (`UserController@invite`) ayrı akış; yine `type=user` ama rol davette seçilir.
+
+`employee` rol izinleri (özet): `employees.list.view`, izin create/view, doküman/eğitim/performans view — **create employee / users / roles / departments yok** (`PermissionSeeder`).
+
+#### 2) Kullanıcılar (`/users`) kimi listeler?
+
+- **API:** `User::where('company_id', …)` — **type/rol/portal filtresi yok** → portal personeli de gelir (`UserController@index`).
+- **FE:** ekstra filtre yok (`UsersPage`).
+- **Tasarım ne olmalı?** Kodda “yalnızca panel kullanıcıları” kuralı **yok**. Ürün olarak ayrım isteniyorsa karar gerekir.
+
+**KARAR BEKLENİYOR:** `/users` listesi (a) tüm `users` (mevcut), (b) yalnızca panel rolleri (`admin`/`hr_*`/`manager`…), (c) portal personeli ayrı sekme/badge ile mi gösterilsin?
+
+#### 3) Neden Company paneline (:3002) girebiliyor?
+
+| Katman | Davranış |
+|--------|----------|
+| Backend login | `portal_login` yoksa normal `auth-token` verir; portal personelini **engellemez** (`AuthController@login`) |
+| Company LoginPage | `type` ∈ `{company_admin, user}` → dashboard’a alır (`LoginPage.tsx` ~53–66) |
+| `ProtectedRoute` | Sadece auth + `super_admin` dışarı; **portal personeli engeli yok** |
+| `CompanyAdminOnly` | `UserType::User` soft-pass; asıl kapı `permission:` middleware (`CompanyAdminOnly.php` yorum + L38–40) |
+| `portal.access` | Yalnızca `/api/v1/portal/*` — panel API’sine uygulanmaz |
+
+**Panele girince ne yapabilir?** Sidebar, Spatie izinlerine göre kısmen görünür (`employees.list.view` → Personel modülü rail’de belirebilir). Yönetim/users menüsü (`management.users`) rolünde yok → sidebar’da gizlenir. URL ile `/users` açıksa sayfa render olur, API **403**.
+
+#### 4) GÜVENLİK AÇIĞI mı, UX sorunu mu? — NET CEVAP
+
+**UX / yönlendirme sorunu (panel ayrımı eksik).** Admin / yetkisiz işlemler için **güvenlik açığı değil** — Faz 2 backend enforcement çalışıyor.
+
+**Kanıt (çalıştırıldı, 13 Tem 2026):**
+
+| Endpoint | Portal `employee` token | Sonuç |
+|----------|-------------------------|--------|
+| `GET /api/v1/users` | Sanctum actingAs | **403** |
+| `GET /api/v1/roles` | | **403** |
+| `GET /api/v1/custom-fields?entity_type=employee` | | **403** |
+| `POST /api/v1/employees` | | **403** |
+| `GET /api/v1/employees/departments` | | **403** |
+| `GET /api/v1/employees` | rolde `employees.list.view` var | **200** (DataScope **own** — başkasını görmez) |
+
+Kalıcı suite: `RouteAuthorizationTest::test_employee_authorization` → users/roles/company **403**; `PolicyDataScopeWave2Test::test_employee_own_sees_self_not_others` → own scope.
+
+**Nüans:** Personel panelde oturum açıp **kendi izin setindeki** endpoint’leri (ör. kendi personel kaydı liste/view, kendi izin talebi) çağırabilir — bu rol tasarımı. Asıl risk: yanlış panele girmek + boş/403’lü ekranlar (kötü UX), yanlışlıkla “yöneticiyim” algısı.
+
+#### Düzeltme önerisi (uygulanmadı)
+
+1. Company login: `Employee` kaydı olan + yalnızca `employee` rolü → portal URL’ye yönlendir / giriş reddi (veya `portal_only` bayrağı).
+2. Backend opsiyonel: company panel login’de `portal_login=false` iken “yalnızca employee rolü + employee kaydı” → 403.
+3. `/users` için KARAR sonrası filtre (portal personeli ayır veya badge).
+4. FE: Bulgu 3 ile birlikte route `PermissionProtectedRoute` yayılımı.
+
+---
+
+### BULGU 2 — Scroll hiçbir sayfada çalışmıyor
+
+#### Kök neden
+
+Company shell **viewport-locked** ama scroll container unutulmuş:
+
+```
+.main-content  → height/max-height: 100vh; overflow: hidden   (company.css ~490–499)
+.page-content  → flex:1; min-height:0; overflow: hidden       (company.css ~605–612)  ← asıl kırık
+```
+
+İçerik taşar; dikey scroll üretilecek yer yok. Portal/SuperAdmin body-scroll kullanıyor; company farklı.
+
+#### Ne zaman başladı?
+
+**Faz 0** (`dab902b`, 2026-07-10) — `.page-content { overflow: hidden }` ilk kez.  
+Faz 3 (dual sidebar / density) ve Faz 4 (Ayarlar Stüdyosu) overflow zincirini **değiştirmedi**; uzun stüdyo/lookup sayfaları sorunu daha görünür kıldı.
+
+Mobil `≤480px` istisnasında `overflow: auto` var; desktop’ta yok.
+
+#### Düzeltme önerisi (uygulanmadı)
+
+```css
+.page-content {
+  overflow-y: auto;   /* hidden → auto */
+  overflow-x: hidden;
+}
+```
+
+`.main-content` 100vh + overflow hidden kalabilir (sticky header shell). Dashboard/kanban gibi iç scroll’lu sayfalar ayrı smoke.
+
+---
+
+### BULGU 3 — Sayfa açılıyor, API 403
+
+#### Kök neden
+
+**FE route RBAC eksik; BE doğru.**
+
+| Katman | Employees | Lookups (iyi örnek) |
+|--------|-----------|---------------------|
+| Sidebar filtre | Var (`moduleNav`) | Var |
+| Route guard | Yalnızca `ProtectedRoute` (auth) | `PermissionProtectedRoute` |
+| Sayfa butonu | “Yeni Personel” guard’sız | `usePermission` |
+| Backend | 403 | 403 |
+
+Kanıt: `App.tsx` employees bloğu “No module restriction” + sadece `ProtectedRoute` (~218–250). `/employees/new` sidebar’da yok; `EmployeesPage` butonu `usePermission` kullanmıyor. `EmployeeForm` mount’ta `departments` + `custom-fields` çağırır → konsol 403.
+
+`ModuleProtectedRoute` = **lisans** kontrolü, permission değil. `PermissionProtectedRoute` company’de neredeyse sadece lookups + settings/custom-fields.
+
+#### Bulgu 1 ile bağlantı
+
+**Aynı kök:** authenticated ≠ authorized. Portal personeli panele girer (1) → URL/butonla yetkisiz sayfa açar (3) → BE 403.
+
+#### Düzeltme önerisi (uygulanmadı)
+
+1. Employees (ve diğer çekirdek) route’larını `PermissionProtectedRoute` ile sar.
+2. Liste aksiyon butonlarında `usePermission` (`create`/`edit`/`delete`).
+3. Yetkisiz route → `/dashboard` veya “Yetkiniz yok” sayfası (403 toast değil sessiz boş form).
+4. Opsiyonel: `EmployeeForm` custom-fields için `employees.custom_fields` vs `management.custom_fields` endpoint tutarlılığı (ayrı teknik borç).
+
+---
+
+### Öncelik sırası (düzeltme turu için öneri)
+
+1. **Bulgu 2** — tek CSS satırı, tüm sayfalar (en hızlı win).
+2. **Bulgu 1 login yönlendirme** — portal personeli :3002’ye girmesin.
+3. **Bulgu 3 route/button guards** — employees + management rotaları.
+4. **KARAR:** `/users` listesinde portal personeli politikası.
+
+---
+
 ## GECE ÖZETİ — Faz 4B B0→B3 (13 Temmuz 2026)
 
 | Adım | Durum | Commit |

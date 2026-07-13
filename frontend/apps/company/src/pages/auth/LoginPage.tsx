@@ -6,8 +6,19 @@ import { login } from '@shared/store/slices/authSlice';
 import { TwoFactorChallenge } from '@shared/components/TwoFactorChallenge';
 import { isTwoFactorChallenge, type AuthResponse, type TwoFactorChallenge as TwoFactorChallengeData } from '@shared/types';
 import { useTranslation } from '@shared/i18n';
+import { hasPanelAccess } from '@shared/constants/permissions';
 import toast from 'react-hot-toast';
 import { BsEnvelope, BsLock, BsEye, BsEyeSlash, BsBuilding } from 'react-icons/bs';
+
+const PORTAL_LOGIN_URL =
+  (import.meta.env.VITE_PORTAL_URL as string | undefined)?.replace(/\/$/, '') ||
+  'http://localhost:3003';
+
+type LoginRejectPayload = {
+  message?: string;
+  code?: string;
+  portal_url?: string;
+};
 
 const LoginPage: React.FC = () => {
   const { t } = useTranslation(['auth', 'validation']);
@@ -50,19 +61,30 @@ const LoginPage: React.FC = () => {
     }
   };
 
+  const redirectToPortal = (portalUrl?: string) => {
+    toast.error(t('auth:login.panelAccessDenied'));
+    const base = (portalUrl || PORTAL_LOGIN_URL).replace(/\/$/, '');
+    window.location.href = `${base}/login`;
+  };
+
   const completeLogin = (result: AuthResponse) => {
     if (result.user.type === 'super_admin') {
-      toast.success('SuperAdmin girişi başarılı!');
+      toast.success(t('auth:login.welcome'));
       window.location.href = 'http://localhost:3001/dashboard';
       return;
     }
 
     if (!['company_admin', 'user'].includes(result.user.type)) {
-      toast.error('Bu panel firma kullanıcıları içindir.');
+      toast.error(t('auth:login.panelAccessDeniedShort'));
       return;
     }
 
-    toast.success('Giriş başarılı!');
+    if (!hasPanelAccess(result.user)) {
+      redirectToPortal();
+      return;
+    }
+
+    toast.success(t('auth:login.welcome'));
     navigate('/dashboard');
   };
 
@@ -80,8 +102,12 @@ const LoginPage: React.FC = () => {
       }
 
       completeLogin(result);
-    } catch {
-      // Error handled by API interceptor
+    } catch (err: unknown) {
+      const payload = err as LoginRejectPayload;
+      if (payload?.code === 'panel_access_denied') {
+        redirectToPortal(payload.portal_url);
+      }
+      // Diğer hatalar API interceptor toast'ında
     }
   };
 

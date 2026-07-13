@@ -16,5 +16,7 @@ export {
   generateAllPermissions,
   generateModuleWildcards,
   getPermissionFromPath,
+  PORTAL_SELF_PERMISSIONS,
+  hasPanelAccess,
 } from './permissions';
-export type { ActionType, ModuleType } from './permissions';
+export type { ActionType, ModuleType, PanelAccessUser } from './permissions';

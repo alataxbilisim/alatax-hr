@@ -8,6 +8,7 @@ use App\Mail\UserInvitation;
 use App\Models\ActivityLog;
 use App\Models\User;
 use App\Services\TwoFactorService;
+use App\Support\PanelAccess;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -31,6 +32,9 @@ class UserController extends BaseController
     {
         $query = User::where('company_id', $this->getCompanyId())
             ->with(['roles']);
+
+        // Karar B: yalnızca panel erişimli kullanıcılar (portal-only personel hariç)
+        PanelAccess::constrainUsersQuery($query);
 
         // Arama
         if ($request->has('search')) {

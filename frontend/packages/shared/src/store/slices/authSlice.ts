@@ -102,8 +102,20 @@ export const login = createAsyncThunk<LoginResult, LoginCredentials & { portal_l
       persistSession(user, token, data.employee);
       return { user, token };
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
-      return rejectWithValue(err.response?.data?.message || 'Giriş yapılamadı');
+      const err = error as {
+        response?: {
+          data?: {
+            message?: string;
+            errors?: { code?: string; portal_url?: string };
+          };
+        };
+      };
+      const errors = err.response?.data?.errors;
+      return rejectWithValue({
+        message: err.response?.data?.message || 'Giriş yapılamadı',
+        code: typeof errors?.code === 'string' ? errors.code : undefined,
+        portal_url: typeof errors?.portal_url === 'string' ? errors.portal_url : undefined,
+      });
     }
   }
 );
@@ -276,7 +288,8 @@ const authSlice = createSlice({
       })
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload as string;
+        const payload = action.payload as string | { message?: string } | undefined;
+        state.error = typeof payload === 'string' ? payload : (payload?.message ?? 'Giriş yapılamadı');
       })
       .addCase(verifyTwoFactor.pending, (state) => {
         state.isLoading = true;

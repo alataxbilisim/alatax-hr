@@ -341,6 +341,53 @@ export function createPermission(module: string, page: string, action: string): 
   return `${module}.${page}.${action}`;
 }
 
+/**
+ * Portal self-servis izinleri (employee rol seti).
+ * Bunların dışında kalan herhangi bir izin = Company panel erişimi.
+ */
+export const PORTAL_SELF_PERMISSIONS: readonly string[] = [
+  'employees.list.view',
+  'employees.view',
+  'documents.list.view',
+  'documents.view',
+  'leaves.requests.view',
+  'leaves.requests.create',
+  'leaves.calendar.view',
+  'leaves.view',
+  'leaves.create',
+  'training.list.view',
+  'training.sessions.view',
+  'trainings.view',
+  'performance.reviews.view',
+  'performance.feedback.view',
+] as const;
+
+export type PanelAccessUser = {
+  type?: string | null;
+  permissions?: string[] | null;
+  roles?: Array<string | { name: string }> | null;
+};
+
+/**
+ * Company panel erişimi var mı? (izin tabanlı; type=user tek başına yetmez)
+ */
+export function hasPanelAccess(user: PanelAccessUser | null | undefined): boolean {
+  if (!user) return false;
+
+  if (user.type === 'super_admin' || user.type === 'company_admin') {
+    return true;
+  }
+
+  const roles = user.roles ?? [];
+  const roleNames = roles.map((r) => (typeof r === 'string' ? r : r.name));
+  if (roleNames.includes('admin')) {
+    return true;
+  }
+
+  const permissions = user.permissions ?? [];
+  return permissions.some((p) => !PORTAL_SELF_PERMISSIONS.includes(p));
+}
+
 // Wildcard yetki kontrolü
 export function matchesPermission(
   userPermissions: string[],

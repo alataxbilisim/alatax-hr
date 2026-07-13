@@ -601,14 +601,15 @@
   border: 2px solid var(--surface-primary);
 }
 
-/* Page Content */
+/* Page Content — viewport shell içinde dikey scroll burada */
 .page-content {
   flex: 1;
   padding: 1.25rem;
   display: flex;
   flex-direction: column;
   min-height: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 /* Page Header — layout.css token'ları kanonik; burada ezme */

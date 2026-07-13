@@ -2,8 +2,11 @@ import React, { useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from './store';
-import { checkAuth } from '@shared/store/slices/authSlice';
+import { checkAuth, logout } from '@shared/store/slices/authSlice';
 import { MODULE_KEYS } from '@shared/constants/modules';
+import { hasPanelAccess } from '@shared/constants/permissions';
+import { useTranslation } from '@shared/i18n';
+import toast from 'react-hot-toast';
 
 // Layouts
 import MainLayout from './layouts/MainLayout';
@@ -14,6 +17,69 @@ import ErrorBoundary from './components/ErrorBoundary';
 
 // Routing
 import ModuleProtectedRoute from './components/routing/ModuleProtectedRoute';
+import PermissionProtectedRoute from './components/routing/PermissionProtectedRoute';
+
+const PORTAL_LOGIN_URL =
+  (import.meta.env.VITE_PORTAL_URL as string | undefined)?.replace(/\/$/, '') ||
+  'http://localhost:3003';
+
+/** Auth + panel erişimi (portal-only personel engeli) */
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, user, isLoading } = useSelector((state: RootState) => state.auth);
+  const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
+  const { t } = useTranslation('auth');
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      navigate('/login');
+    }
+    if (!isLoading && isAuthenticated && user?.type === 'super_admin') {
+      window.location.href = 'http://localhost:3001/dashboard';
+    }
+    if (!isLoading && isAuthenticated && user && user.type !== 'super_admin' && !hasPanelAccess(user)) {
+      toast.error(t('login.panelAccessDenied'));
+      void dispatch(logout());
+      window.location.href = `${PORTAL_LOGIN_URL}/login`;
+    }
+  }, [isAuthenticated, user, isLoading, navigate, dispatch, t]);
+
+  if (isLoading && !isAuthenticated) {
+    return (
+      <div className="loading-screen">
+        <div className="loading-spinner" style={{ width: 40, height: 40 }}></div>
+        <p style={{ marginTop: '1rem', color: 'var(--text-secondary)' }}>Yükleniyor...</p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  if (user?.type === 'super_admin') {
+    return null;
+  }
+
+  if (user && !hasPanelAccess(user)) {
+    return null;
+  }
+
+  return <>{children}</>;
+};
+
+const withPermission = (
+  page: React.ReactNode,
+  module: string,
+  pageKey: string,
+  action = 'view'
+) => (
+  <ProtectedRoute>
+    <PermissionProtectedRoute module={module} page={pageKey} action={action}>
+      {page}
+    </PermissionProtectedRoute>
+  </ProtectedRoute>
+);
 
 // Auth Pages
 import LoginPage from './pages/auth/LoginPage';
@@ -39,7 +105,6 @@ import AccountSecurityPage from './pages/account/AccountSecurityPage';
 import AccountPreferencesPage from './pages/account/AccountPreferencesPage';
 import BranchesPage from './pages/branches/BranchesPage';
 import BranchDetailPage from './pages/branches/BranchDetailPage';
-import PermissionProtectedRoute from './components/routing/PermissionProtectedRoute';
 
 // Employees
 import EmployeesPage from './pages/employees/EmployeesPage';
@@ -96,47 +161,6 @@ import SurveysPage from './pages/surveys/SurveysPage';
 
 // Analytics Module
 import AnalyticsPage from './pages/analytics/AnalyticsPage';
-
-// Protected Route Component
-interface ProtectedRouteProps {
-  children: React.ReactNode;
-}
-
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated, user, isLoading } = useSelector((state: RootState) => state.auth);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      navigate('/login');
-    }
-    // SuperAdmin ise admin paneline yönlendir
-    if (!isLoading && isAuthenticated && user?.type === 'super_admin') {
-      window.location.href = 'http://localhost:3001/dashboard';
-    }
-  }, [isAuthenticated, user, isLoading, navigate]);
-
-  // İlk auth belirlenene kadar loading; arka plan tazelemede unmount yok
-  if (isLoading && !isAuthenticated) {
-    return (
-      <div className="loading-screen">
-        <div className="loading-spinner" style={{ width: 40, height: 40 }}></div>
-        <p style={{ marginTop: '1rem', color: 'var(--text-secondary)' }}>Yükleniyor...</p>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return null;
-  }
-
-  // SuperAdmin kontrolü - redirect'e izin ver
-  if (user?.type === 'super_admin') {
-    return null;
-  }
-
-  return <>{children}</>;
-};
 
 const App: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -197,56 +221,56 @@ const App: React.FC = () => {
             element={<ProtectedRoute><DashboardPage /></ProtectedRoute>}
           />
           
-          {/* Users & Roles - No module restriction, company admin only */}
+          {/* Users & Roles */}
           <Route
             path="/users"
-            element={<ProtectedRoute><UsersPage /></ProtectedRoute>}
+            element={withPermission(<UsersPage />, 'management', 'users', 'view')}
           />
           <Route
             path="/users/:id"
-            element={<ProtectedRoute><UserDetailPage /></ProtectedRoute>}
+            element={withPermission(<UserDetailPage />, 'management', 'users', 'view')}
           />
           <Route
             path="/roles"
-            element={<ProtectedRoute><RolesPage /></ProtectedRoute>}
+            element={withPermission(<RolesPage />, 'management', 'roles', 'view')}
           />
           <Route
             path="/roles/:id"
-            element={<ProtectedRoute><RoleDetailPage /></ProtectedRoute>}
+            element={withPermission(<RoleDetailPage />, 'management', 'roles', 'view')}
           />
           
-          {/* Employees - No module restriction */}
+          {/* Employees */}
           <Route
             path="/employees"
-            element={<ProtectedRoute><EmployeesPage /></ProtectedRoute>}
+            element={withPermission(<EmployeesPage />, 'employees', 'list', 'view')}
           />
           <Route
             path="/employees/new"
-            element={<ProtectedRoute><EmployeeForm /></ProtectedRoute>}
+            element={withPermission(<EmployeeForm />, 'employees', 'list', 'create')}
           />
           <Route
             path="/employees/custom-fields"
-            element={<ProtectedRoute><EmployeeCustomFieldsPage /></ProtectedRoute>}
+            element={withPermission(<EmployeeCustomFieldsPage />, 'employees', 'custom_fields', 'view')}
           />
           <Route
             path="/employees/departments"
-            element={<ProtectedRoute><DepartmentsPage /></ProtectedRoute>}
+            element={withPermission(<DepartmentsPage />, 'employees', 'departments', 'view')}
           />
           <Route
             path="/employees/organization"
-            element={<ProtectedRoute><OrganizationChartPage /></ProtectedRoute>}
+            element={withPermission(<OrganizationChartPage />, 'employees', 'organization', 'view')}
           />
           <Route
             path="/employees/reports"
-            element={<ProtectedRoute><EmployeeReportsPage /></ProtectedRoute>}
+            element={withPermission(<EmployeeReportsPage />, 'employees', 'reports', 'view')}
           />
           <Route
             path="/employees/:id/edit"
-            element={<ProtectedRoute><EmployeeForm /></ProtectedRoute>}
+            element={withPermission(<EmployeeForm />, 'employees', 'list', 'edit')}
           />
           <Route
             path="/employees/:id"
-            element={<ProtectedRoute><EmployeeDetailPage /></ProtectedRoute>}
+            element={withPermission(<EmployeeDetailPage />, 'employees', 'list', 'view')}
           />
           
           <Route
