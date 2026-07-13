@@ -288,6 +288,8 @@ Fark yaratacak 4 şey:
 **6A. Pilot çekirdeği (öncelik sırasıyla — pilot kapısı bu blokta):**
 - [ ] **Personel/Özlük:** Türkiye alan seti (TCKN doğrulama, SGK sicil, İŞKUR meslek kodu, eğitim durumu, engel oranı, yabancı çalışma izni, BES katılım); işten çıkış (offboarding) akışı: çıkış nedeni (SGK kodları), çıkış checklist'i, zimmet iadesi entegrasyonu, ibraname şablonu
 - [ ] **İzin:** İş Kanunu hakediş kuralları hazır politika olarak (kıdem 1–5 yıl: 14, 5–15: 20, 15+: 26 iş günü; 18 yaş altı / 50 yaş üstü min. 20); yasal izin türleri seed (evlilik 3, babalık 5, vefat 3, doğum 16 hafta, süt izni saat bazlı); resmi tatil takvimi (yıllık seed + yarım gün arefe); accrual scheduler'a bağlanır
+  - [ ] **A1 BORÇ:** Hakediş kuralları (14/20/26 + yaş) düzenleme ARAYÜZÜ eksik — seed var, yönetim UI yok. İzin modülü (Zincir 2) tamamlanırken yapılacak. İlke: %100 yönetilebilir.
+  - [ ] **A1 BORÇ:** Dini bayram tarihleri (Ramazan/Kurban) şu an kodda sabit (2026-28). API'den çekilecek (Google Calendar API / TR resmi tatil API). Sürekli manuel güncelleme yerine otomatik. Tatil yönetim ekranıyla birlikte (Zincir 2/3).
 - [ ] **Puantaj & Vardiya:** Company panelinde eksik yönetim ekranları; PDKS import arayüzü (CSV/Excel şablonu — cihaz entegrasyonu backlog); fazla mesai hesap kuralları; bordro-hazır aylık puantaj raporu
 - [ ] **Masraf:** Company panelinde yönetim/onay sayfaları (şu an sadece Portal'da); kategori limitleri; workflow entegrasyonu
 - [ ] **Doküman + Özlük Evrakı:** zorunlu evrak setleri (işe girişte istenenler), süre takibi/uyarıları (sertifika, sağlık raporu), versiyonlama polish

@@ -106,6 +106,151 @@
 
 ---
 
-## Sonraki (henüz yok)
+## A3 — Grup/Şirket/Şube yetki hiyerarşisi — Mimari teşhis
 
-- A3+ (B0 merge sonrası)
+**Tarih:** 14 Temmuz 2026 · **Kod yazılmadı** · **Karar bekleniyor**
+
+### Vizyon (hedef)
+
+```
+GRUP (holding) → ŞİRKET → ŞUBE → departman → kişi
+```
+
+| Rol | Görmesi gereken |
+|-----|-----------------|
+| Grup İK direktörü | Tüm şirketler + şubeler |
+| Şirket müdürü | Kendi şirketi (alt şubeler dahil) |
+| Şube yöneticisi | Kendi şubesi |
+| Departman yöneticisi | Kendi departmanı (**mevcut** `department`) |
+| Çalışan | Kendisi (**mevcut** `own`) |
+
+---
+
+### a) Mevcut tenant modeli
+
+**Sonuç: `companies` = tenant sınırı. 1 auth kullanıcı = 1 şirket. Holding/grup entity yok.**
+
+| Kanıt | Detay |
+|-------|--------|
+| `BelongsToCompany` | Global scope: `WHERE company_id = auth.user.company_id` (SuperAdmin hariç) |
+| `users.company_id` | Tek FK; company switcher yok |
+| `Company` model | `parent_*` / `group_*` / `organization_*` yok |
+| Spatie | `teams => false` — rol takımları company bazlı değil |
+| Auth/FE | `formatUser` tek `company` objesi |
+
+Bir tenant altında birden fazla şirket **tutulamaz** — her `Company` kaydı bağımsız SaaS kiracısıdır. SuperAdmin platform geneli görür; bu “grup İK” değildir.
+
+---
+
+### b) Mevcut DataScope
+
+**Config** (`config/data-scope.php`): admin/hr_manager→`company`, hr_specialist→`department`, manager→`team`, employee→`own`.
+
+**Enum genişlik:** `own < team < department < branch < company` (`DataScopeLevel`).
+
+**Servis** (`DataScopeService`):
+
+| Seviye | Durum |
+|--------|--------|
+| `company` | Ek filtre yok (BelongsToCompany yeter) |
+| `own` / `team` / `department` | Çalışıyor (`user_id` / `manager_id` / `department_id`) |
+| `branch` | **Stub:** `whereRaw('0 = 1')` — boş küme. Yorum: *Employee.branch_id yok* |
+
+`branch` enum’da var, rol atanabilir, ama **kullanılamaz**. Policy’lerde branch referansı yok.
+
+---
+
+### c) Employee ilişki zinciri
+
+```
+Company ← Employee.company_id
+       ← Department.company_id ← Employee.department_id
+       ← Branch.company_id     ✗ Employee.branch_id YOK
+Employee.manager_id → Employee (team)
+Employee.user_id → User
+```
+
+Şube kaydı (`branches`) şirket altında var; personel–şube bağı **şemada yok**. `Branch::employees()` / `BranchController` workaround kırık/ölü.
+
+---
+
+### d) İki mimari seçenek
+
+#### SEÇENEK 1 — “Tek tenant, çok şirket”
+
+Holding = tenant bağlamı; içinde birden fazla `companies` satırı. Employee bir `company_id`’ye bağlı. Grup kapsamı = organization altındaki tüm company’ler. `parent_group_id` / `organizations` + DataScope `group`.
+
+| Artı | Eksi / etki |
+|------|-------------|
+| Grup İK doğal: `company_id IN (org şirketleri)` | Bugünkü varsayım **kırılır**: “1 company = 1 tenant” |
+| Lisans/modül org veya şirket düzeyinde modellenebilir | `BelongsToCompany` global scope → “erişilebilir company seti” olmalı |
+| Tek DB, join’ler basit | `getCompanyId()` (~50 controller), `company.active` MW, register=1 company, FE tek company — hepsi context/switcher ister |
+| | Unique `(company_id, code)` korunur ama authz testleri yeniden yazılır |
+
+**Risk:** Yanlış genişletilmiş scope = **cross-company veri sızıntısı** (Faz 2 güvenlik kırığı).
+
+#### SEÇENEK 2 — “Grup = üst katman; her şirket ayrı tenant”
+
+Her şirket bugünkü gibi bağımsız tenant. Grup membership tablosu; grup İK için **cross-tenant** sorgu.
+
+| Artı | Eksi / etki |
+|------|-------------|
+| Mevcut tenant izolasyonu satır satır korunur | Grup İK = özel bypass yolu; iki güvenlik modeli |
+| Küçük şirket SaaS senaryosu değişmez | N+1 tenant bağlamı, rapor/join zor |
+| | Audit/lisans/modül “hangi company?” belirsizliği |
+| | SüperAdmin’e benzer güç — Policy/test karmaşıklığı yüksek |
+
+**Risk:** Cross-tenant helper’ın her endpoint’e sızması; unutulan bir `where(company_id)` = sızıntı veya eksik veri.
+
+---
+
+### e) Öneri (karar noktası — onayınız şart)
+
+**Aşamalı yaklaşım önerilir; tek seferde holding kodlanmasın.**
+
+1. **Önce şirket-içi (düşük risk, vizyonun şube katmanı):**  
+   `employees.branch_id` + DataScope `branch` gerçek implementasyon + policy/test.  
+   → Şube yöneticisi / şirket müdürü (company) / dept / own **mevcut tenant modelinde** tamamlanır. Tenant varsayımı bozulmaz.
+
+2. **Grup (holding) için tercih: SEÇENEK 1’e yakın “organization + çok şirket”.**  
+   Gerekçe: Filtre hâlâ `company_id IN (...)` — SEÇENEK 2’deki “tenant sınırını aş” modelinden daha tek-kapılı; Faz 2 DataScope genişletmesiyle uyumlu (`group` > `company`). SEÇENEK 2 çift güvenlik modeli ve cross-tenant kaçış kapısı yaratır.
+
+3. **SEÇENEK 2 önerilmez** (ilk yol olarak): izolasyon “görünürde” sağlam ama grup özelliği her yerde istisna ister; solo bakım + sızıntı riski daha yüksek.
+
+**Net öneri metni:**  
+> Kısa vade: company=tenant kalsın + branch DataScope.  
+> Orta vade grup: SEÇENEK 1 (`organizations` / `company_groups` + DataScope `group` + kontrollü multi-company scope).  
+> SEÇENEK 2 ancak “tamamen ayrı hukuki kiracılar asla ortak DB görünümü istemez” ürün kararıysa.
+
+---
+
+### f) Seçilen yolda etki (SEÇENEK 1 + önce branch varsayımı)
+
+| Alan | Değişiklik |
+|------|------------|
+| Tablolar (şube önce) | `employees.branch_id` FK + indeks `(company_id, branch_id)` |
+| Tablolar (grup sonra) | `organizations` (veya `company_groups`); `companies.organization_id`; opsiyonel `organization_user` / membership |
+| DataScope | `branch` doldurulur; sonra `group` seviyesi (`width > company`); `resolve` + `scopeFor*` |
+| BelongsToCompany | Group-kapsamlı kullanıcıda `whereIn(company_id, …)` — **en kritik değişiklik**; SuperAdmin deseninden ayrı tutulmalı |
+| Permission/Policy | Faz 2 testleri genişletilir (branch + group izolasyon); mevcut own/team/dept/company testleri yeşil kalmalı |
+| Migration riski | Branch: düşük. Group: **yüksek** — auth context, FE switcher, register, lisans, tüm controller `getCompanyId` audit |
+| FE | Şube: personel formuna branch. Grup: şirket seçici + org bağlamı |
+
+**Faz 2 korunumu:** Branch adımı mevcut testleri bozmadan eklenebilir. Group adımı bilinçli breaking; ayrı faz + güvenlik test paketi şart.
+
+---
+
+### Karar beklenen sorular (size)
+
+1. Holding gerçekten **çok hukuki şirket / tek İK görünümü** mü, yoksa çoğu müşteri **tek şirket + çok şube** mi? (İkincisi → şimdilik yalnız branch yeter.)
+2. Grup seçilirse **SEÇENEK 1** onaylıyor musunuz, yoksa SEÇENEK 2’de ısrar mı?
+3. Kodlama sırası: önce `branch_id` (ayrı prompt) → sonra group — uygun mu?
+
+**DURUM:** A3 teşhis tamam · **KOD YOK** · push yok · kararınızdan sonra kodlama promptu.
+
+---
+
+## Sonraki
+
+- A3 karar → kodlama (ayrı prompt)
+- A1 borçları ROADMAP’te (Zincir 2/3)
