@@ -658,6 +658,10 @@ class AuthController extends BaseController
         // Varsayılan izin onay akışı (Faz 4B B0)
         app(\App\Services\DefaultLeaveApprovalWorkflowService::class)->ensureForCompany($company);
 
+        // FAZ A1 — TR izin türleri + hakediş + resmi tatiller
+        app(\App\Services\DefaultCompanyHrSeedService::class)->ensureForCompany($company);
+        \App\Models\Holiday::seedTurkishHolidaysForYears([2026, 2027, 2028]);
+
         // Token oluştur
         $token = $user->createToken('auth-token')->plainTextToken;
 

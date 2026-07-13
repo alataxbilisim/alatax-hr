@@ -212,6 +212,10 @@ class CompanyController extends BaseController
                 ['roles' => ['admin']]
             );
 
+            app(\App\Services\DefaultLeaveApprovalWorkflowService::class)->ensureForCompany($company);
+            app(\App\Services\DefaultCompanyHrSeedService::class)->ensureForCompany($company);
+            \App\Models\Holiday::seedTurkishHolidaysForYears([2026, 2027, 2028]);
+
             return $this->created([
                 'company' => $company->load('modules'),
                 'admin' => [

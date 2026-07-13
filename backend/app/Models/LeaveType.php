@@ -17,8 +17,11 @@ class LeaveType extends Model
         'company_id',
         'name',
         'code',
+        'system_code',
+        'is_system',
         'description',
         'is_paid',
+        'deducts_from_annual',
         'default_days',
         'requires_document',
         'gender_restriction',
@@ -32,6 +35,8 @@ class LeaveType extends Model
 
     protected $casts = [
         'is_paid' => 'boolean',
+        'deducts_from_annual' => 'boolean',
+        'is_system' => 'boolean',
         'requires_document' => 'boolean',
         'is_active' => 'boolean',
         'approval_flow' => 'array',

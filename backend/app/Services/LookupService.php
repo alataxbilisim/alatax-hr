@@ -106,6 +106,9 @@ class LookupService
 
     public const TYPE_SURVEY_QUESTION_TYPE = 'survey_question_type';
 
+    /** Mesai / vardiya kavramları (FAZ A1) */
+    public const TYPE_OVERTIME_TYPE = 'overtime_type';
+
     /** @var list<string> */
     public const SYSTEM_TYPES = [
         self::TYPE_CURRENCY,

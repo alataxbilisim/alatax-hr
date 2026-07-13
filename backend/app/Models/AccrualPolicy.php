@@ -93,24 +93,94 @@ class AccrualPolicy extends Model
     }
 
     /**
-     * Kıdeme göre hak edilen günü hesapla
+     * Kıdeme göre hak edilen günü hesapla (geriye uyumlu düz dizi veya bands).
      */
     public function getDaysForTenure(int $yearsOfService): float
     {
-        if (empty($this->tenure_rules)) {
-            return $this->accrual_rate;
+        $bands = $this->tenureBands();
+
+        if ($bands === []) {
+            return (float) $this->accrual_rate;
         }
 
-        // Kıdem kurallarını sırala (yüksekten düşüğe)
-        $rules = collect($this->tenure_rules)->sortByDesc('years');
+        $rules = collect($bands)->sortByDesc('years');
 
         foreach ($rules as $rule) {
-            if ($yearsOfService >= ($rule['years'] ?? 0)) {
-                return $rule['days'] ?? $this->accrual_rate;
+            if ($yearsOfService >= (int) ($rule['years'] ?? 0)) {
+                return (float) ($rule['days'] ?? $this->accrual_rate);
             }
         }
 
-        return $this->accrual_rate;
+        return (float) $this->accrual_rate;
+    }
+
+    /**
+     * TR yıllık izin hakedişi: kıdem bandı + yaş override (min gün).
+     * 1 yıl kıdem şartı (waiting_period_years) altında 0 döner.
+     */
+    public function calculateAnnualEntitlement(int $yearsOfService, ?int $age = null): float
+    {
+        $meta = $this->tenureMeta();
+        $waitingYears = (int) ($meta['waiting_period_years'] ?? 1);
+
+        if ($yearsOfService < $waitingYears) {
+            return 0.0;
+        }
+
+        $days = $this->getDaysForTenure($yearsOfService);
+
+        foreach ($meta['age_overrides'] ?? [] as $override) {
+            $minDays = (float) ($override['min_days'] ?? 0);
+            if ($minDays <= 0 || $age === null) {
+                continue;
+            }
+            if (isset($override['max_age']) && $age <= (int) $override['max_age']) {
+                $days = max($days, $minDays);
+            }
+            if (isset($override['min_age']) && $age >= (int) $override['min_age']) {
+                $days = max($days, $minDays);
+            }
+        }
+
+        return $days;
+    }
+
+    /**
+     * @return list<array{years: int|float, days: int|float}>
+     */
+    public function tenureBands(): array
+    {
+        $rules = $this->tenure_rules;
+        if (empty($rules) || ! is_array($rules)) {
+            return [];
+        }
+
+        if (isset($rules['bands']) && is_array($rules['bands'])) {
+            return array_values($rules['bands']);
+        }
+
+        // Eski düz dizi: [{years, days}, ...]
+        if (array_is_list($rules)) {
+            return $rules;
+        }
+
+        return [];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function tenureMeta(): array
+    {
+        $rules = $this->tenure_rules;
+        if (! is_array($rules) || array_is_list($rules)) {
+            return [
+                'waiting_period_years' => 1,
+                'age_overrides' => [],
+            ];
+        }
+
+        return $rules;
     }
 
     /**

@@ -31,6 +31,7 @@ class LookupSeeder extends Seeder
         $this->seedLeaveGenderRestriction();
         $this->seedHolidayType();
         $this->seedApplicationStage();
+        $this->seedOvertimeType();
         $this->seedExperienceLevel();
         $this->seedJobPositionStatus();
         $this->seedInterviewType();
@@ -219,6 +220,20 @@ class LookupSeeder extends Seeder
             ['value' => 'withdrawn', 'label' => 'Çekildi', 'color' => '#6b7280', 'sort_order' => 90],
         ] as $item) {
             $this->upsertDefault(LookupService::TYPE_APPLICATION_STAGE, $item, false, $meta);
+        }
+    }
+
+    /** Mesai / vardiya kavramları — FAZ A1 (yoksa ekle) */
+    private function seedOvertimeType(): void
+    {
+        foreach ([
+            ['value' => 'normal', 'label' => 'Normal Mesai', 'sort_order' => 10],
+            ['value' => 'overtime', 'label' => 'Fazla Mesai', 'sort_order' => 20],
+            ['value' => 'night', 'label' => 'Gece Mesaisi', 'sort_order' => 30],
+            ['value' => 'weekend', 'label' => 'Hafta Tatili Çalışması', 'sort_order' => 40],
+            ['value' => 'holiday', 'label' => 'Resmi Tatil Çalışması', 'sort_order' => 50],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_OVERTIME_TYPE, $item, false);
         }
     }
 

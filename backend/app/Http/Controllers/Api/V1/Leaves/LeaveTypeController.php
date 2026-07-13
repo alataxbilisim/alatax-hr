@@ -52,6 +52,9 @@ class LeaveTypeController extends BaseController
             'gender_restriction'
         );
 
+        unset($validated['system_code'], $validated['is_system']);
+        $validated['is_system'] = false;
+
         $leaveType = LeaveType::create($validated);
 
         ActivityLog::log('create', $leaveType, 'İzin türü oluşturuldu: '.$leaveType->name);
@@ -77,6 +80,7 @@ class LeaveTypeController extends BaseController
             'code' => 'sometimes|nullable|string|max:10',
             'description' => 'sometimes|nullable|string',
             'is_paid' => 'sometimes|boolean',
+            'deducts_from_annual' => 'sometimes|boolean',
             'default_days' => 'sometimes|integer|min:0',
             'requires_document' => 'sometimes|boolean',
             'gender_restriction' => 'sometimes|nullable|string|max:100',
@@ -85,6 +89,9 @@ class LeaveTypeController extends BaseController
             'approval_flow' => 'sometimes|nullable|array',
             'is_active' => 'sometimes|boolean',
         ]);
+
+        // K-A: system_code istemciden değiştirilemez
+        unset($validated['system_code'], $validated['is_system']);
 
         if (array_key_exists('gender_restriction', $validated)) {
             $this->lookups->assertValid(
@@ -108,6 +115,10 @@ class LeaveTypeController extends BaseController
      */
     public function destroy(LeaveType $leaveType): JsonResponse
     {
+        if ($leaveType->is_system) {
+            return $this->error('Sistem izin türleri silinemez; pasifleştirebilirsiniz', 422);
+        }
+
         $leaveTypeName = $leaveType->name;
         ActivityLog::log('delete', null, 'İzin türü silindi: '.$leaveTypeName);
 
