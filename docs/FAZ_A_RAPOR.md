@@ -93,7 +93,7 @@
 |-------|--------|
 | `InviteAndPasswordOnboardingTest` | davet+accept, tek kullanımlık/expiry, anlık şifre, portal iki mod, permission+tenant, forgot-password |
 | Auth / RouteAuthorization / Totp / A1 seed | regresyon yeşil (lokal) |
-| CI | push sonrası teyit |
+| CI (Backend + Frontend) | ✅ yeşil — [run 29288579899](https://github.com/alataxbilisim/alatax-hr/actions/runs/29288579899) (`3335646`) |
 
 ### Dosyalar
 
@@ -102,7 +102,7 @@
 - `ForcedPasswordChangePage` / `InviteAcceptPage` (shared)
 - Employee portal `access_mode` + FE formları
 
-**DURUM:** A2 kod + testler hazır · tek push + CI bekleniyor · ubuntu görsel sonra.
+**DURUM:** A2 tamam · CI yeşil · ubuntu görsel kontrol sonra.
 
 ---
 
