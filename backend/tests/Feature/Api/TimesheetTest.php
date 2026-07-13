@@ -68,12 +68,14 @@ class TimesheetTest extends TestCase
                 'success' => true,
             ]);
 
-        $this->assertDatabaseHas('attendance_records', [
-            'user_id' => $this->user->id,
-            'company_id' => $this->company->id,
-            'date' => now()->toDateString(),
-            'status' => 'present',
-        ]);
+        $this->assertTrue(
+            AttendanceRecord::query()
+                ->where('user_id', $this->user->id)
+                ->where('company_id', $this->company->id)
+                ->whereDate('date', now()->toDateString())
+                ->where('status', 'present')
+                ->exists()
+        );
     }
 
     /** @test */

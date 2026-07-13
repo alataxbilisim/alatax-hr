@@ -69,13 +69,18 @@ class Totp2faTest extends TestCase
 
     private function regularUser(array $attrs = []): User
     {
-        return User::factory()->create(array_merge([
+        $user = User::factory()->create(array_merge([
             'company_id' => $this->company->id,
             'type' => UserType::User,
             'password' => Hash::make('Password1!'),
             'is_active' => true,
             'two_factor_enabled' => false,
         ], $attrs));
+
+        // Company paneli login: panel erişimi gerekir (yalnızca portal-self yetmez)
+        $user->givePermissionTo('management.users.view');
+
+        return $user;
     }
 
     private function enableFully(User $target, User $admin): array

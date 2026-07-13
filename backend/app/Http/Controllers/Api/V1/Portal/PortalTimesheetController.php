@@ -23,7 +23,7 @@ class PortalTimesheetController extends BaseController
         // Check if already clocked in today
         $existing = AttendanceRecord::where('company_id', $user->company_id)
             ->where('user_id', $user->id)
-            ->where('date', $today)
+            ->whereDate('date', $today)
             ->first();
 
         if ($existing && $existing->clock_in) {
@@ -73,7 +73,7 @@ class PortalTimesheetController extends BaseController
 
         $record = AttendanceRecord::where('company_id', $user->company_id)
             ->where('user_id', $user->id)
-            ->where('date', $today)
+            ->whereDate('date', $today)
             ->first();
 
         if (! $record || ! $record->clock_in) {
@@ -122,7 +122,7 @@ class PortalTimesheetController extends BaseController
 
         $record = AttendanceRecord::where('company_id', $user->company_id)
             ->where('user_id', $user->id)
-            ->where('date', $today)
+            ->whereDate('date', $today)
             ->first();
 
         if (! $record || ! $record->clock_in) {
@@ -155,7 +155,7 @@ class PortalTimesheetController extends BaseController
 
         $record = AttendanceRecord::where('company_id', $user->company_id)
             ->where('user_id', $user->id)
-            ->where('date', $today)
+            ->whereDate('date', $today)
             ->first();
 
         if (! $record || ! $record->break_start) {
@@ -188,7 +188,7 @@ class PortalTimesheetController extends BaseController
 
         $record = AttendanceRecord::where('company_id', $user->company_id)
             ->where('user_id', $user->id)
-            ->where('date', $today)
+            ->whereDate('date', $today)
             ->first();
 
         $status = [
