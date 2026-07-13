@@ -18,7 +18,7 @@
 
 **Motor testleri:** 15 passed (`ApprovalWorkflowMotorB0–B3`).  
 **Faz 2 Policy:** `LeaveRequestPolicyDataScopeTest` yeşil — zayıflatılmadı.  
-**CI:** push sonrası run bekleniyor → https://github.com/alataxbilisim/alatax-hr/actions?query=branch%3Afaz4-form-engine
+**CI:** ✅ yeşil — https://github.com/alataxbilisim/alatax-hr/actions/runs/29217151159 (`ca550dc`)
 
 ### KARAR BEKLENENLER
 
