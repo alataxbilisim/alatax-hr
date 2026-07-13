@@ -233,13 +233,19 @@ Fark yaratacak 4 şey:
 **UI yeri:** Ayarlar Stüdyosu → Modül Ayarları → ilgili akışın zincir editörü (sürükle-bırak adım + koşul builder).
 
 **Teknik checklist (korunan + genişleyen):**
-- [ ] Önce borç kapatma: WorkflowService.php:222 + ApprovalRecord.php:184 bildirim TODO'ları (onay isteği/sonucu bildirimleri)
-- [ ] Zincir veri modeli: çok adımlı adımlar (rol / kişi / dinamik çözücü), seviye içi paralel, koşullu adım kuralları (alan-operatör-değer, custom field dahil)
-- [ ] Çalıştırma motoru: başlat → bildir → onay/red → sonraki / geri → koşul → eskalasyon zamanlayıcı → vekalet
-- [ ] Genelleştirme (üst katman): tetikleyici (kayıt oluştu/güncellendi/durum değişti/tarih geldi) + aksiyonlar (bildirim, alan güncelle, onay başlat, görev, webhook)
-- [ ] Mevcut `approval_workflows` / steps / records / delegations korunarak genişletilir; UI Ayarlar Stüdyosu’na taşınır
-- [ ] Zamanlanmış tetikleyiciler: Laravel Scheduler (routes/console.php): aylık izin hakedişi, devir, doküman/sertifika uyarıları, deneme süresi; eskalasyon SLA job’ları
-- [ ] Feature testler: çok adımlı happy path, koşul dallanması, red+yeniden gönder, vekalet, tenant izolasyonu, yetkisiz onaycı 403
+- [x] **B0:** `findApprover` Employee.manager; `approval_instances`; default leave seed; leave store/approve köprü; `ApprovalRequested` stub; Policy testleri yeşil
+- [x] **B1:** Sıralı çok adım; red + `resubmit` yeni instance; adım sırası 403
+- [x] **B2:** `dynamic_manager` / `dynamic_skip_manager` / role / user; unresolved → hr_manager (atlanmaz); vekalet motor testi
+- [x] **B3:** Adım `condition` jsonb whitelist evaluator (`>`, `<`, `=`, `in`); koşul tutmayan SKIPPED
+- [ ] **B4:** `parallel_group` + `completion_policy` runtime; eskalasyon SLA job; timeout_action
+- [ ] **B5:** Ayarlar Stüdyosu akış tasarımcısı (Modül Ayarları)
+- [x] Bildirim TODO stub: `ApprovalRequested` → database notification (tam 4C değil)
+- [x] Zincir veri modeli genişletildi (condition / parallel_group kolonları); paralel runtime B4
+- [x] Çalıştırma motoru (izin): başlat → bildir(stub) → onay/red → sonraki → koşul → vekalet (eskalasyon B4)
+- [ ] Genelleştirme (üst katman): tetikleyici + aksiyon kataloğu
+- [ ] UI Ayarlar Stüdyosu’na taşınır (B5)
+- [ ] Zamanlanmış tetikleyiciler / eskalasyon job’ları (B4+)
+- [x] Feature testler: B0–B3 motor + LeaveRequestPolicy regresyon
 
 **4C. Bildirim Merkezi**
 - [ ] Kanal soyutlaması: in-app (var) + e-posta (firma SMTP — var) + SMS (SmsService — var) tek servis arkasında

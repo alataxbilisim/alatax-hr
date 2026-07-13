@@ -6,6 +6,34 @@
 
 ---
 
+## GECE ÖZETİ — Faz 4B B0→B3 (13 Temmuz 2026)
+
+| Adım | Durum | Commit |
+|------|-------|--------|
+| A / B0 Motor bağla (izin) | ✅ | `f60623d` |
+| B / B1 Sıralı çok adım + resubmit | ✅ | `417e4c0` |
+| C / B2 Dinamik + hr fallback + vekalet | ✅ | `ac04eb1` |
+| D / B3 Koşullu adım | ✅ | `3f9de4c` |
+| E Derin analiz (snapshot/TEST_TURU/ROADMAP) | ✅ | (bu commit) |
+
+**Motor testleri:** 15 passed (`ApprovalWorkflowMotorB0–B3`).  
+**Faz 2 Policy:** `LeaveRequestPolicyDataScopeTest` yeşil — zayıflatılmadı.  
+**CI:** push sonrası run bekleniyor → https://github.com/alataxbilisim/alatax-hr/actions?query=branch%3Afaz4-form-engine
+
+### KARAR BEKLENENLER
+
+Yok (kararlar 1–7 uygulandı). B4 paralel runtime / B5 Stüdyo UI bilinçli ertelendi.
+
+### Yarın önce bak (kullanıcı testi — 5 madde)
+
+1. Demo firmada `php artisan approvals:seed-default-leave-workflows` çalıştır; yeni izin talebi oluştur → yöneticide bildirim/kuyruk.
+2. Yönetici leave approve → bakiye düşüşünü kontrol et.
+3. İki adımlı test flow (Stüdyo yok: DB/seeder ile) — adım2 erken onay 403.
+4. Reddet → `resubmit` → ikinci `approval_instances` satırı.
+5. 3 günlük vs 15 günlük izin — GM koşul adımı (B3).
+
+---
+
 ## Faz 4B — Gece Otonom İlerleme (13 Temmuz 2026)
 
 | Adım | Durum | Not |
@@ -14,7 +42,7 @@
 | **B / B1** Sıralı çok adım | ✅ | 2+ adım; red→resubmit yeni instance; adım2 erken onay 403 |
 | **C / B2** Dinamik onaycılar + vekalet | ✅ | 3 kademe; unresolved→hr_manager (atlanmaz); vekalet motor bağlı |
 | **D / B3** Koşullu adım | ✅ | whitelist evaluator; 3g→GM atla; 15g→GM zorunlu |
-| **E** Derin analiz (snapshot/TEST_TURU/ROADMAP) | ⏸️ | en son |
+| **E** Derin analiz (snapshot/TEST_TURU/ROADMAP) | ✅ | `docs/PROJECT_SNAPSHOT.md` + TEST_TURU 4B + ROADMAP B0–B3 |
 
 ### B3 özeti
 
