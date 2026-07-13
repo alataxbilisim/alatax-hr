@@ -5,10 +5,12 @@ import { AppDispatch, RootState } from '../../store';
 import { login } from '@shared/store/slices/authSlice';
 import { TwoFactorChallenge } from '@shared/components/TwoFactorChallenge';
 import { isTwoFactorChallenge, type AuthResponse, type TwoFactorChallenge as TwoFactorChallengeData } from '@shared/types';
+import { useTranslation } from '@shared/i18n';
 import toast from 'react-hot-toast';
 import { BsEnvelope, BsLock, BsEye, BsEyeSlash, BsBuilding } from 'react-icons/bs';
 
 const LoginPage: React.FC = () => {
+  const { t } = useTranslation(['auth', 'validation']);
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { isLoading } = useSelector((state: RootState) => state.auth);
@@ -25,15 +27,15 @@ const LoginPage: React.FC = () => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.email) {
-      newErrors.email = 'E-posta adresi gerekli';
+      newErrors.email = t('validation:required_email');
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Geçerli bir e-posta adresi girin';
+      newErrors.email = t('validation:email');
     }
 
     if (!formData.password) {
-      newErrors.password = 'Şifre gerekli';
+      newErrors.password = t('validation:required_password');
     } else if (formData.password.length < 6) {
-      newErrors.password = 'Şifre en az 6 karakter olmalı';
+      newErrors.password = t('validation:password_min', { min: 6 });
     }
 
     setErrors(newErrors);
@@ -87,24 +89,12 @@ const LoginPage: React.FC = () => {
     <div className="auth-layout">
       <div className="auth-container animate-fade-in">
         <div className="auth-card">
-          {/* Logo */}
           <div className="auth-logo">
-            <div
-              style={{
-                width: 48,
-                height: 48,
-                background: 'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)',
-                borderRadius: 10,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 0.75rem',
-              }}
-            >
-              <BsBuilding size={24} color="white" />
+            <div className="auth-logo-mark" aria-hidden>
+              <BsBuilding size={24} />
             </div>
-            <h1>ALATAX HR</h1>
-            <span>Firma Yönetim Paneli</span>
+            <h1>{t('auth:brandName')}</h1>
+            <span>{t('auth:companyPanel')}</span>
           </div>
 
           {challenge ? (
@@ -115,13 +105,13 @@ const LoginPage: React.FC = () => {
             />
           ) : (
             <>
-              <h2 className="auth-title">Hoş Geldiniz</h2>
-              <p className="auth-subtitle">Firma panelinize erişmek için giriş yapın</p>
+              <h2 className="auth-title">{t('auth:login.welcome')}</h2>
+              <p className="auth-subtitle">{t('auth:login.subtitleCompany')}</p>
 
               <form onSubmit={handleSubmit} className="auth-form">
                 <div className="form-group">
                   <label htmlFor="email" className="form-label">
-                    E-posta Adresi
+                    {t('auth:emailLabel')}
                   </label>
                   <div className="input-group">
                     <span className="input-icon">
@@ -132,7 +122,7 @@ const LoginPage: React.FC = () => {
                       id="email"
                       name="email"
                       className={`form-control ${errors.email ? 'is-invalid' : ''}`}
-                      placeholder="ornek@sirket.com"
+                      placeholder={t('auth:emailPlaceholderCompany')}
                       value={formData.email}
                       onChange={handleChange}
                       autoComplete="email"
@@ -158,13 +148,13 @@ const LoginPage: React.FC = () => {
                       value={formData.password}
                       onChange={handleChange}
                       autoComplete="current-password"
-                      style={{ paddingRight: '2.5rem' }}
                     />
                     <button
                       type="button"
                       className="input-action"
                       onClick={() => setShowPassword(!showPassword)}
                       tabIndex={-1}
+                      aria-label={showPassword ? 'Şifreyi gizle' : 'Şifreyi göster'}
                     >
                       {showPassword ? <BsEyeSlash /> : <BsEye />}
                     </button>
@@ -176,7 +166,6 @@ const LoginPage: React.FC = () => {
                   type="submit"
                   className="btn btn-primary btn-lg"
                   disabled={isLoading}
-                  style={{ width: '100%', marginTop: '0.5rem' }}
                 >
                   {isLoading ? (
                     <>
@@ -184,17 +173,18 @@ const LoginPage: React.FC = () => {
                         className="loading-spinner"
                         style={{ width: 16, height: 16, borderWidth: 2 }}
                       ></span>
-                      Giriş yapılıyor...
+                      {t('auth:login.submitting')}
                     </>
                   ) : (
-                    'Giriş Yap'
+                    t('auth:login.submit')
                   )}
                 </button>
               </form>
 
               <div className="auth-footer">
                 <p>
-                  Şifrenizi mi unuttunuz? <Link to="/forgot-password">Şifre Sıfırla</Link>
+                  {t('auth:login.forgotPrompt')}{' '}
+                  <Link to="/forgot-password">{t('auth:login.resetLink')}</Link>
                 </p>
               </div>
             </>
@@ -202,19 +192,9 @@ const LoginPage: React.FC = () => {
         </div>
 
         {!challenge && (
-          <div
-            style={{
-              marginTop: '1rem',
-              padding: '0.75rem 1rem',
-              background: 'rgba(16, 185, 129, 0.1)',
-              border: '1px solid rgba(16, 185, 129, 0.2)',
-              borderRadius: 8,
-              fontSize: '0.75rem',
-              color: 'var(--text-secondary)',
-            }}
-          >
-            <strong style={{ color: 'var(--primary)' }}>Demo Bilgileri:</strong>
-            <div style={{ marginTop: '0.25rem' }}>Firma Admin: test@test.com / password123</div>
+          <div className="auth-demo-hint">
+            <strong>{t('auth:login.demoTitle')}</strong>
+            <div>{t('auth:login.demoCredentials')}</div>
           </div>
         )}
       </div>

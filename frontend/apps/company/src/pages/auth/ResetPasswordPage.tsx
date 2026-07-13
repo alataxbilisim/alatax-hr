@@ -105,19 +105,8 @@ const ResetPasswordPage: React.FC = () => {
       <div className="auth-container animate-fade-in">
         <div className="auth-card">
           <div className="auth-logo">
-            <div
-              style={{
-                width: 48,
-                height: 48,
-                background: 'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)',
-                borderRadius: 10,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 0.75rem',
-              }}
-            >
-              <BsBuilding size={24} color="white" />
+            <div className="auth-logo-mark" aria-hidden>
+              <BsBuilding size={24} />
             </div>
             <h1>{t('auth:brandName')}</h1>
             <span>{t('auth:companyPanel')}</span>
