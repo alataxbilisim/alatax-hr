@@ -13,7 +13,7 @@ use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Personel portal daveti — geçici şifre + portal giriş linki.
+ * Personel portal daveti — davet linki ve/veya bilgilendirme.
  */
 class EmployeeInvitation extends Mailable implements ShouldQueue
 {
@@ -22,7 +22,7 @@ class EmployeeInvitation extends Mailable implements ShouldQueue
     public function __construct(
         public User $user,
         public Employee $employee,
-        public string $temporaryPassword,
+        public ?string $temporaryPassword = null,
         public ?string $invitationToken = null,
     ) {}
 
@@ -55,6 +55,9 @@ class EmployeeInvitation extends Mailable implements ShouldQueue
                 'temporaryPassword' => $this->temporaryPassword,
                 'loginUrl' => $loginUrl,
                 'inviteUrl' => $inviteUrl,
+                'companyLogoUrl' => $company?->logo
+                    ? asset('storage/'.$company->logo)
+                    : null,
             ],
         );
     }

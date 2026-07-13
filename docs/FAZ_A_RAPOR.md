@@ -77,9 +77,32 @@
 | Mail | Queued Mailable’lar; firma adı metin; logo yok | Bildirim Merkezi yok → mevcut şablonu genişlet |
 | A0 panel rol | `grantPanelAccess` / Users UI | Davet/şifre ile birlikte seçim yok |
 
-**Karar (uygulama):** mevcut invite kolonlarını + Mailable’ları genişlet; yeni tablo yok. Token → sha256 saklama + 7g expiry + tek kullanımlık. `must_change_password` bayrağı. Public `accept-invitation` + company/portal `/invite/:token`.
+**Karar (uygulanan):** mevcut invite kolonları + Mailable’lar genişletildi; yeni tablo yok. Token → sha256 + 7g + tek kullanımlık. `must_change_password`. Public accept + company/portal `/invite/:token`.
 
-**DURUM:** A2 uygulama devam ediyor · push yok (faz sonu tek push).
+### Uygulama özeti
+
+| Yol | Davranış |
+|-----|----------|
+| Davet | `POST /users/invite` veya personel `portal_access_mode=invite` → mail → `POST /auth/accept-invitation` → aktif |
+| Anlık şifre | `POST /users` veya `portal_access_mode=set_password` → `must_change_password=true` → `/force-password-change` |
+| Erişim | Panel: davette rol seçimi (A0); Portal: `employee` rolü (panel yok) |
+
+### Testler
+
+| Suite | Sonuç |
+|-------|--------|
+| `InviteAndPasswordOnboardingTest` | davet+accept, tek kullanımlık/expiry, anlık şifre, portal iki mod, permission+tenant, forgot-password |
+| Auth / RouteAuthorization / Totp / A1 seed | regresyon yeşil (lokal) |
+| CI | push sonrası teyit |
+
+### Dosyalar
+
+- `InvitationService`, `AuthController::{show,accept}Invitation`
+- Migration `must_change_password`
+- `ForcedPasswordChangePage` / `InviteAcceptPage` (shared)
+- Employee portal `access_mode` + FE formları
+
+**DURUM:** A2 kod + testler hazır · tek push + CI bekleniyor · ubuntu görsel sonra.
 
 ---
 

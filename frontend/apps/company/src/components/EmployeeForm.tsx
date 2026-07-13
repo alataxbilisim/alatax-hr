@@ -63,6 +63,8 @@ interface EmployeeFormData {
   custom_fields?: Record<string, CustomFieldValue>;
   create_portal_access?: boolean;
   portal_email?: string;
+  portal_access_mode?: 'invite' | 'set_password';
+  portal_password?: string;
 }
 
 const EmployeeForm: React.FC = () => {
@@ -92,6 +94,7 @@ const EmployeeForm: React.FC = () => {
     status: 'active',
     custom_fields: {},
     create_portal_access: false,
+    portal_access_mode: 'invite',
   });
 
   const loadDepartments = useCallback(async () => {
@@ -398,17 +401,56 @@ const EmployeeForm: React.FC = () => {
                       </div>
 
                       {formData.create_portal_access && (
-                        <div className="form-group" style={{ marginBottom: 0 }}>
-                          <label className="form-label">Portal Giriş Email <span style={{ color: 'var(--danger)' }}>*</span></label>
-                          <input
-                            type="email"
-                            className="form-control"
-                            value={formData.portal_email || ''}
-                            onChange={(e) => handleChange('portal_email', e.target.value)}
-                            required={formData.create_portal_access}
-                            placeholder="personel@sirket.com"
-                          />
-                        </div>
+                        <>
+                          <div className="form-group" style={{ marginBottom: '1rem' }}>
+                            <label className="form-label">Portal Giriş Email <span style={{ color: 'var(--danger)' }}>*</span></label>
+                            <input
+                              type="email"
+                              className="form-control"
+                              value={formData.portal_email || ''}
+                              onChange={(e) => handleChange('portal_email', e.target.value)}
+                              required={formData.create_portal_access}
+                              placeholder="personel@sirket.com"
+                            />
+                          </div>
+                          <div className="form-group" style={{ marginBottom: formData.portal_access_mode === 'set_password' ? '1rem' : 0 }}>
+                            <label className="form-label">Erişim yöntemi</label>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                <input
+                                  type="radio"
+                                  name="portal_access_mode"
+                                  checked={(formData.portal_access_mode || 'invite') === 'invite'}
+                                  onChange={() => handleChange('portal_access_mode', 'invite')}
+                                />
+                                <span>Davet e-postası gönder (kişi kendi şifresini belirler)</span>
+                              </label>
+                              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                <input
+                                  type="radio"
+                                  name="portal_access_mode"
+                                  checked={formData.portal_access_mode === 'set_password'}
+                                  onChange={() => handleChange('portal_access_mode', 'set_password')}
+                                />
+                                <span>Şifreyi şimdi belirle (ilk girişte değiştirme zorunlu)</span>
+                              </label>
+                            </div>
+                          </div>
+                          {formData.portal_access_mode === 'set_password' && (
+                            <div className="form-group" style={{ marginBottom: 0 }}>
+                              <label className="form-label">Portal şifresi <span style={{ color: 'var(--danger)' }}>*</span></label>
+                              <input
+                                type="password"
+                                className="form-control"
+                                value={formData.portal_password || ''}
+                                onChange={(e) => handleChange('portal_password', e.target.value)}
+                                required={formData.portal_access_mode === 'set_password'}
+                                autoComplete="new-password"
+                                placeholder="En az 8 karakter"
+                              />
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>

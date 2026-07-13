@@ -154,7 +154,12 @@ const EmployeeDetailPage: React.FC = () => {
   ];
   
   // Portal erişimi form
-  const [portalForm, setPortalForm] = useState({ email: '', name: '' });
+  const [portalForm, setPortalForm] = useState({
+    email: '',
+    name: '',
+    access_mode: 'invite' as 'invite' | 'set_password',
+    password: '',
+  });
   const [portalLoading, setPortalLoading] = useState(false);
 
   const loadEmployee = useCallback(async () => {
@@ -199,13 +204,29 @@ const EmployeeDetailPage: React.FC = () => {
       toast.error('Lütfen tüm alanları doldurun');
       return;
     }
+    if (portalForm.access_mode === 'set_password' && !portalForm.password) {
+      toast.error('Şifre gerekli');
+      return;
+    }
 
     try {
       setPortalLoading(true);
-      const response = await employeesApi.createPortalAccess(Number(id), portalForm);
-      toast.success(`Portal erişimi oluşturuldu. Geçici şifre: ${response.data.data.temporary_password}`);
+      const payload: Record<string, unknown> = {
+        email: portalForm.email,
+        name: portalForm.name,
+        access_mode: portalForm.access_mode,
+      };
+      if (portalForm.access_mode === 'set_password') {
+        payload.password = portalForm.password;
+      }
+      await employeesApi.createPortalAccess(Number(id), payload);
+      toast.success(
+        portalForm.access_mode === 'invite'
+          ? 'Portal daveti gönderildi'
+          : 'Portal erişimi oluşturuldu'
+      );
       setPortalAccessModalOpen(false);
-      setPortalForm({ email: '', name: '' });
+      setPortalForm({ email: '', name: '', access_mode: 'invite', password: '' });
       loadEmployee();
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, 'Portal erişimi oluşturulamadı'));
@@ -348,6 +369,8 @@ const EmployeeDetailPage: React.FC = () => {
                         setPortalForm({
                           email: employee.personal_email || '',
                           name: employee.user?.name || '',
+                          access_mode: 'invite',
+                          password: '',
                         });
                       }}
                     >
@@ -396,6 +419,8 @@ const EmployeeDetailPage: React.FC = () => {
               setPortalForm({
                 email: employee.personal_email || '',
                 name: employee.user?.name || '',
+                access_mode: 'invite',
+                password: '',
               });
             }}
             onRevokePortalAccess={() => setRevokeAccessDialogOpen(true)}
@@ -492,8 +517,42 @@ const EmployeeDetailPage: React.FC = () => {
               placeholder="Email adresi"
             />
           </div>
+          <div className="form-group">
+            <label className="form-label">Erişim yöntemi</label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', cursor: 'pointer' }}>
+              <input
+                type="radio"
+                checked={portalForm.access_mode === 'invite'}
+                onChange={() => setPortalForm({ ...portalForm, access_mode: 'invite', password: '' })}
+              />
+              <span>Davet e-postası gönder</span>
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+              <input
+                type="radio"
+                checked={portalForm.access_mode === 'set_password'}
+                onChange={() => setPortalForm({ ...portalForm, access_mode: 'set_password' })}
+              />
+              <span>Şifreyi şimdi belirle</span>
+            </label>
+          </div>
+          {portalForm.access_mode === 'set_password' && (
+            <div className="form-group">
+              <label className="form-label">Şifre *</label>
+              <input
+                type="password"
+                className="form-control"
+                value={portalForm.password}
+                onChange={(e) => setPortalForm({ ...portalForm, password: e.target.value })}
+                autoComplete="new-password"
+                placeholder="En az 8 karakter"
+              />
+            </div>
+          )}
           <p style={{ fontSize: '0.875rem', color: 'var(--text-tertiary)' }}>
-            Personele geçici bir şifre oluşturulacak ve portal erişimi verilecektir.
+            {portalForm.access_mode === 'invite'
+              ? 'Personele şifre belirleme bağlantısı e-posta ile gönderilir.'
+              : 'Belirlediğiniz şifre ile giriş yapabilir; ilk girişte şifre değiştirmesi zorunludur.'}
           </p>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
             <button className="btn btn-secondary" onClick={() => setPortalAccessModalOpen(false)}>
@@ -502,7 +561,12 @@ const EmployeeDetailPage: React.FC = () => {
             <button
               className="btn btn-success"
               onClick={handleCreatePortalAccess}
-              disabled={portalLoading || !portalForm.email || !portalForm.name}
+              disabled={
+                portalLoading ||
+                !portalForm.email ||
+                !portalForm.name ||
+                (portalForm.access_mode === 'set_password' && !portalForm.password)
+              }
             >
               {portalLoading ? 'Oluşturuluyor...' : 'Erişim Ver'}
             </button>

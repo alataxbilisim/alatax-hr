@@ -19,6 +19,7 @@ use App\Services\CustomFieldValidationService;
 use App\Services\DataScopeService;
 use App\Services\EmployeeImportService;
 use App\Services\EmployeeSensitiveFieldService;
+use App\Services\InvitationService;
 use App\Services\LookupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -27,6 +28,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
 class EmployeeController extends BaseController
 {
@@ -35,6 +37,7 @@ class EmployeeController extends BaseController
         protected EmployeeSensitiveFieldService $sensitiveFields,
         protected LookupService $lookups,
         protected CustomFieldValidationService $customFieldValidation,
+        protected InvitationService $invitations,
     ) {}
 
     /**
@@ -290,6 +293,12 @@ class EmployeeController extends BaseController
             // Portal erişimi
             'create_portal_access' => 'boolean',
             'portal_email' => 'nullable|required_if:create_portal_access,true|email|unique:users,email',
+            'portal_access_mode' => 'nullable|in:invite,set_password',
+            'portal_password' => [
+                'nullable',
+                'required_if:portal_access_mode,set_password',
+                Password::min(8)->mixedCase()->numbers()->symbols(),
+            ],
         ]);
 
         $companyId = $this->getCompanyId();
@@ -362,30 +371,15 @@ class EmployeeController extends BaseController
 
             // Portal erişimi oluştur
             if ($request->get('create_portal_access', false)) {
-                $temporaryPassword = Str::random(12);
-                $invitationToken = Str::random(64);
-
-                $user = User::create([
-                    'company_id' => $this->getCompanyId(),
-                    'name' => $validated['name'],
-                    'email' => $validated['portal_email'],
-                    'password' => Hash::make($temporaryPassword),
-                    'type' => 'user',
-                    'is_active' => true,
-                    'invitation_token' => Hash::make($invitationToken),
-                    'invited_at' => now(),
-                    'created_by' => auth()->id(),
-                ]);
-
-                // Employee'ye user_id'yi ata
-                $employee->update(['user_id' => $user->id]);
-
-                // Varsayılan rol ata
-                $user->assignRole('employee');
-
-                Mail::to($user->email)->queue(
-                    new EmployeeInvitation($user->load('company'), $employee, $temporaryPassword, $invitationToken)
+                $mode = $validated['portal_access_mode'] ?? 'invite';
+                $user = $this->provisionPortalUser(
+                    $employee,
+                    $validated['portal_email'],
+                    $validated['name'],
+                    $mode,
+                    $validated['portal_password'] ?? null
                 );
+                $employee->update(['user_id' => $user->id]);
             }
 
             // Observer Auditable create log yazar — manuel CRUD log yok
@@ -527,45 +521,93 @@ class EmployeeController extends BaseController
         $validated = $request->validate([
             'email' => 'required|email|unique:users,email',
             'name' => 'required|string|max:255',
+            'access_mode' => 'nullable|in:invite,set_password',
+            'password' => [
+                'nullable',
+                'required_if:access_mode,set_password',
+                Password::min(8)->mixedCase()->numbers()->symbols(),
+            ],
         ]);
 
         DB::beginTransaction();
         try {
-            $temporaryPassword = Str::random(12);
-            $invitationToken = Str::random(64);
-
-            $user = User::create([
-                'company_id' => $this->getCompanyId(),
-                'name' => $validated['name'],
-                'email' => $validated['email'],
-                'password' => Hash::make($temporaryPassword),
-                'type' => 'user',
-                'is_active' => true,
-                'invitation_token' => Hash::make($invitationToken),
-                'invited_at' => now(),
-                'created_by' => auth()->id(),
-            ]);
+            $mode = $validated['access_mode'] ?? 'invite';
+            $user = $this->provisionPortalUser(
+                $employee,
+                $validated['email'],
+                $validated['name'],
+                $mode,
+                $validated['password'] ?? null
+            );
 
             $employee->update(['user_id' => $user->id]);
-            $user->assignRole('employee');
 
             ActivityLog::log('update', $employee, 'Personele portal erişimi verildi');
-
-            Mail::to($user->email)->queue(
-                new EmployeeInvitation($user->load('company'), $employee, $temporaryPassword, $invitationToken)
-            );
 
             DB::commit();
 
             return $this->success([
                 'employee' => new EmployeeResource($employee->load('user')),
-                'temporary_password' => $temporaryPassword,
-            ], 'Portal erişimi başarıyla oluşturuldu');
+                'access_mode' => $mode,
+                'invitation_sent' => $mode === 'invite',
+                'must_change_password' => $mode === 'set_password',
+            ], $mode === 'invite'
+                ? 'Portal daveti gönderildi'
+                : 'Portal erişimi oluşturuldu (şifre değiştirme zorunlu)');
         } catch (\Exception $e) {
             DB::rollBack();
 
             return $this->error('Portal erişimi oluşturulurken hata oluştu: '.$e->getMessage(), 500);
         }
+    }
+
+    /**
+     * Portal kullanıcısı oluştur (davet veya anlık şifre).
+     */
+    private function provisionPortalUser(
+        Employee $employee,
+        string $email,
+        string $name,
+        string $mode,
+        ?string $password
+    ): User {
+        if ($mode === 'set_password') {
+            $user = User::create([
+                'company_id' => $this->getCompanyId(),
+                'name' => $name,
+                'email' => $email,
+                'password' => Hash::make((string) $password),
+                'type' => 'user',
+                'is_active' => true,
+                'must_change_password' => true,
+                'created_by' => auth()->id(),
+            ]);
+            $user->assignRole('employee');
+
+            return $user;
+        }
+
+        $issue = $this->invitations->issue();
+
+        $user = User::create([
+            'company_id' => $this->getCompanyId(),
+            'name' => $name,
+            'email' => $email,
+            'password' => Hash::make(Str::random(32)),
+            'type' => 'user',
+            'is_active' => false,
+            'must_change_password' => false,
+            'invitation_token' => $issue['hash'],
+            'invited_at' => $issue['invited_at'],
+            'created_by' => auth()->id(),
+        ]);
+        $user->assignRole('employee');
+
+        Mail::to($user->email)->queue(
+            new EmployeeInvitation($user->load('company'), $employee, null, $issue['plain'])
+        );
+
+        return $user;
     }
 
     /**

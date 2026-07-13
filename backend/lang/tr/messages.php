@@ -34,6 +34,7 @@ return [
         'employee_invitation_login' => 'Portala Giriş Yap',
         'employee_invitation_accept' => 'Daveti Kabul Et',
         'employee_invitation_change_hint' => 'Güvenliğiniz için ilk girişten sonra şifrenizi değiştirmenizi öneririz.',
+        'employee_invitation_set_password_hint' => 'Hesabınızı etkinleştirmek için aşağıdaki bağlantıdan şifrenizi belirleyin.',
 
         'admin_reset_subject' => ':app — Şifreniz Sıfırlandı',
         'admin_reset_heading' => 'Şifreniz Sıfırlandı',

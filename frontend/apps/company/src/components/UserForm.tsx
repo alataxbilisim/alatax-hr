@@ -344,6 +344,12 @@ const UserForm: React.FC<UserFormProps> = ({
         </div>
         </div>
 
+        {!isEditing && (
+          <p style={{ fontSize: '0.875rem', color: 'var(--text-tertiary)', marginTop: '-0.5rem', marginBottom: '1rem' }}>
+            Anlık şifre ile oluşturulan kullanıcı ilk girişte şifresini değiştirmek zorundadır. Davet için &quot;Davet Et&quot; kullanın.
+          </p>
+        )}
+
         {/* Roles */}
         {roles.length > 0 && (
           <div className="form-group">
