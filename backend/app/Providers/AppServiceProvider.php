@@ -3,10 +3,13 @@
 namespace App\Providers;
 
 use App\Enums\UserType;
+use App\Events\ApprovalRequested;
+use App\Listeners\SendApprovalRequestedNotification;
 use App\Models\User;
 use App\Support\HierarchicalPermission;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -28,6 +31,8 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureRateLimiting();
         $this->configureAuthorizationGates();
+
+        Event::listen(ApprovalRequested::class, SendApprovalRequestedNotification::class);
     }
 
     /**

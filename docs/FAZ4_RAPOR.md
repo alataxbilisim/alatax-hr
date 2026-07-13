@@ -6,6 +6,40 @@
 
 ---
 
+## Faz 4B — Gece Otonom İlerleme (13 Temmuz 2026)
+
+| Adım | Durum | Not |
+|------|-------|-----|
+| **A / B0** Motoru bağla (pilot: İzin) | ✅ | findApprover Employee.manager; `approval_instances`; default seed; leave köprü; event stub |
+| **B / B1** Sıralı çok adım | ⏸️ | B0 commit sonrası |
+| **C / B2** Dinamik onaycılar + vekalet | ⏸️ | |
+| **D / B3** Koşullu adım | ⏸️ | A–C yeşilse |
+| **E** Derin analiz (snapshot/TEST_TURU/ROADMAP) | ⏸️ | en son |
+
+### B0 özeti
+
+- **findApprover:** `Employee.manager_id` → `manager.user`; `dynamic_manager` / `dynamic_skip_manager` / `role` / `user` (+ legacy alias).
+- **Şema:** `approval_steps.condition` jsonb, `parallel_group`, `completion_policy`; `approval_instances` (polymorphic+tenant); `approval_records.approval_instance_id`.
+- **Seed:** `DefaultLeaveApprovalWorkflowService` + `approvals:seed-default-leave-workflows`; register’da otomatik.
+- **Köprü:** `LeaveRequestController` store→`startWorkflow`; approve/reject→motor (`processAuthorizedApproval`) veya legacy + warning log. Policy kapısı korunur (motor bypass yok).
+- **Event:** `ApprovalRequested` → `SendApprovalRequestedNotification` (database stub).
+- **Legacy:** akış yoksa otomatik onay **KAPALI**; pending + `Log::warning`.
+
+### B0 testler
+
+| Suite | Sonuç |
+|-------|--------|
+| `ApprovalWorkflowMotorB0Test` (6) | ✅ |
+| `LeaveRequestPolicyDataScopeTest` (7) — Faz 2 | ✅ yeşil (zayıflatılmadı) |
+| `PolicyDataScopeWave3Test` approvals | ✅ |
+| `PermissionEnforcementWave2Test` leaves | ✅ |
+
+### KARAR BEKLENENLER (B0)
+
+Yok — kararlar 1–7 uygulandı.
+
+---
+
 ## Gece İşi Doğrulama (12 Temmuz 2026 — akşam)
 
 **Amaç:** Gece eklenen 6 özelliğin CI derlemesi değil, **mantık** kanıtı. Yeni özellik yok; test derinleştirme + bulunan kırık düzeltme.  

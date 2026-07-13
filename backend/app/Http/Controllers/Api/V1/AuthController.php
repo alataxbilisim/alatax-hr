@@ -632,6 +632,9 @@ class AuthController extends BaseController
         }
         $user->assignRole($adminRole);
 
+        // Varsayılan izin onay akışı (Faz 4B B0)
+        app(\App\Services\DefaultLeaveApprovalWorkflowService::class)->ensureForCompany($company);
+
         // Token oluştur
         $token = $user->createToken('auth-token')->plainTextToken;
 

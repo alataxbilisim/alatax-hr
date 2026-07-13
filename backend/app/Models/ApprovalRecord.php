@@ -14,6 +14,7 @@ class ApprovalRecord extends Model
 
     protected $fillable = [
         'company_id',
+        'approval_instance_id',
         'approval_workflow_id',
         'approval_step_id',
         'approvable_type',
@@ -58,6 +59,11 @@ class ApprovalRecord extends Model
     }
 
     // Relationships
+    public function instance(): BelongsTo
+    {
+        return $this->belongsTo(ApprovalInstance::class, 'approval_instance_id');
+    }
+
     public function workflow(): BelongsTo
     {
         return $this->belongsTo(ApprovalWorkflow::class, 'approval_workflow_id');
@@ -131,10 +137,12 @@ class ApprovalRecord extends Model
             'is_current' => false,
         ]);
 
+        $this->instance?->markRejected();
+
         // Talebi reddet
         $approvable = $this->approvable;
         if (method_exists($approvable, 'onWorkflowRejected')) {
-            $approvable->onWorkflowRejected($reason, $this->approver_id);
+            $approvable->onWorkflowRejected($reason, (int) $this->approver_id);
         }
 
         ActivityLog::log(
@@ -163,13 +171,14 @@ class ApprovalRecord extends Model
         $approvable = $this->approvable;
         $workflow = $this->workflow;
         $nextStep = $workflow->getNextStep($this->step_order);
+        $instance = $this->instance;
 
         if ($nextStep) {
-            // Sonraki adım için kayıt oluştur
             $approver = $nextStep->findApprover($approvable);
 
-            self::create([
+            $nextRecord = self::create([
                 'company_id' => $this->company_id,
+                'approval_instance_id' => $this->approval_instance_id,
                 'approval_workflow_id' => $workflow->id,
                 'approval_step_id' => $nextStep->id,
                 'approvable_type' => $this->approvable_type,
@@ -180,17 +189,20 @@ class ApprovalRecord extends Model
                 'is_current' => true,
             ]);
 
-            // Talep durumunu güncelle
-            $approvable->update(['current_step' => $nextStep->step_order]);
+            $instance?->markInProgress($nextStep->step_order);
 
-            // Onaylayıcıya bildirim gönder
+            if (in_array('current_step', $approvable->getFillable(), true)) {
+                $approvable->update(['current_step' => $nextStep->step_order]);
+            }
+
             if ($approver) {
-                // TODO: Notification gönder
+                event(new \App\Events\ApprovalRequested($nextRecord, $approver, $approvable, $nextStep));
             }
         } else {
-            // Tüm adımlar tamamlandı
+            $instance?->markApproved();
+
             if (method_exists($approvable, 'onWorkflowCompleted')) {
-                $approvable->onWorkflowCompleted();
+                $approvable->onWorkflowCompleted((int) $this->approver_id);
             }
         }
     }

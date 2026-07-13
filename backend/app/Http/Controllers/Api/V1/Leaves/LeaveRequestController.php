@@ -5,17 +5,21 @@ namespace App\Http\Controllers\Api\V1\Leaves;
 use App\Enums\LeaveRequestStatus;
 use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\ActivityLog;
+use App\Models\ApprovalRecord;
 use App\Models\LeaveBalance;
 use App\Models\LeaveRequest;
 use App\Models\LeaveType;
 use App\Services\DataScopeService;
+use App\Services\WorkflowService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class LeaveRequestController extends BaseController
 {
     public function __construct(
         protected DataScopeService $dataScope,
+        protected WorkflowService $workflowService,
     ) {}
 
     /**
@@ -121,6 +125,20 @@ class LeaveRequestController extends BaseController
         // Update balance pending
         $balance->addPending($totalDays);
 
+        // Onay zinciri motoru (yoksa legacy: pending + warning)
+        $record = $this->workflowService->startWorkflow($leaveRequest, [
+            'total_days' => $totalDays,
+            'leave_type_id' => $leaveType->id,
+            'requester_id' => auth()->id(),
+        ]);
+
+        if (! $record) {
+            Log::warning('leave.request.created_without_workflow', [
+                'leave_request_id' => $leaveRequest->id,
+                'company_id' => $leaveRequest->company_id,
+            ]);
+        }
+
         return $this->success($leaveRequest->load(['leaveType', 'user']), 'İzin talebi oluşturuldu', 201);
     }
 
@@ -139,7 +157,8 @@ class LeaveRequestController extends BaseController
 
     /**
      * Approve a leave request.
-     * Onay yetkisi: Policy (workflow canApprove | team | company). Legacy serbest onay yok.
+     * Köprü: aktif motor kaydı varsa WorkflowService; yoksa legacy LeaveRequest::approve.
+     * Yetki kapısı her zaman Policy (motor bypass yok).
      */
     public function approve(Request $request, LeaveRequest $leaveRequest): JsonResponse
     {
@@ -153,9 +172,32 @@ class LeaveRequestController extends BaseController
             'note' => 'nullable|string|max:500',
         ]);
 
-        LeaveRequest::withoutAuditing(
-            fn () => $leaveRequest->approve(auth()->id(), $validated['note'] ?? null)
-        );
+        $currentRecord = $leaveRequest->approvalRecords()
+            ->where('is_current', true)
+            ->where('status', ApprovalRecord::STATUS_PENDING)
+            ->first();
+
+        if ($currentRecord) {
+            $ok = $this->workflowService->processAuthorizedApproval(
+                $currentRecord,
+                (int) auth()->id(),
+                $validated['note'] ?? null
+            );
+
+            if (! $ok) {
+                return $this->error('Onay adımı işlenemedi', null, 422);
+            }
+        } else {
+            Log::warning('leave.request.legacy_approve_without_workflow_record', [
+                'leave_request_id' => $leaveRequest->id,
+                'company_id' => $leaveRequest->company_id,
+                'actor_id' => auth()->id(),
+            ]);
+
+            LeaveRequest::withoutAuditing(
+                fn () => $leaveRequest->approve(auth()->id(), $validated['note'] ?? null)
+            );
+        }
 
         ActivityLog::log('approved', $leaveRequest, 'İzin talebi onaylandı: '.$leaveRequest->leaveType->name);
 
@@ -177,9 +219,32 @@ class LeaveRequestController extends BaseController
             'reason' => 'required|string|max:500',
         ]);
 
-        LeaveRequest::withoutAuditing(
-            fn () => $leaveRequest->reject(auth()->id(), $validated['reason'])
-        );
+        $currentRecord = $leaveRequest->approvalRecords()
+            ->where('is_current', true)
+            ->where('status', ApprovalRecord::STATUS_PENDING)
+            ->first();
+
+        if ($currentRecord) {
+            $ok = $this->workflowService->processAuthorizedRejection(
+                $currentRecord,
+                (int) auth()->id(),
+                $validated['reason']
+            );
+
+            if (! $ok) {
+                return $this->error('Red adımı işlenemedi', null, 422);
+            }
+        } else {
+            Log::warning('leave.request.legacy_reject_without_workflow_record', [
+                'leave_request_id' => $leaveRequest->id,
+                'company_id' => $leaveRequest->company_id,
+                'actor_id' => auth()->id(),
+            ]);
+
+            LeaveRequest::withoutAuditing(
+                fn () => $leaveRequest->reject(auth()->id(), $validated['reason'])
+            );
+        }
 
         ActivityLog::log('rejected', $leaveRequest, 'İzin talebi reddedildi: '.$leaveRequest->leaveType->name.' - Sebep: '.$validated['reason']);
 

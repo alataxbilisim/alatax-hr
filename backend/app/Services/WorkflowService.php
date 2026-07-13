@@ -3,55 +3,75 @@
 namespace App\Services;
 
 use App\Enums\UserType;
+use App\Events\ApprovalRequested;
 use App\Models\ActivityLog;
 use App\Models\ApprovalDelegation;
+use App\Models\ApprovalInstance;
 use App\Models\ApprovalRecord;
+use App\Models\ApprovalStep;
 use App\Models\ApprovalWorkflow;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class WorkflowService
 {
     /**
-     * Bir talep için workflow başlat
+     * Bir talep için workflow başlat.
+     * Akış yoksa legacy: null döner, entity pending kalır (otomatik onay YOK).
      */
     public function startWorkflow(Model $approvable, array $context = []): ?ApprovalRecord
     {
         $entityType = $this->getEntityType($approvable);
-        $companyId = $approvable->company_id;
+        $companyId = (int) $approvable->company_id;
 
-        // Uygun workflow'u bul
         $workflow = ApprovalWorkflow::findForRequest($companyId, $entityType, $context);
 
         if (! $workflow) {
-            // Workflow yoksa direkt onayla
-            if (method_exists($approvable, 'onWorkflowCompleted')) {
-                $approvable->onWorkflowCompleted();
-            }
+            Log::warning('approval.workflow.missing_legacy_fallback', [
+                'company_id' => $companyId,
+                'entity_type' => $entityType,
+                'approvable_type' => get_class($approvable),
+                'approvable_id' => $approvable->id,
+            ]);
 
             return null;
         }
 
-        // İlk adımı al
         $firstStep = $workflow->getFirstStep();
         if (! $firstStep) {
+            Log::warning('approval.workflow.empty_steps', [
+                'workflow_id' => $workflow->id,
+                'company_id' => $companyId,
+            ]);
+
             return null;
         }
 
-        // Onaylayıcıyı bul
         $approver = $firstStep->findApprover($approvable);
 
-        // Talebe workflow bilgilerini ekle
-        $approvable->update([
+        $instance = ApprovalInstance::create([
+            'company_id' => $companyId,
             'approval_workflow_id' => $workflow->id,
+            'approvable_type' => get_class($approvable),
+            'approvable_id' => $approvable->id,
             'current_step' => $firstStep->step_order,
-            'workflow_status' => 'in_progress',
+            'status' => ApprovalInstance::STATUS_IN_PROGRESS,
+            'started_at' => now(),
         ]);
 
-        // İlk onay kaydını oluştur
+        if ($this->approvableHasWorkflowColumns($approvable)) {
+            $approvable->update([
+                'approval_workflow_id' => $workflow->id,
+                'current_step' => $firstStep->step_order,
+                'workflow_status' => 'in_progress',
+            ]);
+        }
+
         $record = ApprovalRecord::create([
             'company_id' => $companyId,
+            'approval_instance_id' => $instance->id,
             'approval_workflow_id' => $workflow->id,
             'approval_step_id' => $firstStep->id,
             'approvable_type' => get_class($approvable),
@@ -62,30 +82,44 @@ class WorkflowService
             'is_current' => true,
         ]);
 
-        // Log kaydı
         ActivityLog::log(
             'workflow_started',
             $approvable,
             "Onay akışı başlatıldı: {$workflow->name}",
             null,
-            ['workflow_id' => $workflow->id, 'approver_id' => $approver?->id]
+            [
+                'workflow_id' => $workflow->id,
+                'instance_id' => $instance->id,
+                'approver_id' => $approver?->id,
+            ]
         );
 
-        // Onaylayıcıya bildirim gönder
         if ($approver) {
-            $this->notifyApprover($approver, $approvable, $firstStep);
+            $this->notifyApprover($approver, $approvable, $firstStep, $record);
         }
 
         return $record;
     }
 
     /**
-     * Onay işlemi
+     * Onay işlemi (canApprove kapısı — /approvals kuyruğu).
      */
     public function approve(ApprovalRecord $record, int $approverId, ?string $comment = null): bool
     {
-        // Yetki kontrolü
         if (! $this->canApprove($record, $approverId)) {
+            return false;
+        }
+
+        return $this->processAuthorizedApproval($record, $approverId, $comment);
+    }
+
+    /**
+     * Policy zaten authorize etmiş köprü yolu (leave/expense approve).
+     * Motor "kim" çözmüştü; Policy "onaylayabilir mi" dedi — canApprove tekrarlanmaz.
+     */
+    public function processAuthorizedApproval(ApprovalRecord $record, int $approverId, ?string $comment = null): bool
+    {
+        if ($record->status !== ApprovalRecord::STATUS_PENDING || ! $record->is_current) {
             return false;
         }
 
@@ -99,12 +133,23 @@ class WorkflowService
     }
 
     /**
-     * Red işlemi
+     * Red işlemi (canApprove kapısı).
      */
     public function reject(ApprovalRecord $record, int $approverId, string $reason): bool
     {
-        // Yetki kontrolü
         if (! $this->canApprove($record, $approverId)) {
+            return false;
+        }
+
+        return $this->processAuthorizedRejection($record, $approverId, $reason);
+    }
+
+    /**
+     * Policy-authorized red köprüsü.
+     */
+    public function processAuthorizedRejection(ApprovalRecord $record, int $approverId, string $reason): bool
+    {
+        if ($record->status !== ApprovalRecord::STATUS_PENDING || ! $record->is_current) {
             return false;
         }
 
@@ -146,7 +191,6 @@ class WorkflowService
      */
     public function getPendingApprovalsForUser(int $userId, int $companyId): \Illuminate\Database\Eloquent\Collection
     {
-        // Direkt atanan veya vekalet verilen onaylar
         $delegatorIds = ApprovalDelegation::where('company_id', $companyId)
             ->where('delegate_id', $userId)
             ->active()
@@ -159,7 +203,7 @@ class WorkflowService
                 $q->where('approver_id', $userId)
                     ->orWhereIn('approver_id', $delegatorIds);
             })
-            ->with(['approvable', 'step', 'workflow'])
+            ->with(['approvable', 'step', 'workflow', 'instance'])
             ->get();
     }
 
@@ -176,7 +220,7 @@ class WorkflowService
     }
 
     /**
-     * Kullanıcının onaylama yetkisi var mı?
+     * Kullanıcının onaylama yetkisi var mı? (atanan / vekil / admin)
      */
     public function canApprove(ApprovalRecord $record, int $userId): bool
     {
@@ -188,18 +232,15 @@ class WorkflowService
             return false;
         }
 
-        // super_admin type veya Spatie admin rolü (company_admin type tek başına yetmez)
         $actor = User::query()->find($userId);
         if ($actor && ($actor->type === UserType::SuperAdmin || $actor->hasRole('admin'))) {
             return true;
         }
 
-        // Direkt atanmış mı?
         if ((int) $record->approver_id === $userId) {
             return true;
         }
 
-        // Vekalet: entity_type leave_request / LeaveRequest / null (tümü)
         $entityHints = $this->delegationEntityHints($record);
 
         foreach ($entityHints as $entityType) {
@@ -239,9 +280,6 @@ class WorkflowService
         return array_values(array_unique($hints));
     }
 
-    /**
-     * Entity tipini belirle
-     */
     protected function getEntityType(Model $approvable): string
     {
         $class = class_basename($approvable);
@@ -257,12 +295,14 @@ class WorkflowService
         return $mapping[$class] ?? strtolower($class);
     }
 
-    /**
-     * Onaylayıcıya bildirim gönder
-     */
-    protected function notifyApprover($approver, $approvable, $step): void
+    protected function notifyApprover(User $approver, Model $approvable, ApprovalStep $step, ApprovalRecord $record): void
     {
-        // TODO: Notification sistemi ile entegre et
-        // $approver->notify(new ApprovalRequestNotification($approvable, $step));
+        event(new ApprovalRequested($record, $approver, $approvable, $step));
+    }
+
+    protected function approvableHasWorkflowColumns(Model $approvable): bool
+    {
+        return in_array('approval_workflow_id', $approvable->getFillable(), true)
+            && in_array('workflow_status', $approvable->getFillable(), true);
     }
 }

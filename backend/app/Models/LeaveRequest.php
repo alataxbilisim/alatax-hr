@@ -105,15 +105,21 @@ class LeaveRequest extends Model
     }
 
     /**
-     * Workflow tamamlandığında çağrılır
+     * Workflow tamamlandığında çağrılır (son adım onayı).
      */
-    public function onWorkflowCompleted(): void
+    public function onWorkflowCompleted(?int $approverId = null): void
     {
-        $this->update([
+        $payload = [
             'status' => self::STATUS_APPROVED,
             'workflow_status' => self::WORKFLOW_COMPLETED,
             'approved_at' => now(),
-        ]);
+        ];
+
+        if ($approverId !== null) {
+            $payload['approved_by'] = $approverId;
+        }
+
+        $this->update($payload);
 
         // Bakiyeyi güncelle
         $balance = LeaveBalance::where('user_id', $this->user_id)

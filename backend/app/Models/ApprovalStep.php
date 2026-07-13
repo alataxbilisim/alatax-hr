@@ -22,6 +22,9 @@ class ApprovalStep extends Model
         'can_skip',
         'timeout_hours',
         'timeout_action',
+        'condition',
+        'parallel_group',
+        'completion_policy',
     ];
 
     protected $casts = [
@@ -29,9 +32,11 @@ class ApprovalStep extends Model
         'can_skip' => 'boolean',
         'step_order' => 'integer',
         'timeout_hours' => 'integer',
+        'condition' => 'array',
+        'parallel_group' => 'integer',
     ];
 
-    // Onaylayıcı tipleri
+    // Onaylayıcı tipleri (legacy + Faz 4B)
     const APPROVER_DIRECT_MANAGER = 'direct_manager';
 
     const APPROVER_DEPARTMENT_HEAD = 'department_head';
@@ -46,13 +51,25 @@ class ApprovalStep extends Model
 
     const APPROVER_CEO = 'ceo';
 
+    const APPROVER_DYNAMIC_MANAGER = 'dynamic_manager';
+
+    const APPROVER_DYNAMIC_SKIP_MANAGER = 'dynamic_skip_manager';
+
+    const APPROVER_ROLE = 'role';
+
+    const APPROVER_USER = 'user';
+
     public static function getApproverTypes(): array
     {
         return [
-            self::APPROVER_DIRECT_MANAGER => 'Direkt Yönetici',
+            self::APPROVER_DYNAMIC_MANAGER => 'Direkt Yönetici',
+            self::APPROVER_DYNAMIC_SKIP_MANAGER => 'Üst Yönetici (skip-level)',
+            self::APPROVER_DIRECT_MANAGER => 'Direkt Yönetici (legacy)',
             self::APPROVER_DEPARTMENT_HEAD => 'Departman Yöneticisi',
-            self::APPROVER_SPECIFIC_USER => 'Belirli Kullanıcı',
-            self::APPROVER_SPECIFIC_ROLE => 'Belirli Rol',
+            self::APPROVER_USER => 'Belirli Kullanıcı',
+            self::APPROVER_SPECIFIC_USER => 'Belirli Kullanıcı (legacy)',
+            self::APPROVER_ROLE => 'Belirli Rol',
+            self::APPROVER_SPECIFIC_ROLE => 'Belirli Rol (legacy)',
             self::APPROVER_HR => 'İK Departmanı',
             self::APPROVER_CFO => 'Finans Müdürü',
             self::APPROVER_CEO => 'Genel Müdür',
@@ -83,18 +100,16 @@ class ApprovalStep extends Model
     }
 
     /**
-     * Bu adım için onaylayıcıyı bul
+     * Bu adım için onaylayıcıyı bul (vekalet uygulanır).
      */
     public function findApprover(Model $approvable): ?User
     {
-        // Önce vekalet kontrolü yap
         $approver = $this->getBaseApprover($approvable);
 
         if (! $approver) {
             return null;
         }
 
-        // Vekalet var mı kontrol et
         $delegate = ApprovalDelegation::findActiveDelegate(
             $approver->id,
             $approvable->company_id,
@@ -105,7 +120,8 @@ class ApprovalStep extends Model
     }
 
     /**
-     * Temel onaylayıcıyı bul (vekalet hariç)
+     * Temel onaylayıcı (vekalet hariç).
+     * Hiyerarşi: Employee.manager_id → manager.user_id (Faz 2 DataScope ile aynı).
      */
     protected function getBaseApprover(Model $approvable): ?User
     {
@@ -115,40 +131,87 @@ class ApprovalStep extends Model
             return null;
         }
 
-        switch ($this->approver_type) {
-            case self::APPROVER_DIRECT_MANAGER:
-                return $requestingUser->manager;
+        $employee = $requestingUser->relationLoaded('employee')
+            ? $requestingUser->employee
+            : $requestingUser->employee()->with(['manager.user', 'department.manager'])->first();
 
-            case self::APPROVER_DEPARTMENT_HEAD:
-                $department = $requestingUser->department;
+        return match ($this->approver_type) {
+            self::APPROVER_DYNAMIC_MANAGER,
+            self::APPROVER_DIRECT_MANAGER => $this->resolveDirectManager($employee),
 
-                return $department?->head;
+            self::APPROVER_DYNAMIC_SKIP_MANAGER => $this->resolveSkipManager($employee),
 
-            case self::APPROVER_SPECIFIC_USER:
-                return $this->specificUser;
+            self::APPROVER_DEPARTMENT_HEAD => $this->resolveDepartmentHead($employee),
 
-            case self::APPROVER_SPECIFIC_ROLE:
-                return User::where('company_id', $approvable->company_id)
-                    ->whereHas('roles', fn ($q) => $q->where('name', $this->specific_role))
-                    ->first();
+            self::APPROVER_USER,
+            self::APPROVER_SPECIFIC_USER => $this->specificUser,
 
-            case self::APPROVER_HR:
-                return User::where('company_id', $approvable->company_id)
-                    ->whereHas('roles', fn ($q) => $q->where('name', 'hr_manager'))
-                    ->first();
+            self::APPROVER_ROLE,
+            self::APPROVER_SPECIFIC_ROLE => User::where('company_id', $approvable->company_id)
+                ->whereHas('roles', fn ($q) => $q->where('name', $this->specific_role))
+                ->first(),
 
-            case self::APPROVER_CFO:
-                return User::where('company_id', $approvable->company_id)
-                    ->whereHas('roles', fn ($q) => $q->where('name', 'cfo'))
-                    ->first();
+            self::APPROVER_HR => User::where('company_id', $approvable->company_id)
+                ->whereHas('roles', fn ($q) => $q->where('name', 'hr_manager'))
+                ->first(),
 
-            case self::APPROVER_CEO:
-                return User::where('company_id', $approvable->company_id)
-                    ->whereHas('roles', fn ($q) => $q->where('name', 'ceo'))
-                    ->first();
+            self::APPROVER_CFO => User::where('company_id', $approvable->company_id)
+                ->whereHas('roles', fn ($q) => $q->where('name', 'cfo'))
+                ->first(),
 
-            default:
-                return null;
+            self::APPROVER_CEO => User::where('company_id', $approvable->company_id)
+                ->whereHas('roles', fn ($q) => $q->where('name', 'ceo'))
+                ->first(),
+
+            default => null,
+        };
+    }
+
+    protected function resolveDirectManager(?Employee $employee): ?User
+    {
+        if (! $employee?->manager_id) {
+            return null;
         }
+
+        $manager = $employee->relationLoaded('manager')
+            ? $employee->manager
+            : $employee->manager()->with('user')->first();
+
+        return $manager?->user;
+    }
+
+    protected function resolveSkipManager(?Employee $employee): ?User
+    {
+        if (! $employee?->manager_id) {
+            return null;
+        }
+
+        $manager = $employee->relationLoaded('manager')
+            ? $employee->manager
+            : $employee->manager()->with('manager.user')->first();
+
+        if (! $manager?->manager_id) {
+            return null;
+        }
+
+        $skip = $manager->relationLoaded('manager')
+            ? $manager->manager
+            : $manager->manager()->with('user')->first();
+
+        return $skip?->user;
+    }
+
+    protected function resolveDepartmentHead(?Employee $employee): ?User
+    {
+        if (! $employee?->department_id) {
+            return null;
+        }
+
+        $department = $employee->relationLoaded('department')
+            ? $employee->department
+            : $employee->department()->with('manager')->first();
+
+        // Department.manager_id → User
+        return $department?->manager;
     }
 }
