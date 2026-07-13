@@ -126,6 +126,7 @@ import EmployeeForm from './components/EmployeeForm';
 import EmployeeDetailPage from './pages/employees/EmployeeDetailPage';
 import EmployeeCustomFieldsPage from './pages/employees/EmployeeCustomFieldsPage';
 import DepartmentsPage from './pages/employees/DepartmentsPage';
+import PositionsPage from './pages/employees/PositionsPage';
 import OrganizationChartPage from './pages/employees/OrganizationChartPage';
 import EmployeeReportsPage from './pages/employees/EmployeeReportsPage';
 
@@ -278,6 +279,10 @@ const App: React.FC = () => {
           <Route
             path="/employees/departments"
             element={withPermission(<DepartmentsPage />, 'employees', 'departments', 'view')}
+          />
+          <Route
+            path="/employees/positions"
+            element={withPermission(<PositionsPage />, 'employees', 'positions', 'view')}
           />
           <Route
             path="/employees/organization"

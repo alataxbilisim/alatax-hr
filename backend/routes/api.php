@@ -336,6 +336,20 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:employees.departments.delete');
         });
 
+        // A5 — Pozisyon / unvan kataloğu (recruitment/positions ≠ iş ilanı)
+        Route::middleware('company_admin')->prefix('positions')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\V1\PositionController::class, 'index'])
+                ->middleware('permission:employees.positions.view');
+            Route::post('/', [\App\Http\Controllers\Api\V1\PositionController::class, 'store'])
+                ->middleware('permission:employees.positions.create');
+            Route::get('/{id}', [\App\Http\Controllers\Api\V1\PositionController::class, 'show'])
+                ->middleware('permission:employees.positions.view');
+            Route::put('/{id}', [\App\Http\Controllers\Api\V1\PositionController::class, 'update'])
+                ->middleware('permission:employees.positions.edit');
+            Route::delete('/{id}', [\App\Http\Controllers\Api\V1\PositionController::class, 'destroy'])
+                ->middleware('permission:employees.positions.delete');
+        });
+
         // Lookups — form okuma (auth) + yönetim CRUD
         Route::get('/lookups/{type}', [\App\Http\Controllers\Api\V1\LookupController::class, 'forType'])
             ->where('type', '[a-z0-9_]+');

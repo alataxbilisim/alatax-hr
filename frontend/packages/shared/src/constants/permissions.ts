@@ -56,6 +56,7 @@ export const PAGES = {
   [MODULES.EMPLOYEES]: {
     LIST: 'list',
     DEPARTMENTS: 'departments',
+    POSITIONS: 'positions',
     ORGANIZATION: 'organization',
     CUSTOM_FIELDS: 'custom_fields',
     REPORTS: 'reports',
@@ -159,6 +160,7 @@ export const PAGE_ACTIONS: Record<string, Record<string, ActionType[]>> = {
   [MODULES.EMPLOYEES]: {
     list: ['view', 'create', 'edit', 'delete', 'export', 'import'],
     departments: ['view', 'create', 'edit', 'delete'],
+    positions: ['view', 'create', 'edit', 'delete'],
     organization: ['view'],
     custom_fields: ['view', 'create', 'edit', 'delete'],
     reports: ['view', 'export'],
@@ -258,6 +260,7 @@ export const PAGE_LABELS: Record<string, Record<string, string>> = {
   [MODULES.EMPLOYEES]: {
     list: 'Personel Listesi',
     departments: 'Departmanlar',
+    positions: 'Pozisyonlar',
     organization: 'Organizasyon Şeması',
     custom_fields: 'Özel Alanlar',
     reports: 'Raporlar',
@@ -451,6 +454,7 @@ export function getPermissionFromPath(path: string): { module: string; page: str
     '/webhooks': { module: 'management', page: 'webhooks' },
     '/employees': { module: 'employees', page: 'list' },
     '/employees/departments': { module: 'employees', page: 'departments' },
+    '/employees/positions': { module: 'employees', page: 'positions' },
     '/employees/organization': { module: 'employees', page: 'organization' },
     '/employees/custom-fields': { module: 'employees', page: 'custom_fields' },
     '/employees/reports': { module: 'employees', page: 'reports' },

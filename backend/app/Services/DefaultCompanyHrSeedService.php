@@ -191,6 +191,9 @@ class DefaultCompanyHrSeedService
             $this->ensureLeaveTypes($companyId);
             $this->ensureAnnualAccrualPolicy($companyId);
         });
+
+        // A5 — pozisyon kataloğu (ayrı transaction; leave seed'i bozmaz)
+        app(PositionCatalogSeedService::class)->ensureForCompany($companyId);
     }
 
     public function ensureForAllCompanies(): int
