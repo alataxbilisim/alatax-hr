@@ -170,8 +170,48 @@ class ApprovalRecord extends Model
     {
         $approvable = $this->approvable;
         $workflow = $this->workflow;
-        $nextStep = $workflow->getNextStep($this->step_order);
         $instance = $this->instance;
+        $evaluator = app(\App\Services\ApprovalStepConditionEvaluator::class);
+        $context = [
+            'total_days' => $approvable->getAttribute('total_days'),
+            'leave_type_id' => $approvable->getAttribute('leave_type_id'),
+            'user_id' => $approvable->getAttribute('user_id'),
+            'requester_id' => $approvable->getAttribute('user_id'),
+            'amount' => $approvable->getAttribute('amount'),
+            'department_id' => $approvable->getAttribute('department_id'),
+        ];
+
+        $nextStep = null;
+        $order = $this->step_order;
+
+        while (true) {
+            $candidate = $workflow->getNextStep($order);
+            if (! $candidate) {
+                break;
+            }
+
+            if ($evaluator->matches($candidate->condition, $approvable, $context)) {
+                $nextStep = $candidate;
+                break;
+            }
+
+            self::create([
+                'company_id' => $this->company_id,
+                'approval_instance_id' => $this->approval_instance_id,
+                'approval_workflow_id' => $workflow->id,
+                'approval_step_id' => $candidate->id,
+                'approvable_type' => $this->approvable_type,
+                'approvable_id' => $this->approvable_id,
+                'approver_id' => null,
+                'status' => self::STATUS_SKIPPED,
+                'comment' => 'Koşul tutmadı — adım atlandı',
+                'decided_at' => now(),
+                'step_order' => $candidate->step_order,
+                'is_current' => false,
+            ]);
+
+            $order = $candidate->step_order;
+        }
 
         if ($nextStep) {
             $approver = $nextStep->findApprover($approvable);

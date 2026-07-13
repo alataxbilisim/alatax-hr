@@ -49,6 +49,29 @@ class WorkflowService
             return null;
         }
 
+        $evaluator = app(ApprovalStepConditionEvaluator::class);
+        $resolvedFirst = null;
+        $skippedSteps = [];
+
+        foreach ($workflow->steps()->orderBy('step_order')->get() as $step) {
+            if ($evaluator->matches($step->condition, $approvable, $context)) {
+                $resolvedFirst = $step;
+                break;
+            }
+            $skippedSteps[] = $step;
+        }
+
+        if (! $resolvedFirst) {
+            Log::warning('approval.workflow.no_matching_steps', [
+                'workflow_id' => $workflow->id,
+                'company_id' => $companyId,
+            ]);
+
+            return null;
+        }
+
+        $firstStep = $resolvedFirst;
+
         $approver = $firstStep->findApprover($approvable);
 
         $instance = ApprovalInstance::create([
@@ -66,6 +89,23 @@ class WorkflowService
                 'approval_workflow_id' => $workflow->id,
                 'current_step' => $firstStep->step_order,
                 'workflow_status' => 'in_progress',
+            ]);
+        }
+
+        foreach ($skippedSteps as $skipped) {
+            ApprovalRecord::create([
+                'company_id' => $companyId,
+                'approval_instance_id' => $instance->id,
+                'approval_workflow_id' => $workflow->id,
+                'approval_step_id' => $skipped->id,
+                'approvable_type' => get_class($approvable),
+                'approvable_id' => $approvable->id,
+                'approver_id' => null,
+                'status' => ApprovalRecord::STATUS_SKIPPED,
+                'comment' => 'Koşul tutmadı — adım atlandı',
+                'decided_at' => now(),
+                'step_order' => $skipped->step_order,
+                'is_current' => false,
             ]);
         }
 

@@ -13,8 +13,14 @@
 | **A / B0** Motoru bağla (pilot: İzin) | ✅ | findApprover Employee.manager; `approval_instances`; default seed; leave köprü; event stub |
 | **B / B1** Sıralı çok adım | ✅ | 2+ adım; red→resubmit yeni instance; adım2 erken onay 403 |
 | **C / B2** Dinamik onaycılar + vekalet | ✅ | 3 kademe; unresolved→hr_manager (atlanmaz); vekalet motor bağlı |
-| **D / B3** Koşullu adım | ⏸️ | A–C yeşil — başlıyor |
+| **D / B3** Koşullu adım | ✅ | whitelist evaluator; 3g→GM atla; 15g→GM zorunlu |
 | **E** Derin analiz (snapshot/TEST_TURU/ROADMAP) | ⏸️ | en son |
+
+### B3 özeti
+
+- `ApprovalStepConditionEvaluator`: field+op whitelist, `eval` yok.
+- Koşul tutmayan adım → `STATUS_SKIPPED` audit kaydı (atlanır, sonraki adıma değil “geçiş”).
+- Test: `ApprovalWorkflowMotorB3Test` (3).
 
 ### B2 özeti
 
