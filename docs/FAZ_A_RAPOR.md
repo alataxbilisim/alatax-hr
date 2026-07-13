@@ -6,6 +6,63 @@
 
 ---
 
+## GECE ÖZETİ (14 Temmuz 2026 gece — A3/A4/A5)
+
+**PUSH YAPILMADI** — sabah kullanıcı `push` demeli. Branch `faz4-form-engine` remote’tan **4 commit önde**.
+
+### Durum tablosu
+
+| İş | Durum | Not |
+|----|--------|-----|
+| A3 branch DataScope | ✅ bitti | `employees.branch_id` + gerçek branch scope + `branch_manager` rolü + FE şube Select |
+| A4 org şeması 3 mod | ✅ bitti | people / department / hybrid; `OrganizationChartService` |
+| A5 pozisyon + SGK | ✅ bitti | `positions` kataloğu, gömülü SGK kod seed, CRUD, personel Select |
+| Holding/group | ⏸️ ertelendi | ROADMAP notu; companies=tenant kırılmadı |
+| Borç lint | ✅ minimal | hardcoded white org diff geri alındı |
+
+### Lokal commit listesi (push yok)
+
+```
+a014316 feat(A5): pozisyon kataloğu + SGK meslek kodu seed + personel Select
+7a8582c feat(A4): org şeması 3 mod — people/department/hybrid
+5faab49 feat(A3): employees.branch_id + DataScope branch + branch_manager rolü
+86d4d47 docs(A3): A1 borç ROADMAP + grup/şirket/şube mimari teşhis (kod yok)
+```
+
+### GÜVENLİK TESTİ (EN ÖNEMLİ)
+
+| Suite | Sonuç |
+|-------|--------|
+| DataScopeServiceTest (+ branch unit) | ✅ |
+| BranchDataScopeTest | ✅ |
+| LeaveRequestPolicyDataScopeTest | ✅ |
+| PolicyDataScopeWave2/3 | ✅ |
+| **Tam suite yerel** | **294 passed**, 1 risky, 1202 assertions (~215s) |
+
+Faz 2 DataScope/policy **yeşil kaldı**. Güvenlik testi kırılmadı.
+
+### KARAR BEKLENENLER
+
+- Holding (SEÇENEK 1) ne zaman? → şimdilik yok
+- Org şemasına şube katmanı (A3 sonrası opsiyonel)
+- A1 borçları (hakediş UI + dini bayram API) — Zincir 2/3
+
+### Sabah önce bak (5 madde)
+
+1. `git push origin faz4-form-engine` (sen söyleyince) + CI yeşil teyit  
+2. Ubuntu: personel formunda **Şube** + **Pozisyon** Select; şube yöneticisi listede yalnız kendi şubesi  
+3. Org şeması: 3 mod geçişi (kişi / departman / karma)  
+4. `/employees/positions` kataloğu + register sonrası seed pozisyonlar  
+5. `migrate` (branch_id + positions) staging’de
+
+### Yerel test
+
+- Backend: **294 yeşil** / 1 risky  
+- Frontend company `tsc --noEmit`: **yeşil**  
+- CI: yok (push yok)
+
+---
+
 ## A1 — Default seed
 
 ### Kararlar (uygulanan)
