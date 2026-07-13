@@ -233,7 +233,7 @@ const EmployeeReportsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="dashboard-page loading">
+      <div className="page-fill dashboard-page loading">
         <div className="loading-spinner"></div>
         <span>Yükleniyor...</span>
       </div>
@@ -241,7 +241,7 @@ const EmployeeReportsPage: React.FC = () => {
   }
 
   return (
-    <div className="dashboard-page">
+    <div className="page-fill dashboard-page">
       {/* Header */}
       <div className="dashboard-header">
         <div className="header-left">

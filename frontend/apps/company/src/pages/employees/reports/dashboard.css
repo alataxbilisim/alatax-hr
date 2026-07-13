@@ -3,10 +3,11 @@
    Dark Theme - Power BI Inspired
    =================================== */
 
-/* Dashboard Page Layout */
+/* Dashboard Page Layout — MainLayout .page-fill içinde doldur (100vh yok) */
 .dashboard-page {
-  min-height: 100vh;
-  height: 100vh;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
   background: linear-gradient(135deg, #0a0c10 0%, #0f1117 50%, #151921 100%);
   padding: 0;
   display: flex;

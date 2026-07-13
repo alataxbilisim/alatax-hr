@@ -601,15 +601,31 @@
   border: 2px solid var(--surface-primary);
 }
 
-/* Page Content — viewport shell içinde dikey scroll burada */
+/* Page Content — tek ortak scroll yüzeyi (block; flex çocuk shrink kırığı yok) */
 .page-content {
   flex: 1;
   padding: 1.25rem;
-  display: flex;
-  flex-direction: column;
   min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
+}
+
+/*
+ * Tam yükseklik sayfalar (kanban, BI dashboard): dış scroll kapalı,
+ * iç scroll .page-fill / sütun body’de.
+ */
+.page-content:has(> .page-fill) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.page-fill {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* Page Header — layout.css token'ları kanonik; burada ezme */

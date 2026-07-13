@@ -210,5 +210,33 @@
     "tab": "Özel Alanlar",
     "title": "Özel Alanlar",
     "empty": "Bu personel için tanımlanmış özel alan yok"
+  },
+  "users": {
+    "panelBadge": "Panel",
+    "panelGrantTitle": "Personele Panel Erişimi Ver",
+    "panelGrantHint": "Portal erişimi olan ama panel rolü olmayan personellerden birini seçin. Mevcut kullanıcı kaydına panel rolü eklenir.",
+    "panelGrantSearch": "Ara",
+    "panelGrantSearchPlaceholder": "Ad veya e-posta",
+    "panelGrantSearchBtn": "Bul",
+    "panelGrantRole": "Panel rolü",
+    "panelGrantPick": "Personel seçin",
+    "panelGrantSubmit": "Erişim ver",
+    "panelGrantEmpty": "Uygun personel bulunamadı",
+    "panelGrantSelectUser": "Bir personel seçin",
+    "panelGrantSelectRole": "Bir rol seçin",
+    "panelGrantSuccess": "Panel erişimi verildi",
+    "panelGrantError": "Panel erişimi verilemedi",
+    "panelGrantLoadError": "Aday listesi yüklenemedi",
+    "panelRevoke": "Panel erişimini kaldır",
+    "panelRevokeConfirmTitle": "Panel erişimini kaldır",
+    "panelRevokeConfirm": "\"{{name}}\" kullanıcısının panel rolleri kaldırılacak; yalnızca portal erişimi kalacak. Devam?",
+    "panelRevokeSuccess": "Panel erişimi kaldırıldı",
+    "panelRevokeError": "Panel erişimi kaldırılamadı",
+    "panelRoles": {
+      "hr_specialist": "İK Uzmanı (hr_specialist)",
+      "hr_manager": "İK Yöneticisi (hr_manager)",
+      "manager": "Yönetici (manager)",
+      "admin": "Admin"
+    }
   }
 }

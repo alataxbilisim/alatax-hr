@@ -84,4 +84,44 @@ final class PanelAccess
                 });
         });
     }
+
+    /**
+     * Portal erişimi olan ama panel erişimi olmayan kullanıcılar
+     * (personel kaydı + PanelAccess::has === false).
+     *
+     * @param  Builder<\App\Models\User>  $query
+     * @return Builder<\App\Models\User>
+     */
+    public static function constrainPortalOnlyQuery(Builder $query): Builder
+    {
+        $portalOnly = self::PORTAL_SELF_PERMISSIONS;
+
+        return $query
+            ->whereHas('employee')
+            ->whereNotIn('type', [
+                UserType::CompanyAdmin->value,
+                UserType::SuperAdmin->value,
+            ])
+            ->whereDoesntHave('roles', function (Builder $rq) use ($portalOnly): void {
+                $rq->where('name', 'admin')
+                    ->orWhereHas('permissions', function (Builder $pq) use ($portalOnly): void {
+                        $pq->whereNotIn('name', $portalOnly);
+                    });
+            })
+            ->whereDoesntHave('permissions', function (Builder $pq) use ($portalOnly): void {
+                $pq->whereNotIn('name', $portalOnly);
+            });
+    }
+
+    /**
+     * Personelden panele yükseltmede atanabilir varsayılan roller.
+     *
+     * @var list<string>
+     */
+    public const GRANTABLE_PANEL_ROLES = [
+        'hr_manager',
+        'hr_specialist',
+        'manager',
+        'admin',
+    ];
 }

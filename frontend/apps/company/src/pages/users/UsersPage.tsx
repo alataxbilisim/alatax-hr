@@ -1,11 +1,15 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usersApi, rolesApi } from '@shared/services/api';
+import { useTranslation } from '@shared/i18n';
+import { usePermission } from '@shared/hooks';
+import { getErrorMessage } from '@shared/services/apiHelpers';
 import toast from 'react-hot-toast';
 import { DataTable, ConfirmDialog } from '../../components/ui';
 import UserForm from '../../components/UserForm';
 import UserInviteForm from '../../components/UserInviteForm';
 import UserImportForm from '../../components/UserImportForm';
+import GrantPanelAccessModal from '../../components/GrantPanelAccessModal';
 import {
   BsPlus,
   BsPencil,
@@ -17,6 +21,8 @@ import {
   BsEye,
   BsEnvelope,
   BsUpload,
+  BsShieldLock,
+  BsShieldX,
 } from 'react-icons/bs';
 
 interface User {
@@ -27,6 +33,7 @@ interface User {
   is_active: boolean;
   type: string;
   roles: Array<{ id: number; name: string }>;
+  employee?: { id: number; employee_code?: string } | null;
   last_login_at: string | null;
   last_login_ip: string | null;
   created_at: string;
@@ -46,6 +53,10 @@ interface PaginatedResponse {
 
 const UsersPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation('common');
+  const { canEdit } = usePermission();
+  const canEditUsers = canEdit('management', 'users');
+
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -57,10 +68,14 @@ const UsersPage: React.FC = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [inviteFormOpen, setInviteFormOpen] = useState(false);
   const [importFormOpen, setImportFormOpen] = useState(false);
+  const [grantPanelOpen, setGrantPanelOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | undefined>();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [revokeDialogOpen, setRevokeDialogOpen] = useState(false);
+  const [userToRevoke, setUserToRevoke] = useState<User | null>(null);
+  const [revokeLoading, setRevokeLoading] = useState(false);
 
   // Bulk action states
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
@@ -152,6 +167,27 @@ const UsersPage: React.FC = () => {
     }
   };
 
+  const handleRevokePanel = (user: User) => {
+    setUserToRevoke(user);
+    setRevokeDialogOpen(true);
+  };
+
+  const confirmRevokePanel = async () => {
+    if (!userToRevoke) return;
+    setRevokeLoading(true);
+    try {
+      await usersApi.revokePanelAccess(userToRevoke.id);
+      toast.success(t('users.panelRevokeSuccess'));
+      setRevokeDialogOpen(false);
+      setUserToRevoke(null);
+      loadUsers();
+    } catch (err) {
+      toast.error(getErrorMessage(err, t('users.panelRevokeError')));
+    } finally {
+      setRevokeLoading(false);
+    }
+  };
+
   const handleBulkAction = async () => {
     if (selectedUsers.length === 0) {
       toast.error('Lütfen en az bir kullanıcı seçin');
@@ -234,7 +270,12 @@ const UsersPage: React.FC = () => {
             {user.name.charAt(0).toUpperCase()}
           </div>
           <div>
-            <div style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{user.name}</div>
+            <div style={{ fontWeight: 500, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              {user.name}
+              <span className="badge badge-secondary" style={{ fontSize: '0.65rem' }}>
+                {t('users.panelBadge')}
+              </span>
+            </div>
             <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{user.email}</div>
           </div>
         </div>
@@ -337,6 +378,18 @@ const UsersPage: React.FC = () => {
           >
             <BsPencil />
           </button>
+          {canEditUsers && user.employee && user.type === 'user' && (
+            <button
+              type="button"
+              className="btn btn-ghost btn-icon"
+              onClick={() => handleRevokePanel(user)}
+              title={t('users.panelRevoke')}
+              aria-label={t('users.panelRevoke')}
+              style={{ color: 'var(--warning)' }}
+            >
+              <BsShieldX />
+            </button>
+          )}
           <button
             type="button"
             className="btn btn-ghost btn-icon"
@@ -360,6 +413,15 @@ const UsersPage: React.FC = () => {
           {total > 0 && <span className="page-subtitle">{total} kayıt</span>}
         </div>
         <div className="page-header-actions">
+          {canEditUsers && (
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => setGrantPanelOpen(true)}
+            >
+              <BsShieldLock /> {t('users.panelGrantTitle')}
+            </button>
+          )}
           <button
             type="button"
             className="btn btn-secondary btn-sm"
@@ -522,6 +584,12 @@ const UsersPage: React.FC = () => {
         onSuccess={loadUsers}
       />
 
+      <GrantPanelAccessModal
+        isOpen={grantPanelOpen}
+        onClose={() => setGrantPanelOpen(false)}
+        onSuccess={loadUsers}
+      />
+
       {/* Delete Confirmation */}
       <ConfirmDialog
         isOpen={deleteDialogOpen}
@@ -532,6 +600,20 @@ const UsersPage: React.FC = () => {
         confirmText="Sil"
         variant="danger"
         loading={deleteLoading}
+      />
+
+      <ConfirmDialog
+        isOpen={revokeDialogOpen}
+        onClose={() => {
+          setRevokeDialogOpen(false);
+          setUserToRevoke(null);
+        }}
+        onConfirm={confirmRevokePanel}
+        title={t('users.panelRevokeConfirmTitle')}
+        message={t('users.panelRevokeConfirm', { name: userToRevoke?.name ?? '' })}
+        confirmText={t('users.panelRevoke')}
+        variant="danger"
+        loading={revokeLoading}
       />
     </div>
   );

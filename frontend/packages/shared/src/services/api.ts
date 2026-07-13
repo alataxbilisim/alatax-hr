@@ -163,6 +163,12 @@ export const dashboardApi = {
 export const usersApi = {
   list: (params?: Record<string, unknown>) => 
     api.get('/users', { params }),
+  portalCandidates: (params?: Record<string, unknown>) =>
+    api.get('/users/portal-candidates', { params }),
+  grantPanelAccess: (id: number, data: { role: string }) =>
+    api.post(`/users/${id}/panel-access`, data),
+  revokePanelAccess: (id: number) =>
+    api.delete(`/users/${id}/panel-access`),
   get: (id: number) => 
     api.get(`/users/${id}`),
   create: (data: Record<string, unknown>) => 

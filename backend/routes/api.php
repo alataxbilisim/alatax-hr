@@ -65,8 +65,14 @@ Route::prefix('v1')->group(function () {
 
             Route::get('users', [\App\Http\Controllers\Api\V1\UserController::class, 'index'])
                 ->middleware('permission:management.users.view');
+            Route::get('users/portal-candidates', [\App\Http\Controllers\Api\V1\UserController::class, 'portalCandidates'])
+                ->middleware('permission:management.users.view');
             Route::post('users', [\App\Http\Controllers\Api\V1\UserController::class, 'store'])
                 ->middleware('permission:management.users.create');
+            Route::post('users/{user}/panel-access', [\App\Http\Controllers\Api\V1\UserController::class, 'grantPanelAccess'])
+                ->middleware('permission:management.users.edit');
+            Route::delete('users/{user}/panel-access', [\App\Http\Controllers\Api\V1\UserController::class, 'revokePanelAccess'])
+                ->middleware('permission:management.users.edit');
             Route::get('users/{user}', [\App\Http\Controllers\Api\V1\UserController::class, 'show'])
                 ->middleware('permission:management.users.view');
             Route::put('users/{user}', [\App\Http\Controllers\Api\V1\UserController::class, 'update'])

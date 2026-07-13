@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Enums\UserType;
 use App\Http\Resources\EmployeeResource;
 use App\Mail\PasswordResetByAdmin;
 use App\Mail\UserInvitation;
@@ -31,7 +32,7 @@ class UserController extends BaseController
     public function index(Request $request): JsonResponse
     {
         $query = User::where('company_id', $this->getCompanyId())
-            ->with(['roles']);
+            ->with(['roles', 'employee:id,user_id,employee_code']);
 
         // Karar B: yalnızca panel erişimli kullanıcılar (portal-only personel hariç)
         PanelAccess::constrainUsersQuery($query);
@@ -73,6 +74,142 @@ class UserController extends BaseController
         $users = $query->paginate($request->get('per_page', 15));
 
         return $this->paginated($users, 'Kullanıcılar listelendi');
+    }
+
+    /**
+     * Panel rolü verilebilecek portal-only personeller (user + employee, panel erişimi yok).
+     */
+    public function portalCandidates(Request $request): JsonResponse
+    {
+        $query = User::where('company_id', $this->getCompanyId())
+            ->with(['roles', 'employee']);
+
+        PanelAccess::constrainPortalOnlyQuery($query);
+
+        if ($request->filled('search')) {
+            $search = (string) $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        $query->orderBy('name');
+
+        $users = $query->paginate($request->get('per_page', 20));
+
+        return $this->paginated($users, 'Panel adayları listelendi');
+    }
+
+    /**
+     * Mevcut personel kullanıcısına panel rolü ata (yeni user oluşturmaz).
+     */
+    public function grantPanelAccess(Request $request, User $user): JsonResponse
+    {
+        if ($user->company_id !== $this->getCompanyId()) {
+            return $this->forbidden('Bu kullanıcıya erişim yetkiniz yok');
+        }
+
+        if (! $user->employee) {
+            return $this->error('Panel erişimi yalnızca personel kaydı olan kullanıcılara verilebilir', 422);
+        }
+
+        if (PanelAccess::has($user)) {
+            return $this->error('Kullanıcının zaten panel erişimi var', 422);
+        }
+
+        $validated = $request->validate([
+            'role' => [
+                'required',
+                'string',
+                'in:'.implode(',', PanelAccess::GRANTABLE_PANEL_ROLES),
+            ],
+        ], [
+            'role.required' => 'Panel rolü seçilmelidir',
+            'role.in' => 'Seçilen rol panele yükseltilmek için geçerli değil',
+        ]);
+
+        $roleName = $validated['role'];
+        $oldRoles = $user->roles->pluck('name')->sort()->values()->all();
+
+        // Portal erişimini koru: employee rolü kalsın, panel rolü eklensin
+        if (! $user->hasRole('employee')) {
+            $user->assignRole('employee');
+        }
+        $user->assignRole($roleName);
+        $user->unsetRelation('roles');
+        $user->load('roles');
+
+        if (! PanelAccess::has($user)) {
+            $user->removeRole($roleName);
+
+            return $this->error('Atanan rol panel erişimi sağlamıyor', 422);
+        }
+
+        $newRoles = $user->roles->pluck('name')->sort()->values()->all();
+        ActivityLog::log(
+            'panel_access_grant',
+            $user,
+            "Personele panel erişimi verildi: {$user->name} ({$roleName})",
+            ['roles' => $oldRoles],
+            ['roles' => $newRoles]
+        );
+
+        return $this->success([
+            'user' => $user->fresh()->load(['roles', 'employee']),
+            'panel_access' => true,
+        ], 'Panel erişimi verildi');
+    }
+
+    /**
+     * Panel rollerini kaldır → yalnızca portal (employee) kalır.
+     */
+    public function revokePanelAccess(User $user): JsonResponse
+    {
+        if ($user->company_id !== $this->getCompanyId()) {
+            return $this->forbidden('Bu kullanıcıya erişim yetkiniz yok');
+        }
+
+        if ($user->id === auth()->id()) {
+            return $this->error('Kendi panel erişiminizi kaldıramazsınız', 422);
+        }
+
+        if ($user->type === UserType::CompanyAdmin || $user->type === UserType::SuperAdmin) {
+            return $this->error('Firma/süper admin kullanıcılarının panel erişimi kaldırılamaz', 422);
+        }
+
+        if (! PanelAccess::has($user)) {
+            return $this->error('Kullanıcının panel erişimi yok', 422);
+        }
+
+        if (! $user->employee) {
+            return $this->error('Panel erişimi kaldırma yalnızca personel kullanıcıları için geçerlidir', 422);
+        }
+
+        $oldRoles = $user->roles->pluck('name')->sort()->values()->all();
+
+        // Tüm roller çıkar, yalnızca employee bırak (portal)
+        $user->syncRoles(['employee']);
+        $user->unsetRelation('roles');
+        $user->load('roles');
+
+        if (PanelAccess::has($user)) {
+            return $this->error('Panel erişimi kaldırılamadı; kullanıcıda hâlâ panel izinleri var', 422);
+        }
+
+        $newRoles = $user->roles->pluck('name')->sort()->values()->all();
+        ActivityLog::log(
+            'panel_access_revoke',
+            $user,
+            "Personelin panel erişimi kaldırıldı: {$user->name}",
+            ['roles' => $oldRoles],
+            ['roles' => $newRoles]
+        );
+
+        return $this->success([
+            'user' => $user->fresh()->load(['roles', 'employee']),
+            'panel_access' => false,
+        ], 'Panel erişimi kaldırıldı');
     }
 
     /**

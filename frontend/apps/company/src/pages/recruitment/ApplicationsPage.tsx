@@ -153,7 +153,7 @@ const ApplicationsPage: React.FC = () => {
   }
 
   return (
-    <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+    <div className="animate-fade-in page-fill">
       <div className="page-header" style={{ flexShrink: 0 }}>
         <div className="page-header-content">
           <button

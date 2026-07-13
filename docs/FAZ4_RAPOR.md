@@ -19,16 +19,40 @@
 
 **Kavram:** Panel = portal-self dışı izin / admin / company_admin. Portal-only `employee` rol seti panele giremez, `/users`’ta görünmez. İK (hr_manager) çift erişimli — panel + portal.
 
-**Test:** `PanelAccessControlTest` (5) + LeaveRequestPolicy + PermissionEnforcementWave2 yeşil. FE lint+build 3 SPA ✅.  
-**CI takip:** `fcf90e2` sonrası Backend kırmızı — panel login kapısı `Totp2faTest`’teki panel-izinsiz kullanıcıları 403’ledi; `regularUser`’a `management.users.view` verildi. Yan etki: sqlite Timesheet `where('date')` eşleşmiyordu → `whereDate` + assert düzeltmesi. Host suite: **247 passed**, 1 risky.
+### Scroll — kalan kırıklar (tur 2)
+
+**Kök:** `.page-content { display:flex }` çocukları shrink edip scrollbar üretmiyordu.
+
+| Sayfa / alan | Düzeltme |
+|--------------|----------|
+| Ayarlar, /account, listeler, formlar, personel detay | Block scroll (varsayılan `.page-content`) |
+| Kanban (`/recruitment/applications`) | `.page-fill` + sütun içi scroll |
+| BI rapor (`/employees/reports`) | `.page-fill`; `100vh` kaldırıldı |
+| Lookups sidebar | sticky + iç scroll (bilinçli) |
+
+**Ortak kural:** Scroll = `.page-content`. Tam yükseklik UI = `.page-fill`.
+
+**Görsel test listesi (1366×768):** dashboard, personel liste/detay, izin, `/settings`, `/account/*`, kanban, uzun formlar, lookups.
+
+### Personele panel rolü (tur 2)
+
+| Parça | Detay |
+|-------|--------|
+| BE | `GET /users/portal-candidates`, `POST|DELETE /users/{id}/panel-access` (`management.users.view|edit`) |
+| FE | `/users` → “Personele Panel Erişimi Ver” + satırda kaldır; “Panel” rozeti |
+| Test | `PanelAccessControlTest` +4 → toplam 9 |
+
+**Test:** PanelAccess 9 + Wave2/Policy yeşil. FE lint+build 3 SPA ✅.
 
 **Kullanıcı görsel kontrol:**
-1. Uzun sayfada scroll
-2. Sadece-portal personel Company login → portal’a yönlenir
-3. `/employees/new` yetkisiz → Erişim Engeli (403 spam yok)
-4. `/users`’ta portal-only yok; İK/admin var
+1. Tüm ana sayfalarda scroll (yukarı liste)
+2. Sadece-portal → Company panele giremez
+3. Yetkisiz `/employees/new` → Erişim Engeli
+4. `/users` portal-only yok
+5. Personele `hr_specialist` ata → panel+portal; kaldır → panel yok
 
 **DURUM:** Kod hazır · görsel kontrol sizde.
+
 ---
 
 ## Test Turu Kritik Bulgu Teşhisi (13 Temmuz 2026)
