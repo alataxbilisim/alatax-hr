@@ -3,8 +3,11 @@
 namespace Database\Seeders;
 
 use App\Models\Role;
+use Illuminate\Database\QueryException;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Permission;
+use Throwable;
 
 class PermissionSeeder extends Seeder
 {
@@ -16,7 +19,26 @@ class PermissionSeeder extends Seeder
      * - module.* = Modüldeki tüm yetkiler
      * - module.page.* = Sayfadaki tüm yetkiler
      */
+    /** Test ortamında eşzamanlı PermissionSeeder yarışını engelle (migrate lock'tan ayrı). */
+    private const TESTING_SEED_LOCK_KEY = 74290115;
+
     public function run(): void
+    {
+        if (app()->environment('testing')) {
+            DB::select('SELECT pg_advisory_lock(?)', [self::TESTING_SEED_LOCK_KEY]);
+            try {
+                $this->runSeeding();
+            } finally {
+                DB::select('SELECT pg_advisory_unlock(?)', [self::TESTING_SEED_LOCK_KEY]);
+            }
+
+            return;
+        }
+
+        $this->runSeeding();
+    }
+
+    private function runSeeding(): void
     {
         // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
@@ -27,18 +49,86 @@ class PermissionSeeder extends Seeder
         // Geriye uyumluluk için eski yetkiler
         $legacyPermissions = $this->getLegacyPermissions();
 
-        // Tüm yetkileri birleştir
-        $allPermissions = array_merge($hierarchicalPermissions, $legacyPermissions);
+        // Rol tanımlarındaki wildcard'lar (employees.* vb.) Spatie satırı olarak da gerekir
+        $roleWildcards = $this->collectRoleWildcardPermissions();
 
-        // Tüm permission'ları oluştur
-        foreach ($allPermissions as $permission) {
-            Permission::firstOrCreate(
-                ['name' => $permission, 'guard_name' => 'sanctum']
-            );
-        }
+        // Tüm yetkileri birleştir
+        $allPermissions = array_values(array_unique(array_merge(
+            $hierarchicalPermissions,
+            $legacyPermissions,
+            $roleWildcards
+        )));
+
+        $this->upsertPermissions($allPermissions);
 
         // Varsayılan rolleri oluştur
         $this->createRoles($allPermissions);
+    }
+
+    /**
+     * @param  list<string>  $names
+     */
+    private function upsertPermissions(array $names): void
+    {
+        $now = now();
+        $rows = array_map(static fn (string $name) => [
+            'name' => $name,
+            'guard_name' => 'sanctum',
+            'created_at' => $now,
+            'updated_at' => $now,
+        ], $names);
+
+        foreach (array_chunk($rows, 100) as $chunk) {
+            $this->retryOnDeadlock(function () use ($chunk) {
+                Permission::query()->upsert(
+                    $chunk,
+                    ['name', 'guard_name'],
+                    ['updated_at']
+                );
+            });
+        }
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function collectRoleWildcardPermissions(): array
+    {
+        $wildcards = [];
+        foreach ($this->rolePermissionMap([]) as $roleData) {
+            foreach ($roleData['permissions'] as $perm) {
+                if (str_contains((string) $perm, '*')) {
+                    $wildcards[] = $perm;
+                }
+            }
+        }
+
+        return array_values(array_unique($wildcards));
+    }
+
+    /**
+     * @param  callable(): mixed  $callback
+     */
+    private function retryOnDeadlock(callable $callback, int $attempts = 5): mixed
+    {
+        $last = null;
+
+        for ($i = 0; $i < $attempts; $i++) {
+            try {
+                return $callback();
+            } catch (QueryException $e) {
+                $last = $e;
+                $sqlState = $e->errorInfo[0] ?? null;
+                if ($sqlState !== '40P01' && ! str_contains($e->getMessage(), 'deadlock')) {
+                    throw $e;
+                }
+                usleep(50_000 * ($i + 1));
+            } catch (Throwable $e) {
+                throw $e;
+            }
+        }
+
+        throw $last ?? new \RuntimeException('PermissionSeeder deadlock retry exhausted');
     }
 
     /**
@@ -291,10 +381,44 @@ class PermissionSeeder extends Seeder
 
     /**
      * Varsayılan rolleri oluştur
+     *
+     * @param  list<string>  $allPermissions
      */
     private function createRoles(array $allPermissions): void
     {
-        $roles = [
+        $roles = $this->rolePermissionMap($allPermissions);
+
+        foreach ($roles as $roleName => $roleData) {
+            $this->retryOnDeadlock(function () use ($roleName, $roleData) {
+                $role = Role::firstOrCreate(
+                    ['name' => $roleName, 'guard_name' => 'sanctum']
+                );
+
+                // Mevcut satırları model olarak sync et (isim TOCTOU / PermissionDoesNotExist azaltır)
+                $validPermissions = Permission::query()
+                    ->where('guard_name', 'sanctum')
+                    ->whereIn('name', $roleData['permissions'])
+                    ->get();
+
+                $role->syncPermissions($validPermissions);
+
+                if ($roleName === 'admin' && $role->data_scope === null) {
+                    $role->forceFill(['data_scope' => 'company'])->save();
+                }
+                if ($roleName === 'branch_manager' && $role->data_scope === null) {
+                    $role->forceFill(['data_scope' => 'branch'])->save();
+                }
+            });
+        }
+    }
+
+    /**
+     * @param  list<string>  $allPermissions
+     * @return array<string, array{description: string, permissions: list<string>}>
+     */
+    private function rolePermissionMap(array $allPermissions): array
+    {
+        return [
             'admin' => [
                 'description' => 'Firma Yöneticisi - Tüm yetkiler',
                 'permissions' => $allPermissions, // Tüm yetkiler
@@ -508,26 +632,5 @@ class PermissionSeeder extends Seeder
                 ],
             ],
         ];
-
-        foreach ($roles as $roleName => $roleData) {
-            $role = Role::firstOrCreate(
-                ['name' => $roleName, 'guard_name' => 'sanctum']
-            );
-
-            // Sadece mevcut yetkileri ata (olmayan yetkileri atla)
-            $validPermissions = array_filter($roleData['permissions'], function ($perm) {
-                return Permission::where('name', $perm)->where('guard_name', 'sanctum')->exists();
-            });
-
-            $role->syncPermissions($validPermissions);
-
-            // admin → company data_scope (config fallback ile uyumlu)
-            if ($roleName === 'admin' && $role->data_scope === null) {
-                $role->forceFill(['data_scope' => 'company'])->save();
-            }
-            if ($roleName === 'branch_manager' && $role->data_scope === null) {
-                $role->forceFill(['data_scope' => 'branch'])->save();
-            }
-        }
     }
 }

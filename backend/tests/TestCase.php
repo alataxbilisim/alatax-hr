@@ -78,9 +78,10 @@ abstract class TestCase extends BaseTestCase
             $role->forceFill(['data_scope' => 'company'])->save();
         }
 
-        $perms = Permission::query()->where('guard_name', 'sanctum')->pluck('name');
+        // Model koleksiyonu ile sync — isim listesinde TOCTOU / cache yarışını azaltır
+        $perms = Permission::query()->where('guard_name', 'sanctum')->get();
         if ($perms->isNotEmpty()) {
-            $role->syncPermissions($perms->all());
+            $role->syncPermissions($perms);
         }
 
         if (! $user->hasRole($role)) {

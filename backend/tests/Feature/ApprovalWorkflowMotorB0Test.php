@@ -18,7 +18,7 @@ use App\Models\Module;
 use App\Models\User;
 use App\Services\DefaultLeaveApprovalWorkflowService;
 use App\Services\WorkflowService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Permission;

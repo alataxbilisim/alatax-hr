@@ -10,7 +10,7 @@ use App\Models\User;
 use App\Services\PositionCatalogSeedService;
 use Database\Seeders\ModuleSeeder;
 use Database\Seeders\PermissionSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;

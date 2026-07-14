@@ -16,7 +16,7 @@ use App\Models\Module;
 use App\Models\User;
 use App\Services\ApprovalStepConditionEvaluator;
 use App\Services\WorkflowService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshDatabase;
 use InvalidArgumentException;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Permission;

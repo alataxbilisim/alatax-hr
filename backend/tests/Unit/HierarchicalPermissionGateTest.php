@@ -6,7 +6,7 @@ use App\Enums\UserType;
 use App\Models\User;
 use App\Support\HierarchicalPermission;
 use Database\Seeders\PermissionSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;

@@ -9,7 +9,7 @@ use App\Models\Employee;
 use App\Models\ExpenseCategory;
 use App\Models\ExpenseClaim;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 

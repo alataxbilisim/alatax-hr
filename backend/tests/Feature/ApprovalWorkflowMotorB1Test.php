@@ -16,7 +16,7 @@ use App\Models\LeaveType;
 use App\Models\Module;
 use App\Models\User;
 use App\Services\WorkflowService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
