@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { leavesApi, usersApi } from '@shared/services/api';
 import { Select } from '@shared/components';
+import { useTranslation } from '@shared/i18n';
 import toast from 'react-hot-toast';
 import { Modal } from '../ui';
 import { BsPencil, BsSearch, BsCalendar3 } from 'react-icons/bs';
@@ -35,6 +36,7 @@ interface User {
 }
 
 const LeaveBalancesTab: React.FC = () => {
+  const { t } = useTranslation('common');
   const [balances, setBalances] = useState<LeaveBalance[]>([]);
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<User[]>([]);
@@ -45,7 +47,7 @@ const LeaveBalancesTab: React.FC = () => {
   // Edit modal
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingBalance, setEditingBalance] = useState<LeaveBalance | null>(null);
-  const [editForm, setEditForm] = useState({ total_days: 0, carried_over: 0 });
+  const [editForm, setEditForm] = useState({ total_days: 0, carried_over: 0, reason: '' });
   const [saving, setSaving] = useState(false);
 
   const loadUsers = useCallback(async () => {
@@ -91,21 +93,30 @@ const LeaveBalancesTab: React.FC = () => {
     setEditForm({
       total_days: balance.total_days,
       carried_over: balance.carried_over || 0,
+      reason: '',
     });
     setEditModalOpen(true);
   };
 
   const handleSave = async () => {
     if (!editingBalance) return;
+    if (editForm.reason.trim().length < 3) {
+      toast.error(t('leaves.balanceReasonRequired'));
+      return;
+    }
 
     setSaving(true);
     try {
-      await leavesApi.balance.update(editingBalance.id, editForm);
-      toast.success('Bakiye güncellendi');
+      await leavesApi.balance.update(editingBalance.id, {
+        total_days: editForm.total_days,
+        carried_over: editForm.carried_over,
+        reason: editForm.reason.trim(),
+      });
+      toast.success(t('leaves.balanceUpdated'));
       setEditModalOpen(false);
       loadBalances();
     } catch {
-      toast.error('Güncelleme başarısız');
+      toast.error(t('leaves.balanceUpdateFailed'));
     } finally {
       setSaving(false);
     }
@@ -291,15 +302,15 @@ const LeaveBalancesTab: React.FC = () => {
       <Modal
         isOpen={editModalOpen}
         onClose={() => setEditModalOpen(false)}
-        title="Bakiye Düzenle"
+        title={t('leaves.editBalance')}
         size="sm"
         footer={
           <>
             <button className="btn btn-secondary" onClick={() => setEditModalOpen(false)} disabled={saving}>
-              İptal
+              {t('cancel')}
             </button>
             <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
-              {saving ? 'Kaydediliyor...' : 'Kaydet'}
+              {saving ? t('loading') : t('save')}
             </button>
           </>
         }
@@ -307,15 +318,15 @@ const LeaveBalancesTab: React.FC = () => {
         {editingBalance && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div>
-              <label className="form-label text-muted">Personel</label>
+              <label className="form-label text-muted">{t('leaves.employee')}</label>
               <p style={{ fontWeight: 500, margin: 0 }}>{editingBalance.user?.name}</p>
             </div>
             <div>
-              <label className="form-label text-muted">İzin Türü</label>
+              <label className="form-label text-muted">{t('leaves.leaveType')}</label>
               <p style={{ fontWeight: 500, margin: 0 }}>{editingBalance.leave_type?.name}</p>
             </div>
             <div className="form-group">
-              <label className="form-label">Toplam Gün</label>
+              <label className="form-label">{t('leaves.totalDays')}</label>
               <input
                 type="number"
                 className="form-control"
@@ -325,13 +336,23 @@ const LeaveBalancesTab: React.FC = () => {
               />
             </div>
             <div className="form-group">
-              <label className="form-label">Devir Gün</label>
+              <label className="form-label">{t('leaves.carriedOver')}</label>
               <input
                 type="number"
                 className="form-control"
                 value={editForm.carried_over}
                 onChange={(e) => setEditForm({ ...editForm, carried_over: Number(e.target.value) })}
                 min={0}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">{t('leaves.balanceReason')}</label>
+              <textarea
+                className="form-control"
+                value={editForm.reason}
+                onChange={(e) => setEditForm({ ...editForm, reason: e.target.value })}
+                rows={3}
+                required
               />
             </div>
           </div>

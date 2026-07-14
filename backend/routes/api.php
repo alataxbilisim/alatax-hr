@@ -600,11 +600,21 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:leaves.requests.approve');
             Route::post('/requests/{leave_request}/resubmit', [\App\Http\Controllers\Api\V1\Leaves\LeaveRequestController::class, 'resubmit'])
                 ->middleware('permission:leaves.requests.create');
+            Route::post('/requests/{leave_request}/cancel', [\App\Http\Controllers\Api\V1\Leaves\LeaveRequestController::class, 'cancel'])
+                ->middleware('permission:leaves.requests.delete|leaves.requests.create');
 
             Route::get('/calendar', [\App\Http\Controllers\Api\V1\Leaves\LeaveCalendarController::class, 'index'])
                 ->middleware('permission:leaves.calendar.view');
             Route::get('/balance', [\App\Http\Controllers\Api\V1\Leaves\LeaveBalanceController::class, 'index'])
                 ->middleware('permission:leaves.balances.view');
+            Route::get('/balance/my', [\App\Http\Controllers\Api\V1\Leaves\LeaveBalanceController::class, 'myBalance'])
+                ->middleware('permission:leaves.balances.view');
+            Route::post('/balance/bulk', [\App\Http\Controllers\Api\V1\Leaves\LeaveBalanceController::class, 'bulkUpdate'])
+                ->middleware('permission:leaves.balances.edit');
+            Route::put('/balance/{leave_balance}', [\App\Http\Controllers\Api\V1\Leaves\LeaveBalanceController::class, 'update'])
+                ->middleware('permission:leaves.balances.edit');
+            Route::patch('/balance/{leave_balance}', [\App\Http\Controllers\Api\V1\Leaves\LeaveBalanceController::class, 'update'])
+                ->middleware('permission:leaves.balances.edit');
 
             // Tatil Takvimi
             Route::prefix('holidays')->group(function () {

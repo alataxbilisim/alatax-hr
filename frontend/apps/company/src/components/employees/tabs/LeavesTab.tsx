@@ -8,8 +8,10 @@ export interface LeaveBalance {
     name: string;
     color?: string;
   };
-  entitled_days: number;
+  /** BE kaynak alan adı (entitled_days değil) */
+  total_days: number;
   used_days: number;
+  pending_days?: number;
   remaining_days: number;
 }
 
@@ -83,7 +85,7 @@ const LeavesTab: React.FC<LeavesTabProps> = ({ balances, requests }) => {
                 <div style={{ fontWeight: 500, marginBottom: '0.75rem' }}>{balance.leave_type.name}</div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                   <span style={{ color: 'var(--text-tertiary)', fontSize: '0.875rem' }}>Hak Edilen</span>
-                  <span style={{ fontWeight: 600 }}>{balance.entitled_days} gün</span>
+                  <span style={{ fontWeight: 600 }}>{balance.total_days} gün</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                   <span style={{ color: 'var(--text-tertiary)', fontSize: '0.875rem' }}>Kullanılan</span>

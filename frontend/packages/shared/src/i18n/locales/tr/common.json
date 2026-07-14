@@ -315,5 +315,16 @@
   "form": {
     "branch": "Şube",
     "selectPlaceholder": "Seçiniz..."
+  },
+  "leaves": {
+    "editBalance": "Bakiye Düzenle",
+    "employee": "Personel",
+    "leaveType": "İzin Türü",
+    "totalDays": "Toplam Gün",
+    "carriedOver": "Devir Gün",
+    "balanceReason": "Gerekçe",
+    "balanceReasonRequired": "Manuel bakiye düzeltmesi için gerekçe zorunludur (en az 3 karakter).",
+    "balanceUpdated": "Bakiye güncellendi",
+    "balanceUpdateFailed": "Bakiye güncellemesi başarısız"
   }
 }

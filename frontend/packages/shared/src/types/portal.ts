@@ -102,7 +102,11 @@ export interface PortalLeaveType {
   name: string;
   description: string | null;
   unit: 'day' | 'hour';
+  /** Şema alanı */
+  default_days: number;
+  /** Alias — default_days ile aynı */
   default_limit: number;
+  max_days?: number | null;
   is_paid: boolean;
   requires_document: boolean;
 }

@@ -48,11 +48,12 @@ class LeaveRequestPolicy
 
     public function delete(User $user, LeaveRequest $leaveRequest): bool
     {
+        // İptal: sahibi veya DataScope içinde yetkili (şube/dept/team/company)
         if ((int) $leaveRequest->user_id === $user->id) {
             return true;
         }
 
-        return $this->dataScope->resolve($user) === DataScopeLevel::Company;
+        return $this->dataScope->allowsUserId($user, (int) $leaveRequest->user_id);
     }
 
     /**

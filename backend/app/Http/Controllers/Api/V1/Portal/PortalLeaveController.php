@@ -22,9 +22,22 @@ class PortalLeaveController extends BaseController
 
         $leaveTypes = LeaveType::where('company_id', $user->company_id)
             ->where('is_active', true)
-            ->get(['id', 'name', 'description', 'unit', 'default_limit', 'is_paid', 'requires_document']);
+            ->get(['id', 'name', 'description', 'default_days', 'is_paid', 'requires_document', 'max_days_at_once']);
 
-        return $this->success($leaveTypes);
+        // FE uyumu: default_days kaynak; unit sabit (şemada kolon yok)
+        $mapped = $leaveTypes->map(fn (LeaveType $type) => [
+            'id' => $type->id,
+            'name' => $type->name,
+            'description' => $type->description,
+            'default_days' => $type->default_days,
+            'default_limit' => $type->default_days, // geriye uyumluluk alias
+            'max_days' => $type->max_days_at_once ?? $type->default_days,
+            'unit' => 'day',
+            'is_paid' => $type->is_paid,
+            'requires_document' => $type->requires_document,
+        ]);
+
+        return $this->success($mapped);
     }
 
     /**
@@ -37,7 +50,7 @@ class PortalLeaveController extends BaseController
 
         $balances = LeaveBalance::where('user_id', $user->id)
             ->where('year', $year)
-            ->with('leaveType:id,name,unit')
+            ->with('leaveType:id,name,default_days')
             ->get();
 
         return $this->success($balances);

@@ -31,6 +31,11 @@ class LeaveBalance extends Model
         'carried_over' => 'decimal:2',
     ];
 
+    /** API tüketicileri için kalan gün */
+    protected $appends = [
+        'remaining_days',
+    ];
+
     // Relationships
     public function user()
     {

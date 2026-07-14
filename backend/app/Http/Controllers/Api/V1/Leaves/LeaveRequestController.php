@@ -287,25 +287,31 @@ class LeaveRequestController extends BaseController
     }
 
     /**
-     * Cancel a leave request.
+     * Cancel a leave request (yalnızca pending — approved sonrası ayrı akış).
      */
     public function cancel(LeaveRequest $leaveRequest): JsonResponse
     {
         $this->authorize('delete', $leaveRequest);
 
-        if ($leaveRequest->user_id !== auth()->id()) {
-            return $this->error('Bu talebi iptal etme yetkiniz yok', null, 403);
+        if ($leaveRequest->status !== LeaveRequestStatus::Pending) {
+            return $this->error('Sadece bekleyen talepler iptal edilebilir', 422);
         }
 
-        if ($leaveRequest->status !== LeaveRequest::STATUS_PENDING) {
-            return $this->error('Sadece bekleyen talepler iptal edilebilir', null, 422);
-        }
-
+        $pendingDays = (float) $leaveRequest->total_days;
         LeaveRequest::withoutAuditing(fn () => $leaveRequest->cancel());
 
-        ActivityLog::log('cancelled', $leaveRequest, 'İzin talebi iptal edildi: '.$leaveRequest->leaveType->name);
+        ActivityLog::log(
+            'cancelled',
+            $leaveRequest,
+            'İzin talebi iptal edildi: '.$leaveRequest->leaveType?->name,
+            ['status' => LeaveRequestStatus::Pending->value, 'pending_days_restored' => $pendingDays],
+            ['status' => LeaveRequestStatus::Cancelled->value]
+        );
 
-        return $this->success($leaveRequest->fresh(), 'İzin talebi iptal edildi');
+        return $this->success(
+            $leaveRequest->fresh()->load(['leaveType', 'user']),
+            'İzin talebi iptal edildi'
+        );
     }
 
     /**
