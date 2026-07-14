@@ -15,7 +15,9 @@ class CustomFieldController extends BaseController
      */
     public function index(Request $request): JsonResponse
     {
-        $query = CustomFieldDefinition::where('company_id', $this->getCompanyId());
+        // Yalnız firma custom alanları — sistem katalog (company_id null / is_system) Form Engine GET'te
+        $query = CustomFieldDefinition::where('company_id', $this->getCompanyId())
+            ->customOnly();
 
         // Entity type filtresi
         if ($request->has('entity_type')) {
@@ -38,6 +40,7 @@ class CustomFieldController extends BaseController
     public function show(int $id): JsonResponse
     {
         $field = CustomFieldDefinition::where('company_id', $this->getCompanyId())
+            ->customOnly()
             ->findOrFail($id);
 
         return $this->success($field);
@@ -61,7 +64,8 @@ class CustomFieldController extends BaseController
                 'regex:/^[a-z0-9_]+$/',
                 Rule::unique('custom_field_definitions')->where(function ($query) use ($request) {
                     return $query->where('company_id', $this->getCompanyId())
-                        ->where('entity_type', $request->entity_type);
+                        ->where('entity_type', $request->entity_type)
+                        ->whereNull('deleted_at');
                 }),
             ],
             'field_label' => 'required|string|max:255',
@@ -85,12 +89,15 @@ class CustomFieldController extends BaseController
         $field = CustomFieldDefinition::create([
             'company_id' => $this->getCompanyId(),
             'entity_type' => $validated['entity_type'],
+            'is_system' => false,
+            'system_key' => null,
             'field_key' => $validated['field_key'],
             'field_label' => $validated['field_label'],
             'field_type' => $validated['field_type'],
             'field_options' => $validated['field_options'] ?? null,
             'is_required' => $validated['is_required'] ?? false,
             'is_active' => $validated['is_active'] ?? true,
+            'is_hidden' => false,
             'sort_order' => $validated['sort_order'] ?? 0,
             'validation_rules' => $validated['validation_rules'] ?? null,
             'placeholder' => $validated['placeholder'] ?? null,
@@ -111,6 +118,10 @@ class CustomFieldController extends BaseController
     {
         $field = CustomFieldDefinition::where('company_id', $this->getCompanyId())
             ->findOrFail($id);
+
+        if ($field->is_system) {
+            return $this->error('Sistem alanları silinemez veya bu uçtan düzenlenemez; form-definitions kullanın.', 422);
+        }
 
         $validated = $request->validate([
             'field_label' => 'sometimes|string|max:255',
@@ -133,6 +144,7 @@ class CustomFieldController extends BaseController
 
         $field->update(array_merge($validated, [
             'updated_by' => auth()->id(),
+            'is_system' => false,
         ]));
 
         ActivityLog::log('update', $field, 'Özel alan güncellendi: '.$field->field_label);
@@ -147,6 +159,10 @@ class CustomFieldController extends BaseController
     {
         $field = CustomFieldDefinition::where('company_id', $this->getCompanyId())
             ->findOrFail($id);
+
+        if ($field->is_system) {
+            return $this->error('Sistem alanları silinemez; gizleyebilirsiniz (form-definitions).', 422);
+        }
 
         ActivityLog::log('delete', $field, 'Özel alan silindi: '.$field->field_label);
 
@@ -168,6 +184,7 @@ class CustomFieldController extends BaseController
 
         foreach ($validated['fields'] as $fieldData) {
             CustomFieldDefinition::where('company_id', $this->getCompanyId())
+                ->customOnly()
                 ->where('id', $fieldData['id'])
                 ->update(['sort_order' => $fieldData['sort_order']]);
         }

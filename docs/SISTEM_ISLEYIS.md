@@ -8,6 +8,7 @@
 | Soru | Dosya |
 |---|---|
 | Sistem uçtan uca nasıl işler? | **bu dosya** |
+| Company + Portal görsel akış şeması (düzenlenebilir) | [AKIS_SEMA_EDITOR.html](AKIS_SEMA_EDITOR.html) |
 | Ne zaman, hangi sırayla geliştirilir? | ROADMAP.md |
 | Hangi modülde hangi ekran/işlem var? | MODUL_SPEC.md |
 | Bir işlem başlayınca ne olur (akış)? | AKIS_SPEC.md |

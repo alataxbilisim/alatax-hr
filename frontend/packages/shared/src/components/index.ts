@@ -6,3 +6,21 @@ export { TwoFactorChallenge } from './TwoFactorChallenge';
 export type { TwoFactorChallengeProps } from './TwoFactorChallenge';
 export { default as InviteAcceptPage } from './InviteAcceptPage';
 export { default as ForcedPasswordChangePage } from './ForcedPasswordChangePage';
+export {
+  FormEngine,
+  FormEngineField,
+  buildZodSchema,
+  buildSubmitPayload,
+  getVisibleFields,
+  isFieldVisible,
+  isFieldReadonly,
+  isValidTurkishNationalId,
+} from '../form-engine';
+export type {
+  FormEngineProps,
+  FormDefinitionPayload,
+  FormEngineSubmitPayload,
+  FormEngineValues,
+  FormFieldMeta,
+  FormLayout,
+} from '../form-engine';

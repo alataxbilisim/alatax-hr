@@ -152,6 +152,7 @@ class PermissionSeeder extends Seeder
                 'api_keys' => ['view', 'create', 'edit', 'delete'],
                 'custom_fields' => ['view', 'create', 'edit', 'delete'],
                 'lookups' => ['view', 'create', 'edit', 'delete'],
+                'forms' => ['view', 'edit'],
                 'workflows' => ['view', 'create', 'edit', 'delete'],
             ],
 
@@ -435,6 +436,7 @@ class PermissionSeeder extends Seeder
                     'management.audit_logs.view',
                     'management.custom_fields.view', 'management.custom_fields.create', 'management.custom_fields.edit',
                     'management.lookups.view', 'management.lookups.create', 'management.lookups.edit', 'management.lookups.delete',
+                    'management.forms.view', 'management.forms.edit',
                     // api_keys / webhooks / workflows → yalnızca admin (company_admin / admin rolü)
 
                     // Personel - Tam yetki

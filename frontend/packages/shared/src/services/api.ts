@@ -1300,6 +1300,13 @@ export const customFieldsApi = {
   getEntityTypes: () => api.get('/custom-fields/entity-types'),
 };
 
+/** Form Engine — layout + alan metadata (FAZ 4A) */
+export const formDefinitionsApi = {
+  get: (entityType: string) => api.get(`/form-definitions/${entityType}`),
+  update: <T extends object>(entityType: string, data: T) =>
+    api.put(`/form-definitions/${entityType}`, data),
+};
+
 /** Lookup Engine — form dropdown (GET /lookups/{type}) + yönetim CRUD */
 export interface LookupItem {
   id: number;

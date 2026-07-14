@@ -15,14 +15,20 @@ class CustomFieldDefinition extends Model
     protected $fillable = [
         'company_id',
         'entity_type',
+        'is_system',
+        'system_key',
         'field_key',
         'field_label',
+        'label_override',
         'field_type',
         'field_options',
         'is_required',
+        'is_required_override',
         'is_active',
+        'is_hidden',
         'sort_order',
         'validation_rules',
+        'field_permission',
         'placeholder',
         'help_text',
         'default_value',
@@ -34,7 +40,10 @@ class CustomFieldDefinition extends Model
         'field_options' => 'array',
         'validation_rules' => 'array',
         'is_required' => 'boolean',
+        'is_required_override' => 'boolean',
         'is_active' => 'boolean',
+        'is_system' => 'boolean',
+        'is_hidden' => 'boolean',
         'sort_order' => 'integer',
     ];
 
@@ -81,6 +90,10 @@ class CustomFieldDefinition extends Model
 
     const ENTITY_ASSET = 'asset';
 
+    public const FIELD_PERMISSION_READONLY = 'readonly';
+
+    public const FIELD_PERMISSION_HIDDEN = 'hidden';
+
     /**
      * Get available field types
      */
@@ -119,41 +132,52 @@ class CustomFieldDefinition extends Model
         ];
     }
 
-    /**
-     * Scope: Filter by entity type
-     */
     public function scopeForEntity($query, string $entityType)
     {
         return $query->where('entity_type', $entityType);
     }
 
-    /**
-     * Scope: Only active fields
-     */
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
     }
 
-    /**
-     * Scope: Ordered by sort_order
-     */
+    public function scopeCustomOnly($query)
+    {
+        return $query->where('is_system', false);
+    }
+
+    public function scopeSystemOnly($query)
+    {
+        return $query->where('is_system', true);
+    }
+
     public function scopeOrdered($query)
     {
         return $query->orderBy('sort_order')->orderBy('field_label');
     }
 
+    public function effectiveLabel(): string
+    {
+        return $this->label_override ?: $this->field_label;
+    }
+
+    public function effectiveRequired(): bool
+    {
+        if ($this->is_required_override !== null) {
+            return (bool) $this->is_required_override;
+        }
+
+        return (bool) $this->is_required;
+    }
+
     /**
-     * Validate a value against this field's rules
+     * @deprecated Use CustomFieldValidationService — validation_rules orada uygulanır.
      */
     public function validateValue($value): bool
     {
-        if ($this->is_required && empty($value)) {
+        if ($this->effectiveRequired() && empty($value)) {
             return false;
-        }
-
-        if (! empty($this->validation_rules)) {
-            // TODO: Implement validation logic
         }
 
         return true;

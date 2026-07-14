@@ -361,15 +361,26 @@ const EmployeesPage: React.FC = () => {
               <BsEye />
             </button>
             {canEditEmployee && (
-              <button
-                type="button"
-                className="btn btn-ghost btn-icon"
-                onClick={() => navigate(`/employees/${employee.id}/edit`)}
-                title="Düzenle"
-                aria-label="Düzenle"
-              >
-                <BsPencil />
-              </button>
+              <>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-icon"
+                  onClick={() => navigate(`/employees/${employee.id}/edit`)}
+                  title="Düzenle"
+                  aria-label="Düzenle"
+                >
+                  <BsPencil />
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-icon"
+                  onClick={() => navigate(`/employees/form-engine/${employee.id}/edit`)}
+                  title={t('formEngine.editBeta')}
+                  aria-label={t('formEngine.editBeta')}
+                >
+                  FE
+                </button>
+              </>
             )}
             {canDeleteEmployee && (
               <button
@@ -422,9 +433,18 @@ const EmployeesPage: React.FC = () => {
             </button>
           )}
           {canCreateEmployee && (
-            <button type="button" className="btn btn-primary btn-sm" onClick={() => navigate('/employees/new')}>
-              <BsPlus /> {t('actions.newEmployee')}
-            </button>
+            <>
+              <button type="button" className="btn btn-primary btn-sm" onClick={() => navigate('/employees/new')}>
+                <BsPlus /> {t('actions.newEmployee')}
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => navigate('/employees/form-engine/new')}
+              >
+                {t('formEngine.newBeta')}
+              </button>
+            </>
           )}
         </div>
       </div>

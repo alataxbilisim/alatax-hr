@@ -3,15 +3,20 @@
 namespace App\Services;
 
 use App\Models\CustomFieldDefinition;
+use App\Rules\TurkishNationalId;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
 
 /**
  * Entity custom_fields jsonb değerlerini CustomFieldDefinition'a göre doğrular.
- * Şimdilik yalnızca employee (employees.custom_fields kolonu).
+ * Yalnızca firma custom alanları (is_system=false); sistem alanları FormFieldCatalogService.
  */
 class CustomFieldValidationService
 {
+    public function __construct(
+        protected FormFieldCatalogService $catalog
+    ) {}
+
     /**
      * @param  array<string, mixed>|null  $customFields
      *
@@ -21,7 +26,9 @@ class CustomFieldValidationService
     {
         $definitions = CustomFieldDefinition::query()
             ->forEntity($entityType)
+            ->customOnly()
             ->active()
+            ->where('is_hidden', false)
             ->ordered()
             ->get();
 
@@ -37,8 +44,8 @@ class CustomFieldValidationService
             $attribute = "custom_fields.{$key}";
             $value = array_key_exists($key, $values) ? $values[$key] : null;
 
-            if ($definition->is_required && $this->isEmpty($value)) {
-                $errors[$attribute][] = "{$definition->field_label} zorunludur.";
+            if ($definition->effectiveRequired() && $this->isEmpty($value)) {
+                $errors[$attribute][] = "{$definition->effectiveLabel()} zorunludur.";
 
                 continue;
             }
@@ -50,6 +57,13 @@ class CustomFieldValidationService
             $typeError = $this->validateType($definition, $value);
             if ($typeError !== null) {
                 $errors[$attribute][] = $typeError;
+
+                continue;
+            }
+
+            $ruleError = $this->validateRules($definition, $value, $attribute);
+            if ($ruleError !== null) {
+                $errors[$attribute][] = $ruleError;
             }
         }
 
@@ -73,7 +87,7 @@ class CustomFieldValidationService
 
     private function validateType(CustomFieldDefinition $definition, mixed $value): ?string
     {
-        $label = $definition->field_label;
+        $label = $definition->effectiveLabel();
 
         return match ($definition->field_type) {
             CustomFieldDefinition::TYPE_NUMBER => is_numeric($value)
@@ -101,6 +115,59 @@ class CustomFieldValidationService
                 ? null
                 : "{$label} geçersiz değer.",
         };
+    }
+
+    /**
+     * validation_rules jsonb → uygulama (tckn, min:, max:, regex:…).
+     */
+    private function validateRules(CustomFieldDefinition $definition, mixed $value, string $attribute): ?string
+    {
+        foreach ($this->catalog->laravelRulesFromDefinition($definition) as $rule) {
+            if ($rule instanceof TurkishNationalId) {
+                $message = null;
+                $rule->validate($attribute, $value, function (string $msg) use (&$message) {
+                    $message = $msg;
+                });
+                if ($message !== null) {
+                    return $message;
+                }
+
+                continue;
+            }
+
+            if (! is_string($rule)) {
+                continue;
+            }
+
+            if (str_starts_with($rule, 'min:')) {
+                $min = (int) substr($rule, 4);
+                if (is_string($value) && mb_strlen($value) < $min) {
+                    return "{$definition->effectiveLabel()} en az {$min} karakter olmalıdır.";
+                }
+                if (is_numeric($value) && (float) $value < $min) {
+                    return "{$definition->effectiveLabel()} en az {$min} olmalıdır.";
+                }
+            }
+
+            if (str_starts_with($rule, 'max:')) {
+                $max = (int) substr($rule, 4);
+                if (is_string($value) && mb_strlen($value) > $max) {
+                    return "{$definition->effectiveLabel()} en fazla {$max} karakter olmalıdır.";
+                }
+                if (is_numeric($value) && (float) $value > $max) {
+                    return "{$definition->effectiveLabel()} en fazla {$max} olmalıdır.";
+                }
+            }
+
+            if (str_starts_with($rule, 'regex:')) {
+                $pattern = substr($rule, 6);
+                if (! is_string($value) || @preg_match($pattern, $value) !== 1) {
+                    return "{$definition->effectiveLabel()} formatı geçersiz.";
+                }
+            }
+        }
+
+        return null;
     }
 
     private function isValidDateString(mixed $value): bool
@@ -159,7 +226,6 @@ class CustomFieldValidationService
             if (is_array($option) && array_key_exists('value', $option) && (string) $option['value'] === $stringValue) {
                 return true;
             }
-            // Eski/bozuk string[] kayıtlarına tolerans
             if (is_string($option) && $option === $stringValue) {
                 return true;
             }

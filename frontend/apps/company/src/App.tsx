@@ -123,6 +123,8 @@ import BranchDetailPage from './pages/branches/BranchDetailPage';
 // Employees
 import EmployeesPage from './pages/employees/EmployeesPage';
 import EmployeeForm from './components/EmployeeForm';
+import EmployeeFormEnginePage from './pages/employees/EmployeeFormEnginePage';
+import FormLayoutEditorPage from './pages/settings/FormLayoutEditorPage';
 import EmployeeDetailPage from './pages/employees/EmployeeDetailPage';
 import EmployeeCustomFieldsPage from './pages/employees/EmployeeCustomFieldsPage';
 import DepartmentsPage from './pages/employees/DepartmentsPage';
@@ -277,6 +279,14 @@ const App: React.FC = () => {
           <Route
             path="/employees/new"
             element={withPermission(<EmployeeForm />, 'employees', 'list', 'create')}
+          />
+          <Route
+            path="/employees/form-engine/new"
+            element={withPermission(<EmployeeFormEnginePage />, 'employees', 'list', 'create')}
+          />
+          <Route
+            path="/employees/form-engine/:id/edit"
+            element={withPermission(<EmployeeFormEnginePage />, 'employees', 'list', 'edit')}
           />
           <Route
             path="/employees/custom-fields"
@@ -765,6 +775,16 @@ const App: React.FC = () => {
               <ProtectedRoute>
                 <PermissionProtectedRoute module="management" page="custom_fields" action="view">
                   <CustomFieldsIndexPage />
+                </PermissionProtectedRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings/forms/employee"
+            element={
+              <ProtectedRoute>
+                <PermissionProtectedRoute module="management" page="forms" action="view">
+                  <FormLayoutEditorPage />
                 </PermissionProtectedRoute>
               </ProtectedRoute>
             }

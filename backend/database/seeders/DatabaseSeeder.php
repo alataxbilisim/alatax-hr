@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             SuperAdminSeeder::class,
             LeaveTypeSeeder::class,
             LookupSeeder::class,
+            EmployeeFormFieldSeeder::class,
         ]);
     }
 }

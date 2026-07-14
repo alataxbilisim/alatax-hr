@@ -392,6 +392,16 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:management.custom_fields.delete');
         });
 
+        // Form Engine definitions (FAZ 4A-1)
+        Route::middleware('company_admin')->prefix('form-definitions')->group(function () {
+            Route::get('/{entityType}', [\App\Http\Controllers\Api\V1\FormDefinitionController::class, 'show'])
+                ->middleware('permission:management.forms.view')
+                ->where('entityType', '[a-z_]+');
+            Route::put('/{entityType}', [\App\Http\Controllers\Api\V1\FormDefinitionController::class, 'update'])
+                ->middleware('permission:management.forms.edit')
+                ->where('entityType', '[a-z_]+');
+        });
+
         // Activity Logs — management.audit_logs (PermissionSeeder: underscore)
         // /export MUST be before /{id}
         Route::get('/activity-logs', [\App\Http\Controllers\Api\V1\ActivityLogController::class, 'index'])
