@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from '@shared/i18n';
 import { leavesApi, lookupsApi, type LookupItem } from '@shared/services/api';
 import { Select } from '@shared/components';
 import toast from 'react-hot-toast';
@@ -58,6 +59,7 @@ interface LeaveRequest {
 type TabType = 'requests' | 'types' | 'balances' | 'calendar' | 'holidays' | 'policies' | 'reports';
 
 const LeavesPage: React.FC = () => {
+  const { t } = useTranslation('common');
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -317,10 +319,19 @@ const LeavesPage: React.FC = () => {
     switch (activeTab) {
       case 'requests':
         return (
-          <button type="button" className="btn btn-primary btn-sm" onClick={() => setRequestFormOpen(true)}>
-            <BsPlus />
-            Yeni Talep
-          </button>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button type="button" className="btn btn-primary btn-sm" onClick={() => setRequestFormOpen(true)}>
+              <BsPlus />
+              Yeni Talep
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => navigate('/leaves/form-engine/new')}
+            >
+              {t('formEngine.newBeta')}
+            </button>
+          </div>
         );
       case 'types':
         return (

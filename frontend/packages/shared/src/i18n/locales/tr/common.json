@@ -155,6 +155,8 @@
     "lookups": "Listeler",
     "customFields": "Özel Alanlar",
     "formLayout": "Personel form düzeni",
+    "formLayoutEmployee": "Personel form düzeni",
+    "formLayoutLeave": "İzin talebi form düzeni",
     "modulesSoon": "Yakında — derin bağlantılar",
     "leaveTypes": "İzin türleri",
     "documentCategories": "Evrak kategorileri",
@@ -464,6 +466,13 @@
     "systemNoDelete": "Sistem alanı silinemez",
     "systemNoDeleteHelp": "Sistem alanları silinemez — yalnızca gizleyebilir, yeniden adlandırabilir veya zorunluluk override edebilirsiniz.",
     "newBeta": "Yeni (Form Engine)",
-    "editBeta": "Form Engine ile düzenle"
+    "editBeta": "Form Engine ile düzenle",
+    "editorTitleLeave": "İzin Talebi Form Düzeni",
+    "unsupportedEntity": "Bu entity için form düzeni desteklenmiyor.",
+    "leaveCreateTitle": "Yeni İzin Talebi (Form Engine)",
+    "leaveBetaHint": "Beta — form tanımından üretilir. Klasik modal forma dönebilirsiniz.",
+    "useClassicLeaveForm": "Klasik forma dön",
+    "leaveCreateSuccess": "İzin talebi oluşturuldu",
+    "leaveTotalDaysHint": "Toplam gün sunucuda iş günü olarak hesaplanır; formdaki alan salt okunur bilgilendirmedir."
   }
 }

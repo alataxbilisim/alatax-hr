@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from '@shared/i18n';
 import { formDefinitionsApi } from '@shared/services/api';
 import { getErrorMessage } from '@shared/services/apiHelpers';
@@ -15,12 +15,22 @@ import {
   BsShieldLock,
 } from 'react-icons/bs';
 
+const SUPPORTED_ENTITIES = ['employee', 'leave_request'] as const;
+type StudioEntityType = (typeof SUPPORTED_ENTITIES)[number];
+
+function isStudioEntityType(value: string | undefined): value is StudioEntityType {
+  return SUPPORTED_ENTITIES.some((entity) => entity === value);
+}
+
 /**
- * Ayarlar Stüdyosu — Personel form layout / alan metadata editörü.
+ * Ayarlar Stüdyosu — form layout / alan metadata editörü (entityType parametreli).
  * Sistem alan silinemez; yalnız gizle / rename / zorunlu / sıra.
  */
 const FormLayoutEditorPage: React.FC = () => {
   const { t } = useTranslation('common');
+  const { entityType: entityParam } = useParams<{ entityType: string }>();
+  const entityType: StudioEntityType = isStudioEntityType(entityParam) ? entityParam : 'employee';
+
   const [definition, setDefinition] = useState<FormDefinitionPayload | null>(null);
   const [fields, setFields] = useState<FormFieldMeta[]>([]);
   const [layout, setLayout] = useState<FormLayout | null>(null);
@@ -28,10 +38,24 @@ const FormLayoutEditorPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  const pilotPath = useMemo(() => {
+    if (entityType === 'leave_request') {
+      return '/leaves/form-engine/new';
+    }
+    return '/employees/form-engine/new';
+  }, [entityType]);
+
+  const title = useMemo(() => {
+    if (entityType === 'leave_request') {
+      return t('formEngine.editorTitleLeave');
+    }
+    return t('formEngine.editorTitle');
+  }, [entityType, t]);
+
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await formDefinitionsApi.get('employee');
+      const res = await formDefinitionsApi.get(entityType);
       const data = res.data.data as FormDefinitionPayload;
       setDefinition(data);
       setFields(data.fields ?? []);
@@ -42,7 +66,7 @@ const FormLayoutEditorPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [t]);
+  }, [entityType, t]);
 
   useEffect(() => {
     void load();
@@ -98,19 +122,16 @@ const FormLayoutEditorPage: React.FC = () => {
           }
           return {
             id: f.id,
-            field_key: f.field_key,
-            label_override: f.label_override,
             field_label: f.field_label,
+            label_override: f.label_override,
             is_hidden: f.is_hidden,
             is_required: f.is_required,
             is_required_override: f.is_required_override,
             sort_order: f.sort_order,
-            field_permission: f.field_permission,
           };
         }),
       };
-
-      const res = await formDefinitionsApi.update('employee', payload);
+      const res = await formDefinitionsApi.update(entityType, payload);
       const data = res.data.data as FormDefinitionPayload;
       setDefinition(data);
       setFields(data.fields ?? []);
@@ -124,7 +145,19 @@ const FormLayoutEditorPage: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (!isStudioEntityType(entityParam) && entityParam) {
+    return (
+      <div className="animate-fade-in">
+        <div className="card">
+          <div className="card-body">
+            <p className="text-danger">{t('formEngine.unsupportedEntity')}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading || !definition) {
     return (
       <div className="animate-fade-in">
         <div className="card">
@@ -140,11 +173,11 @@ const FormLayoutEditorPage: React.FC = () => {
     <div className="animate-fade-in">
       <div className="page-header">
         <div className="page-header-content">
-          <h1 className="page-title">{t('formEngine.editorTitle')}</h1>
+          <h1 className="page-title">{title}</h1>
           <p className="page-subtitle">{t('formEngine.editorSubtitle')}</p>
         </div>
         <div className="page-header-actions" style={{ display: 'flex', gap: '0.5rem' }}>
-          <Link to="/employees/form-engine/new" className="btn btn-secondary btn-sm">
+          <Link to={pilotPath} className="btn btn-secondary btn-sm">
             {t('formEngine.previewPilot')}
           </Link>
           <button
@@ -168,7 +201,7 @@ const FormLayoutEditorPage: React.FC = () => {
               onChange={(e) => setFormName(e.target.value)}
             />
           </div>
-          {definition?.is_system_default && (
+          {definition.is_system_default && (
             <p style={{ color: 'var(--text-tertiary)', margin: 0, fontSize: '0.875rem' }}>
               {t('formEngine.usingSystemDefault')}
             </p>
@@ -247,43 +280,45 @@ const FormLayoutEditorPage: React.FC = () => {
                             ? t('formEngine.hideSystemHint')
                             : t('formEngine.toggleHidden')
                         }
+                        aria-label={t('formEngine.toggleHidden')}
                       >
                         {field.is_hidden ? <BsEyeSlash /> : <BsEye />}
                       </button>
                     </td>
                     <td>
                       <select
-                        className="form-control form-control-sm"
+                        className="form-select form-select-sm"
                         value={
-                          field.is_required_override === null ||
-                          field.is_required_override === undefined
-                            ? ''
+                          field.is_required_override === null || field.is_required_override === undefined
+                            ? 'default'
                             : field.is_required_override
-                              ? '1'
-                              : '0'
+                              ? 'yes'
+                              : 'no'
                         }
                         onChange={(e) => {
                           const v = e.target.value;
                           updateField(index, {
-                            is_required_override: v === '' ? null : v === '1',
+                            is_required_override:
+                              v === 'default' ? null : v === 'yes',
                           });
                         }}
                       >
-                        <option value="">{t('formEngine.requiredDefault')}</option>
-                        <option value="1">{t('formEngine.requiredYes')}</option>
-                        <option value="0">{t('formEngine.requiredNo')}</option>
+                        <option value="default">{t('formEngine.requiredDefault')}</option>
+                        <option value="yes">{t('formEngine.requiredYes')}</option>
+                        <option value="no">{t('formEngine.requiredNo')}</option>
                       </select>
                     </td>
                     <td>
                       <select
-                        className="form-control form-control-sm"
+                        className="form-select form-select-sm"
                         value={field.field_permission ?? ''}
                         onChange={(e) => {
                           const v = e.target.value;
-                          updateField(index, {
-                            field_permission:
-                              v === '' ? null : (v as 'readonly' | 'hidden'),
-                          });
+                          let permission: FormFieldMeta['field_permission'] = null;
+                          if (v === 'readonly' || v === 'hidden') {
+                            permission = v;
+                          }
+                          updateField(index, { field_permission: permission });
                         }}
                       >
                         <option value="">{t('formEngine.permNormal')}</option>
@@ -293,11 +328,9 @@ const FormLayoutEditorPage: React.FC = () => {
                     </td>
                     <td>
                       {field.is_system ? (
-                        <span title={t('formEngine.systemNoDelete')}>
-                          <BsShieldLock /> <BsLock />
-                        </span>
+                        <BsLock title={t('formEngine.colSystem')} />
                       ) : (
-                        '—'
+                        <BsShieldLock title={t('formEngine.colSystem')} />
                       )}
                     </td>
                   </tr>
@@ -307,10 +340,6 @@ const FormLayoutEditorPage: React.FC = () => {
           </div>
         </div>
       </div>
-
-      <p style={{ marginTop: 'var(--space-3)', color: 'var(--text-tertiary)', fontSize: '0.875rem' }}>
-        {t('formEngine.systemNoDeleteHelp')}
-      </p>
     </div>
   );
 };

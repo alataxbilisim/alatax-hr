@@ -113,6 +113,32 @@ export const FormEngineField: React.FC<FormEngineFieldProps> = ({
             );
           }
 
+          if (field.field_type === 'file') {
+            return (
+              <div>
+                <label className="form-label" htmlFor={`fe-${key}`}>
+                  {field.effective_label}
+                  {field.effective_required && !readonly && (
+                    <span className="text-danger ms-1">*</span>
+                  )}
+                </label>
+                <input
+                  id={`fe-${key}`}
+                  type="file"
+                  className="form-control"
+                  disabled={readonly}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] ?? null;
+                    rhf.onChange(file);
+                  }}
+                />
+                {rhf.value instanceof File && (
+                  <small className="form-text text-muted">{rhf.value.name}</small>
+                )}
+              </div>
+            );
+          }
+
           const customDef: CustomFieldDefinition = {
             id: field.id,
             field_key: field.field_key,

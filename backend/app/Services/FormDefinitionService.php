@@ -57,7 +57,7 @@ class FormDefinitionService
             'name' => $form?->name ?? ucfirst($entityType),
             'is_active' => $form?->is_active ?? true,
             'is_system_default' => $form === null || $form->company_id === null,
-            'layout' => $form?->layout ?? $this->catalog->defaultEmployeeLayout(),
+            'layout' => $form?->layout ?? $this->catalog->defaultLayoutFor($entityType),
             'fields' => $fields,
         ];
     }
@@ -94,7 +94,7 @@ class FormDefinitionService
                         'entity_type' => $entityType,
                         'name' => $payload['name'] ?? ($systemDefault?->name ?? 'Personel Formu'),
                         'is_active' => true,
-                        'layout' => $systemDefault?->layout ?? $this->catalog->defaultEmployeeLayout(),
+                        'layout' => $systemDefault?->layout ?? $this->catalog->defaultLayoutFor($entityType),
                         'created_by' => $userId,
                     ]);
                 }
@@ -244,11 +244,17 @@ class FormDefinitionService
         }
     }
 
+    /** @var list<string> */
+    public const SUPPORTED_ENTITIES = [
+        CustomFieldDefinition::ENTITY_EMPLOYEE,
+        CustomFieldDefinition::ENTITY_LEAVE_REQUEST,
+    ];
+
     private function assertSupportedEntity(string $entityType): void
     {
-        if ($entityType !== CustomFieldDefinition::ENTITY_EMPLOYEE) {
+        if (! in_array($entityType, self::SUPPORTED_ENTITIES, true)) {
             throw ValidationException::withMessages([
-                'entity_type' => ['Bu sürümde yalnızca employee form tanımı desteklenir.'],
+                'entity_type' => ['Desteklenen form tanımları: employee, leave_request.'],
             ]);
         }
     }

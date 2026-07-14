@@ -32,6 +32,9 @@ export function buildSubmitPayload(
 
 function normalizeValue(raw: unknown, fieldType: string): unknown {
   if (raw === undefined) return null;
+  if (fieldType === 'file') {
+    return raw instanceof File ? raw : raw === null || raw === '' ? null : raw;
+  }
   if (fieldType === 'number' || fieldType === 'decimal') {
     if (raw === '' || raw === null) return null;
     const n = typeof raw === 'number' ? raw : Number(raw);

@@ -57,6 +57,12 @@ export function buildZodSchema(
           schema = z.array(z.string()).min(1, messages.required);
         }
         break;
+      case 'file':
+        schema = z.union([z.instanceof(File), z.null()]).optional();
+        if (required) {
+          schema = z.instanceof(File, { message: messages.required });
+        }
+        break;
       case 'email':
         schema = z.string().optional().nullable().or(z.literal(''));
         if (required) {

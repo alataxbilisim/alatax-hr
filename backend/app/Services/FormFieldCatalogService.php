@@ -77,20 +77,138 @@ class FormFieldCatalogService
         ];
     }
 
+    /**
+     * İzin talebi formu standart alanları (LeaveRequestForm ile hizalı).
+     * total_days hesaplanan/salt okunur; iş mantığı (bakiye/workflow) FormEngine dışında kalır.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function leaveRequestSystemFieldCatalog(): array
+    {
+        return [
+            ['system_key' => 'leave_type_id', 'field_label' => 'İzin Türü', 'field_type' => CustomFieldDefinition::TYPE_NUMBER, 'is_required' => true, 'sort_order' => 10, 'section' => 'request'],
+            ['system_key' => 'start_date', 'field_label' => 'Başlangıç Tarihi', 'field_type' => CustomFieldDefinition::TYPE_DATE, 'is_required' => true, 'sort_order' => 20, 'section' => 'request'],
+            ['system_key' => 'end_date', 'field_label' => 'Bitiş Tarihi', 'field_type' => CustomFieldDefinition::TYPE_DATE, 'is_required' => true, 'sort_order' => 30, 'section' => 'request'],
+            [
+                'system_key' => 'total_days',
+                'field_label' => 'Toplam Gün',
+                'field_type' => CustomFieldDefinition::TYPE_NUMBER,
+                'is_required' => false,
+                'sort_order' => 40,
+                'section' => 'request',
+                'field_permission' => CustomFieldDefinition::FIELD_PERMISSION_READONLY,
+            ],
+            ['system_key' => 'reason', 'field_label' => 'Açıklama', 'field_type' => CustomFieldDefinition::TYPE_TEXTAREA, 'is_required' => false, 'sort_order' => 50, 'section' => 'request'],
+            ['system_key' => 'document', 'field_label' => 'Belge', 'field_type' => CustomFieldDefinition::TYPE_FILE, 'is_required' => false, 'sort_order' => 60, 'section' => 'request'],
+        ];
+    }
+
     public function defaultEmployeeLayout(): array
     {
-        $sections = [
-            'general' => ['id' => 'general', 'label' => 'Genel', 'sort_order' => 0, 'rows' => []],
-            'personal' => ['id' => 'personal', 'label' => 'Kişisel', 'sort_order' => 1, 'rows' => []],
-            'contact' => ['id' => 'contact', 'label' => 'İletişim', 'sort_order' => 2, 'rows' => []],
-            'work' => ['id' => 'work', 'label' => 'İş Bilgileri', 'sort_order' => 3, 'rows' => []],
-            'salary' => ['id' => 'salary', 'label' => 'Maaş', 'sort_order' => 4, 'rows' => []],
-            'sgk' => ['id' => 'sgk', 'label' => 'SGK', 'sort_order' => 5, 'rows' => []],
-            'custom' => ['id' => 'custom', 'label' => 'Özel Alanlar', 'sort_order' => 6, 'rows' => []],
-        ];
+        return $this->layoutFromCatalog(
+            $this->employeeSystemFieldCatalog(),
+            [
+                'general' => ['id' => 'general', 'label' => 'Genel', 'sort_order' => 0],
+                'personal' => ['id' => 'personal', 'label' => 'Kişisel', 'sort_order' => 1],
+                'contact' => ['id' => 'contact', 'label' => 'İletişim', 'sort_order' => 2],
+                'work' => ['id' => 'work', 'label' => 'İş Bilgileri', 'sort_order' => 3],
+                'salary' => ['id' => 'salary', 'label' => 'Maaş', 'sort_order' => 4],
+                'sgk' => ['id' => 'sgk', 'label' => 'SGK', 'sort_order' => 5],
+                'custom' => ['id' => 'custom', 'label' => 'Özel Alanlar', 'sort_order' => 6],
+            ]
+        );
+    }
 
-        foreach ($this->employeeSystemFieldCatalog() as $field) {
+    public function defaultLeaveRequestLayout(): array
+    {
+        return $this->layoutFromCatalog(
+            $this->leaveRequestSystemFieldCatalog(),
+            [
+                'request' => ['id' => 'request', 'label' => 'İzin Talebi', 'sort_order' => 0],
+                'custom' => ['id' => 'custom', 'label' => 'Özel Alanlar', 'sort_order' => 1],
+            ]
+        );
+    }
+
+    /**
+     * Entity’ye göre varsayılan layout.
+     *
+     * @return array{sections: list<array<string, mixed>>}
+     */
+    public function defaultLayoutFor(string $entityType): array
+    {
+        return match ($entityType) {
+            CustomFieldDefinition::ENTITY_LEAVE_REQUEST => $this->defaultLeaveRequestLayout(),
+            default => $this->defaultEmployeeLayout(),
+        };
+    }
+
+    /**
+     * Idempotent sistem alan + varsayılan layout seed (employee + leave_request).
+     *
+     * @return array{fields: int, layouts: int}
+     */
+    public function seedSystemCatalog(): array
+    {
+        $fieldCount = 0;
+        $fieldCount += $this->seedEntityCatalog(
+            CustomFieldDefinition::ENTITY_EMPLOYEE,
+            $this->employeeSystemFieldCatalog()
+        );
+        $fieldCount += $this->seedEntityCatalog(
+            CustomFieldDefinition::ENTITY_LEAVE_REQUEST,
+            $this->leaveRequestSystemFieldCatalog()
+        );
+
+        FormDefinition::withoutGlobalScopes()->updateOrCreate(
+            [
+                'company_id' => null,
+                'entity_type' => CustomFieldDefinition::ENTITY_EMPLOYEE,
+            ],
+            [
+                'name' => 'Personel Formu (Sistem)',
+                'is_active' => true,
+                'layout' => $this->defaultEmployeeLayout(),
+            ]
+        );
+
+        FormDefinition::withoutGlobalScopes()->updateOrCreate(
+            [
+                'company_id' => null,
+                'entity_type' => CustomFieldDefinition::ENTITY_LEAVE_REQUEST,
+            ],
+            [
+                'name' => 'İzin Talebi Formu (Sistem)',
+                'is_active' => true,
+                'layout' => $this->defaultLeaveRequestLayout(),
+            ]
+        );
+
+        return ['fields' => $fieldCount, 'layouts' => 2];
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $catalog
+     * @param  array<string, array{id: string, label: string, sort_order: int}>  $sectionMeta
+     * @return array{sections: list<array<string, mixed>>}
+     */
+    private function layoutFromCatalog(array $catalog, array $sectionMeta): array
+    {
+        $sections = [];
+        foreach ($sectionMeta as $id => $meta) {
+            $sections[$id] = [
+                'id' => $meta['id'],
+                'label' => $meta['label'],
+                'sort_order' => $meta['sort_order'],
+                'rows' => [],
+            ];
+        }
+
+        foreach ($catalog as $field) {
             $sectionId = $field['section'];
+            if (! isset($sections[$sectionId])) {
+                continue;
+            }
             $sections[$sectionId]['rows'][] = [
                 'sort_order' => count($sections[$sectionId]['rows']),
                 'fields' => [
@@ -105,21 +223,19 @@ class FormFieldCatalogService
     }
 
     /**
-     * Idempotent sistem alan + varsayılan layout seed.
-     *
-     * @return array{fields: int, layouts: int}
+     * @param  list<array<string, mixed>>  $catalog
      */
-    public function seedSystemCatalog(): array
+    private function seedEntityCatalog(string $entityType, array $catalog): int
     {
         $fieldCount = 0;
-        foreach ($this->employeeSystemFieldCatalog() as $item) {
+        foreach ($catalog as $item) {
             $section = $item['section'];
             unset($item['section']);
 
             CustomFieldDefinition::withoutGlobalScopes()->updateOrCreate(
                 [
                     'company_id' => null,
-                    'entity_type' => CustomFieldDefinition::ENTITY_EMPLOYEE,
+                    'entity_type' => $entityType,
                     'field_key' => $item['system_key'],
                 ],
                 [
@@ -142,19 +258,7 @@ class FormFieldCatalogService
             $fieldCount++;
         }
 
-        FormDefinition::withoutGlobalScopes()->updateOrCreate(
-            [
-                'company_id' => null,
-                'entity_type' => CustomFieldDefinition::ENTITY_EMPLOYEE,
-            ],
-            [
-                'name' => 'Personel Formu (Sistem)',
-                'is_active' => true,
-                'layout' => $this->defaultEmployeeLayout(),
-            ]
-        );
-
-        return ['fields' => $fieldCount, 'layouts' => 1];
+        return $fieldCount;
     }
 
     /**

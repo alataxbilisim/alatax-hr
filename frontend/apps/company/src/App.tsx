@@ -124,6 +124,7 @@ import BranchDetailPage from './pages/branches/BranchDetailPage';
 import EmployeesPage from './pages/employees/EmployeesPage';
 import EmployeeForm from './components/EmployeeForm';
 import EmployeeFormEnginePage from './pages/employees/EmployeeFormEnginePage';
+import LeaveRequestFormEnginePage from './pages/leaves/LeaveRequestFormEnginePage';
 import FormLayoutEditorPage from './pages/settings/FormLayoutEditorPage';
 import EmployeeDetailPage from './pages/employees/EmployeeDetailPage';
 import EmployeeCustomFieldsPage from './pages/employees/EmployeeCustomFieldsPage';
@@ -443,6 +444,10 @@ const App: React.FC = () => {
           />
           
           {/* Leaves Module */}
+          <Route
+            path="/leaves/form-engine/new"
+            element={withPermission(<LeaveRequestFormEnginePage />, 'leaves', 'requests', 'create')}
+          />
           <Route
             path="/leaves"
             element={
@@ -780,7 +785,7 @@ const App: React.FC = () => {
             }
           />
           <Route
-            path="/settings/forms/employee"
+            path="/settings/forms/:entityType"
             element={
               <ProtectedRoute>
                 <PermissionProtectedRoute module="management" page="forms" action="view">
