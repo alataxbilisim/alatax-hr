@@ -15,13 +15,8 @@ class JobApplication extends Model
     protected $fillable = [
         'company_id',
         'job_position_id',
-        'position_id',
-        'form_id',
         'first_name',
         'last_name',
-        'applicant_name',
-        'applicant_email',
-        'applicant_phone',
         'email',
         'phone',
         'cv_path',
@@ -37,6 +32,9 @@ class JobApplication extends Model
         'assigned_to',
         'ip_address',
         'user_agent',
+        'consent_kvkk',
+        'consent_at',
+        'converted_employee_id',
         'updated_by',
     ];
 
@@ -45,9 +43,11 @@ class JobApplication extends Model
         'tags' => 'array',
         'rating' => 'integer',
         'status' => JobApplicationStatus::class,
+        'consent_kvkk' => 'boolean',
+        'consent_at' => 'datetime',
     ];
 
-    protected $appends = ['full_name'];
+    protected $appends = ['full_name', 'applicant_name'];
 
     // Constants for status
     const STATUS_NEW = 'new';
@@ -90,19 +90,20 @@ class JobApplication extends Model
         return $this->belongsTo(JobPosition::class);
     }
 
+    /** FE / legacy alias — job_position_id */
     public function position()
     {
-        return $this->belongsTo(JobPosition::class, 'position_id');
+        return $this->belongsTo(JobPosition::class, 'job_position_id');
     }
 
-    public function form()
+    public function convertedEmployee()
     {
-        return $this->belongsTo(ApplicationForm::class, 'form_id');
+        return $this->belongsTo(Employee::class, 'converted_employee_id');
     }
 
     public function creator()
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(User::class, 'updated_by');
     }
 
     public function assignedTo()
@@ -121,9 +122,14 @@ class JobApplication extends Model
     }
 
     // Accessors
-    public function getFullNameAttribute()
+    public function getFullNameAttribute(): string
     {
-        return "{$this->first_name} {$this->last_name}";
+        return trim(($this->first_name ?? '').' '.($this->last_name ?? ''));
+    }
+
+    public function getApplicantNameAttribute(): string
+    {
+        return $this->full_name;
     }
 
     public function getStatusLabelAttribute()

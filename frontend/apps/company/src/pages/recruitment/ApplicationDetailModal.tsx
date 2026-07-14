@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { useTranslation } from '@shared/i18n';
 import { recruitmentApi, lookupsApi, type LookupItem } from '@shared/services/api';
 import { Select } from '@shared/components';
 import toast from 'react-hot-toast';
@@ -13,6 +14,7 @@ import {
   BsPerson,
   BsCalendar,
   BsChatDots,
+  BsPersonPlus,
 } from 'react-icons/bs';
 
 interface ApplicationDetail {
@@ -20,12 +22,18 @@ interface ApplicationDetail {
   applicant_name: string;
   applicant_email: string;
   applicant_phone: string | null;
+  first_name?: string;
+  last_name?: string;
+  full_name?: string;
+  email?: string;
+  phone?: string | null;
   position: { id: number; title: string } | null;
   status: string;
   form_data: Record<string, unknown>;
   cv_path: string | null;
   notes: string | null;
   rating: number | null;
+  converted_employee_id?: number | null;
   status_logs: Array<{
     id: number;
     status: string;
@@ -69,6 +77,8 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
   const [newStatus, setNewStatus] = useState('');
   const [statusNote, setStatusNote] = useState('');
   const [changingStatus, setChangingStatus] = useState(false);
+  const [converting, setConverting] = useState(false);
+  const { t } = useTranslation('common');
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
 
@@ -87,8 +97,17 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
     setLoading(true);
     try {
       const response = await recruitmentApi.applications.get(applicationId);
-      const data = response.data.data;
-      setApplication(data);
+      const data: ApplicationDetail = response.data.data;
+      const displayName =
+        data.applicant_name ||
+        data.full_name ||
+        [data.first_name, data.last_name].filter(Boolean).join(' ');
+      setApplication({
+        ...data,
+        applicant_name: displayName,
+        applicant_email: data.applicant_email || data.email || '',
+        applicant_phone: data.applicant_phone ?? data.phone ?? null,
+      });
       setNotes(data.notes || '');
       setNewStatus(data.status);
     } catch {
@@ -151,6 +170,23 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
       onUpdate();
     } catch {
       toast.error('Puanlama başarısız');
+    }
+  };
+
+  const handleConvertToEmployee = async () => {
+    if (!applicationId) return;
+
+    setConverting(true);
+    try {
+      const res = await recruitmentApi.applications.convertToEmployee(applicationId);
+      const created = Boolean(res.data.data?.created);
+      toast.success(created ? t('recruitment.convertSuccess') : t('recruitment.convertAlready'));
+      void loadApplication();
+      onUpdate();
+    } catch {
+      toast.error(t('recruitment.convertFailed'));
+    } finally {
+      setConverting(false);
     }
   };
 
@@ -237,6 +273,21 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
                 </a>
               )}
             </div>
+            {application.status === 'hired' && (
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  onClick={() => void handleConvertToEmployee()}
+                  disabled={converting || Boolean(application.converted_employee_id)}
+                >
+                  <BsPersonPlus size={14} />{' '}
+                  {application.converted_employee_id
+                    ? t('recruitment.convertAlready')
+                    : t('recruitment.convertToEmployee')}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Rating */}

@@ -453,12 +453,26 @@ export const recruitmentApi = {
       api.get('/recruitment/applications', { params }),
     get: (id: number) => 
       api.get(`/recruitment/applications/${id}`),
+    create: (data: {
+      job_position_id: number;
+      first_name: string;
+      last_name: string;
+      email: string;
+      phone?: string | null;
+      notes?: string | null;
+      consent_kvkk: boolean;
+      source?: string;
+    }) => api.post('/recruitment/applications', data),
     updateStatus: (id: number, data: { status: string; note?: string }) => 
       api.put(`/recruitment/applications/${id}/status`, data),
     updateNotes: (id: number, notes: string) => 
       api.put(`/recruitment/applications/${id}/notes`, { notes }),
     rate: (id: number, rating: number) => 
       api.put(`/recruitment/applications/${id}/rate`, { rating }),
+    convertToEmployee: (
+      id: number,
+      data?: { branch_id?: number | null; employee_code?: string; hire_date?: string; department_id?: number | null }
+    ) => api.post(`/recruitment/applications/${id}/convert-to-employee`, data ?? {}),
   },
   
   // CV Pool
@@ -913,11 +927,15 @@ export const publicApi = {
       api.get(`/public/jobs/${positionSlug}`),
   },
   
-  // Applications
-  apply: (positionSlug: string, data: FormData) => 
-    api.post(`/public/jobs/${positionSlug}/apply`, data, { 
-      headers: { 'Content-Type': 'multipart/form-data' } 
-    }),
+  // Applications — companySlug tenant için zorunlu
+  apply: (companySlug: string, positionSlug: string, data: FormData) => {
+    if (!data.has('company_slug')) {
+      data.append('company_slug', companySlug);
+    }
+    return api.post(`/public/companies/${companySlug}/jobs/${positionSlug}/apply`, data, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
 };
 
 // Portal API (Personel Self-Servis)

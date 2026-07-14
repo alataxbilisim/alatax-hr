@@ -431,6 +431,8 @@ Route::prefix('v1')->group(function () {
             // Başvurular
             Route::get('/applications', [\App\Http\Controllers\Api\V1\Recruitment\ApplicationController::class, 'index'])
                 ->middleware('permission:recruitment.applications.view');
+            Route::post('/applications', [\App\Http\Controllers\Api\V1\Recruitment\ApplicationController::class, 'store'])
+                ->middleware('permission:recruitment.applications.edit');
             Route::get('/applications/{id}', [\App\Http\Controllers\Api\V1\Recruitment\ApplicationController::class, 'show'])
                 ->middleware('permission:recruitment.applications.view');
             Route::put('/applications/{id}/status', [\App\Http\Controllers\Api\V1\Recruitment\ApplicationController::class, 'updateStatus'])
@@ -439,6 +441,8 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:recruitment.applications.edit');
             Route::put('/applications/{id}/rate', [\App\Http\Controllers\Api\V1\Recruitment\ApplicationController::class, 'rate'])
                 ->middleware('permission:recruitment.applications.edit');
+            Route::post('/applications/{id}/convert-to-employee', [\App\Http\Controllers\Api\V1\Recruitment\ApplicationController::class, 'convertToEmployee'])
+                ->middleware('permission:recruitment.applications.edit|employees.list.create');
 
             // CV Havuzu
             Route::get('/cv-pool', [\App\Http\Controllers\Api\V1\Recruitment\CvPoolController::class, 'index'])
@@ -1170,7 +1174,8 @@ Route::prefix('v1')->group(function () {
         // Pozisyon detayı (slug ile)
         Route::get('/jobs/{positionSlug}', [\App\Http\Controllers\Api\V1\Public\JobController::class, 'show']);
 
-        // Başvuru gönder
+        // Başvuru gönder (company_slug body veya route param — tenant)
         Route::post('/jobs/{positionSlug}/apply', [\App\Http\Controllers\Api\V1\Public\ApplicationController::class, 'store']);
+        Route::post('/companies/{companySlug}/jobs/{positionSlug}/apply', [\App\Http\Controllers\Api\V1\Public\ApplicationController::class, 'store']);
     });
 });

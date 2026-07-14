@@ -54,3 +54,55 @@
 - Approved iptal → 422; başka kullanıcının talebi (employee) → 403
 - DataScope / A3–A6 branch-context testleri yeşil kaldı
 - Push yapılmadı
+
+---
+
+## B-2 — İşe alım akışı tamiri
+
+### ADIM 0 — Teşhis
+
+| # | Bulgu | Gerçek |
+|---|--------|--------|
+| 1 | Public apply status | `published` arıyordu; enum/JobController **`active`** → **KARAR: `active`** |
+| 2 | Public create alanları | `applicant_*` / `position_id` — şema: `first_name`/`last_name`/`email`/`job_position_id` |
+| 3 | HR store | **Yoktu**; kanban `GET /recruitment/applications` (index de yanlış kolon arıyordu) |
+| 4 | hired→employee | Stage update vardı; personel dönüşümü **yoktu** |
+
+### Uygulama özeti
+
+| Adım | Durum | Not |
+|------|--------|-----|
+| 1 Public başvuru | ✅ | `active` + şema alanları + `consent_kvkk`/`consent_at` + company slug tenant |
+| 2 Manuel aday | ✅ | `POST /recruitment/applications` + FE “Aday Ekle” |
+| 3 hired→personel | ✅ | `POST .../convert-to-employee` ön-doldurma; **onboarding otomatik YOK** (ayrı iş) |
+| 4 Test | ✅ | Aşağıda |
+
+### Status kararı
+
+**`active`** — `JobPositionStatus` enum + Public `JobController` + `publish()` yardımcıları baskın doğruluk; `published` yalnızca `published_at` timestamp anlamında.
+
+### Eklenen alanlar (ekleyici migration)
+
+- `job_applications.consent_kvkk` (bool)
+- `job_applications.consent_at` (timestamp, nullable)
+- `job_applications.converted_employee_id` → `employees` (nullable FK)
+
+### Eklenen route'lar
+
+| Method | Path | Auth / Permission |
+|--------|------|-------------------|
+| `POST` | `/api/v1/public/jobs/{slug}/apply` | public + `company_slug` body |
+| `POST` | `/api/v1/public/companies/{slug}/jobs/{slug}/apply` | public (tercih) |
+| `POST` | `/api/v1/recruitment/applications` | `recruitment.applications.edit` |
+| `POST` | `/api/v1/recruitment/applications/{id}/convert-to-employee` | `edit` \| `employees.list.create` |
+
+### Test sonuçları (`alatax_hr_testing`)
+
+| Suite | Sonuç |
+|-------|--------|
+| `RecruitmentFlowRepairTest` | **10 passed** |
+| Regresyon paketi (B-1 + kanban + DataScope + branch) | **56 passed** / **0 fail** |
+
+### DUR notu
+
+- **Onboarding otomatik tetikleme** bu adımda yok (AKIS_SPEC Aşama 3 zinciri ayrı iş).

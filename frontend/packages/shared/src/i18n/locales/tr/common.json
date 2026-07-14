@@ -326,5 +326,26 @@
     "balanceReasonRequired": "Manuel bakiye düzeltmesi için gerekçe zorunludur (en az 3 karakter).",
     "balanceUpdated": "Bakiye güncellendi",
     "balanceUpdateFailed": "Bakiye güncellemesi başarısız"
+  },
+  "recruitment": {
+    "addCandidate": "Aday Ekle",
+    "candidateAdded": "Aday eklendi",
+    "candidateAddFailed": "Aday eklenemedi",
+    "positionsLoadFailed": "Pozisyonlar yüklenemedi",
+    "position": "Pozisyon",
+    "selectPosition": "Pozisyon seçin",
+    "positionRequired": "Pozisyon seçimi zorunludur",
+    "firstName": "Ad",
+    "lastName": "Soyad",
+    "email": "E-posta",
+    "phone": "Telefon",
+    "notes": "Notlar",
+    "kvkkConsent": "Adayın KVKK aydınlatma metnini okuduğunu ve kişisel verilerin işlenmesine rıza verdiğini onaylıyorum.",
+    "consentRequired": "KVKK rızası zorunludur",
+    "convertToEmployee": "Personele Dönüştür",
+    "convertSuccess": "Personel kaydı ön-dolduruldu",
+    "convertFailed": "Personele dönüşüm başarısız",
+    "convertAlready": "Personel kaydı zaten oluşturulmuş",
+    "applicationsTitle": "Başvurular"
   }
 }

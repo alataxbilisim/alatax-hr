@@ -1,14 +1,17 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from '@shared/i18n';
 import { recruitmentApi, lookupsApi, type LookupItem } from '@shared/services/api';
 import toast from 'react-hot-toast';
 import ApplicationDetailModal from './ApplicationDetailModal';
+import AddCandidateForm from '../../components/recruitment/AddCandidateForm';
 import {
   BsArrowLeft,
   BsStarFill,
   BsStar,
   BsEnvelope,
   BsTelephone,
+  BsPlus,
 } from 'react-icons/bs';
 
 interface Application {
@@ -70,6 +73,7 @@ function toStatusColumns(items: LookupItem[]): StatusColumn[] {
 
 const ApplicationsPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation('common');
   const [applications, setApplications] = useState<Application[]>([]);
   const [statusColumns, setStatusColumns] = useState<StatusColumn[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,6 +81,7 @@ const ApplicationsPage: React.FC = () => {
 
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedApplicationId, setSelectedApplicationId] = useState<number | null>(null);
+  const [addOpen, setAddOpen] = useState(false);
 
   const loadStatusLookups = useCallback(async () => {
     try {
@@ -164,7 +169,12 @@ const ApplicationsPage: React.FC = () => {
           >
             <BsArrowLeft /> Pozisyonlara Dön
           </button>
-          <h1 className="page-title">Başvurular</h1>
+          <h1 className="page-title">{t('recruitment.applicationsTitle')}</h1>
+        </div>
+        <div className="page-header-actions">
+          <button type="button" className="btn btn-primary" onClick={() => setAddOpen(true)}>
+            <BsPlus /> {t('recruitment.addCandidate')}
+          </button>
         </div>
       </div>
 
@@ -217,6 +227,12 @@ const ApplicationsPage: React.FC = () => {
         onClose={() => setDetailModalOpen(false)}
         applicationId={selectedApplicationId}
         onUpdate={loadApplications}
+      />
+
+      <AddCandidateForm
+        isOpen={addOpen}
+        onClose={() => setAddOpen(false)}
+        onSuccess={() => void loadApplications()}
       />
     </div>
   );
