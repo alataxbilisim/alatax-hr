@@ -46,7 +46,7 @@ Fark yaratacak 4 şey:
 | Deployment | Docker Compose + CI (Pint/FE/PHPUnit blocking) | On-prem installer, imzalı lisans |
 | UI | Desktop odaklı, ekranlar büyük | Kompakt token ölçeği, 1366×768 hedefi, density modu |
 | i18n | Altyapı kurulu (tr); yeni kod t() zorunlu (Faz 0) | Toplu string migrasyonu + dil switcher + EN (backlog) |
-| Test | **186 passed**, PHPUnit CI blocking (Faz 2) | Endpoint auth+permission+happy path genişletme |
+| Test | **~338 passed** (B-3 sonrası, `alatax_hr_testing`), PHPUnit CI blocking | Endpoint auth+permission+happy path genişletme |
 
 ---
 
@@ -91,7 +91,7 @@ Fark yaratacak 4 şey:
 - [x] **[Faz 2]** PHPUnit suite yeşile çekme + CI blocking — ✅ kapandı (11 Tem 2026)
 - [ ] **[Faz 0-son]** Mailtrap SMTP testi: forgot/reset + davet maillerini uçtan uca doğrula (kod hazır; SMTP bağla → queue → inbox).
 - [ ] **[Faz 1]** XAMPP/Docker `.env` locale ikiliği: Docker’a tam geçince `backend/.env` `APP_LOCALE` tekilleşir (compose env şimdilik ezer).
-- [ ] **[Faz 0 kalıntı]** 6 kayıp route kararı: `/onboarding/templates`, `/performance/periods`, `/performance/criteria`, `/training/sessions`, `/assets/categories`, `/assets/assignments` → router’a ekle veya sidebar’dan kaldır.
+- [x] **[Faz 0 kalıntı → B-4]** 6 kayıp route: 5 bağlandı (tab+BE mevcut), `/assets/assignments` sidebar’dan kaldırıldı (ayrı liste sayfası yok; zimmet varlık detayında)
 - [ ] **[Faz 0 kalıntı]** `_archive_old_app/` repo’dan çıkar (ayrı branch/arşiv).
 - [ ] **[backlog]** i18n eski string toplu migrasyonu (global açılım öncesi).
 - [ ] **[backlog]** i18n dil değiştirici UI + EN locale.
@@ -164,20 +164,19 @@ Fark yaratacak 4 şey:
 
 ---
 
-### FAZ 3 — Tasarım Sistemi v2: Kompakt UI (2–3 hafta)
+### FAZ 3 — Tasarım Sistemi v2: Kompakt UI ✅ KAPANDI (çekirdek; cilalama borçları Faz 4’e)
 
 **Amaç:** "Küçük ekran laptop'ta rahat kullanım" (13", 1366×768) hedefi. Form Engine'den ÖNCE yapılır ki yeni motorlar doğru yoğunlukta doğsun.
 
-- [ ] `packages/shared/src/styles/theme.css` token revizyonu: tipografi ölçeği (base 13–14px veri ekranlarında), spacing ölçeği, kontrol yükseklikleri (input/button ~32px), tablo satır yüksekliği (~36px), kart padding'leri
-- [ ] **Density modu:** `data-density="compact|comfortable"` (kullanıcı tercihi, themeSlice + preferences'a kaydedilir)
-- [ ] DataTable standardizasyonu: sticky header, kolon genişlik/sıra ayarı, yoğunluk desteği, sayfa boyutu tercihi, kayıtlı görünüm altyapısına hazırlık
-- [ ] ModuleRail + ContextSidebar toplam genişliği daraltılır; ContextSidebar daraltılabilir olur; 1366px'te ana içerik alanı ≥ 1040px hedefi
-- [ ] Form yerleşimi: ≥1280px'te 2 kolon standardı; modal boyut standartları
-- [ ] Sayfa taraması: en yoğun 15 ekranda (personel listesi/detayı, izinler, dashboard...) yatay scroll ve taşma sıfırlanır
-- [ ] Hardcoded renk/spacing avı → hepsi CSS variable'a (Cursor kuralı olarak da sabitlenir)
-- [ ] Portal'daki Bootstrap 5 için karar: kısa vadede kalır; mobil uygulama fazı öncesi shared design system'e geçiş backlog'a
+- [x] `packages/shared/src/styles/theme.css` token revizyonu (spacing/tipografi/kontrol yükseklikleri)
+- [x] **Density modu:** `data-density` + kullanıcı tercihi
+- [x] DataTable ortak bileşen + yoğunluk uyumu
+- [x] ModuleRail / ContextSidebar kompakt kullanım
+- [x] Hardcoded renk/spacing → CSS variable kuralı (`.cursorrules`)
+- [ ] Portal Bootstrap → shared design system (backlog)
+- [ ] Dropdown/Select görsel cilalama → Faz 4 borç
 
-**DoD:** 1366×768'de Company panelinin ana akışları yatay scroll'suz ve rahat; density toggle çalışır; tema token'ları tek dosyadan yönetilir.
+**DoD (çekirdek):** tema token’ları tek dosyadan; density çalışır; Company ana akışlar kompakt token’larla.
 
 ---
 
@@ -385,4 +384,4 @@ Toplam tahmin: **~29–42 hafta (7–10 ay)** tam zamanlı. Pilot geri bildirimi
 
 ---
 
-*Faz 0, Faz 1 ve Faz 2 kapandı (11 Tem 2026). Sonraki adım: Faz 3 — Tasarım Sistemi v2 (Kompakt UI). Her fazın başında bu belge üzerinden o faza özel Cursor promptları hazırlanır.*
+*Faz 0–3 kapandı (çekirdek). Aktif: Faz 4 + FAZ A/B (`faz4-form-engine`). Test ~338. Her fazın başında bu belge üzerinden Cursor promptları hazırlanır.*

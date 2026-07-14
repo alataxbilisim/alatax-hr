@@ -1,11 +1,11 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { performanceApi, lookupsApi, type LookupItem } from '@shared/services/api';
 import toast from 'react-hot-toast';
 import { DataTable, ConfirmDialog, EmptyState } from '../../components/ui';
 import PeriodForm from '../../components/performance/PeriodForm';
 import CriteriaForm from '../../components/performance/CriteriaForm';
 import ReviewForm from '../../components/performance/ReviewForm';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   BsPlus,
   BsGraphUp,
@@ -60,7 +60,23 @@ const statusBadgeClass: Record<string, string> = {
 
 const PerformancePage: React.FC = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<TabType>('reviews');
+  const location = useLocation();
+
+  const activeTab: TabType = useMemo(() => {
+    const path = location.pathname;
+    if (path.includes('/performance/periods')) return 'periods';
+    if (path.includes('/performance/criteria')) return 'criteria';
+    return 'reviews';
+  }, [location.pathname]);
+
+  const handleTabChange = (tab: TabType) => {
+    const paths: Record<TabType, string> = {
+      reviews: '/performance',
+      periods: '/performance/periods',
+      criteria: '/performance/criteria',
+    };
+    navigate(paths[tab]);
+  };
 
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(true);
@@ -554,21 +570,21 @@ const PerformancePage: React.FC = () => {
       <div className="tabs" style={{ marginBottom: '1.5rem' }}>
         <button
           className={`tab ${activeTab === 'reviews' ? 'active' : ''}`}
-          onClick={() => setActiveTab('reviews')}
+          onClick={() => handleTabChange('reviews')}
         >
           <BsGraphUp size={16} />
           Değerlendirmeler
         </button>
         <button
           className={`tab ${activeTab === 'periods' ? 'active' : ''}`}
-          onClick={() => setActiveTab('periods')}
+          onClick={() => handleTabChange('periods')}
         >
           <BsCalendarRange size={16} />
           Dönemler
         </button>
         <button
           className={`tab ${activeTab === 'criteria' ? 'active' : ''}`}
-          onClick={() => setActiveTab('criteria')}
+          onClick={() => handleTabChange('criteria')}
         >
           <BsListCheck size={16} />
           Kriterler

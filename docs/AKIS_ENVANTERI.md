@@ -45,7 +45,7 @@
 | Personel belgeleri (HR yükle / portal gör) | ✅ | `EmployeeDocumentController` + portal |
 | Detay performans sekmesi | ⬜ | BE `show` aggregate var; FE sekme yok |
 | İşten çıkış sihirbazı | ⬜ | Spec’te var; uçtan uca sihirbaz yok |
-| Hire’dan personel otomatik oluştur | ⬜ | İşe alım `hired` → employee yok |
+| Hire’dan personel otomatik oluştur | ✅ | B-2: `POST .../convert-to-employee` (hired → personel ön-doldurma; onboarding otomatik değil) |
 
 ---
 
@@ -58,7 +58,7 @@
 | Türler company-scoped | ✅ | `BelongsToCompany` |
 | Company talep formunda tür listesi | 🔴 | **Kök neden (çoklu):** (1) Firmada tür yoksa boş. (2) `GET /leaves/types` → `permission:leaves.types.view` + `module.access:leave-management`; yetki/modül yoksa 403 → form toast. (3) `LeaveTypeController::index` `is_active` query’yi **uygulamaz**; `success(paginator)` dönüyor — FE `data` / `data.data` parse ediyor (genelde OK). Lookup `forType` **kullanılmıyor** — türler ayrı tablo. |
 | Portal tür listesi | 🔴 | `PortalLeaveController::types` kolon drift riski (`unit`/`default_limit` vs şema `default_days`) — belirsiz: runtime doğrulanmadı |
-| Personele bakiye **manuel atama** | 🔴 | FE `LeaveBalancesTab` update çağırır; BE `update`/`bulkUpdate` var ama **route yok** (yalnızca `GET /leaves/balance`) → pratikte atama **yapılamıyor** |
+| Personele bakiye **manuel atama** | ✅ | B-1: `PUT/PATCH .../leaves/balance/{id}` + bulk + `reason` + DataScope |
 | Bakiye oluşumu (lazy, company talep) | 🟡 | İlk company `store`’da `firstOrCreate` + `default_days`; personel oluşturmada bakiye yok |
 | Hakediş otomasyonu | 🟡 | Accrual policy CRUD + `process-monthly` endpoint var; **scheduler/cron yok**; bakiye kaydı olmayanlara accrual işlemez |
 | Talep oluştur (company) | ✅ | Bakiye kontrolü + pending + workflow start |
@@ -66,15 +66,15 @@
 | Onay motoru (workflow) | 🟡 | Leave’e bağlı; workflow yoksa legacy. Register/seed ile default workflow mümkün |
 | Onayla → bakiye düş | ✅ | `approvePending` |
 | Takvimde görün | 🟡 | Onaylı talepler calendar’da; `today`/`upcoming` route’suz |
-| İptal (company) | 🔴 | Controller kısmen var; cancel route eksik |
-| Personel detay izin alan adları | 🟡 | FE `entitled_days` vs BE `total_days` drift |
+| İptal (company) | ✅ | B-1: `POST .../leaves/requests/{id}/cancel` + Policy |
+| Personel detay izin alan adları | ✅ | B-1: FE `total_days` (drift kapatıldı) |
 
 **Kullanıcı cümleleri → kök neden özeti**
 
 | Şikayet | En olası kök |
 |---------|----------------|
 | “İzin türleri talep formunda gelmiyor” | Firma için leave type seed edilmemiş **veya** modül/izin 403; Lookup değil |
-| “Personele izin atayamıyorum” | Bakiye update **route yok** → UI kopuk; otomatik hakediş de cron’suz |
+| “Personele izin atayamıyorum” | ~~Bakiye update route yok~~ → **B-1 ile kapatıldı**; hakediş cron hâlâ borç |
 
 ---
 
@@ -93,8 +93,8 @@
 | Kanban UI + stage değiştir | 🟡 | UI var; **veri kaynağı boş/kırık** çünkü başvuru girişi yok → kullanıcı “form yok, paylaşamıyorum” |
 | Mülakat planla / tamamla | 🟡 | CRUD var; alan adı drift (applicant_* vs first_name) |
 | Teklif (offer) kaydı | ⬜ | Tablo kalıntısı; model/controller/FE yok |
-| `hired` → personel | ⬜ | Otomatik/manuel dönüşüm yok |
-| `hired` → onboarding | ⬜ | Wire yok |
+| `hired` → personel | ✅ | B-2: convert-to-employee (ön-doldurma, idempotent) |
+| `hired` → onboarding | ⬜ | Wire yok (bilinçli kapsam dışı) |
 
 **Kanban boş mu?** Evet — kök çoğunlukla **başvuru oluşturma kanalının fiilen kırık/yok olması**, kanban bileşeninin kendisi değil.
 
@@ -109,7 +109,7 @@
 | Portal vardiya görüntüleme | 🟡 | API var; portal UI çağırmıyor |
 | Vardiya tanımı CRUD | ⬜ | Model/migration; controller/route/FE yok |
 | Vardiya atama | ⬜ | `EmployeeShift` yazma API yok |
-| HR attendance panosu (company) | 🔴 | BE `AttendanceController` var; **company sidebar/route yok** |
+| HR attendance panosu (company) | ✅ | B-3: company nav + `/attendance` + DataScope/Policy |
 | Onaylı izin → puantaja yansıma | ⬜ | Spec’te var; otomatik bağ yok (belirsiz/ kısmi değil — kodda wire görülmedi) |
 
 ---
@@ -120,7 +120,7 @@
 |------|-------|----------------|
 | Portal talep + fiş + submit | ✅ | |
 | HR listele / onayla (BE) | ✅ | `ExpenseClaimController` |
-| HR onay UI (company) | ⬜ | `App.tsx` / `moduleNav` masraf yok |
+| HR onay UI (company) | ✅ | B-3: onay kuyruğu + tüm talepler + markPaid + kategoriler |
 | WorkflowEngine tetikleme | 🔴 | Policy workflow-aware; `submit` `startWorkflow` çağırmıyor; onay legacy |
 | Kategori CRUD (HR) | ⬜ | Permission seed var; route yok |
 | Ödendi (`paid`) adımı | 🟡 | Status enum’da var; onay sonrası ödeme adımı yok |
@@ -239,7 +239,7 @@ flowchart TB
 | Personel → onboarding | Yeni hire tetik | Manuel süreç başlatma | 🟡 |
 | İzin onay → puantaj | İzinli gün | Wire yok | ⬜ |
 | Onay motoru → izin | Evet | Var | ✅ / 🟡 |
-| Onay motoru → masraf | Evet | Policy var, start yok | 🔴 |
+| Onay motoru → masraf | Evet | B-3: submit→`startWorkflow`; yoksa legacy pending | ✅ / 🟡 |
 | Onay motoru → doküman / eğitim / zimmet talebi | Evet | Entity string; akış yok | ⬜ / 🔴 |
 | Lookup → personel / izin gender / başvuru stage / … | Yaygın | Çoğu modülde kullanılıyor; timesheet status hâlâ hardcoded | 🟡 |
 | Public başvuru → kanban | Evet | API kırık + FE yok | 🔴 |
@@ -252,13 +252,13 @@ flowchart TB
 
 | # | Kopukluk | Neden kritik | Durum |
 |---|----------|--------------|-------|
-| 1 | **İşe alım: aday başvurusu yok/kırık** | Public apply şema+status bug; kariyer FE yok; manuel store yok → kanban boş, “paylaşamıyorum” | 🔴 / ⬜ |
-| 2 | **İzin: bakiyeye manuel atama yapılamıyor** | Update route yok; hakediş cron’suz; yeni personelde otomatik hak yok → “izin atayamıyorum” | 🔴 |
-| 3 | **İzin: türlerin formda gelmemesi** | Yeni firmada seed yok + types.view/modül kapısı; portal types drift | 🔴 / ⬜ |
-| 4 | **Masraf: company onay yüzeyi yok** | Portal talep var; İK panele giremiyor (nav/route yok); workflow start yok | ⬜ / 🔴 |
-| 5 | **İşe alım → personel/onboarding dönüşümü yok** | `hired` sadece stage; yaşam döngüsü Aşama 2→3 kopuk | ⬜ |
+| 1 | **İşe alım: aday başvurusu** | ~~Public apply kırık~~ → **B-2 ✅**; kariyer FE sınırlı | 🟡 |
+| 2 | **İzin: bakiyeye manuel atama** | ~~Update route yok~~ → **B-1 ✅**; hakediş cron borç | 🟡 |
+| 3 | **İzin: türlerin formda gelmemesi** | Seed/modül; portal types → **B-1 kısmen** | 🟡 |
+| 4 | **Masraf / puantaj HR yüzeyi** | ~~Company yok~~ → **B-3 ✅**; vardiya/PDKS ayrı | 🟡 |
+| 5 | **İşe alım → personel** | ~~hired kopuk~~ → **B-2 convert ✅**; onboarding oto ⬜ | 🟡 |
 
-**Yakın takip (6–8):** Vardiya CRUD/atama yok; HR puantaj UI yok; sidebar alt-URL’ler 404; anket audience; eğitim yoklama FE.
+**Yakın takip:** Vardiya CRUD/PDKS; sidebar alt-URL → **B-4** (5 bağlandı, assignments kaldırıldı); anket audience; eğitim yoklama FE.
 
 ---
 

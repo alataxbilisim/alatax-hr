@@ -1,5 +1,7 @@
 # ALATAX HR — PROJECT_SNAPSHOT
 
+> **Not (FAZ A/B güncellemesi):** 13 Tem 2026 baseline; FAZ A/B ile güncellendi (branch-context, izin/işe alım/masraf/puantaj HR, test **~338**). Tam yeniden envanter üretilmedi — detay: `docs/FAZ_B_RAPOR.md`.
+
 **Üretim tarihi:** 13 Temmuz 2026  
 **Branch:** `faz4-form-engine`  
 **Kaynak kural:** `docs/CURSOR_PROJE_ANALIZ_PROMPT.md` (koddan okuma; değer uydurma yok)  

@@ -39,27 +39,28 @@ alatax-hr/
 
 ---
 
-## NEREDEN BAŞLAYACAKSIN — İLK 3 ADIM
+## NEREDEN BAŞLAYACAKSIN — GÜNCEL DURUM (Temmuz 2026)
 
-### ADIM 0: Belgeleri yerleştir (bugün, 15 dk)
-`.cursorrules`'ı köke, diğerlerini `docs/`'a koy. ROADMAP + SISTEM_ISLEYIS'i bir kez baştan sona oku.
+> **Eski “Faz 0’a başla / SQLite kararı” bloğu geçersizdir.** Aşağıdaki gerçek duruma göre devam edin.
 
-### ADIM 1: Tek kararı ver (Faz 1'i kilitler)
-SQLite'taki 118 MB **test verisi mi**? 
-- Evet → Faz 1'de veri taşımadan temiz PostgreSQL baseline'a geçeriz (kolay yol).
-- Hayır (korunacak veri var) → Faz 1'e pgloader migrasyon adımı ekleriz.
+### Güncel durum (kısa)
 
-### ADIM 2: Faz 0'a başla (ROADMAP'in ilk bloğu)
-Faz 0 = stabilizasyon. Yeni özellik YOK; önce kırıkları kapat, altyapıyı kur. Sıra:
-1. Migration çakışmalarını çöz + eksik seeder'ları ekle → temiz kurulum
-2. Frontend bug turu (loading/isLoading, notificationSlice, route düzeltmeleri)
-3. Docker Compose (dev) + CI kurulumu
-4. Forgot-password sayfaları + davet e-postası
-5. i18n altyapısı + CORS/throttle temizliği
+| Alan | Gerçek |
+|------|--------|
+| Branch | `faz4-form-engine` |
+| Faz 0 / 1 / 2 | **Kapalı** (stabilizasyon, pgsql, RBAC+audit) |
+| Faz 3 | Tasarım sistemi / kompakt UI **kodda** (theme tokens, density) |
+| Faz 4 + FAZ A/B | **Aktif** — Lookup/Select, onay motoru (izin pilot), branch-context; B-1 izin, B-2 işe alım, B-3 masraf/puantaj HR, B-DB test izolasyonu |
+| Veritabanı | **PostgreSQL** aktif (`alatax_hr`); testler yalnızca `alatax_hr_testing` |
+| Test | ~**338** passed (B-3 sonrası) |
 
-**Her madde için Cursor'a nasıl gideceksin:** maddeyi tek başına, net ve test edilebilir bir prompt olarak ver. Örnek:
-> "docs/ROADMAP.md Faz 0'daki migration çakışmalarını çöz. Şu 3 çakışma var: document_categories (0001_03_00 ve 0001_03_01 ikisi de create), announcement_reads (0001_06_04 vs 0001_06_07 çift şema), request_types (çift set). Etkin şemaları koru, ölü migration'ları temizle. .cursorrules'daki migration kurallarına uy. Değişiklikten sonra migrate:fresh --seed'in temiz çalıştığını doğrula."
+### Sıradaki odak
 
+1. ROADMAP Faz 4 kalanları (Form Engine 4A, bildirim 4C, Stüdyo) + FAZ B akış tamiri devamı.
+2. Yeni iş: ROADMAP/MODUL_SPEC’e bak; `.cursorrules` + `docs/FAZ_B_RAPOR.md` bağlamı kullan.
+3. SQLite / “temiz MVP’den başla” yolu **yok** — mevcut pgsql + seed ile çalış.
+
+**Cursor’a iş verirken:** tek madde, test edilebilir DoD, yıkıcı DB komutu yok (`alatax_hr` dokunulmaz).
 ---
 
 ## ÇALIŞMA RİTMİ (her faz için tekrarla)

@@ -1,10 +1,11 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { trainingApi, usersApi, lookupsApi, type LookupItem } from '@shared/services/api';
 import { Select } from '@shared/components';
 import toast from 'react-hot-toast';
 import { DataTable, ConfirmDialog, EmptyState, Modal } from '../../components/ui';
 import TrainingForm from '../../components/training/TrainingForm';
 import SessionForm from '../../components/training/SessionForm';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   BsPlus,
   BsMortarboard,
@@ -58,7 +59,17 @@ const statusBadgeClass: Record<string, string> = {
 };
 
 const TrainingPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<TabType>('trainings');
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const activeTab: TabType = useMemo(() => {
+    if (location.pathname.includes('/training/sessions')) return 'sessions';
+    return 'trainings';
+  }, [location.pathname]);
+
+  const handleTabChange = (tab: TabType) => {
+    navigate(tab === 'sessions' ? '/training/sessions' : '/training');
+  };
 
   const [trainings, setTrainings] = useState<Training[]>([]);
   const [trainingsLoading, setTrainingsLoading] = useState(true);
@@ -397,14 +408,14 @@ const TrainingPage: React.FC = () => {
       <div className="tabs" style={{ marginBottom: '1.5rem' }}>
         <button
           className={`tab ${activeTab === 'trainings' ? 'active' : ''}`}
-          onClick={() => setActiveTab('trainings')}
+          onClick={() => handleTabChange('trainings')}
         >
           <BsMortarboard size={16} />
           Eğitimler
         </button>
         <button
           className={`tab ${activeTab === 'sessions' ? 'active' : ''}`}
-          onClick={() => setActiveTab('sessions')}
+          onClick={() => handleTabChange('sessions')}
         >
           <BsCalendarEvent size={16} />
           Oturumlar

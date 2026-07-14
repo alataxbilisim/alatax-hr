@@ -1,10 +1,10 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { onboardingApi, lookupsApi, type LookupItem } from '@shared/services/api';
 import toast from 'react-hot-toast';
 import { DataTable, ConfirmDialog, EmptyState } from '../../components/ui';
 import TemplateForm from '../../components/onboarding/TemplateForm';
 import ProcessForm from '../../components/onboarding/ProcessForm';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   BsPlus,
   BsPersonCheck,
@@ -57,7 +57,16 @@ const statusBadgeClass: Record<string, string> = {
 
 const OnboardingPage: React.FC = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<TabType>('processes');
+  const location = useLocation();
+
+  const activeTab: TabType = useMemo(() => {
+    if (location.pathname.includes('/onboarding/templates')) return 'templates';
+    return 'processes';
+  }, [location.pathname]);
+
+  const handleTabChange = (tab: TabType) => {
+    navigate(tab === 'templates' ? '/onboarding/templates' : '/onboarding');
+  };
 
   const [processes, setProcesses] = useState<Process[]>([]);
   const [processesLoading, setProcessesLoading] = useState(true);
@@ -366,14 +375,14 @@ const OnboardingPage: React.FC = () => {
       <div className="tabs" style={{ marginBottom: '1.5rem' }}>
         <button
           className={`tab ${activeTab === 'processes' ? 'active' : ''}`}
-          onClick={() => setActiveTab('processes')}
+          onClick={() => handleTabChange('processes')}
         >
           <BsPersonCheck size={16} />
           Süreçler
         </button>
         <button
           className={`tab ${activeTab === 'templates' ? 'active' : ''}`}
-          onClick={() => setActiveTab('templates')}
+          onClick={() => handleTabChange('templates')}
         >
           <BsFileText size={16} />
           Şablonlar

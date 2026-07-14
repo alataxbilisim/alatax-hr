@@ -1,11 +1,11 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { assetsApi, lookupsApi, type LookupItem } from '@shared/services/api';
 import toast from 'react-hot-toast';
 import { DataTable, ConfirmDialog, EmptyState } from '../../components/ui';
 import AssetForm from '../../components/assets/AssetForm';
 import CategoryForm from '../../components/assets/CategoryForm';
 import AssignmentForm from '../../components/assets/AssignmentForm';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   BsPlus,
   BsLaptop,
@@ -56,7 +56,16 @@ const statusBadgeClass: Record<string, string> = {
 
 const AssetsPage: React.FC = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<TabType>('assets');
+  const location = useLocation();
+
+  const activeTab: TabType = useMemo(() => {
+    if (location.pathname.includes('/assets/categories')) return 'categories';
+    return 'assets';
+  }, [location.pathname]);
+
+  const handleTabChange = (tab: TabType) => {
+    navigate(tab === 'categories' ? '/assets/categories' : '/assets');
+  };
 
   // Assets state
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -387,7 +396,7 @@ const AssetsPage: React.FC = () => {
         <button
           type="button"
           className={`tab ${activeTab === 'assets' ? 'active' : ''}`}
-          onClick={() => setActiveTab('assets')}
+          onClick={() => handleTabChange('assets')}
         >
           <BsLaptop size={16} />
           Varlıklar
@@ -395,7 +404,7 @@ const AssetsPage: React.FC = () => {
         <button
           type="button"
           className={`tab ${activeTab === 'categories' ? 'active' : ''}`}
-          onClick={() => setActiveTab('categories')}
+          onClick={() => handleTabChange('categories')}
         >
           <BsFolder size={16} />
           Kategoriler

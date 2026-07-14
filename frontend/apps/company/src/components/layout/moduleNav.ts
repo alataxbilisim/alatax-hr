@@ -207,7 +207,6 @@ export const operationalModuleGroups: ModuleGroup[] = [
     items: [
       { path: '/assets', labelKey: 'nav.assetsList', permission: { module: 'assets', page: 'list' } },
       { path: '/assets/categories', labelKey: 'nav.assetsCategories', permission: { module: 'assets', page: 'categories' } },
-      { path: '/assets/assignments', labelKey: 'nav.assetsAssignments', permission: { module: 'assets', page: 'assignments' } },
       { path: '/assets/custom-fields', labelKey: 'nav.assetsCustomFields', permission: { module: 'assets', page: 'custom_fields' } },
     ],
   },
