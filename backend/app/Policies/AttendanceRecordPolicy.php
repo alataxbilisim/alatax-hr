@@ -8,9 +8,9 @@ use App\Models\User;
 use App\Services\DataScopeService;
 
 /**
- * Attendance satır yetkisi — ExpenseClaim / Leave ile aynı DataScope modeli.
+ * AttendanceRecord satır yetkisi — ExpenseClaim / Leave ile aynı DataScope modeli.
  */
-class AttendancePolicy
+class AttendanceRecordPolicy
 {
     public function __construct(
         protected DataScopeService $dataScope,
