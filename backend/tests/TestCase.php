@@ -5,18 +5,49 @@ namespace Tests;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
+use RuntimeException;
 use Spatie\Permission\Models\Permission;
 
 abstract class TestCase extends BaseTestCase
 {
+    /** Testlerin bağlanmasına izin verilen tek veritabanı adı. */
+    private const TESTING_DATABASE = 'alatax_hr_testing';
+
     protected function setUp(): void
     {
         parent::setUp();
 
+        $this->assertUsingTestingDatabase();
+
         // Feature suite tek process'te auth throttle (10/dk) birikmesin.
         // AuthThrottleTest kendi içinde yeniden clear edip 429 davranışını doğrular.
         $this->clearAuthRateLimiters();
+    }
+
+    /**
+     * RefreshDatabase migrate:fresh ÖNCESİ — yanlış DB'de wipe'ı engeller.
+     * Not: dönüş tipi yok — Laravel trait imzasıyla uyumlu kalmalı.
+     */
+    protected function beforeRefreshingDatabase()
+    {
+        $this->assertUsingTestingDatabase();
+    }
+
+    /**
+     * Dev DB (alatax_hr) üzerinde test çalıştırmayı gürültülü şekilde reddet.
+     */
+    protected function assertUsingTestingDatabase(): void
+    {
+        $name = DB::connection()->getDatabaseName();
+
+        if ($name !== self::TESTING_DATABASE) {
+            throw new RuntimeException(
+                'Refusing to run tests against non-testing database: '.$name
+                .' (expected '.self::TESTING_DATABASE.')'
+            );
+        }
     }
 
     /**

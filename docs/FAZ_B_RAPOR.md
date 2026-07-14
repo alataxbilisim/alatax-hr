@@ -106,3 +106,41 @@
 ### DUR notu
 
 - **Onboarding otomatik tetikleme** bu adımda yok (AKIS_SPEC Aşama 3 zinciri ayrı iş).
+
+---
+
+## B-DB — Test suite dev DB koruması (acil)
+
+### Teşhis
+
+| Madde | Bulgu |
+|-------|--------|
+| `phpunit.xml` | `DB_DATABASE=alatax_hr_testing` vardı ama **`force` yoktu** |
+| `.env.testing` | **YOKTU** |
+| `config/database.php` | `env('DB_DATABASE')` |
+| Docker compose | `DB_DATABASE=alatax_hr` process env'e yazılıyor |
+| `bootstrap/cache/config.php` | yok |
+| Base `TestCase` | RefreshDatabase kullanmıyor; Feature testleri trait ile kullanıyor |
+
+### Kök neden
+
+Docker/compose ortamında `DB_DATABASE=alatax_hr` zaten set. PHPUnit `<env>` varsayılanı mevcut env'i **ezmez**.  
+Runtime kanıt (önce): `DB::connection()->getDatabaseName() = **alatax_hr**` → `RefreshDatabase` dev'i siliyordu.
+
+### Koruma
+
+1. `phpunit.xml`: `DB_DATABASE` / `APP_ENV` / `DB_CONNECTION` → `force="true"`
+2. `tests/bootstrap.php`: `putenv` + `$_ENV` ile `alatax_hr_testing` kesinleştirme; config cache silme
+3. `.env.testing` + `.env.testing.example` (dev adından farklı)
+4. `TestCase::assertUsingTestingDatabase()` + `beforeRefreshingDatabase()` — yanlış DB'de **RuntimeException**
+
+### Kanıt
+
+| An | `getDatabaseName()` | Sentinel `admin@demo.test` |
+|----|---------------------|----------------------------|
+| Önce (probe) | `alatax_hr` | — |
+| Sonra (probe) | `alatax_hr_testing` | — |
+| Suite sonrası (dev tinker) | `alatax_hr` | **mevcut (SENTINEL_AFTER=yes)** |
+
+Tam suite: 303 passed / 22 failed (testing DB deadlock / permission seed yarışı — **dev wipe değil**).  
+DB wipe komutu çalıştırılmadı. Push yok.
