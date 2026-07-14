@@ -16,7 +16,7 @@ const api: AxiosInstance = axios.create({
   withCredentials: true,
 });
 
-// Request interceptor - Token ekle (açık Authorization varsa üzerine yazma — 2FA challenge)
+// Request interceptor - Token + şube bağlamı (X-Branch-Id)
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const existing = config.headers.Authorization;
@@ -25,6 +25,11 @@ api.interceptors.request.use(
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
+    }
+    // Company panel şube seçici — localStorage (Redux ile senkron)
+    const branchId = localStorage.getItem('alatax_branch_id');
+    if (branchId && !config.headers['X-Branch-Id']) {
+      config.headers['X-Branch-Id'] = branchId;
     }
     return config;
   },
@@ -1124,6 +1129,9 @@ export const employeesApi = {
   reports: {
     // Metadata (boyutlar, metrikler, filtreler)
     getMetadata: () => api.get('/employees/reports/metadata'),
+
+    /** Şube karşılaştırma — reports.cross_branch */
+    getByBranch: () => api.get('/employees/reports/by-branch'),
     
     // Dinamik veri aggregation
     getData: (config: {

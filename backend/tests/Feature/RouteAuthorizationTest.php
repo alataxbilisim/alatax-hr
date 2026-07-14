@@ -448,9 +448,14 @@ class RouteAuthorizationTest extends TestCase
      */
     public function test_public_routes(): void
     {
-        // Public job listings (authentication gerekmez)
+        // Public job listings — auth gerekmez (401 olmamalı); firma yoksa 404, varsa 200
         $response = $this->getJson('/api/v1/public/companies/test-company/jobs');
-        // Route varsa test et, yoksa skip
+        $this->assertContains(
+            $response->status(),
+            [200, 404],
+            'Public kariyer listesi 200 veya 404 dönmeli (auth zorunlu olmamalı)'
+        );
+        $this->assertNotEquals(401, $response->status());
     }
 
     /**

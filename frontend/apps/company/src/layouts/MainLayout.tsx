@@ -6,6 +6,7 @@ import { RootState, AppDispatch } from '../store';
 import { logout } from '@shared/store/slices/authSlice';
 import { toggleTheme, toggleSidebar, setSidebarOpen } from '@shared/store/slices/themeSlice';
 import { useTranslation } from '@shared/i18n';
+import { Select } from '@shared/components';
 import {
   BsBoxArrowRight,
   BsSun,
@@ -25,6 +26,12 @@ import {
   type ModuleGroup,
 } from '../components/layout/moduleNav';
 import ContextSidebar from '../components/layout/ContextSidebar';
+import {
+  BRANCH_ALL,
+  fetchBranchContext,
+  resetBranchContext,
+  setSelectedBranchId,
+} from '../store/branchContextSlice';
 
 function findModuleIdByPath(pathname: string): string {
   // /account → account (kişisel)
@@ -186,6 +193,7 @@ const MainLayout: React.FC = () => {
   const { t } = useTranslation('common');
   const { user } = useSelector((state: RootState) => state.auth);
   const { mode, sidebarOpen } = useSelector((state: RootState) => state.theme);
+  const branchContext = useSelector((state: RootState) => state.branchContext);
 
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -202,9 +210,26 @@ const MainLayout: React.FC = () => {
   const currentModule: ModuleGroup | null =
     moduleGroups.find((m) => m.id === activeModule) || null;
 
+  const branchOptions = useMemo(() => {
+    const opts = branchContext.branches.map((b) => ({
+      value: String(b.id),
+      label: b.name,
+    }));
+    if (branchContext.canSelectAll) {
+      return [{ value: BRANCH_ALL, label: t('nav.allBranches') }, ...opts];
+    }
+    return opts;
+  }, [branchContext.branches, branchContext.canSelectAll, t]);
+
   useEffect(() => {
     setMobileToggleHost(mobileToggleHostRef.current);
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      void dispatch(fetchBranchContext());
+    }
+  }, [dispatch, user?.id]);
 
   const handleModuleClick = (moduleId: string) => {
     if (moduleId === activeModule) {
@@ -272,6 +297,7 @@ const MainLayout: React.FC = () => {
   };
 
   const handleLogout = async () => {
+    dispatch(resetBranchContext());
     await dispatch(logout());
     navigate('/login');
   };
@@ -336,6 +362,33 @@ const MainLayout: React.FC = () => {
           </div>
 
           <div className="header-right">
+            <div className="header-branch-context" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span
+                className="header-company-label"
+                style={{
+                  fontSize: '0.8125rem',
+                  color: 'var(--text-secondary)',
+                  whiteSpace: 'nowrap',
+                }}
+                title={user?.company?.name ?? t('nav.companyLabel')}
+              >
+                {t('nav.companyLabel')}
+                {user?.company?.name ? `: ${user.company.name}` : ''}
+              </span>
+              {branchOptions.length > 0 && (
+                <div style={{ minWidth: '10rem' }}>
+                  <Select
+                    id="header-branch-selector"
+                    value={branchContext.selectedBranchId}
+                    onChange={(v) => dispatch(setSelectedBranchId(v || BRANCH_ALL))}
+                    options={branchOptions}
+                    disabled={!branchContext.canSelectAll && branchContext.lockedBranchId !== null}
+                    placeholder={t('nav.branchSelector')}
+                  />
+                </div>
+              )}
+            </div>
+
             <button
               type="button"
               className="header-btn"

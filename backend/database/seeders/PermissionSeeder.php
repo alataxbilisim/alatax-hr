@@ -280,6 +280,7 @@ class PermissionSeeder extends Seeder
             // Raporlar
             'reports.view',
             'reports.export',
+            'reports.cross_branch',
 
             // Log görüntüleme ve denetim
             'logs.view',
@@ -351,7 +352,7 @@ class PermissionSeeder extends Seeder
                     'employees.view', 'employees.create', 'employees.edit', 'employees.delete',
                     'branches.view', 'branches.create', 'branches.edit',
                     'company.view', 'settings.view',
-                    'reports.view', 'reports.export',
+                    'reports.view', 'reports.export', 'reports.cross_branch',
                     'logs.view', 'audit.view',
                 ],
             ],

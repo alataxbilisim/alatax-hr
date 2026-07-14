@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import {
   FiArrowLeft,
   FiPlus,
@@ -13,6 +14,7 @@ import {
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import { employeesApi } from '@alatax/shared';
+import { useTranslation } from '@shared/i18n';
 import type { Dashboard, DashboardWidget, ReportMetadata } from './reports/types';
 import DashboardGrid from './reports/DashboardGrid';
 import AddWidgetModal from './reports/AddWidgetModal';
@@ -20,14 +22,31 @@ import WidgetSettingsPanel from './reports/WidgetSettingsPanel';
 import SaveDashboardModal from './reports/SaveDashboardModal';
 import DashboardList from './reports/DashboardList';
 import ExportMenu from './reports/ExportMenu';
+import type { RootState } from '../../store';
 import './reports/dashboard.css';
+
+interface BranchCompareRow {
+  branch_id: number;
+  branch_name: string;
+  branch_code: string | null;
+  active_employees: number;
+}
 
 // Unique ID generator
 const generateId = () => `widget_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
 const EmployeeReportsPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation('common');
   const dashboardRef = useRef<HTMLDivElement>(null);
+  const user = useSelector((state: RootState) => state.auth.user);
+  const canCrossBranch = Boolean(
+    user?.permissions?.includes('reports.cross_branch') ||
+      user?.permissions?.includes('reports.*') ||
+      user?.permissions?.includes('*') ||
+      user?.type === 'company_admin'
+  );
+  const [branchCompare, setBranchCompare] = useState<BranchCompareRow[] | null>(null);
 
   // Rapor state
   const [dashboard, setDashboard] = useState<Dashboard>({
@@ -90,6 +109,14 @@ const EmployeeReportsPage: React.FC = () => {
         ]);
         setMetadata(metadataRes.data.data);
         setSavedDashboards(dashboardsRes.data.data || []);
+        if (canCrossBranch) {
+          try {
+            const byBranch = await employeesApi.reports.getByBranch();
+            setBranchCompare(byBranch.data.data?.by_branch ?? []);
+          } catch {
+            setBranchCompare(null);
+          }
+        }
       } catch (error) {
         console.error('Error loading data:', error);
         toast.error('Veriler yüklenemedi');
@@ -99,7 +126,7 @@ const EmployeeReportsPage: React.FC = () => {
     };
 
     fetchData();
-  }, []);
+  }, [canCrossBranch]);
 
   // Handle window resize
   useEffect(() => {
@@ -242,6 +269,40 @@ const EmployeeReportsPage: React.FC = () => {
 
   return (
     <div className="page-fill dashboard-page">
+      {canCrossBranch && branchCompare && branchCompare.length > 0 && (
+        <div
+          className="branch-comparison-panel"
+          style={{
+            margin: '0.75rem 1rem 0',
+            padding: '0.75rem 1rem',
+            border: '1px solid var(--border-primary)',
+            borderRadius: 'var(--radius-md, 6px)',
+            background: 'var(--bg-secondary)',
+          }}
+        >
+          <div style={{ fontWeight: 600, marginBottom: '0.35rem' }}>{t('nav.branchComparison')}</div>
+          <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+            {t('nav.branchComparisonHint')}
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+            {branchCompare.map((row) => (
+              <div
+                key={row.branch_id}
+                style={{
+                  minWidth: '7rem',
+                  padding: '0.5rem 0.75rem',
+                  background: 'var(--bg-primary)',
+                  borderRadius: 'var(--radius-sm, 4px)',
+                }}
+              >
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{row.branch_name}</div>
+                <div style={{ fontSize: '1.125rem', fontWeight: 600 }}>{row.active_employees}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="dashboard-header">
         <div className="header-left">

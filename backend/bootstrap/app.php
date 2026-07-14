@@ -30,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'company_admin' => \App\Http\Middleware\CompanyAdminOnly::class,
             'portal.access' => \App\Http\Middleware\PortalAccess::class,
             'deny.2fa.challenge' => \App\Http\Middleware\DenyTwoFactorChallengeToken::class,
+            'branch.context' => \App\Http\Middleware\ResolveBranchContext::class,
             'ability' => \Laravel\Sanctum\Http\Middleware\CheckForAnyAbility::class,
             'abilities' => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,

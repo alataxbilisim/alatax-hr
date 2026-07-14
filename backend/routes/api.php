@@ -32,7 +32,10 @@ Route::prefix('v1')->group(function () {
         ->middleware(['auth:sanctum', 'throttle:auth', 'ability:2fa-challenge']);
 
     // Protected routes (authentication required)
-    Route::middleware(['auth:sanctum', 'deny.2fa.challenge', 'company.active'])->group(function () {
+    Route::middleware(['auth:sanctum', 'deny.2fa.challenge', 'company.active', 'branch.context'])->group(function () {
+
+        // Şube bağlam seçici (FAZ A6)
+        Route::get('/context/branches', [\App\Http\Controllers\Api\V1\BranchContextController::class, 'branches']);
 
         // Auth endpoints
         Route::prefix('auth')->group(function () {
@@ -238,6 +241,8 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:employees.list.view');
 
             Route::prefix('reports')->group(function () {
+                Route::get('/by-branch', \App\Http\Controllers\Api\V1\BranchComparisonReportController::class)
+                    ->middleware('permission:reports.cross_branch');
                 Route::get('/metadata', [\App\Http\Controllers\Api\V1\EmployeeReportController::class, 'metadata'])
                     ->middleware('permission:employees.reports.view');
                 Route::post('/data', [\App\Http\Controllers\Api\V1\EmployeeReportController::class, 'getData'])

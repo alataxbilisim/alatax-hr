@@ -171,6 +171,21 @@ class Employee extends Model
         return $this->hasMany(LeaveRequest::class, 'user_id', 'user_id');
     }
 
+    protected static function booted(): void
+    {
+        // FAZ A6 — istek bazlı şube seçici (DataScope içinde ek filtre; genişletmez)
+        static::addGlobalScope(\App\Http\Middleware\ResolveBranchContext::SCOPE_NAME, function ($builder) {
+            if (! app()->bound(\App\Support\BranchContext::class)) {
+                return;
+            }
+            $context = app(\App\Support\BranchContext::class);
+            if ($context->isAll() || $context->branchId === null) {
+                return;
+            }
+            $builder->where($builder->getModel()->getTable().'.branch_id', $context->branchId);
+        });
+    }
+
     /**
      * Tam ad
      */

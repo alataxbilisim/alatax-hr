@@ -6,6 +6,23 @@
 
 ---
 
+## A6 — Şube bağlam seçici (14 Temmuz 2026)
+
+**PUSH YOK** (kullanıcı onayı beklenir).
+
+| Adım | Durum |
+|------|--------|
+| 0 CI throttle + public_routes | ✅ Feature **275 passed / 0 fail / 0 risky** |
+| 1 DemoSeeder | ✅ `admin@demo.test` … şifre `Demo1234!` (production guard) |
+| 2 Backend X-Branch-Id | ✅ `/context/branches` + middleware + Employee scope |
+| 3 reports.cross_branch | ✅ `/employees/reports/by-branch` |
+| 4 FE navbar Select | ✅ Redux + localStorage + interceptor |
+| 5 Testler | ✅ `BranchContextTest` + DataScope regresyon |
+
+**Kural:** Şube seçici DataScope’u genişletmez. DB silinmedi (`alatax_hr` korunur; yalnızca `alatax_hr_testing` yeniden oluşturuldu).
+
+---
+
 ## GECE ÖZETİ (14 Temmuz 2026 gece — A3/A4/A5)
 
 **PUSH YAPILMADI** — sabah kullanıcı `push` demeli. Branch `faz4-form-engine` remote’tan **4 commit önde**.
