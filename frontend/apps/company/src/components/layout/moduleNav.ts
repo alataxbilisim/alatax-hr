@@ -13,6 +13,8 @@ import {
   BsBarChartLine,
   BsGear,
   BsPersonGear,
+  BsReceipt,
+  BsClockHistory,
 } from 'react-icons/bs';
 
 /** Menü öğesi için yetki bilgisi */
@@ -109,6 +111,32 @@ export const operationalModuleGroups: ModuleGroup[] = [
       { path: '/leaves/policies', labelKey: 'nav.leavesPolicies', permission: { module: 'leaves', page: 'accrual_policies' } },
       { path: '/leaves/reports', labelKey: 'nav.leavesReports', permission: { module: 'leaves', page: 'requests' } },
       { path: '/leaves/custom-fields', labelKey: 'nav.leavesCustomFields', permission: { module: 'leaves', page: 'custom_fields' } },
+    ],
+  },
+  {
+    id: 'expenses',
+    icon: BsReceipt,
+    labelKey: 'nav.expenses',
+    color: '#ef4444',
+    basePath: '/expenses',
+    moduleKey: 'expense-management',
+    permissionModule: 'expenses',
+    items: [
+      { path: '/expenses', labelKey: 'nav.expensesQueue', permission: { module: 'expenses', page: 'claims' } },
+      { path: '/expenses/all', labelKey: 'nav.expensesAll', permission: { module: 'expenses', page: 'claims' } },
+      { path: '/expenses/categories', labelKey: 'nav.expensesCategories', permission: { module: 'expenses', page: 'categories' } },
+    ],
+  },
+  {
+    id: 'timesheet',
+    icon: BsClockHistory,
+    labelKey: 'nav.timesheet',
+    color: '#22c55e',
+    basePath: '/attendance',
+    moduleKey: 'timesheet',
+    permissionModule: 'timesheet',
+    items: [
+      { path: '/attendance', labelKey: 'nav.timesheetAttendance', permission: { module: 'timesheet', page: 'attendance' } },
     ],
   },
   {

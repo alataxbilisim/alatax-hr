@@ -452,6 +452,9 @@ class PermissionSeeder extends Seeder
                     // Masraf - Tam yetki
                     'expenses.*',
 
+                    // Puantaj / yoklama
+                    'timesheet.attendance.*',
+
                     // Onboarding - Tam yetki
                     'onboarding.*',
 
@@ -569,6 +572,9 @@ class PermissionSeeder extends Seeder
                     // Masraf - ekip onay
                     'expenses.claims.view', 'expenses.claims.approve',
 
+                    // Puantaj - ekip görüntüleme / onay
+                    'timesheet.attendance.view', 'timesheet.attendance.approve',
+
                     // Performans - Değerlendirme yapabilir
                     'performance.reviews.view', 'performance.reviews.create', 'performance.reviews.edit',
                     'performance.reviews.approve',
@@ -596,6 +602,7 @@ class PermissionSeeder extends Seeder
                     'leaves.requests.view', 'leaves.requests.approve',
                     'leaves.calendar.view',
                     'expenses.claims.view', 'expenses.claims.approve',
+                    'timesheet.attendance.view', 'timesheet.attendance.approve',
                     'documents.list.view',
                     'employees.view',
                     'leaves.view', 'leaves.approve',

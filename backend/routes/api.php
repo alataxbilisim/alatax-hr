@@ -714,6 +714,21 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:expenses.claims.approve');
             Route::post('claims/{expense_claim}/reject', [\App\Http\Controllers\Api\V1\Expenses\ExpenseClaimController::class, 'reject'])
                 ->middleware('permission:expenses.claims.approve');
+            Route::post('claims/{expense_claim}/mark-paid', [\App\Http\Controllers\Api\V1\Expenses\ExpenseClaimController::class, 'markPaid'])
+                ->middleware('permission:expenses.claims.edit');
+
+            Route::get('categories', [\App\Http\Controllers\Api\V1\Expenses\ExpenseCategoryController::class, 'index'])
+                ->middleware('permission:expenses.categories.view');
+            Route::post('categories', [\App\Http\Controllers\Api\V1\Expenses\ExpenseCategoryController::class, 'store'])
+                ->middleware('permission:expenses.categories.create');
+            Route::get('categories/{expense_category}', [\App\Http\Controllers\Api\V1\Expenses\ExpenseCategoryController::class, 'show'])
+                ->middleware('permission:expenses.categories.view');
+            Route::put('categories/{expense_category}', [\App\Http\Controllers\Api\V1\Expenses\ExpenseCategoryController::class, 'update'])
+                ->middleware('permission:expenses.categories.edit');
+            Route::patch('categories/{expense_category}', [\App\Http\Controllers\Api\V1\Expenses\ExpenseCategoryController::class, 'update'])
+                ->middleware('permission:expenses.categories.edit');
+            Route::delete('categories/{expense_category}', [\App\Http\Controllers\Api\V1\Expenses\ExpenseCategoryController::class, 'destroy'])
+                ->middleware('permission:expenses.categories.delete');
         });
 
         // Performans Değerlendirme Modülü

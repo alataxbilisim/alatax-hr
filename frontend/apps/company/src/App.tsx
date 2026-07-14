@@ -153,6 +153,12 @@ import DocumentReportsPage from './pages/documents/DocumentReportsPage';
 // Leaves Module
 import LeavesPage from './pages/leaves/LeavesPage';
 
+// Expenses Module
+import ExpensesPage from './pages/expenses/ExpensesPage';
+
+// Attendance / Timesheet
+import AttendancePage from './pages/attendance/AttendancePage';
+
 // Onboarding Module
 import OnboardingPage from './pages/onboarding/OnboardingPage';
 import ProcessDetailPage from './pages/onboarding/ProcessDetailPage';
@@ -503,6 +509,50 @@ const App: React.FC = () => {
               <ProtectedRoute>
                 <ModuleProtectedRoute moduleKey={MODULE_KEYS.LEAVE_MANAGEMENT}>
                   <LeaveCustomFieldsPage />
+                </ModuleProtectedRoute>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Expenses Module */}
+          <Route
+            path="/expenses"
+            element={
+              <ProtectedRoute>
+                <ModuleProtectedRoute moduleKey={MODULE_KEYS.EXPENSE_MANAGEMENT}>
+                  <ExpensesPage />
+                </ModuleProtectedRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/expenses/all"
+            element={
+              <ProtectedRoute>
+                <ModuleProtectedRoute moduleKey={MODULE_KEYS.EXPENSE_MANAGEMENT}>
+                  <ExpensesPage />
+                </ModuleProtectedRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/expenses/categories"
+            element={
+              <ProtectedRoute>
+                <ModuleProtectedRoute moduleKey={MODULE_KEYS.EXPENSE_MANAGEMENT}>
+                  <ExpensesPage />
+                </ModuleProtectedRoute>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Timesheet / Attendance */}
+          <Route
+            path="/attendance"
+            element={
+              <ProtectedRoute>
+                <ModuleProtectedRoute moduleKey={MODULE_KEYS.TIMESHEET}>
+                  <AttendancePage />
                 </ModuleProtectedRoute>
               </ProtectedRoute>
             }

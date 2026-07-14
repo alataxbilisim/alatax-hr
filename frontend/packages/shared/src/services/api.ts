@@ -896,7 +896,7 @@ export const surveysApi = {
   results: (id: number) => api.get(`/surveys/${id}/results`),
 };
 
-// Attendance API (Company Admin)
+// Attendance API (Company HR)
 export const attendanceApi = {
   list: (params?: Record<string, unknown>) => api.get('/attendance', { params }),
   dailySummary: (date?: string) => api.get('/attendance/daily-summary', { params: { date } }),
@@ -905,6 +905,30 @@ export const attendanceApi = {
   update: (id: number, data: Record<string, unknown>) => api.put(`/attendance/${id}`, data),
   approve: (id: number) => api.post(`/attendance/${id}/approve`),
   bulkApprove: (ids: number[]) => api.post('/attendance/bulk-approve', { ids }),
+};
+
+// Expenses API (Company HR) — portal own API ayrı (portalApi.expenses)
+export const expensesApi = {
+  claims: {
+    list: (params?: Record<string, unknown>) => api.get('/expenses/claims', { params }),
+    get: (id: number) => api.get(`/expenses/claims/${id}`),
+    approve: (id: number, data?: { note?: string }) =>
+      api.post(`/expenses/claims/${id}/approve`, data ?? {}),
+    reject: (id: number, data: { reason: string }) =>
+      api.post(`/expenses/claims/${id}/reject`, data),
+    markPaid: (
+      id: number,
+      data?: { payment_method?: string; payment_reference?: string; note?: string }
+    ) => api.post(`/expenses/claims/${id}/mark-paid`, data ?? {}),
+  },
+  categories: {
+    list: (params?: Record<string, unknown>) => api.get('/expenses/categories', { params }),
+    get: (id: number) => api.get(`/expenses/categories/${id}`),
+    create: (data: Record<string, unknown>) => api.post('/expenses/categories', data),
+    update: (id: number, data: Record<string, unknown>) =>
+      api.put(`/expenses/categories/${id}`, data),
+    delete: (id: number) => api.delete(`/expenses/categories/${id}`),
+  },
 };
 
 // Analytics API

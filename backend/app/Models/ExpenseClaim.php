@@ -93,6 +93,37 @@ class ExpenseClaim extends Model
         return $this->morphMany(ApprovalRecord::class, 'approvable');
     }
 
+    /**
+     * Workflow tamamlandığında çağrılır (son adım onayı).
+     */
+    public function onWorkflowCompleted(?int $approverId = null): void
+    {
+        $payload = [
+            'status' => self::STATUS_APPROVED,
+            'approved_at' => now(),
+            'rejection_reason' => null,
+        ];
+
+        if ($approverId !== null) {
+            $payload['approved_by'] = $approverId;
+        }
+
+        $this->update($payload);
+    }
+
+    /**
+     * Workflow reddedildiğinde çağrılır.
+     */
+    public function onWorkflowRejected(string $reason, int $rejecterId): void
+    {
+        $this->update([
+            'status' => self::STATUS_REJECTED,
+            'rejection_reason' => $reason,
+            'approved_by' => $rejecterId,
+            'approved_at' => now(),
+        ]);
+    }
+
     public function calculateTotal(): void
     {
         $this->total_amount = $this->items()->sum('amount');

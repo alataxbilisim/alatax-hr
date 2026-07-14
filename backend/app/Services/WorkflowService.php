@@ -366,6 +366,7 @@ class WorkflowService
             'LeaveRequest' => ApprovalWorkflow::ENTITY_LEAVE_REQUEST,
             'AssetRequest' => ApprovalWorkflow::ENTITY_ASSET_REQUEST,
             'ExpenseRequest' => ApprovalWorkflow::ENTITY_EXPENSE_REQUEST,
+            'ExpenseClaim' => ApprovalWorkflow::ENTITY_EXPENSE_REQUEST,
             'TrainingRequest' => ApprovalWorkflow::ENTITY_TRAINING_REQUEST,
             'Document' => ApprovalWorkflow::ENTITY_DOCUMENT_APPROVAL,
         ];

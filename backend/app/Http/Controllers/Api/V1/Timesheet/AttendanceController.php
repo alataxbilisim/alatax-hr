@@ -5,19 +5,28 @@ namespace App\Http\Controllers\Api\V1\Timesheet;
 use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\ActivityLog;
 use App\Models\AttendanceRecord;
+use App\Services\DataScopeService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class AttendanceController extends BaseController
 {
+    public function __construct(
+        protected DataScopeService $dataScope,
+    ) {}
+
     /**
      * Attendance kayıtlarını listele
      */
     public function index(Request $request): JsonResponse
     {
-        $query = AttendanceRecord::where('company_id', $this->getCompanyId())
+        $this->authorize('viewAny', AttendanceRecord::class);
+
+        $query = AttendanceRecord::query()
             ->with(['user:id,name,email']);
+
+        $this->dataScope->scopeForUser($query, $request->user());
 
         if ($request->has('user_id')) {
             $query->where('user_id', $request->user_id);
@@ -49,9 +58,11 @@ class AttendanceController extends BaseController
      */
     public function show(int $id): JsonResponse
     {
-        $record = AttendanceRecord::where('company_id', $this->getCompanyId())
+        $record = AttendanceRecord::query()
             ->with(['user:id,name,email', 'approver:id,name'])
             ->findOrFail($id);
+
+        $this->authorize('view', $record);
 
         return $this->success($record, 'Attendance kaydı detayı');
     }
@@ -61,6 +72,8 @@ class AttendanceController extends BaseController
      */
     public function store(Request $request): JsonResponse
     {
+        $this->authorize('create', AttendanceRecord::class);
+
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
             'date' => 'required|date',
@@ -72,11 +85,14 @@ class AttendanceController extends BaseController
             'notes' => 'nullable|string|max:500',
         ]);
 
+        if (! $this->dataScope->allowsUserId($request->user(), (int) $validated['user_id'])) {
+            return $this->error('Bu personel için kayıt oluşturma yetkiniz yok', 403);
+        }
+
         $validated['company_id'] = $this->getCompanyId();
         $validated['clock_in_method'] = 'manual';
 
-        // Check if record already exists
-        $existing = AttendanceRecord::where('company_id', $validated['company_id'])
+        $existing = AttendanceRecord::query()
             ->where('user_id', $validated['user_id'])
             ->where('date', $validated['date'])
             ->first();
@@ -87,7 +103,6 @@ class AttendanceController extends BaseController
 
         $record = AttendanceRecord::create($validated);
 
-        // Calculate total hours
         if ($record->clock_in && $record->clock_out) {
             $record->total_hours = $record->calculateTotalHours();
             $record->save();
@@ -103,8 +118,9 @@ class AttendanceController extends BaseController
      */
     public function update(Request $request, int $id): JsonResponse
     {
-        $record = AttendanceRecord::where('company_id', $this->getCompanyId())
-            ->findOrFail($id);
+        $record = AttendanceRecord::query()->findOrFail($id);
+
+        $this->authorize('update', $record);
 
         $oldValues = $record->toArray();
 
@@ -119,7 +135,6 @@ class AttendanceController extends BaseController
 
         $record->update($validated);
 
-        // Recalculate total hours
         if ($record->clock_in && $record->clock_out) {
             $record->total_hours = $record->calculateTotalHours();
             $record->save();
@@ -135,8 +150,9 @@ class AttendanceController extends BaseController
      */
     public function approve(int $id): JsonResponse
     {
-        $record = AttendanceRecord::where('company_id', $this->getCompanyId())
-            ->findOrFail($id);
+        $record = AttendanceRecord::query()->findOrFail($id);
+
+        $this->authorize('approve', $record);
 
         $record->update([
             'is_approved' => true,
@@ -159,14 +175,24 @@ class AttendanceController extends BaseController
             'ids.*' => 'integer|exists:attendance_records,id',
         ]);
 
-        $count = AttendanceRecord::where('company_id', $this->getCompanyId())
+        $records = AttendanceRecord::query()
             ->whereIn('id', $validated['ids'])
             ->where('is_approved', false)
-            ->update([
+            ->get();
+
+        $count = 0;
+        foreach ($records as $record) {
+            if (! $request->user()->can('approve', $record)) {
+                continue;
+            }
+
+            $record->update([
                 'is_approved' => true,
                 'approved_by' => auth()->id(),
                 'approved_at' => now(),
             ]);
+            $count++;
+        }
 
         ActivityLog::log('attendance_bulk_approved', null, "{$count} attendance kaydı onaylandı");
 
@@ -178,11 +204,13 @@ class AttendanceController extends BaseController
      */
     public function dailySummary(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', AttendanceRecord::class);
+
         $date = $request->get('date', now()->toDateString());
 
-        $records = AttendanceRecord::where('company_id', $this->getCompanyId())
-            ->where('date', $date)
-            ->get();
+        $query = AttendanceRecord::query()->where('date', $date);
+        $this->dataScope->scopeForUser($query, $request->user());
+        $records = $query->get();
 
         $summary = [
             'date' => $date,
@@ -197,7 +225,6 @@ class AttendanceController extends BaseController
             'average_hours' => $records->avg('total_hours'),
         ];
 
-        // Format average clock in time
         if ($summary['average_clock_in']) {
             $avgSeconds = (int) $summary['average_clock_in'];
             $summary['average_clock_in'] = sprintf('%02d:%02d', floor($avgSeconds / 3600), floor(($avgSeconds % 3600) / 60));

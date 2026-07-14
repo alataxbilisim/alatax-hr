@@ -177,7 +177,9 @@ class ApprovalRecord extends Model
             'leave_type_id' => $approvable->getAttribute('leave_type_id'),
             'user_id' => $approvable->getAttribute('user_id'),
             'requester_id' => $approvable->getAttribute('user_id'),
-            'amount' => $approvable->getAttribute('amount'),
+            'amount' => $approvable->getAttribute('amount')
+                ?? $approvable->getAttribute('total_amount'),
+            'total_amount' => $approvable->getAttribute('total_amount'),
             'department_id' => $approvable->getAttribute('department_id'),
         ];
 

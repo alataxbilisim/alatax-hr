@@ -180,8 +180,8 @@ class PermissionEnforcementWave1Test extends TestCase
 
         $this->postJson("/api/v1/attendance/{$record->id}/approve")->assertStatus(403);
 
-        $approver = $this->makeUser(UserType::User);
-        $approver->givePermissionTo('timesheet.attendance.approve');
+        // DataScope: company_admin (company) onaylayabilir; salt permission + own scope yetmez
+        $approver = $this->makeUser(UserType::CompanyAdmin);
         Sanctum::actingAs($approver);
 
         $this->postJson("/api/v1/attendance/{$record->id}/approve")->assertStatus(200);

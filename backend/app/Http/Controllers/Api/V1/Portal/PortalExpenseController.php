@@ -8,14 +8,17 @@ use App\Models\ExpenseCategory;
 use App\Models\ExpenseClaim;
 use App\Models\ExpenseItem;
 use App\Services\LookupService;
+use App\Services\WorkflowService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class PortalExpenseController extends BaseController
 {
     public function __construct(
         protected LookupService $lookups,
+        protected WorkflowService $workflowService,
     ) {}
 
     /**
@@ -169,9 +172,24 @@ class PortalExpenseController extends BaseController
             'submitted_at' => now(),
         ]));
 
+        // Onay zinciri motoru (yoksa legacy: submitted + warning)
+        $record = $this->workflowService->startWorkflow($claim->fresh(), [
+            'amount' => (float) $claim->total_amount,
+            'total_amount' => (float) $claim->total_amount,
+            'requester_id' => auth()->id(),
+            'user_id' => auth()->id(),
+        ]);
+
+        if (! $record) {
+            Log::warning('expense.claim.submitted_without_workflow', [
+                'expense_claim_id' => $claim->id,
+                'company_id' => $claim->company_id,
+            ]);
+        }
+
         ActivityLog::log('expense_claim_submitted', $claim, 'Masraf talebi gönderildi');
 
-        return $this->success($claim, 'Masraf talebi gönderildi');
+        return $this->success($claim->fresh(), 'Masraf talebi gönderildi');
     }
 
     /**
