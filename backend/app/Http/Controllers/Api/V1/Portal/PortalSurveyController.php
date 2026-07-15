@@ -6,12 +6,17 @@ use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\Survey;
 use App\Models\SurveyResponse;
 use App\Models\SurveySubmission;
+use App\Services\SurveyAudienceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class PortalSurveyController extends BaseController
 {
+    public function __construct(
+        protected SurveyAudienceService $audienceService,
+    ) {}
+
     /**
      * Çalışana atanan aktif anketleri listele
      */
@@ -46,8 +51,13 @@ class PortalSurveyController extends BaseController
         $surveys = $query->orderByDesc('created_at')
             ->paginate($request->get('per_page', 15));
 
+        // Hedef kitle filtresi
+        $filtered = $surveys->getCollection()->filter(
+            fn (Survey $survey) => $this->audienceService->userMatches($survey, $user)
+        )->values();
+
         // Her anket için kullanıcının durumunu ekle
-        $data = $surveys->getCollection()->map(function ($survey) use ($user) {
+        $data = $filtered->map(function ($survey) use ($user) {
             $submission = SurveySubmission::where('survey_id', $survey->id)
                 ->where('user_id', $user->id)
                 ->first();
@@ -87,11 +97,15 @@ class PortalSurveyController extends BaseController
             ->first();
 
         if (! $survey) {
-            return $this->error('Anket bulunamadı', null, 404);
+            return $this->error('Anket bulunamadı', 404);
+        }
+
+        if (! $this->audienceService->userMatches($survey, $user)) {
+            return $this->error('Bu anket sizin hedef kitlenizde değil', 403);
         }
 
         if (! $survey->isOpen()) {
-            return $this->error('Anket henüz başlamadı veya sona erdi', null, 422);
+            return $this->error('Anket henüz başlamadı veya sona erdi', 422);
         }
 
         // Kullanıcının mevcut submission'ını kontrol et
@@ -162,7 +176,11 @@ class PortalSurveyController extends BaseController
             ->first();
 
         if (! $survey || ! $survey->isOpen()) {
-            return $this->error('Anket bulunamadı veya açık değil', null, 404);
+            return $this->error('Anket bulunamadı veya açık değil', 404);
+        }
+
+        if (! $this->audienceService->userMatches($survey, $user)) {
+            return $this->error('Bu anket sizin hedef kitlenizde değil', 403);
         }
 
         // Zaten bir submission var mı kontrol et
@@ -172,7 +190,7 @@ class PortalSurveyController extends BaseController
 
         if ($submission) {
             if ($submission->status === 'completed') {
-                return $this->error('Anket zaten tamamlanmış', null, 422);
+                return $this->error('Anket zaten tamamlanmış', 422);
             }
 
             // Devam eden submission varsa onu döndür
@@ -221,7 +239,7 @@ class PortalSurveyController extends BaseController
             ->first();
 
         if (! $submission) {
-            return $this->error('Yanıt bulunamadı veya gönderilemez', null, 404);
+            return $this->error('Yanıt bulunamadı veya gönderilemez', 404);
         }
 
         $survey = Survey::where('id', $id)
@@ -229,7 +247,11 @@ class PortalSurveyController extends BaseController
             ->first();
 
         if (! $survey || ! $survey->isOpen()) {
-            return $this->error('Anket bulunamadı veya açık değil', null, 404);
+            return $this->error('Anket bulunamadı veya açık değil', 404);
+        }
+
+        if (! $this->audienceService->userMatches($survey, $user)) {
+            return $this->error('Bu anket sizin hedef kitlenizde değil', 403);
         }
 
         // Zorunlu sorular kontrolü
@@ -238,9 +260,9 @@ class PortalSurveyController extends BaseController
 
         $missingQuestions = $requiredQuestions->diff($answeredQuestionIds);
         if ($missingQuestions->isNotEmpty()) {
-            return $this->error('Zorunlu soruları yanıtlamanız gerekiyor', [
+            return $this->error('Zorunlu soruları yanıtlamanız gerekiyor', 422, [
                 'missing_questions' => $missingQuestions->toArray(),
-            ], 422);
+            ]);
         }
 
         return DB::transaction(function () use ($validated, $submission) {

@@ -154,6 +154,8 @@ class SurveyController extends BaseController
             'is_active' => 'boolean',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date',
+            'audience' => 'sometimes|nullable|in:all,department,position,custom',
+            'audience_filter' => 'sometimes|nullable|array',
         ]);
 
         $oldValues = $survey->toArray();

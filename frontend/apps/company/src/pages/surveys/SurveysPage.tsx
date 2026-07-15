@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { surveysApi, lookupsApi, type LookupItem } from '@shared/services/api';
+import { surveysApi, lookupsApi, employeesApi, type LookupItem } from '@shared/services/api';
 import { Select } from '@shared/components';
+import { useTranslation } from '@shared/i18n';
 import toast from 'react-hot-toast';
 import { DataTable, ConfirmDialog, EmptyState, Modal } from '../../components/ui';
 import {
@@ -38,6 +39,7 @@ interface SurveyQuestion {
 }
 
 const SurveysPage: React.FC = () => {
+  const { t } = useTranslation('common');
   const [surveys, setSurveys] = useState<Survey[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -62,8 +64,11 @@ const SurveysPage: React.FC = () => {
     is_active: true,
     start_date: '',
     end_date: '',
+    audience: 'all',
+    audience_department_ids: '',
   });
   const [questions, setQuestions] = useState<SurveyQuestion[]>([]);
+  const [departments, setDepartments] = useState<Array<{ id: number; name: string }>>([]);
 
   // Results Modal
   const [showResultsModal, setShowResultsModal] = useState(false);
@@ -77,12 +82,15 @@ const SurveysPage: React.FC = () => {
 
   const loadLookups = useCallback(async () => {
     try {
-      const [typeRes, questionTypeRes] = await Promise.all([
+      const [typeRes, questionTypeRes, depsRes] = await Promise.all([
         lookupsApi.forType('survey_type'),
         lookupsApi.forType('survey_question_type'),
+        employeesApi.getDepartments(),
       ]);
       setTypeOptions(typeRes.data.data ?? []);
       setQuestionTypeOptions(questionTypeRes.data.data ?? []);
+      const deps = depsRes.data.data;
+      setDepartments(Array.isArray(deps) ? deps : []);
     } catch {
       console.error('Anket lookup listeleri yüklenemedi');
     }
@@ -144,6 +152,8 @@ const SurveysPage: React.FC = () => {
       is_active: true,
       start_date: '',
       end_date: '',
+      audience: 'all',
+      audience_department_ids: '',
     });
     setQuestions([{
       question_text: '',
@@ -158,8 +168,13 @@ const SurveysPage: React.FC = () => {
   const openEditModal = async (survey: Survey) => {
     try {
       const response = await surveysApi.get(survey.id);
-      const fullSurvey = response.data.data;
+      const fullSurvey = response.data.data as Survey & {
+        audience?: string;
+        audience_filter?: { department_ids?: number[] };
+        questions?: SurveyQuestion[];
+      };
       setEditingSurvey(fullSurvey);
+      const filter = fullSurvey.audience_filter ?? {};
       setFormData({
         title: fullSurvey.title || '',
         description: fullSurvey.description || '',
@@ -168,6 +183,8 @@ const SurveysPage: React.FC = () => {
         is_active: fullSurvey.is_active ?? true,
         start_date: fullSurvey.start_date?.split('T')[0] || '',
         end_date: fullSurvey.end_date?.split('T')[0] || '',
+        audience: fullSurvey.audience || 'all',
+        audience_department_ids: (filter.department_ids ?? []).join(','),
       });
       setQuestions(fullSurvey.questions?.map((q: SurveyQuestion, i: number) => ({
         id: q.id,
@@ -179,7 +196,7 @@ const SurveysPage: React.FC = () => {
       })) || []);
       setShowModal(true);
     } catch {
-      toast.error('Anket yüklenemedi');
+      toast.error(t('surveys.loadDetailError'));
     }
   };
 
@@ -259,8 +276,19 @@ const SurveysPage: React.FC = () => {
 
     setSubmitting(true);
     try {
+      const departmentIds = formData.audience_department_ids
+        .split(',')
+        .map((s) => Number(s.trim()))
+        .filter((n) => Number.isFinite(n) && n > 0);
+
+      const { audience_department_ids: _ids, ...rest } = formData;
       const data = {
-        ...formData,
+        ...rest,
+        audience: formData.audience,
+        audience_filter:
+          formData.audience === 'department'
+            ? { department_ids: departmentIds }
+            : null,
         questions: validQuestions.map(q => ({
           ...q,
           options: q.options.filter(o => o.trim()),
@@ -488,7 +516,7 @@ const SurveysPage: React.FC = () => {
                     checked={formData.is_anonymous}
                     onChange={(e) => setFormData({ ...formData, is_anonymous: e.target.checked })}
                   />
-                  Anonim
+                  {t('surveys.anonymous')}
                 </label>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
                   <input
@@ -496,10 +524,45 @@ const SurveysPage: React.FC = () => {
                     checked={formData.is_active}
                     onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
                   />
-                  Aktif
+                  {t('surveys.active')}
                 </label>
               </div>
             </div>
+            <div className="col-md-6 mb-3">
+              <label className="form-label">{t('surveys.audience')}</label>
+              <Select
+                value={formData.audience}
+                onChange={(v) => setFormData({ ...formData, audience: v || 'all' })}
+                options={[
+                  { value: 'all', label: t('surveys.audienceAll') },
+                  { value: 'department', label: t('surveys.audienceDepartment') },
+                  { value: 'position', label: t('surveys.audiencePosition') },
+                  { value: 'custom', label: t('surveys.audienceCustom') },
+                ]}
+                aria-label={t('surveys.audience')}
+              />
+            </div>
+            {formData.audience === 'department' && (
+              <div className="col-md-6 mb-3">
+                <label className="form-label">{t('surveys.audienceDepartments')}</label>
+                <Select
+                  value={formData.audience_department_ids.split(',')[0] || ''}
+                  onChange={(v) =>
+                    setFormData({
+                      ...formData,
+                      audience_department_ids: v || '',
+                    })
+                  }
+                  options={departments.map((d) => ({
+                    value: String(d.id),
+                    label: d.name,
+                  }))}
+                  allowEmpty
+                  placeholder={t('formEngine.selectPlaceholder')}
+                  aria-label={t('surveys.audienceDepartments')}
+                />
+              </div>
+            )}
           </div>
 
           <hr />

@@ -500,5 +500,39 @@
     "portalDescriptionLabel": "Açıklama",
     "portalDescriptionPlaceholder": "Talebinizi detaylı açıklayın",
     "portalSubmit": "Talep Oluştur"
+  },
+  "surveys": {
+    "loadDetailError": "Anket yüklenemedi",
+    "anonymous": "Anonim",
+    "active": "Aktif",
+    "audience": "Hedef kitle",
+    "audienceAll": "Tüm firma",
+    "audienceDepartment": "Departman",
+    "audiencePosition": "Pozisyon",
+    "audienceCustom": "Özel kullanıcı listesi",
+    "audienceDepartments": "Departman seçin"
+  },
+  "trainingAttendance": {
+    "title": "Yoklama",
+    "save": "Yoklamayı kaydet",
+    "saving": "Kaydediliyor…",
+    "saveSuccess": "Yoklama kaydedildi",
+    "saveError": "Yoklama kaydedilemedi",
+    "loadError": "Katılımcılar yüklenemedi",
+    "loading": "Katılımcılar yükleniyor…",
+    "count": "{{count}} katılımcı",
+    "add": "Katılımcı ekle",
+    "addSuccess": "Katılımcı eklendi",
+    "addError": "Katılımcı eklenemedi",
+    "empty": "Henüz katılımcı yok",
+    "emptyHint": "Önce katılımcı ekleyin, sonra yoklama alın.",
+    "colName": "Katılımcı",
+    "colStatus": "Durum",
+    "status": {
+      "registered": "Kayıtlı",
+      "attended": "Katıldı",
+      "absent": "Gelmedi",
+      "excused": "Mazeretli"
+    }
   }
 }
