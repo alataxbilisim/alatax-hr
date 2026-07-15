@@ -47,6 +47,7 @@ class LookupSeeder extends Seeder
         $this->seedContinuousFeedbackType();
         $this->seedOnboardingProcessStatus();
         $this->seedOnboardingTaskStatus();
+        $this->seedTerminationReason();
         $this->seedDocumentApprovalStatus();
         $this->seedDocumentFileType();
         $this->seedEmployeeDocumentStatus();
@@ -435,6 +436,28 @@ class LookupSeeder extends Seeder
             ['value' => 'skipped', 'label' => 'Atlandı', 'color' => '#64748b', 'sort_order' => 40],
         ] as $item) {
             $this->upsertDefault(LookupService::TYPE_ONBOARDING_TASK_STATUS, $item, false, $meta);
+        }
+    }
+
+    /** SGK işten çıkış kodları (yaygın) — hibrit */
+    private function seedTerminationReason(): void
+    {
+        $meta = ['hybrid' => true];
+        foreach ([
+            ['value' => '01', 'label' => '01 — Deneme süreli sözleşmenin işverence feshi', 'sort_order' => 10],
+            ['value' => '02', 'label' => '02 — Deneme süreli sözleşmenin işçi tarafından feshi', 'sort_order' => 20],
+            ['value' => '03', 'label' => '03 — Belirsiz süreli sözleşmenin işçi tarafından feshi (istifa)', 'sort_order' => 30],
+            ['value' => '04', 'label' => '04 — Belirsiz süreli sözleşmenin işverence haklı sebep bildirilmeden feshi', 'sort_order' => 40],
+            ['value' => '05', 'label' => '05 — Belirsiz süreli sözleşmenin işverence haklı sebeple feshi', 'sort_order' => 50],
+            ['value' => '08', 'label' => '08 — Vize süresinin bitimi', 'sort_order' => 60],
+            ['value' => '09', 'label' => '09 — İşçinin ölümü', 'sort_order' => 70],
+            ['value' => '11', 'label' => '11 — Emeklilik', 'sort_order' => 80],
+            ['value' => '13', 'label' => '13 — Belirli süreli sözleşmenin sona ermesi', 'sort_order' => 90],
+            ['value' => '17', 'label' => '17 — İşyerinin kapanması', 'sort_order' => 100],
+            ['value' => '22', 'label' => '22 — Diğer nedenler', 'sort_order' => 110],
+            ['value' => '25', 'label' => '25 — Karşılıklı anlaşma ile fesih', 'sort_order' => 120],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_TERMINATION_REASON, $item, false, $meta);
         }
     }
 

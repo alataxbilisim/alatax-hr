@@ -5,6 +5,8 @@ import { DataTable, ConfirmDialog, EmptyState } from '../../components/ui';
 import TemplateForm from '../../components/onboarding/TemplateForm';
 import ProcessForm from '../../components/onboarding/ProcessForm';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from '@shared/i18n';
+import { Select } from '@shared/components';
 import {
   BsPlus,
   BsPersonCheck,
@@ -19,6 +21,7 @@ interface Template {
   id: number;
   name: string;
   description?: string;
+  process_type?: 'onboarding' | 'offboarding';
   tasks: Array<{
     title: string;
     description: string;
@@ -56,6 +59,7 @@ const statusBadgeClass: Record<string, string> = {
 };
 
 const OnboardingPage: React.FC = () => {
+  const { t } = useTranslation('common');
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -73,6 +77,7 @@ const OnboardingPage: React.FC = () => {
   const [processPage, setProcessPage] = useState(1);
   const [processTotalPages, setProcessTotalPages] = useState(1);
   const [processFormOpen, setProcessFormOpen] = useState(false);
+  const [processTypeFilter, setProcessTypeFilter] = useState<'onboarding' | 'offboarding' | ''>('');
 
   const [templates, setTemplates] = useState<Template[]>([]);
   const [templatesLoading, setTemplatesLoading] = useState(true);
@@ -80,6 +85,7 @@ const OnboardingPage: React.FC = () => {
   const [templateTotalPages, setTemplateTotalPages] = useState(1);
   const [templateFormOpen, setTemplateFormOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+  const [templateTypeFilter, setTemplateTypeFilter] = useState<'onboarding' | 'offboarding'>('onboarding');
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{ type: 'template' | 'process'; item: Template | Process } | null>(null);
@@ -102,7 +108,11 @@ const OnboardingPage: React.FC = () => {
   const loadProcesses = useCallback(async () => {
     try {
       setProcessesLoading(true);
-      const response = await onboardingApi.processes.list({ page: processPage });
+      const params: Record<string, unknown> = { page: processPage };
+      if (processTypeFilter) {
+        params.process_type = processTypeFilter;
+      }
+      const response = await onboardingApi.processes.list(params);
       const data = response.data.data;
       setProcesses(data.data || []);
       setProcessTotalPages(data.last_page || 1);
@@ -111,12 +121,15 @@ const OnboardingPage: React.FC = () => {
     } finally {
       setProcessesLoading(false);
     }
-  }, [processPage]);
+  }, [processPage, processTypeFilter]);
 
   const loadTemplates = useCallback(async () => {
     try {
       setTemplatesLoading(true);
-      const response = await onboardingApi.templates.list({ page: templatePage });
+      const response = await onboardingApi.templates.list({
+        page: templatePage,
+        process_type: templateTypeFilter,
+      });
       const data = response.data.data;
       setTemplates(data.data || []);
       setTemplateTotalPages(data.last_page || 1);
@@ -125,7 +138,7 @@ const OnboardingPage: React.FC = () => {
     } finally {
       setTemplatesLoading(false);
     }
-  }, [templatePage]);
+  }, [templatePage, templateTypeFilter]);
 
   useEffect(() => {
     void loadLookups();
@@ -389,6 +402,41 @@ const OnboardingPage: React.FC = () => {
         </button>
       </div>
 
+      <div style={{ marginBottom: '1rem', maxWidth: 280 }}>
+        {activeTab === 'templates' ? (
+          <Select
+            value={templateTypeFilter}
+            onChange={(v) => {
+              setTemplatePage(1);
+              setTemplateTypeFilter(v === 'offboarding' ? 'offboarding' : 'onboarding');
+            }}
+            options={[
+              { value: 'onboarding', label: t('offboarding.processTypeOnboarding') },
+              { value: 'offboarding', label: t('offboarding.processTypeOffboarding') },
+            ]}
+            aria-label={t('offboarding.processType')}
+          />
+        ) : (
+          <Select
+            value={processTypeFilter}
+            onChange={(v) => {
+              setProcessPage(1);
+              if (v === 'onboarding' || v === 'offboarding') {
+                setProcessTypeFilter(v);
+              } else {
+                setProcessTypeFilter('');
+              }
+            }}
+            options={[
+              { value: '', label: t('offboarding.filterAllTypes') },
+              { value: 'onboarding', label: t('offboarding.processTypeOnboarding') },
+              { value: 'offboarding', label: t('offboarding.processTypeOffboarding') },
+            ]}
+            aria-label={t('offboarding.processType')}
+          />
+        )}
+      </div>
+
       {/* Content */}
       {activeTab === 'processes' ? (
         processesLoading ? (
@@ -455,6 +503,7 @@ const OnboardingPage: React.FC = () => {
         onClose={() => { setTemplateFormOpen(false); setSelectedTemplate(null); }}
         onSubmit={handleTemplateSubmit}
         template={selectedTemplate}
+        defaultProcessType={templateTypeFilter}
       />
 
       {/* Delete Confirm */}

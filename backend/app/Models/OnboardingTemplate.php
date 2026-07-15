@@ -12,8 +12,13 @@ class OnboardingTemplate extends Model
 {
     use BelongsToCompany, HasAuditColumns, HasFactory, SoftDeletes;
 
+    public const TYPE_ONBOARDING = 'onboarding';
+
+    public const TYPE_OFFBOARDING = 'offboarding';
+
     protected $fillable = [
         'company_id',
+        'process_type',
         'name',
         'description',
         'tasks',
@@ -45,6 +50,11 @@ class OnboardingTemplate extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    public function scopeOfType($query, string $type)
+    {
+        return $query->where('process_type', $type);
     }
 
     // Methods

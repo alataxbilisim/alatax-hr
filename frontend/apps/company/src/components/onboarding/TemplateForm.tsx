@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../ui';
 import { Select } from '@shared/components';
+import { useTranslation } from '@shared/i18n';
 import { BsPlus, BsTrash, BsGripVertical } from 'react-icons/bs';
 
 interface Task {
@@ -9,12 +10,14 @@ interface Task {
   type: string;
   is_required: boolean;
   days_offset: number;
+  action_key?: string;
 }
 
 interface TemplateFormValues {
   id?: number;
   name: string;
   description: string;
+  process_type: 'onboarding' | 'offboarding';
   tasks: Task[];
   estimated_days: number;
   is_active: boolean;
@@ -29,11 +32,13 @@ interface TemplateFormProps {
     id?: number;
     name?: string;
     description?: string;
+    process_type?: 'onboarding' | 'offboarding';
     tasks?: Task[];
     estimated_days?: number;
     is_active?: boolean;
     is_default?: boolean;
   } | null;
+  defaultProcessType?: 'onboarding' | 'offboarding';
 }
 
 /** Motor dışı — lookup değil; sabit seçenekler + Select */
@@ -52,16 +57,24 @@ const TemplateForm: React.FC<TemplateFormProps> = ({
   onClose,
   onSubmit,
   template,
+  defaultProcessType = 'onboarding',
 }) => {
+  const { t } = useTranslation('common');
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<Omit<TemplateFormValues, 'id'>>({
     name: '',
     description: '',
+    process_type: defaultProcessType,
     tasks: [{ title: '', description: '', type: 'custom', is_required: true, days_offset: 0 }],
     estimated_days: 7,
     is_active: true,
     is_default: false,
   });
+
+  const processTypeOptions = [
+    { value: 'onboarding', label: t('offboarding.processTypeOnboarding') },
+    { value: 'offboarding', label: t('offboarding.processTypeOffboarding') },
+  ];
 
   useEffect(() => {
     if (isOpen) {
@@ -69,8 +82,9 @@ const TemplateForm: React.FC<TemplateFormProps> = ({
         setFormData({
           name: template.name || '',
           description: template.description || '',
-          tasks: template.tasks && template.tasks.length > 0 
-            ? template.tasks 
+          process_type: template.process_type || defaultProcessType,
+          tasks: template.tasks && template.tasks.length > 0
+            ? template.tasks
             : [{ title: '', description: '', type: 'custom', is_required: true, days_offset: 0 }],
           estimated_days: template.estimated_days || 7,
           is_active: template.is_active ?? true,
@@ -80,6 +94,7 @@ const TemplateForm: React.FC<TemplateFormProps> = ({
         setFormData({
           name: '',
           description: '',
+          process_type: defaultProcessType,
           tasks: [{ title: '', description: '', type: 'custom', is_required: true, days_offset: 0 }],
           estimated_days: 7,
           is_active: true,
@@ -87,7 +102,7 @@ const TemplateForm: React.FC<TemplateFormProps> = ({
         });
       }
     }
-  }, [isOpen, template]);
+  }, [isOpen, template, defaultProcessType]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -132,32 +147,47 @@ const TemplateForm: React.FC<TemplateFormProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={template ? 'Şablonu Düzenle' : 'Yeni Şablon'}
+      title={template ? t('offboarding.templateEditTitle') : t('offboarding.templateCreateTitle')}
       size="lg"
     >
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label className="form-label">Şablon Adı *</label>
+          <label className="form-label">{t('offboarding.templateName')} *</label>
           <input
             type="text"
             name="name"
             value={formData.name}
             onChange={handleChange}
             className="form-input"
-            placeholder="Örn: Yazılım Geliştirici Onboarding"
+            placeholder={t('offboarding.templateNamePlaceholder')}
             required
           />
         </div>
 
         <div className="form-group">
-          <label className="form-label">Açıklama</label>
+          <label className="form-label">{t('offboarding.processType')}</label>
+          <Select
+            value={formData.process_type}
+            onChange={(v) => setFormData((prev) => ({
+              ...prev,
+              process_type: v === 'offboarding' ? 'offboarding' : 'onboarding',
+            }))}
+            options={processTypeOptions}
+            placeholder={t('offboarding.processType')}
+            aria-label={t('offboarding.processType')}
+            disabled={Boolean(template?.id)}
+          />
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">{t('offboarding.templateDescription')}</label>
           <textarea
             name="description"
             value={formData.description}
             onChange={handleChange}
             className="form-input"
             rows={2}
-            placeholder="Şablon hakkında kısa açıklama"
+            placeholder={t('offboarding.templateDescriptionPlaceholder')}
           />
         </div>
 

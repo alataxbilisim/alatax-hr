@@ -15,9 +15,14 @@ class TemplateController extends BaseController
      */
     public function index(Request $request): JsonResponse
     {
-        $templates = OnboardingTemplate::withCount('processes')
-            ->latest()
-            ->paginate($request->get('per_page', 15));
+        $query = OnboardingTemplate::withCount('processes')->latest();
+
+        $type = $request->get('process_type', OnboardingTemplate::TYPE_ONBOARDING);
+        if (in_array($type, [OnboardingTemplate::TYPE_ONBOARDING, OnboardingTemplate::TYPE_OFFBOARDING], true)) {
+            $query->where('process_type', $type);
+        }
+
+        $templates = $query->paginate($request->get('per_page', 15));
 
         return $this->success($templates, 'Onboarding şablonları listelendi');
     }
@@ -30,20 +35,27 @@ class TemplateController extends BaseController
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'process_type' => 'nullable|in:onboarding,offboarding',
             'tasks' => 'required|array|min:1',
             'tasks.*.title' => 'required|string|max:255',
             'tasks.*.description' => 'nullable|string',
             'tasks.*.type' => 'required|in:document_upload,document_fill,training,meeting,system_setup,quiz,custom',
             'tasks.*.is_required' => 'boolean',
             'tasks.*.days_offset' => 'nullable|integer|min:0',
+            'tasks.*.action_key' => 'nullable|string|max:64',
             'estimated_days' => 'integer|min:1',
             'is_active' => 'boolean',
             'is_default' => 'boolean',
         ]);
 
-        // If setting as default, unset other defaults
+        $validated['process_type'] = $validated['process_type'] ?? OnboardingTemplate::TYPE_ONBOARDING;
+
+        // If setting as default, unset other defaults of same type
         if ($validated['is_default'] ?? false) {
-            OnboardingTemplate::where('is_default', true)->update(['is_default' => false]);
+            OnboardingTemplate::query()
+                ->where('process_type', $validated['process_type'])
+                ->where('is_default', true)
+                ->update(['is_default' => false]);
         }
 
         $template = OnboardingTemplate::create($validated);
@@ -69,20 +81,27 @@ class TemplateController extends BaseController
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'description' => 'sometimes|nullable|string',
+            'process_type' => 'sometimes|in:onboarding,offboarding',
             'tasks' => 'sometimes|required|array|min:1',
             'tasks.*.title' => 'required_with:tasks|string|max:255',
             'tasks.*.description' => 'nullable|string',
             'tasks.*.type' => 'required_with:tasks|in:document_upload,document_fill,training,meeting,system_setup,quiz,custom',
             'tasks.*.is_required' => 'boolean',
             'tasks.*.days_offset' => 'nullable|integer|min:0',
+            'tasks.*.action_key' => 'nullable|string|max:64',
             'estimated_days' => 'sometimes|integer|min:1',
             'is_active' => 'sometimes|boolean',
             'is_default' => 'sometimes|boolean',
         ]);
 
-        // If setting as default, unset other defaults
+        $processType = $validated['process_type'] ?? $template->process_type;
+
+        // If setting as default, unset other defaults of same type
         if (($validated['is_default'] ?? false) && ! $template->is_default) {
-            OnboardingTemplate::where('is_default', true)->update(['is_default' => false]);
+            OnboardingTemplate::query()
+                ->where('process_type', $processType)
+                ->where('is_default', true)
+                ->update(['is_default' => false]);
         }
 
         $oldValues = $template->getOriginal();

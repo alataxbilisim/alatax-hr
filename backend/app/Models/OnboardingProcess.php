@@ -20,9 +20,15 @@ class OnboardingProcess extends Model
 
     const STATUS_CANCELLED = 'cancelled';
 
+    public const TYPE_ONBOARDING = 'onboarding';
+
+    public const TYPE_OFFBOARDING = 'offboarding';
+
     protected $fillable = [
         'company_id',
+        'process_type',
         'user_id',
+        'employee_id',
         'template_id',
         'title',
         'start_date',
@@ -31,6 +37,10 @@ class OnboardingProcess extends Model
         'status',
         'progress',
         'notes',
+        'termination_reason_code',
+        'termination_date',
+        'exit_notes',
+        'remaining_leave_days',
         'assigned_to',
         'created_by',
         'updated_by',
@@ -40,12 +50,19 @@ class OnboardingProcess extends Model
         'start_date' => 'date',
         'target_end_date' => 'date',
         'actual_end_date' => 'date',
+        'termination_date' => 'date',
+        'remaining_leave_days' => 'decimal:2',
     ];
 
     // Relationships
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function employee()
+    {
+        return $this->belongsTo(Employee::class);
     }
 
     public function template()
@@ -69,17 +86,35 @@ class OnboardingProcess extends Model
         return $query->whereIn('status', [self::STATUS_PENDING, self::STATUS_IN_PROGRESS]);
     }
 
+    public function scopeOfType($query, string $type)
+    {
+        return $query->where('process_type', $type);
+    }
+
+    public function isOffboarding(): bool
+    {
+        return $this->process_type === self::TYPE_OFFBOARDING;
+    }
+
     // Methods
     public function updateProgress(): void
     {
         $total = $this->tasks()->count();
-        $completed = $this->tasks()->where('status', 'completed')->count();
+        $completed = $this->tasks()->whereIn('status', [
+            OnboardingTask::STATUS_COMPLETED,
+            OnboardingTask::STATUS_SKIPPED,
+        ])->count();
 
-        $this->progress = $total > 0 ? round(($completed / $total) * 100) : 0;
+        $this->progress = $total > 0 ? (int) round(($completed / $total) * 100) : 0;
 
         if ($this->progress === 100) {
-            $this->status = self::STATUS_COMPLETED;
-            $this->actual_end_date = now();
+            // Offboarding: otomatik kapanmaz — "Çıkışı Tamamla" gerekir
+            if ($this->isOffboarding()) {
+                $this->status = self::STATUS_IN_PROGRESS;
+            } else {
+                $this->status = self::STATUS_COMPLETED;
+                $this->actual_end_date = now();
+            }
         } elseif ($this->progress > 0) {
             $this->status = self::STATUS_IN_PROGRESS;
         }
@@ -94,6 +129,7 @@ class OnboardingProcess extends Model
         }
 
         foreach ($this->template->tasks as $index => $taskData) {
+            $actionKey = $taskData['action_key'] ?? null;
             $task = OnboardingTask::create([
                 'company_id' => $this->company_id,
                 'process_id' => $this->id,
@@ -106,6 +142,7 @@ class OnboardingProcess extends Model
                     ? $this->start_date->copy()->addDays($taskData['days_offset'])
                     : null,
                 'assigned_to' => $taskData['assigned_to'] ?? $this->assigned_to,
+                'data' => $actionKey ? ['action_key' => $actionKey] : null,
             ]);
 
             if ($task->assigned_to) {

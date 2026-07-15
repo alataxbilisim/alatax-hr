@@ -6,6 +6,7 @@ use App\Models\AccrualPolicy;
 use App\Models\Company;
 use App\Models\Holiday;
 use App\Models\LeaveType;
+use App\Services\Onboarding\DefaultOffboardingTemplateService;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -194,6 +195,8 @@ class DefaultCompanyHrSeedService
 
         // A5 — pozisyon kataloğu (ayrı transaction; leave seed'i bozmaz)
         app(PositionCatalogSeedService::class)->ensureForCompany($companyId);
+        // Offboarding varsayılan şablon
+        app(DefaultOffboardingTemplateService::class)->ensureForCompany($companyId);
     }
 
     public function ensureForAllCompanies(): int
