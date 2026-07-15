@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Shift extends Model
 {
+    use BelongsToCompany;
+
     protected $fillable = [
         'company_id',
         'name',
@@ -27,6 +30,7 @@ class Shift extends Model
         'end_time' => 'datetime:H:i',
         'break_start' => 'datetime:H:i',
         'break_end' => 'datetime:H:i',
+        'break_duration_minutes' => 'integer',
         'is_night_shift' => 'boolean',
         'is_active' => 'boolean',
     ];
@@ -50,8 +54,8 @@ class Shift extends Model
             $end->addDay();
         }
 
-        $minutes = $end->diffInMinutes($start) - $this->break_duration_minutes;
+        $minutes = $end->diffInMinutes($start) - (int) $this->break_duration_minutes;
 
-        return round($minutes / 60, 2);
+        return round(max(0, $minutes) / 60, 2);
     }
 }

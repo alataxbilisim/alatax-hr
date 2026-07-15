@@ -137,6 +137,9 @@ export const operationalModuleGroups: ModuleGroup[] = [
     permissionModule: 'timesheet',
     items: [
       { path: '/attendance', labelKey: 'nav.timesheetAttendance', permission: { module: 'timesheet', page: 'attendance' } },
+      { path: '/attendance/shifts', labelKey: 'nav.timesheetShifts', permission: { module: 'timesheet', page: 'shifts' } },
+      { path: '/attendance/shift-assignments', labelKey: 'nav.timesheetShiftAssign', permission: { module: 'timesheet', page: 'shifts' } },
+      { path: '/attendance/reports', labelKey: 'nav.timesheetReports', permission: { module: 'timesheet', page: 'attendance' } },
       { path: '/attendance/kiosk', labelKey: 'nav.timesheetKiosk', permission: { module: 'timesheet', page: 'kiosk' } },
     ],
   },

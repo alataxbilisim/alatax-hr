@@ -49,8 +49,14 @@ const TimesheetPage: React.FC = () => {
   const [weeklySummary, setWeeklySummary] = useState<WeeklySummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'today' | 'weekly'>('today');
+  const [activeTab, setActiveTab] = useState<'today' | 'weekly' | 'shifts'>('today');
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [myShifts, setMyShifts] = useState<Array<{
+    date: string;
+    day_name: string;
+    shift: { id: number; name: string; start_time: string; end_time: string } | null;
+    notes?: string | null;
+  }>>([]);
 
   // Update current time every second
   useEffect(() => {
@@ -63,18 +69,21 @@ const TimesheetPage: React.FC = () => {
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      const [todayRes, weeklyRes] = await Promise.all([
+      const [todayRes, weeklyRes, shiftsRes] = await Promise.all([
         portalApi.timesheet.todayStatus(),
         portalApi.timesheet.weeklyRecords(),
+        portalApi.timesheet.shifts(),
       ]);
       setTodayStatus(todayRes.data.data);
       setWeeklySummary(weeklyRes.data.data);
+      const shiftPayload = shiftsRes.data.data;
+      setMyShifts(shiftPayload?.shifts || []);
     } catch {
-      toast.error('Veriler yüklenemedi');
+      toast.error(t('portalShifts.loadFailed'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     loadData();
@@ -224,6 +233,13 @@ const TimesheetPage: React.FC = () => {
         >
           <BsCalendar3 className="me-2" />
           Haftalık
+        </button>
+        <button
+          className={`nav-tab-mobile ${activeTab === 'shifts' ? 'active' : ''}`}
+          onClick={() => setActiveTab('shifts')}
+        >
+          <BsCalendar3 className="me-2" />
+          {t('portalShifts.tab')}
         </button>
       </div>
 
@@ -402,6 +418,46 @@ const TimesheetPage: React.FC = () => {
             </div>
           </div>
         </>
+      )}
+
+      {activeTab === 'shifts' && (
+        <div className="card">
+          <div className="card-header">
+            <h3 className="card-title">{t('portalShifts.tab')}</h3>
+          </div>
+          <div className="card-body p-0">
+            {myShifts.length === 0 ? (
+              <div className="p-4 text-muted text-center">{t('portalShifts.empty')}</div>
+            ) : (
+              <div className="mobile-card-list" style={{ display: 'flex' }}>
+                {myShifts.map((day) => (
+                  <div key={day.date} className="mobile-card">
+                    <div className="mobile-card-header">
+                      <div>
+                        <div className="mobile-card-title">{day.day_name}</div>
+                        <div className="mobile-card-subtitle">{day.date}</div>
+                      </div>
+                    </div>
+                    <div className="mobile-card-body">
+                      <div className="mobile-card-row">
+                        <span className="mobile-card-label">{t('portalShifts.shift')}</span>
+                        <span className="mobile-card-value">{day.shift?.name || '—'}</span>
+                      </div>
+                      <div className="mobile-card-row">
+                        <span className="mobile-card-label">{t('portalShifts.hours')}</span>
+                        <span className="mobile-card-value">
+                          {day.shift
+                            ? `${String(day.shift.start_time).slice(0, 5)} – ${String(day.shift.end_time).slice(0, 5)}`
+                            : '—'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

@@ -1034,6 +1034,31 @@ Route::prefix('v1')->group(function () {
             Route::post('/{id}/approve', [\App\Http\Controllers\Api\V1\Timesheet\AttendanceController::class, 'approve'])
                 ->middleware('permission:timesheet.attendance.approve');
         });
+
+        // Vardiya tanım + atama
+        Route::prefix('shifts')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\V1\Timesheet\ShiftController::class, 'index'])
+                ->middleware('permission:timesheet.shifts.view');
+            Route::post('/', [\App\Http\Controllers\Api\V1\Timesheet\ShiftController::class, 'store'])
+                ->middleware('permission:timesheet.shifts.create');
+            Route::get('/{id}', [\App\Http\Controllers\Api\V1\Timesheet\ShiftController::class, 'show'])
+                ->middleware('permission:timesheet.shifts.view');
+            Route::put('/{id}', [\App\Http\Controllers\Api\V1\Timesheet\ShiftController::class, 'update'])
+                ->middleware('permission:timesheet.shifts.edit');
+            Route::delete('/{id}', [\App\Http\Controllers\Api\V1\Timesheet\ShiftController::class, 'destroy'])
+                ->middleware('permission:timesheet.shifts.delete');
+        });
+
+        Route::prefix('employee-shifts')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\V1\Timesheet\EmployeeShiftController::class, 'index'])
+                ->middleware('permission:timesheet.shifts.view');
+            Route::post('/', [\App\Http\Controllers\Api\V1\Timesheet\EmployeeShiftController::class, 'store'])
+                ->middleware('permission:timesheet.shifts.create');
+            Route::post('/bulk', [\App\Http\Controllers\Api\V1\Timesheet\EmployeeShiftController::class, 'bulkAssign'])
+                ->middleware('permission:timesheet.shifts.create');
+            Route::delete('/{id}', [\App\Http\Controllers\Api\V1\Timesheet\EmployeeShiftController::class, 'destroy'])
+                ->middleware('permission:timesheet.shifts.edit');
+        });
     });
 
     // ===========================================

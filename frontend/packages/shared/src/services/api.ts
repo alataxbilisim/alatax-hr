@@ -908,6 +908,24 @@ export const attendanceApi = {
   bulkApprove: (ids: number[]) => api.post('/attendance/bulk-approve', { ids }),
   issueKioskToken: (data?: { branch_id?: number }) =>
     api.post('/attendance/kiosk/token', data ?? {}),
+  report: (params?: Record<string, unknown>) => api.get('/attendance/reports', { params }),
+  reportExport: (params?: Record<string, unknown>) =>
+    api.get('/attendance/reports/export', { params, responseType: 'blob' }),
+};
+
+// Shifts API (Company HR) — vardiya tanım + atama
+export const shiftsApi = {
+  list: (params?: Record<string, unknown>) => api.get('/shifts', { params }),
+  get: (id: number) => api.get(`/shifts/${id}`),
+  create: (data: Record<string, unknown>) => api.post('/shifts', data),
+  update: (id: number, data: Record<string, unknown>) => api.put(`/shifts/${id}`, data),
+  delete: (id: number) => api.delete(`/shifts/${id}`),
+  assignments: {
+    list: (params?: Record<string, unknown>) => api.get('/employee-shifts', { params }),
+    assign: (data: Record<string, unknown>) => api.post('/employee-shifts', data),
+    bulkAssign: (data: Record<string, unknown>) => api.post('/employee-shifts/bulk', data),
+    remove: (id: number) => api.delete(`/employee-shifts/${id}`),
+  },
 };
 
 // Expenses API (Company HR) — portal own API ayrı (portalApi.expenses)

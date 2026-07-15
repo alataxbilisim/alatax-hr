@@ -457,6 +457,7 @@ class PermissionSeeder extends Seeder
 
                     // Puantaj / yoklama
                     'timesheet.attendance.*',
+                    'timesheet.shifts.*',
                     'timesheet.kiosk.view',
 
                     // Onboarding - Tam yetki
@@ -547,6 +548,10 @@ class PermissionSeeder extends Seeder
                     // Analitik
                     'analytics.reports.view',
 
+                    // Puantaj
+                    'timesheet.attendance.view', 'timesheet.attendance.create', 'timesheet.attendance.edit', 'timesheet.attendance.approve',
+                    'timesheet.shifts.view', 'timesheet.shifts.create', 'timesheet.shifts.edit', 'timesheet.shifts.delete',
+
                     // Geriye uyumluluk
                     'users.view',
                     'employees.view', 'employees.create', 'employees.edit',
@@ -576,8 +581,10 @@ class PermissionSeeder extends Seeder
                     // Masraf - ekip onay
                     'expenses.claims.view', 'expenses.claims.approve',
 
-                    // Puantaj - ekip görüntüleme / onay
+                    // Puantaj - ekip görüntüleme / onay / düzeltme / vardiya
                     'timesheet.attendance.view', 'timesheet.attendance.approve',
+                    'timesheet.attendance.create', 'timesheet.attendance.edit',
+                    'timesheet.shifts.view', 'timesheet.shifts.create', 'timesheet.shifts.edit',
 
                     // Performans - Değerlendirme yapabilir
                     'performance.reviews.view', 'performance.reviews.create', 'performance.reviews.edit',
@@ -607,6 +614,8 @@ class PermissionSeeder extends Seeder
                     'leaves.calendar.view',
                     'expenses.claims.view', 'expenses.claims.approve',
                     'timesheet.attendance.view', 'timesheet.attendance.approve',
+                    'timesheet.attendance.create', 'timesheet.attendance.edit',
+                    'timesheet.shifts.view', 'timesheet.shifts.create', 'timesheet.shifts.edit',
                     'documents.list.view',
                     'employees.view',
                     'leaves.view', 'leaves.approve',
