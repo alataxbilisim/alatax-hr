@@ -344,3 +344,60 @@ Neden: eski form varsayılan kalır; geri dönüş tek tık; auto-flag riski yok
 
 *4A-2 uygulama kaydı. Big-bang geçiş yok; klasik form varsayılan.*
 *4A-2 hotfix: departments/managers 500 + FE boş-sayfa UX.*
+
+---
+
+## GECE ÖZETİ (4A-3)
+
+**Tarih:** 15 Temmuz 2026  
+**Branch:** `faz4-form-engine` (main / faz3-tasarim’e dokunulmadı)  
+**Push:** yok · **DB wipe:** yok (`alatax_hr` + `alatax_hr_testing` ayakta)
+
+### Zincir tablosu
+
+| Zincir | Durum | Commit | Not |
+|--------|-------|--------|-----|
+| 0 Foundation / 4A-2 hotfix | ✅ | `e6653bd` | Önceki gece birikimi commit |
+| 1 leave_request FormEngine | ✅ | `816d839` | Katalog + stüdyo + pilot; iş mantığı taşınmadı |
+| 2 request_types.form_fields | ✅ | `465df71` | Yerinde adapter; portal FormEngine |
+| 3a survey audience | ✅ | `2923539` | FE hedef kitle + portal filtre |
+| 3b training attendance | ✅ | `f36df0b` | Yoklama UI → `updateAttendance` |
+| 4 Kapanış | ✅ | (bu rapor) | Kod yok |
+
+### Test / tsc
+
+| Kontrol | Sonuç |
+|---------|--------|
+| Tam suite (Docker, `alatax_hr_testing`, sıralı) | **375 passed** / 0 fail (1456 assertions) |
+| company `tsc --noEmit` | **0** |
+| B-DB guard | dokunulmadı |
+
+### Sentinel
+
+| Kontrol | Sonuç |
+|---------|--------|
+| `admin@demo.test` @ `alatax_hr` | **mevcut** (id=82, `is_active=t`) |
+
+### Git
+
+- `origin/faz4-form-engine`’e göre **ahead 14** (gece 4A-3: `e6653bd`…`f36df0b` + önceki A/B commit’ler)  
+- **PUSH YOK**
+
+### KARAR BEKLENENLER
+
+1. **Z2 form_fields sözleşmesi:** Seed/örnek yoktu; adapter recruitment `application_forms.fields` hizasını varsaydı (`id\|name\|key\|field_key`, `type`, `label`, `required?`, `options?`). Ürün onayı isteniyor.
+2. **Z3a position/custom audience UI:** BE destekliyor; FE’de şimdilik ağırlık **departman**. Pozisyon / özel kullanıcı listesi UI genişletmesi ürün kararı.
+3. **Portal anket pagination:** Audience filtre collection sonrası; meta.total sayfa bazlı kalabilir — SQL’e taşıma ayrı iş.
+
+### Sabah önce bak (5 madde)
+
+1. Company: `/settings/forms/leave_request` + `/leaves/form-engine/new` — klasik izin formu bozulmamış mı?
+2. Portal: `form_fields` dolu bir talep tipi seç → FormEngine render + submit `form_data`.
+3. Company anket formu: hedef kitle = departman → portal’da dışarıdaki personel anketi görmemeli.
+4. Eğitim oturumu → katılımcılar → yoklama kaydet → status DB’de güncellendi mi?
+5. `git log --oneline origin/faz4-form-engine..HEAD` + ahead; **push etme** — sabah review sonrası.
+
+### Güvenlik / regresyon
+
+- Faz 2 field-permission / DataScope / policy + A/B + 4A testleri yeşil (tam suite 375).  
+- Klasik formlar duruyor; FormEngine yolları paralel.
