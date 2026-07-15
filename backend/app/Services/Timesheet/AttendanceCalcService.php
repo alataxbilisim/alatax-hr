@@ -80,9 +80,17 @@ class AttendanceCalcService
         } elseif ($clockIn && ! $clockOut) {
             // Gece işi tamamlar; clock-out anında eksik 0
             $missingMinutes = 0;
+        } elseif (! $clockIn && ! $clockOut) {
+            if (in_array($record->status, [
+                AttendanceRecord::STATUS_ABSENT,
+                AttendanceRecord::STATUS_HOLIDAY,
+                AttendanceRecord::STATUS_LEAVE,
+            ], true)) {
+                $status = $record->status;
+            }
         }
 
-        // holiday / leave / absent elle set edilmişse status'u ezme (manuel düzeltme hariç calc çağrısı)
+        // holiday / leave elle set ve giriş yoksa koru
         if (in_array($record->status, [
             AttendanceRecord::STATUS_HOLIDAY,
             AttendanceRecord::STATUS_LEAVE,

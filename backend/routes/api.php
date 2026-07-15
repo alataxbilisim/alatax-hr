@@ -1021,6 +1021,10 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:timesheet.attendance.view');
             Route::get('/daily-summary', [\App\Http\Controllers\Api\V1\Timesheet\AttendanceController::class, 'dailySummary'])
                 ->middleware('permission:timesheet.attendance.view');
+            Route::get('/reports', [\App\Http\Controllers\Api\V1\Timesheet\AttendanceReportController::class, 'index'])
+                ->middleware('permission:timesheet.attendance.view');
+            Route::get('/reports/export', [\App\Http\Controllers\Api\V1\Timesheet\AttendanceReportController::class, 'export'])
+                ->middleware('permission:timesheet.attendance.view');
             Route::post('/', [\App\Http\Controllers\Api\V1\Timesheet\AttendanceController::class, 'store'])
                 ->middleware('permission:timesheet.attendance.create');
             Route::post('/bulk-approve', [\App\Http\Controllers\Api\V1\Timesheet\AttendanceController::class, 'bulkApprove'])

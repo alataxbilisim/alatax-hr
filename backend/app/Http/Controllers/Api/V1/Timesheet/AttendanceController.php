@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\ActivityLog;
 use App\Models\AttendanceRecord;
 use App\Services\DataScopeService;
+use App\Services\Timesheet\AttendanceCalcService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,6 +15,7 @@ class AttendanceController extends BaseController
 {
     public function __construct(
         protected DataScopeService $dataScope,
+        protected AttendanceCalcService $calc,
     ) {}
 
     /**
@@ -83,15 +85,20 @@ class AttendanceController extends BaseController
             'break_end' => 'nullable|date_format:H:i',
             'status' => 'nullable|in:present,absent,late,early_leave,holiday,leave',
             'notes' => 'nullable|string|max:500',
+            'reason' => 'required|string|min:3|max:500',
         ]);
 
         if (! $this->dataScope->allowsUserId($request->user(), (int) $validated['user_id'])) {
             return $this->error('Bu personel için kayıt oluşturma yetkiniz yok', 403);
         }
 
+        $reason = $validated['reason'];
+        unset($validated['reason']);
+
         $validated['company_id'] = $this->getCompanyId();
         $validated['clock_in_method'] = 'manual';
         $validated['source'] = 'manual';
+        $validated['notes'] = trim(($validated['notes'] ?? '').' [düzeltme: '.$reason.']');
 
         $existing = AttendanceRecord::query()
             ->where('user_id', $validated['user_id'])
@@ -103,13 +110,15 @@ class AttendanceController extends BaseController
         }
 
         $record = AttendanceRecord::create($validated);
+        $record = $this->calc->recalculate($record);
 
-        if ($record->clock_in && $record->clock_out) {
-            $record->total_hours = $record->calculateTotalHours();
-            $record->save();
-        }
-
-        ActivityLog::log('attendance_created', $record, 'Attendance kaydı oluşturuldu');
+        ActivityLog::log(
+            'attendance_created',
+            $record,
+            'Attendance kaydı oluşturuldu: '.$reason,
+            null,
+            $record->toArray()
+        );
 
         return $this->success($record->load('user:id,name'), 'Attendance kaydı oluşturuldu', 201);
     }
@@ -132,16 +141,22 @@ class AttendanceController extends BaseController
             'break_end' => 'nullable|date_format:H:i',
             'status' => 'nullable|in:present,absent,late,early_leave,holiday,leave',
             'notes' => 'nullable|string|max:500',
+            'reason' => 'required|string|min:3|max:500',
         ]);
 
+        $reason = $validated['reason'];
+        unset($validated['reason']);
+
         $record->update($validated);
+        $record = $this->calc->recalculate($record->fresh());
 
-        if ($record->clock_in && $record->clock_out) {
-            $record->total_hours = $record->calculateTotalHours();
-            $record->save();
-        }
-
-        ActivityLog::log('attendance_updated', $record, 'Attendance kaydı güncellendi', $oldValues, $record->toArray());
+        ActivityLog::log(
+            'attendance_updated',
+            $record,
+            'Attendance kaydı güncellendi: '.$reason,
+            $oldValues,
+            $record->toArray()
+        );
 
         return $this->success($record->load('user:id,name'), 'Attendance kaydı güncellendi');
     }

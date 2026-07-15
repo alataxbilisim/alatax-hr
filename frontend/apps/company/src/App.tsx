@@ -165,6 +165,7 @@ import AttendancePage from './pages/attendance/AttendancePage';
 import PdksKioskPage from './pages/attendance/PdksKioskPage';
 import ShiftsPage from './pages/attendance/ShiftsPage';
 import ShiftAssignmentsPage from './pages/attendance/ShiftAssignmentsPage';
+import AttendanceReportsPage from './pages/attendance/AttendanceReportsPage';
 
 // Onboarding Module
 import OnboardingPage from './pages/onboarding/OnboardingPage';
@@ -612,6 +613,18 @@ const App: React.FC = () => {
                 <ModuleProtectedRoute moduleKey={MODULE_KEYS.TIMESHEET}>
                   <PermissionProtectedRoute module="timesheet" page="shifts" action="view">
                     <ShiftAssignmentsPage />
+                  </PermissionProtectedRoute>
+                </ModuleProtectedRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/attendance/reports"
+            element={
+              <ProtectedRoute>
+                <ModuleProtectedRoute moduleKey={MODULE_KEYS.TIMESHEET}>
+                  <PermissionProtectedRoute module="timesheet" page="attendance" action="view">
+                    <AttendanceReportsPage />
                   </PermissionProtectedRoute>
                 </ModuleProtectedRoute>
               </ProtectedRoute>
