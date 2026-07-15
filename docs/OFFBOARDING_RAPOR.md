@@ -4,21 +4,29 @@
 **Tarih:** 2026-07-16  
 **Kapsam:** İşten çıkış sihirbazı (onboarding motorunun `process_type` ile genişletilmesi)
 
-## Özet
+## Zincir tablosu
 
 | Zincir | İçerik | Commit |
 |--------|--------|--------|
-| Z1 | `process_type`, SGK lookup, varsayılan offboarding şablonu, şablon tip filtresi | `feat(offboarding): Z1…` |
-| Z2 | Sihirbaz, akıllı görevler, finalize/iptal, `employees.terminate.create` | `feat(offboarding): Z2…` |
-| Z3 | İbraname PDF, kalan izin günü, bu rapor | `feat(offboarding): Z3…` |
+| Z1 | `process_type`, SGK lookup (12 kod), varsayılan offboarding şablonu, şablon tip filtresi | `d4ed6a5` |
+| Z2 | Sihirbaz, akıllı görevler, finalize/iptal, `employees.terminate.create` | `e3dbf8c` |
+| Z3 | İbraname PDF, kalan izin günü, bu rapor | `69e565f` |
+
+## Doğrulama
+
+| Kontrol | Sonuç |
+|---------|--------|
+| Suite | **448 passed / 0 fail** (önceki 435 + 13 offboarding) |
+| company + portal `tsc` | **0** |
+| Select sentinel | **PASSED** |
+| DB wipe | **yok** (ekleyici migration) |
+| PUSH | **yok** |
 
 ## Kritik kurallar (doğrulandı)
 
-- **DB silinmedi** — yalnızca ekleyici migration `2026_07_16_120000_add_process_type_and_offboarding_fields`.
-- **PUSH yok.**
 - Onboarding motoru yeniden kullanıldı; ayrı görev motoru yok.
-- `process_type` default **`onboarding`** → mevcut hire→onboarding regresyonu korunur.
-- Süreç açıkken personel **`active`** kalır; yalnız **Çıkışı Tamamla** → `terminated`.
+- `process_type` default **`onboarding`** → hire→onboarding regresyonu yeşil.
+- Süreç açıkken personel **`active`**; yalnız **Çıkışı Tamamla** → `terminated`.
 
 ## SGK çıkış kodları (lookup `termination_reason`)
 
@@ -28,7 +36,7 @@
 
 1. `asset_return` — açık zimmet varken tamamlanamaz  
 2. `document_handover`  
-3. `revoke_portal` — tamamlanınca kullanıcı `is_active=false`, `employee.user_id=null` (süreç `user_id`/`employee_id` korunur)  
+3. `revoke_portal` — `is_active=false` + `employee.user_id=null` (süreç `user_id`/`employee_id` korunur)  
 4. `clearance_form`  
 5. `knowledge_transfer`  
 
@@ -41,14 +49,9 @@
 
 ## Bildirim
 
-Mevcut `onboarding.task_assigned` yeniden kullanıldı (ayrı `offboarding.task_assigned` eklenmedi).
+Mevcut `onboarding.task_assigned` yeniden kullanıldı.
 
 ## İzin / ibraname
 
-- Kalan yıllık izin: `LeaveBalance` (`system_code=annual`) → `remaining_leave_days` süreçte; ücret hesabı yok.
-- PDF: `SimpleTextPdf` (Türkçe karakterler ASCII yaklaşımı).
-
-## Test
-
-- `OffboardingTemplateSeedTest` + `OffboardingFlowTest` (13 test)
-- Tam suite / tsc / sentinel: commit sonrası çalıştırılır.
+- Kalan yıllık izin: `LeaveBalance` (`system_code=annual`) → `remaining_leave_days` (ücret yok).
+- PDF: `SimpleTextPdf` (Türkçe → ASCII yaklaşımı).
