@@ -92,6 +92,10 @@ class LookupService
 
     public const TYPE_TERMINATION_REASON = 'termination_reason';
 
+    public const TYPE_SALARY_CHANGE_REASON = 'salary_change_reason';
+
+    public const TYPE_SALARY_REVIEW_STATUS = 'salary_review_status';
+
     public const TYPE_DOCUMENT_APPROVAL_STATUS = 'document_approval_status';
 
     public const TYPE_DOCUMENT_FILE_TYPE = 'document_file_type';
@@ -135,6 +139,8 @@ class LookupService
         self::TYPE_ONBOARDING_PROCESS_STATUS,
         self::TYPE_ONBOARDING_TASK_STATUS,
         self::TYPE_TERMINATION_REASON,
+        self::TYPE_SALARY_CHANGE_REASON,
+        self::TYPE_SALARY_REVIEW_STATUS,
         self::TYPE_DOCUMENT_APPROVAL_STATUS,
         self::TYPE_EMPLOYEE_DOCUMENT_STATUS,
         self::TYPE_TRAINING_SESSION_STATUS,
@@ -226,6 +232,12 @@ class LookupService
         ],
         self::TYPE_TERMINATION_REASON => [
             ['model' => OnboardingProcess::class, 'column' => 'termination_reason_code'],
+        ],
+        self::TYPE_SALARY_CHANGE_REASON => [
+            ['model' => \App\Models\SalaryRecord::class, 'column' => 'change_reason'],
+        ],
+        self::TYPE_SALARY_REVIEW_STATUS => [
+            ['model' => \App\Models\SalaryReviewPeriod::class, 'column' => 'status'],
         ],
         self::TYPE_DOCUMENT_APPROVAL_STATUS => [
             ['model' => Document::class, 'column' => 'approval_status'],

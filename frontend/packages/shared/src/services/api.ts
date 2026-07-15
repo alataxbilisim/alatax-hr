@@ -1034,6 +1034,11 @@ export const portalApi = {
     get: (id: number) => api.get(`/portal/payslips/${id}`),
     download: (id: number) => api.get(`/portal/payslips/${id}/download`, { responseType: 'blob' }),
   },
+
+  // Salary (Ücretim — yalnız kendi kaydı)
+  salary: {
+    me: () => api.get('/portal/salary'),
+  },
   
   // Announcements (Duyurular)
   announcements: {
@@ -1180,6 +1185,17 @@ export const employeesApi = {
   getPerformance: (id: number) => api.get(`/employees/${id}/performance`),
   getActivity: (id: number, params?: Record<string, unknown>) => 
     api.get(`/employees/${id}/activity`, { params }),
+  getSalary: (id: number) => api.get(`/employees/${id}/salary`),
+  createSalary: (
+    id: number,
+    data: {
+      effective_date: string;
+      amount: number;
+      currency?: string;
+      change_reason: string;
+      note?: string;
+    }
+  ) => api.post(`/employees/${id}/salary`, data),
   
   // Belgeler
   documents: {
@@ -1325,6 +1341,29 @@ export const positionsApi = {
   create: <T extends object>(data: T) => api.post('/positions', data),
   update: <T extends object>(id: number, data: T) => api.put(`/positions/${id}`, data),
   delete: (id: number) => api.delete(`/positions/${id}`),
+};
+
+/** B11 — Ücret bantları */
+export const salaryBandsApi = {
+  list: (params?: Record<string, unknown>) => api.get('/salary-bands', { params }),
+  get: (id: number) => api.get(`/salary-bands/${id}`),
+  create: <T extends object>(data: T) => api.post('/salary-bands', data),
+  update: <T extends object>(id: number, data: T) => api.put(`/salary-bands/${id}`, data),
+  delete: (id: number) => api.delete(`/salary-bands/${id}`),
+};
+
+/** B11 — Zam dönemleri */
+export const salaryReviewsApi = {
+  list: (params?: Record<string, unknown>) => api.get('/salary-reviews', { params }),
+  get: (id: number) => api.get(`/salary-reviews/${id}`),
+  create: <T extends object>(data: T) => api.post('/salary-reviews', data),
+  updateItem: <T extends object>(periodId: number, itemId: number, data: T) =>
+    api.put(`/salary-reviews/${periodId}/items/${itemId}`, data),
+  submit: (id: number) => api.post(`/salary-reviews/${id}/submit`),
+  approve: (id: number, data?: { notes?: string }) =>
+    api.post(`/salary-reviews/${id}/approve`, data ?? {}),
+  reject: (id: number, data: { reason: string }) =>
+    api.post(`/salary-reviews/${id}/reject`, data),
 };
 
 // Custom Fields API (Özel Alanlar)

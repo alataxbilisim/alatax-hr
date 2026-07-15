@@ -20,6 +20,7 @@ import ProfilePage from './pages/ProfilePage';
 import LeavesPage from './pages/LeavesPage';
 import DocumentsPage from './pages/DocumentsPage';
 import PayslipsPage from './pages/PayslipsPage';
+import SalaryPage from './pages/SalaryPage';
 import AnnouncementsPage from './pages/AnnouncementsPage';
 import RequestsPage from './pages/RequestsPage';
 import TrainingPage from './pages/TrainingPage';
@@ -139,6 +140,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/leaves" element={<LeavesPage />} />
         <Route path="/documents" element={<DocumentsPage />} />
         <Route path="/payslips" element={<PayslipsPage />} />
+        <Route path="/salary" element={<SalaryPage />} />
         <Route path="/training" element={<TrainingPage />} />
         <Route path="/performance" element={<PerformancePage />} />
         <Route path="/surveys" element={<SurveysPage />} />

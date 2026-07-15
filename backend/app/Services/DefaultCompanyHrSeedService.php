@@ -197,6 +197,7 @@ class DefaultCompanyHrSeedService
         app(PositionCatalogSeedService::class)->ensureForCompany($companyId);
         // Offboarding varsayılan şablon
         app(DefaultOffboardingTemplateService::class)->ensureForCompany($companyId);
+        app(\App\Services\Salary\SalaryRecordService::class)->backfillCompany($companyId);
     }
 
     public function ensureForAllCompanies(): int

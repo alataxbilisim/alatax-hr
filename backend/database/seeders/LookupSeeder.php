@@ -48,6 +48,8 @@ class LookupSeeder extends Seeder
         $this->seedOnboardingProcessStatus();
         $this->seedOnboardingTaskStatus();
         $this->seedTerminationReason();
+        $this->seedSalaryChangeReason();
+        $this->seedSalaryReviewStatus();
         $this->seedDocumentApprovalStatus();
         $this->seedDocumentFileType();
         $this->seedEmployeeDocumentStatus();
@@ -458,6 +460,34 @@ class LookupSeeder extends Seeder
             ['value' => '25', 'label' => '25 — Karşılıklı anlaşma ile fesih', 'sort_order' => 120],
         ] as $item) {
             $this->upsertDefault(LookupService::TYPE_TERMINATION_REASON, $item, false, $meta);
+        }
+    }
+
+    private function seedSalaryChangeReason(): void
+    {
+        $meta = ['hybrid' => true];
+        foreach ([
+            ['value' => 'initial', 'label' => 'Başlangıç', 'sort_order' => 10],
+            ['value' => 'annual_raise', 'label' => 'Yıllık zam', 'sort_order' => 20],
+            ['value' => 'promotion', 'label' => 'Terfi', 'sort_order' => 30],
+            ['value' => 'role_change', 'label' => 'Görev değişikliği', 'sort_order' => 40],
+            ['value' => 'market_adjustment', 'label' => 'Piyasa düzeltmesi', 'sort_order' => 50],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_SALARY_CHANGE_REASON, $item, false, $meta);
+        }
+    }
+
+    private function seedSalaryReviewStatus(): void
+    {
+        $meta = ['hybrid' => true];
+        foreach ([
+            ['value' => 'draft', 'label' => 'Taslak', 'color' => '#64748b', 'sort_order' => 10],
+            ['value' => 'pending_approval', 'label' => 'Onayda', 'color' => '#f59e0b', 'sort_order' => 20],
+            ['value' => 'approved', 'label' => 'Onaylandı', 'color' => '#10b981', 'sort_order' => 30],
+            ['value' => 'rejected', 'label' => 'Reddedildi', 'color' => '#ef4444', 'sort_order' => 40],
+            ['value' => 'cancelled', 'label' => 'İptal', 'color' => '#94a3b8', 'sort_order' => 50],
+        ] as $item) {
+            $this->upsertDefault(LookupService::TYPE_SALARY_REVIEW_STATUS, $item, false, $meta);
         }
     }
 

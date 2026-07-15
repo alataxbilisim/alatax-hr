@@ -17,6 +17,7 @@ import {
   BsKeyFill,
   BsListCheck,
   BsBoxArrowRight,
+  BsCashCoin,
 } from 'react-icons/bs';
 import { employeesApi } from '@shared/services/api';
 import { getErrorMessage } from '@shared/services/apiHelpers';
@@ -35,6 +36,7 @@ import {
   AssetsTab,
   HistoryTab,
   CustomFieldsTab,
+  SalaryTab,
 } from '../../components/employees/tabs';
 import type {
   EmployeeLeaveData,
@@ -129,8 +131,9 @@ const EmployeeDetailPage: React.FC = () => {
   const { t } = useTranslation('common');
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const { canCreate } = usePermission();
+  const { canCreate, canView } = usePermission();
   const canTerminate = canCreate('employees', 'terminate');
+  const canViewSalary = canView('employees', 'salary');
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('general');
@@ -153,6 +156,9 @@ const EmployeeDetailPage: React.FC = () => {
     { id: 'personal', label: 'Kişisel', icon: <BsBuilding /> },
     { id: 'work', label: 'İş Bilgileri', icon: <BsBriefcase /> },
     { id: 'custom', label: t('customFields.tab'), icon: <BsListCheck /> },
+    ...(canViewSalary
+      ? [{ id: 'salary', label: t('salary.tab'), icon: <BsCashCoin /> } satisfies TabItem]
+      : []),
     { id: 'documents', label: 'Belgeler', icon: <BsFileEarmark /> },
     { id: 'leaves', label: 'İzinler', icon: <BsCalendarCheck /> },
     { id: 'trainings', label: 'Eğitimler', icon: <BsBook /> },
@@ -451,6 +457,10 @@ const EmployeeDetailPage: React.FC = () => {
         {activeTab === 'personal' && <PersonalTab employee={employee} />}
 
         {activeTab === 'work' && <WorkTab employee={employee} />}
+
+        {activeTab === 'salary' && canViewSalary && (
+          <SalaryTab employeeId={employee.id} />
+        )}
 
         {activeTab === 'custom' && (
           <CustomFieldsTab values={employee.custom_fields || {}} />

@@ -25,7 +25,9 @@ import {
   BsThreeDots,
   BsClock,
   BsReceipt,
+  BsCashCoin,
 } from 'react-icons/bs';
+import { useTranslation } from '@shared/i18n';
 
 type MenuItem = {
   path: string;
@@ -133,6 +135,7 @@ const PortalLayout: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation('common');
   const { user } = useSelector((state: RootState) => state.auth);
   const { mode } = useSelector((state: RootState) => state.theme);
   const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(false);
@@ -170,6 +173,7 @@ const PortalLayout: React.FC = () => {
     { path: '/profile', icon: BsPersonCircle, label: 'Profilim' },
     { path: '/leaves', icon: BsCalendarCheck, label: 'İzinlerim' },
     { path: '/payslips', icon: BsCurrencyDollar, label: 'Bordrolarım' },
+    { path: '/salary', icon: BsCashCoin, label: t('nav.mySalary') },
     { path: '/documents', icon: BsFileEarmarkText, label: 'Belgelerim' },
     { path: '/training', icon: BsMortarboard, label: 'Eğitimlerim' },
     { path: '/performance', icon: BsGraphUp, label: 'Performansım' },

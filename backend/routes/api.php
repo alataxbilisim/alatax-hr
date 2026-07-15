@@ -303,6 +303,10 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:employees.list.view');
             Route::get('/{id}/activity', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'getActivity'])
                 ->middleware('permission:employees.list.view');
+            Route::get('/{id}/salary', [\App\Http\Controllers\Api\V1\Salary\EmployeeSalaryController::class, 'index'])
+                ->middleware('permission:employees.salary.view');
+            Route::post('/{id}/salary', [\App\Http\Controllers\Api\V1\Salary\EmployeeSalaryController::class, 'store'])
+                ->middleware('permission:employees.salary.edit');
 
             Route::get('/{id}/documents', [\App\Http\Controllers\Api\V1\EmployeeDocumentController::class, 'index'])
                 ->middleware('permission:employees.documents.view');
@@ -355,6 +359,37 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:employees.positions.edit');
             Route::delete('/{id}', [\App\Http\Controllers\Api\V1\PositionController::class, 'destroy'])
                 ->middleware('permission:employees.positions.delete');
+        });
+
+        // B11 — Ücret bantları + zam dönemleri (Personel altında)
+        Route::middleware('company_admin')->prefix('salary-bands')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\V1\Salary\SalaryBandController::class, 'index'])
+                ->middleware('permission:employees.salary.view');
+            Route::post('/', [\App\Http\Controllers\Api\V1\Salary\SalaryBandController::class, 'store'])
+                ->middleware('permission:employees.salary.edit');
+            Route::get('/{id}', [\App\Http\Controllers\Api\V1\Salary\SalaryBandController::class, 'show'])
+                ->middleware('permission:employees.salary.view');
+            Route::put('/{id}', [\App\Http\Controllers\Api\V1\Salary\SalaryBandController::class, 'update'])
+                ->middleware('permission:employees.salary.edit');
+            Route::delete('/{id}', [\App\Http\Controllers\Api\V1\Salary\SalaryBandController::class, 'destroy'])
+                ->middleware('permission:employees.salary.edit');
+        });
+
+        Route::middleware('company_admin')->prefix('salary-reviews')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\V1\Salary\SalaryReviewController::class, 'index'])
+                ->middleware('permission:employees.salary.view');
+            Route::post('/', [\App\Http\Controllers\Api\V1\Salary\SalaryReviewController::class, 'store'])
+                ->middleware('permission:employees.salary.edit');
+            Route::get('/{id}', [\App\Http\Controllers\Api\V1\Salary\SalaryReviewController::class, 'show'])
+                ->middleware('permission:employees.salary.view');
+            Route::put('/{id}/items/{itemId}', [\App\Http\Controllers\Api\V1\Salary\SalaryReviewController::class, 'updateItem'])
+                ->middleware('permission:employees.salary.edit');
+            Route::post('/{id}/submit', [\App\Http\Controllers\Api\V1\Salary\SalaryReviewController::class, 'submit'])
+                ->middleware('permission:employees.salary.edit');
+            Route::post('/{id}/approve', [\App\Http\Controllers\Api\V1\Salary\SalaryReviewController::class, 'approve'])
+                ->middleware('permission:employees.salary.edit');
+            Route::post('/{id}/reject', [\App\Http\Controllers\Api\V1\Salary\SalaryReviewController::class, 'reject'])
+                ->middleware('permission:employees.salary.edit');
         });
 
         // Lookups — form okuma (auth) + yönetim CRUD
@@ -1125,6 +1160,10 @@ Route::prefix('v1')->group(function () {
         Route::put('/profile', [\App\Http\Controllers\Api\V1\Portal\PortalProfileController::class, 'update']);
         Route::put('/profile/password', [\App\Http\Controllers\Api\V1\Portal\PortalProfileController::class, 'updatePassword']);
         Route::post('/profile/avatar', [\App\Http\Controllers\Api\V1\Portal\PortalProfileController::class, 'updateAvatar']);
+
+        // Ücretim (yalnız kendi)
+        Route::get('/salary', [\App\Http\Controllers\Api\V1\Portal\PortalSalaryController::class, 'me']);
+        Route::get('/salary/{id}', [\App\Http\Controllers\Api\V1\Portal\PortalSalaryController::class, 'show']);
 
         // İzinler
         Route::prefix('leaves')->group(function () {
