@@ -25,12 +25,16 @@ const ContextSidebar: React.FC<ContextSidebarProps> = ({
 }) => {
   const { t } = useTranslation('common');
   const { user } = useSelector((state: RootState) => state.auth);
+  const activeModules = user?.company?.active_modules || [];
 
   if (!module) return null;
 
   const filteredItems = getFilteredMenuItems(
     module,
-    user as { type: string; permissions: string[] } | null
+    user
+      ? { type: user.type, permissions: user.permissions || [] }
+      : null,
+    activeModules
   );
 
   if (filteredItems.length === 0) return null;

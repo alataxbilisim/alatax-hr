@@ -57,7 +57,10 @@ const ModuleRail: React.FC<ModuleRailProps> = ({
       }
       const visibleItems = getFilteredMenuItems(
         module,
-        user as { type: string; permissions: string[] } | null
+        user
+          ? { type: user.type, permissions: user.permissions || [] }
+          : null,
+        activeModules
       );
       return visibleItems.length > 0;
     });
@@ -75,7 +78,10 @@ const ModuleRail: React.FC<ModuleRailProps> = ({
     return (
       getFilteredMenuItems(
         module,
-        user as { type: string; permissions: string[] } | null
+        user
+          ? { type: user.type, permissions: user.permissions || [] }
+          : null,
+        activeModules
       ).length > 0
     );
   });

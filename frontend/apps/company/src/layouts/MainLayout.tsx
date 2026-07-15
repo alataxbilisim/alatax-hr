@@ -98,7 +98,10 @@ const CompanyMobileDrawer: React.FC<{
       return (
         getFilteredMenuItems(
           m,
-          user as { type: string; permissions: string[] } | null
+          user
+            ? { type: user.type, permissions: user.permissions || [] }
+            : null,
+          activeModules
         ).length > 0
       );
     }),
@@ -108,7 +111,10 @@ const CompanyMobileDrawer: React.FC<{
       return (
         getFilteredMenuItems(
           m,
-          user as { type: string; permissions: string[] } | null
+          user
+            ? { type: user.type, permissions: user.permissions || [] }
+            : null,
+          activeModules
         ).length > 0
       );
     }),
@@ -149,7 +155,10 @@ const CompanyMobileDrawer: React.FC<{
           {allModules.map((module) => {
             const items = getFilteredMenuItems(
               module,
-              user as { type: string; permissions: string[] } | null
+              user
+                ? { type: user.type, permissions: user.permissions || [] }
+                : null,
+              activeModules
             );
             return (
               <div key={module.id} className="mobile-module-group">
@@ -239,7 +248,10 @@ const MainLayout: React.FC = () => {
       if (module) {
         const visible = getFilteredMenuItems(
           module,
-          user as { type: string; permissions: string[] } | null
+          user
+            ? { type: user.type, permissions: user.permissions || [] }
+            : null,
+          activeModules
         );
         if (visible.length > 0) {
           navigate(visible[0].path);
@@ -282,7 +294,6 @@ const MainLayout: React.FC = () => {
       training: t('nav.training'),
       sessions: t('nav.trainingSessions'),
       assets: t('nav.assets'),
-      assignments: t('nav.assetsAssignments'),
       surveys: t('nav.surveys'),
       analytics: t('nav.analytics'),
       settings: t('studio.companySettings'),

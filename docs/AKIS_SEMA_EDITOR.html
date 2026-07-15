@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ALATAX HR — Company + Portal Akış Şeması</title>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --surface: #ffffff;
+      --surface-2: #f8fafc;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --muted: #64748b;
+      --company: #059669;
+      --company-soft: #ecfdf5;
+      --company-border: #a7f3d0;
+      --portal: #0284c7;
+      --portal-soft: #f0f9ff;
+      --portal-border: #bae6fd;
+      --hub: #7c3aed;
+      --hub-soft: #f5f3ff;
+      --cross: #d97706;
+      --danger: #dc2626;
+      --shadow: 0 1px 2px rgba(15,23,42,.06), 0 8px 24px rgba(15,23,42,.06);
+      --radius: 12px;
+      --font: "Segoe UI", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; font-family: var(--font); background: var(--bg); color: var(--text); }
+    button, input, select, textarea { font: inherit; }
+    #app { display: grid; grid-template-rows: auto 1fr; height: 100%; }
+
+    header {
+      display: flex; flex-wrap: wrap; gap: .6rem; align-items: center;
+      padding: .7rem 1rem; background: var(--surface); border-bottom: 1px solid var(--border);
+      box-shadow: 0 1px 0 rgba(15,23,42,.03);
+      z-index: 20;
+    }
+    .brand { display: flex; flex-direction: column; min-width: 220px; }
+    .brand strong { font-size: .95rem; letter-spacing: -.01em; }
+    .brand span { font-size: .72rem; color: var(--muted); }
+    .toolbar { display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; flex: 1; }
+    .sep { width: 1px; height: 22px; background: var(--border); margin: 0 .2rem; }
+    .btn {
+      appearance: none; border: 1px solid var(--border); background: var(--surface);
+      color: var(--text); border-radius: 8px; padding: .38rem .7rem; font-size: .78rem;
+      cursor: pointer; display: inline-flex; align-items: center; gap: .35rem;
+    }
+    .btn:hover { border-color: #94a3b8; background: var(--surface-2); }
+    .btn.active { background: #0f172a; color: #fff; border-color: #0f172a; }
+    .btn.primary { background: var(--company); border-color: var(--company); color: #fff; }
+    .btn.danger:hover { color: var(--danger); border-color: #fecaca; background: #fef2f2; }
+    .btn-file { cursor: pointer; }
+    .btn-file input { display: none; }
+    .search {
+      border: 1px solid var(--border); border-radius: 8px; padding: .38rem .65rem;
+      min-width: 180px; background: var(--surface-2);
+    }
+    .status { font-size: .72rem; color: var(--muted); margin-left: auto; white-space: nowrap; }
+    .legend { display: flex; gap: .7rem; font-size: .7rem; color: var(--muted); }
+    .legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; margin-right: .25rem; vertical-align: -1px; }
+
+    #main { display: grid; grid-template-columns: 1fr 300px; min-height: 0; }
+    #canvas-wrap {
+      position: relative; overflow: auto; background:
+        linear-gradient(90deg, rgba(5,150,105,.04) 0 50%, rgba(2,132,199,.04) 50% 100%),
+        radial-gradient(circle at 1px 1px, #cbd5e1 1px, transparent 0) 0 0 / 22px 22px;
+    }
+    #world {
+      position: relative; width: 1480px; height: 2200px; transform-origin: 0 0;
+      will-change: transform;
+    }
+    #edges {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      pointer-events: none; overflow: visible;
+    }
+    #edges path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    #edges path.cross { stroke: var(--cross); stroke-width: 2; }
+    #edges path.same { stroke: #94a3b8; stroke-width: 1.5; }
+    #edges path.dashed { stroke-dasharray: 6 5; }
+    #edges path.selected { stroke-width: 3; filter: drop-shadow(0 0 3px rgba(217,119,6,.45)); }
+    #edges text { font-size: 10px; fill: #475569; paint-order: stroke; stroke: #fff; stroke-width: 3px; }
+
+    .lane-title {
+      position: absolute; top: 18px; font-size: .78rem; font-weight: 700;
+      letter-spacing: .06em; text-transform: uppercase; padding: .35rem .7rem;
+      border-radius: 999px; border: 1px solid var(--border); background: #fff;
+    }
+    .lane-title.company { left: 28px; color: var(--company); border-color: var(--company-border); background: var(--company-soft); }
+    .lane-title.portal { left: 780px; color: var(--portal); border-color: var(--portal-border); background: var(--portal-soft); }
+
+    .node {
+      position: absolute; width: 280px; background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow); cursor: grab; user-select: none;
+      transition: box-shadow .15s ease, border-color .15s ease;
+      contain: layout style;
+    }
+    .node:active { cursor: grabbing; }
+    .node.selected { border-color: #0f172a; box-shadow: 0 0 0 2px #0f172a22, var(--shadow); z-index: 5; }
+    .node.dim { opacity: .28; }
+    .node.hit { outline: 2px solid var(--cross); }
+    .node[data-lane="company"] { border-top: 3px solid var(--company); }
+    .node[data-lane="portal"] { border-top: 3px solid var(--portal); }
+    .node[data-type="hub"] { border-top: 3px solid var(--hub); width: 300px; background: linear-gradient(180deg, var(--hub-soft), #fff); }
+
+    .node-head {
+      display: flex; gap: .55rem; align-items: flex-start; padding: .7rem .8rem .55rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .node-badge {
+      flex: 0 0 auto; width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center;
+      font-size: .7rem; font-weight: 700; color: #fff;
+    }
+    .node[data-lane="company"] .node-badge { background: var(--company); }
+    .node[data-lane="portal"] .node-badge { background: var(--portal); }
+    .node[data-type="hub"] .node-badge { background: var(--hub); }
+    .node-title { flex: 1; min-width: 0; }
+    .node-title h3 { margin: 0; font-size: .88rem; line-height: 1.25; }
+    .node-title p { margin: .15rem 0 0; font-size: .68rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .node-meta { display: flex; flex-wrap: wrap; gap: .25rem; margin-top: .35rem; }
+    .chip {
+      font-size: .62rem; padding: .12rem .4rem; border-radius: 999px; border: 1px solid var(--border);
+      background: var(--surface-2); color: var(--muted); white-space: nowrap;
+    }
+    .chip.license { background: #fff7ed; border-color: #fed7aa; color: #c2410c; }
+    .chip.warn { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+    .chip.ok { background: var(--company-soft); border-color: var(--company-border); color: #047857; }
+
+    .node-body { padding: .45rem .55rem .6rem; }
+    .page-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .28rem; }
+    .page-list li {
+      display: grid; grid-template-columns: 1fr auto; gap: .35rem; align-items: start;
+      padding: .4rem .5rem; border-radius: 8px; background: var(--surface-2); border: 1px solid transparent;
+    }
+    .page-list li:hover { border-color: var(--border); background: #fff; }
+    .page-list strong { display: block; font-size: .74rem; font-weight: 600; }
+    .page-list span { display: block; font-size: .64rem; color: var(--muted); margin-top: .1rem; line-height: 1.35; }
+    .page-list code { font-size: .62rem; color: #475569; background: #e2e8f0; padding: .1rem .3rem; border-radius: 4px; }
+    .node-flow {
+      margin: .45rem .55rem .65rem; padding: .5rem .6rem; border-radius: 8px;
+      background: #fffbeb; border: 1px solid #fde68a; font-size: .68rem; color: #92400e; line-height: 1.4;
+    }
+    .node-flow b { color: #78350f; }
+    .collapse-btn {
+      border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: .7rem; padding: .1rem .2rem;
+    }
+
+    #side {
+      border-left: 1px solid var(--border); background: var(--surface); padding: .9rem; overflow: auto;
+    }
+    #side h2 { margin: 0 0 .5rem; font-size: .9rem; }
+    #side h3 { margin: 1rem 0 .35rem; font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+    #side label { display: block; font-size: .7rem; color: var(--muted); margin: .45rem 0 .2rem; }
+    #side input, #side select, #side textarea {
+      width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: .45rem .55rem; background: var(--surface-2);
+    }
+    #side textarea { min-height: 72px; resize: vertical; }
+    .empty { color: var(--muted); font-size: .8rem; line-height: 1.45; }
+    .hint { font-size: .7rem; color: var(--muted); line-height: 1.45; margin-top: .8rem; }
+    .help {
+      display: none; position: absolute; top: 12px; right: 320px; z-index: 30; width: min(380px, calc(100vw - 340px));
+      background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: .9rem 1rem; box-shadow: var(--shadow);
+      font-size: .78rem; line-height: 1.5;
+    }
+    .help.open { display: block; }
+    .help ul { margin: .35rem 0 0; padding-left: 1.1rem; color: var(--muted); }
+    kbd { font-size: .68rem; border: 1px solid var(--border); border-radius: 4px; padding: 0 .28rem; background: var(--surface-2); }
+
+    @media (max-width: 960px) {
+      #main { grid-template-columns: 1fr; }
+      #side { display: none; }
+      .help { right: 12px; }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="brand">
+      <strong>Company + Portal Akış Şeması</strong>
+      <span>Kullanım tarafı · SuperAdmin hariç · düzenlenebilir</span>
+    </div>
+    <div class="toolbar">
+      <button class="btn" id="btn-add-module">+ Modül</button>
+      <button class="btn" id="btn-add-hub">+ Hub</button>
+      <button class="btn" id="btn-link" title="Modüller arası bağ">Bağ çiz</button>
+      <div class="sep"></div>
+      <button class="btn" id="btn-fit">Sığdır</button>
+      <button class="btn" id="btn-zoom-in">+</button>
+      <button class="btn" id="btn-zoom-out">−</button>
+      <div class="sep"></div>
+      <input class="search" id="search" type="search" placeholder="Modül / sayfa ara…" />
+      <label class="btn btn-file">JSON yükle<input type="file" id="file-import" accept=".json,application/json" /></label>
+      <button class="btn" id="btn-export">JSON indir</button>
+      <button class="btn danger" id="btn-reset">Seed’e dön</button>
+      <button class="btn" id="btn-help">Yardım</button>
+      <div class="legend">
+        <span><i style="background:var(--company)"></i>Company</span>
+        <span><i style="background:var(--portal)"></i>Portal</span>
+        <span><i style="background:var(--cross)"></i>Çapraz akış</span>
+      </div>
+      <span class="status" id="status"></span>
+    </div>
+  </header>
+
+  <div id="main">
+    <div id="canvas-wrap">
+      <div class="help" id="help">
+        <strong>Kullanım</strong>
+        <ul>
+          <li>Kartları sürükleyerek konumlandırın (performans için sayfalar kart içinde listelenir).</li>
+          <li><strong>Bağ çiz</strong> → kaynak modül → hedef modül.</li>
+          <li>Çift tık: ad değiştir · <kbd>Delete</kbd>: sil · tekerlek: zoom.</li>
+          <li>Sağ panelden açıklama, lisans, sayfa listesini düzenleyin.</li>
+          <li>Değişiklikler localStorage’a yazılır; JSON ile yedekleyin.</li>
+        </ul>
+      </div>
+      <div id="world">
+        <div class="lane-title company">Company — Firma Paneli</div>
+        <div class="lane-title portal">Portal — Personel Self-Servis</div>
+        <svg id="edges"></svg>
+        <div id="nodes"></div>
+      </div>
+    </div>
+
+    <aside id="side">
+      <h2>Özellikler</h2>
+      <div id="side-empty" class="empty">Bir modül seçin. Sayfalar modül kartının içinde yer alır — tüm Company/Portal menüleri seed’de doludur.</div>
+      <div id="side-form" hidden>
+        <label>Ad</label>
+        <input id="f-label" />
+        <label>Lane</label>
+        <select id="f-lane">
+          <option value="company">Company</option>
+          <option value="portal">Portal</option>
+        </select>
+        <label>Tip</label>
+        <select id="f-type">
+          <option value="module">Modül</option>
+          <option value="hub">Hub</option>
+        </select>
+        <label>Route / lisans</label>
+        <input id="f-route" placeholder="/employees · lisans: leave-management" />
+        <label>Kısa akış açıklaması</label>
+        <textarea id="f-flow" placeholder="Portal talep oluşturur → Company onaylar…"></textarea>
+        <label>Sayfalar (her satır: Ad | route | not)</label>
+        <textarea id="f-pages" style="min-height:160px"></textarea>
+        <h3>Bağ</h3>
+        <label>Seçili bağ etiketi</label>
+        <input id="f-edge-label" placeholder="talep → onay" />
+        <label>Stil</label>
+        <select id="f-edge-style">
+          <option value="solid">Düz</option>
+          <option value="dashed">Kesikli</option>
+        </select>
+        <div style="display:flex;gap:.4rem;margin-top:.7rem">
+          <button class="btn primary" id="btn-apply" type="button">Uygula</button>
+          <button class="btn danger" id="btn-delete" type="button">Sil</button>
+        </div>
+        <p class="hint">Eksik sayfa görürseniz satır ekleyin. Company nav + Portal menü seed’i güncel `moduleNav` / `PortalLayout` ile hizalıdır.</p>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  const STORAGE_KEY = 'alatax-akis-sema-v2';
+  const world = document.getElementById('world');
+  const nodesEl = document.getElementById('nodes');
+  const edgesEl = document.getElementById('edges');
+  const wrap = document.getElementById('canvas-wrap');
+
+  let model = null;
+  let selectedId = null;
+  let selectedKind = null;
+  let linkMode = false;
+  let linkFrom = null;
+  let scale = 0.85;
+  let dragging = null;
+  let dragOffset = { x: 0, y: 0 };
+  let edgeRaf = 0;
+
+  function uid(p) { return p + '_' + Math.random().toString(36).slice(2, 9); }
+
+  function pageLines(pages) {
+    return (pages || []).map((p) => [p.label, p.route || '', p.note || ''].join(' | ')).join('\n');
+  }
+
+  function parsePages(text) {
+    return String(text || '').split('\n').map((line) => line.trim()).filter(Boolean).map((line) => {
+      const parts = line.split('|').map((s) => s.trim());
+      return { label: parts[0] || 'Sayfa', route: parts[1] || '', note: parts[2] || '' };
+    });
+  }
+
+  /** Tam seed — Company moduleNav + Portal menü + akış ilişkileri */
+  function buildSeed() {
+    const nodes = [
+      // —— COMPANY ——
+      {
+        id: 'c_dash', lane: 'company', type: 'module', x: 40, y: 70,
+        label: 'Dashboard', route: '/dashboard',
+        flow: 'Firma operasyon özeti; bekleyen onaylar ve KPI giriş noktası.',
+        pages: [
+          { label: 'Genel Bakış', route: '/dashboard', note: 'Özet widget’lar' },
+        ],
+      },
+      {
+        id: 'c_emp', lane: 'company', type: 'module', x: 40, y: 210,
+        label: 'Personel', route: '/employees · her zaman açık',
+        flow: 'Özlük merkezi. Portal erişimi buradan açılır; detayda izin/evrak/eğitim/zimmet sekmeleri.',
+        pages: [
+          { label: 'Personel Listesi', route: '/employees', note: 'CRUD, filtre, export' },
+          { label: 'Departmanlar', route: '/employees/departments', note: 'Org birimleri' },
+          { label: 'Pozisyonlar', route: '/employees/positions', note: 'Unvan / kadro' },
+          { label: 'Organizasyon Şeması', route: '/employees/organization', note: 'Hiyerarşi görseli' },
+          { label: 'Özel Alanlar', route: '/employees/custom-fields', note: 'Form Engine alanları' },
+          { label: 'Raporlar', route: '/employees/reports', note: 'Personel analitiği' },
+          { label: 'Personel Detay', route: '/employees/:id', note: 'Hub: izin, evrak, eğitim, zimmet, portal-access' },
+          { label: 'Yeni / Düzenle', route: '/employees/new · /:id/edit', note: 'Özlük formu' },
+        ],
+      },
+      {
+        id: 'c_rec', lane: 'company', type: 'module', x: 40, y: 620,
+        label: 'İşe Alım', route: 'lisans: job-applications',
+        flow: 'İlan → başvuru → mülakat → hired. Hired sonrası Onboarding’e mantıksal geçiş.',
+        pages: [
+          { label: 'Pozisyonlar (ilan)', route: '/recruitment/positions', note: 'Açık pozisyonlar' },
+          { label: 'Başvurular', route: '/recruitment/applications', note: 'Pipeline / Kanban' },
+          { label: 'Mülakatlar', route: '/recruitment/interviews', note: 'Takvim & sonuç' },
+          { label: 'CV Havuzu', route: '/recruitment/cv-pool', note: 'Aday arşivi' },
+          { label: 'Raporlar', route: '/recruitment/reports', note: 'İşe alım metrikleri' },
+          { label: 'Özel Alanlar', route: '/recruitment/custom-fields', note: 'Başvuru form alanları' },
+        ],
+      },
+      {
+        id: 'c_leave', lane: 'company', type: 'module', x: 40, y: 980,
+        label: 'İzinler', route: 'lisans: leave-management',
+        flow: 'Portal talep oluşturur → bakiye/çakışma → yönetici/İK onayı → takvim & bakiye güncellenir.',
+        pages: [
+          { label: 'İzin Talepleri', route: '/leaves', note: 'Onay / red kuyruğu' },
+          { label: 'İzin Türleri', route: '/leaves/types', note: 'Yıllık, mazeret…' },
+          { label: 'Bakiyeler', route: '/leaves/balances', note: 'Hakediş bakiyeleri' },
+          { label: 'Takvim', route: '/leaves/calendar', note: 'Takım izin görünümü' },
+          { label: 'Tatiller', route: '/leaves/holidays', note: 'Resmi / firma tatilleri' },
+          { label: 'Hakediş Politikaları', route: '/leaves/policies', note: 'Accrual kuralları' },
+          { label: 'Raporlar', route: '/leaves/reports', note: 'İzin analitikleri' },
+          { label: 'Özel Alanlar', route: '/leaves/custom-fields', note: 'Talep ek alanları' },
+        ],
+      },
+      {
+        id: 'c_doc', lane: 'company', type: 'module', x: 40, y: 1380,
+        label: 'Evraklar', route: 'lisans: document-management',
+        flow: 'İK belge yükler / talep eder → çalışan portaldan görür veya yükler → onay.',
+        pages: [
+          { label: 'Belgeler', route: '/documents', note: 'Firma belge kütüphanesi' },
+          { label: 'Kategoriler', route: '/documents/categories', note: 'Kimlik, sözleşme…' },
+          { label: 'Raporlar', route: '/documents/reports', note: 'Eksik belge takibi' },
+          { label: 'Özel Alanlar', route: '/documents/custom-fields', note: 'Belge meta alanları' },
+          { label: 'Belge Detay', route: '/documents/:id', note: 'Önizleme / onay' },
+        ],
+      },
+      {
+        id: 'c_onb', lane: 'company', type: 'module', x: 360, y: 70,
+        label: 'Onboarding', route: 'lisans: onboarding',
+        flow: 'Şablondan süreç → görevler (İK/yönetici/çalışan) → portal görevleri → personel dosyası tamamlanır.',
+        pages: [
+          { label: 'Süreçler', route: '/onboarding', note: 'Aktif onboarding listesi' },
+          { label: 'Şablonlar', route: '/onboarding/templates', note: 'Görev şablonları (tab)' },
+          { label: 'Süreç Detay', route: '/onboarding/processes/:id', note: 'Görev checklist' },
+        ],
+      },
+      {
+        id: 'c_perf', lane: 'company', type: 'module', x: 360, y: 320,
+        label: 'Performans', route: 'lisans: performance',
+        flow: 'Dönem açılır → öz değerlendirme (portal) + yönetici → skor paylaşımı → OKR güncelleme.',
+        pages: [
+          { label: 'Değerlendirmeler', route: '/performance', note: 'Review listesi' },
+          { label: 'Dönemler', route: '/performance/periods', note: 'Değerlendirme dönemleri (tab)' },
+          { label: 'Kriterler', route: '/performance/criteria', note: 'Skor kriterleri (tab)' },
+          { label: 'Özel Alanlar', route: '/performance/custom-fields', note: 'Review alanları' },
+          { label: 'Review Detay', route: '/performance/reviews/:id', note: 'Skor & yorum' },
+        ],
+      },
+      {
+        id: 'c_train', lane: 'company', type: 'module', x: 360, y: 620,
+        label: 'Eğitim', route: 'lisans: training',
+        flow: 'Program/oturum tanımlanır → personele atanır → portalda katılım & tamamlanma.',
+        pages: [
+          { label: 'Eğitimler', route: '/training', note: 'Eğitim kataloğu' },
+          { label: 'Oturumlar', route: '/training/sessions', note: 'Tarihli seanslar (tab)' },
+          { label: 'Özel Alanlar', route: '/training/custom-fields', note: 'Eğitim alanları' },
+        ],
+      },
+      {
+        id: 'c_asset', lane: 'company', type: 'module', x: 360, y: 900,
+        label: 'Varlıklar', route: 'lisans: asset-management',
+        flow: 'Zimmet tanımı → personele atama → iade / bakım. Personel detayda zimmet sekmesi.',
+        pages: [
+          { label: 'Varlık Listesi', route: '/assets', note: 'Envanter' },
+          { label: 'Kategoriler', route: '/assets/categories', note: 'Laptop, telefon… (tab)' },
+          { label: 'Atamalar', route: '/assets/assignments', note: 'Zimmet geçmişi' },
+          { label: 'Özel Alanlar', route: '/assets/custom-fields', note: 'Varlık alanları' },
+          { label: 'Varlık Detay', route: '/assets/:id', note: 'Durum & geçmiş' },
+        ],
+      },
+      {
+        id: 'c_sur', lane: 'company', type: 'module', x: 360, y: 1220,
+        label: 'Anketler', route: 'lisans: surveys',
+        flow: 'İK anket yayınlar → çalışan portalda yanıtlar → sonuç/trend.',
+        pages: [
+          { label: 'Anket Listesi', route: '/surveys', note: 'Oluştur / yayınla / sonuç' },
+        ],
+      },
+      {
+        id: 'c_anal', lane: 'company', type: 'module', x: 360, y: 1420,
+        label: 'Analitik', route: 'lisans: hr-analytics',
+        flow: 'Hazır HR raporları ve export (rapor motoru).',
+        pages: [
+          { label: 'Raporlar', route: '/analytics', note: 'HR analytics paneli' },
+        ],
+      },
+      {
+        id: 'c_acct', lane: 'company', type: 'module', x: 40, y: 1780,
+        label: 'Ayarlar (kişisel)', route: '/account/*',
+        flow: 'Giriş yapmış kullanıcının kendi profil / güvenlik / tercihleri.',
+        pages: [
+          { label: 'Profilim', route: '/account/profile', note: 'Ad, iletişim' },
+          { label: 'Güvenlik', route: '/account/security', note: 'Şifre, 2FA' },
+          { label: 'Tercihler', route: '/account/preferences', note: 'Tema, density' },
+        ],
+      },
+      {
+        id: 'c_mgmt', lane: 'company', type: 'module', x: 360, y: 1620,
+        label: 'Yönetim (Stüdyo)', route: 'permission: management',
+        flow: 'Firma yapılandırması: kullanıcı/rol, listeler, özel alanlar, modül ayarları derin linkleri.',
+        pages: [
+          { label: 'Firma Ayarları', route: '/settings', note: 'Firma profili' },
+          { label: 'Webhook’lar', route: '/webhooks', note: 'Dış entegrasyon' },
+          { label: 'Kullanıcılar', route: '/users', note: 'Panel kullanıcıları' },
+          { label: 'Roller', route: '/roles', note: 'RBAC matrisi' },
+          { label: 'Şubeler', route: '/branches', note: 'Lokasyonlar' },
+          { label: 'Log & Denetim', route: '/audit-logs', note: 'lisans: audit-logs' },
+          { label: 'Listeler (Lookups)', route: '/lookups', note: 'Durum / cinsiyet / şehir…' },
+          { label: 'Özel Alanlar Index', route: '/settings/custom-fields', note: 'Entity alan kataloğu' },
+          { label: 'İzin Türleri (derin)', route: '/leaves/types', note: 'Modül ayarı linki' },
+          { label: 'Evrak Kategorileri (derin)', route: '/documents/categories', note: 'Modül ayarı linki' },
+          { label: 'Varlık Kategorileri (derin)', route: '/assets/categories', note: 'Modül ayarı linki' },
+        ],
+      },
+      {
+        id: 'c_hub', lane: 'company', type: 'hub', x: 680, y: 280,
+        label: 'Personel Detay Hub', route: '/employees/:id',
+        flow: 'Tek kayıtta izin, evrak, eğitim, zimmet ve portal erişimi birleşir. Çapraz modül ilişkilerinin merkezi.',
+        pages: [
+          { label: 'Özlük', route: 'tab', note: 'Kimlik, SGK, banka…' },
+          { label: 'İzinler', route: 'tab', note: '→ İzinler modülü verisi' },
+          { label: 'Evraklar', route: 'tab', note: '→ Evraklar modülü' },
+          { label: 'Eğitimler', route: 'tab', note: '→ Eğitim modülü' },
+          { label: 'Zimmetler', route: 'tab', note: '→ Varlıklar modülü' },
+          { label: 'Portal Erişimi', route: 'action', note: 'user oluştur / şifre / revoke' },
+        ],
+      },
+
+      // —— PORTAL ——
+      {
+        id: 'p_dash', lane: 'portal', type: 'module', x: 1040, y: 70,
+        label: 'Ana Sayfa', route: '/dashboard',
+        flow: 'İzin bakiyesi, duyuru, bekleyen talep, bordro özeti; hızlı aksiyonlar.',
+        pages: [
+          { label: 'Özet Dashboard', route: '/dashboard', note: 'Widget’lar + kısayollar' },
+        ],
+      },
+      {
+        id: 'p_prof', lane: 'portal', type: 'module', x: 1040, y: 230,
+        label: 'Profilim', route: '/profile',
+        flow: 'Self-servis iletişim/adres/acil durum; Company personel kaydının alt kümesi.',
+        pages: [
+          { label: 'İletişim', route: 'sekme', note: 'E-posta, telefon' },
+          { label: 'Adres', route: 'sekme', note: 'İkamet' },
+          { label: 'Acil Durum', route: 'sekme', note: 'Yakın kişi' },
+          { label: 'Şifre Değiştir', route: 'sekme', note: 'Hesap güvenliği' },
+        ],
+      },
+      {
+        id: 'p_leave', lane: 'portal', type: 'module', x: 1040, y: 470,
+        label: 'İzinlerim', route: '/leaves',
+        flow: 'Bakiye gör · talep oluştur/iptal · sonuç bildirimi. Onay Company’de.',
+        pages: [
+          { label: 'Bakiye & Talepler', route: '/leaves', note: 'Liste + yeni talep' },
+        ],
+      },
+      {
+        id: 'p_pay', lane: 'portal', type: 'module', x: 1040, y: 650,
+        label: 'Bordrolarım', route: '/payslips',
+        flow: 'PDF görüntüleme/indirme. Company UI henüz yok (API portal tarafı).',
+        pages: [
+          { label: 'Bordro Listesi', route: '/payslips', note: 'portal-only' },
+        ],
+      },
+      {
+        id: 'p_doc', lane: 'portal', type: 'module', x: 1040, y: 820,
+        label: 'Belgelerim', route: '/documents',
+        flow: 'HR’ın paylaştığı belgeleri listele/indir (çoğunlukla salt okunur).',
+        pages: [
+          { label: 'Belge Listesi', route: '/documents', note: 'İndirme' },
+        ],
+      },
+      {
+        id: 'p_train', lane: 'portal', type: 'module', x: 1040, y: 980,
+        label: 'Eğitimlerim', route: '/training',
+        flow: 'Atanan eğitimler; Yaklaşan / Tamamlanan filtreleri.',
+        pages: [
+          { label: 'Eğitim Listesi', route: '/training', note: 'Filtre: tümü / yaklaşan / tamamlanan' },
+        ],
+      },
+      {
+        id: 'p_perf', lane: 'portal', type: 'module', x: 1040, y: 1140,
+        label: 'Performansım', route: '/performance',
+        flow: 'Review görüntüleme, OKR güncelleme, geri bildirimler.',
+        pages: [
+          { label: 'Değerlendirmeler', route: 'sekme', note: 'Review listesi' },
+          { label: 'Hedefler (OKR)', route: 'sekme', note: 'KR güncelleme' },
+          { label: 'Geri Bildirimler', route: 'sekme', note: 'Sürekli feedback' },
+        ],
+      },
+      {
+        id: 'p_sur', lane: 'portal', type: 'module', x: 1040, y: 1380,
+        label: 'Anketler', route: '/surveys',
+        flow: 'Bekleyen anketleri doldur; anonim eNPS vb.',
+        pages: [
+          { label: 'Anket Listesi', route: '/surveys', note: 'Bekleyen / tamamlanan' },
+        ],
+      },
+      {
+        id: 'p_ts', lane: 'portal', type: 'module', x: 1040, y: 1540,
+        label: 'Puantaj', route: '/timesheet',
+        flow: 'Giriş/çıkış/mola (konum). Company UI henüz yok; backend attendance API var.',
+        pages: [
+          { label: 'Bugün', route: 'sekme', note: 'Punch in/out' },
+          { label: 'Haftalık', route: 'sekme', note: 'Hafta özeti' },
+        ],
+      },
+      {
+        id: 'p_exp', lane: 'portal', type: 'module', x: 1040, y: 1740,
+        label: 'Masraflar', route: '/expenses',
+        flow: 'Masraf kalemi + fiş → gönder → HR onayı (Company UI kısmi/yok).',
+        pages: [
+          { label: 'Masraf Talepleri', route: '/expenses', note: 'portal-only UI ağırlıklı' },
+        ],
+      },
+      {
+        id: 'p_ann', lane: 'portal', type: 'module', x: 780, y: 1540,
+        label: 'Duyurular', route: '/announcements',
+        flow: 'Şirket duyuruları. Company yönetim UI’si henüz yok.',
+        pages: [
+          { label: 'Duyuru Listesi', route: '/announcements', note: 'portal-only' },
+        ],
+      },
+      {
+        id: 'p_req', lane: 'portal', type: 'module', x: 780, y: 1740,
+        label: 'Taleplerim', route: '/requests',
+        flow: 'Genel personel talepleri (izin dışı). Lookup: employee_request_*.',
+        pages: [
+          { label: 'Talep Listesi', route: '/requests', note: 'Yeni talep modalı' },
+        ],
+      },
+    ];
+
+    const edges = [
+      { id: 'e1', from: 'c_rec', to: 'c_onb', label: 'hired → onboarding', style: 'dashed' },
+      { id: 'e2', from: 'c_onb', to: 'c_emp', label: 'personel dosyası', style: 'dashed' },
+      { id: 'e3', from: 'c_emp', to: 'c_hub', label: 'detay kaydı', style: 'solid' },
+      { id: 'e4', from: 'c_hub', to: 'c_leave', label: 'izin sekmeleri', style: 'dashed' },
+      { id: 'e5', from: 'c_hub', to: 'c_doc', label: 'evrak sekmeleri', style: 'dashed' },
+      { id: 'e6', from: 'c_hub', to: 'c_train', label: 'eğitim sekmeleri', style: 'dashed' },
+      { id: 'e7', from: 'c_hub', to: 'c_asset', label: 'zimmet sekmeleri', style: 'dashed' },
+      { id: 'e8', from: 'c_emp', to: 'p_dash', label: 'portal-access', style: 'solid' },
+      { id: 'e9', from: 'c_hub', to: 'p_prof', label: 'özlük self-servis', style: 'solid' },
+      { id: 'e10', from: 'p_leave', to: 'c_leave', label: 'talep → onay', style: 'solid' },
+      { id: 'e11', from: 'p_doc', to: 'c_doc', label: 'paylaşım / yükleme', style: 'solid' },
+      { id: 'e12', from: 'p_train', to: 'c_train', label: 'katılım / tamamlanma', style: 'solid' },
+      { id: 'e13', from: 'p_perf', to: 'c_perf', label: 'review / OKR', style: 'solid' },
+      { id: 'e14', from: 'p_sur', to: 'c_sur', label: 'yanıt → sonuç', style: 'solid' },
+      { id: 'e15', from: 'c_onb', to: 'p_dash', label: 'görevler (portal)', style: 'dashed' },
+      { id: 'e16', from: 'c_mgmt', to: 'c_leave', label: 'modül ayarları', style: 'dashed' },
+      { id: 'e17', from: 'c_mgmt', to: 'c_emp', label: 'kullanıcı / rol', style: 'dashed' },
+      { id: 'e18', from: 'p_dash', to: 'p_leave', label: 'hızlı aksiyon', style: 'dashed' },
+      { id: 'e19', from: 'p_dash', to: 'p_req', label: 'bekleyen talepler', style: 'dashed' },
+      { id: 'e20', from: 'p_exp', to: 'c_mgmt', label: 'onay (workflow)', style: 'dashed' },
+    ];
+
+    return {
+      version: 2,
+      meta: {
+        title: 'ALATAX HR Company + Portal',
+        updatedAt: new Date().toISOString(),
+        notes: 'SuperAdmin hariç. Sayfalar modül kartı içinde; bağlar modüller arası akış.',
+      },
+      nodes,
+      edges,
+    };
+  }
+
+  function loadModel() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const p = JSON.parse(raw);
+        if (p && p.version === 2 && Array.isArray(p.nodes) && Array.isArray(p.edges)) return p;
+      }
+    } catch (_) {}
+    return buildSeed();
+  }
+
+  function saveModel() {
+    model.meta.updatedAt = new Date().toISOString();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(model));
+    setStatus('Kayıtlı · ' + model.nodes.length + ' modül · ' + model.edges.length + ' bağ · ' + pageCount() + ' sayfa');
+  }
+
+  function pageCount() {
+    return model.nodes.reduce((n, m) => n + ((m.pages && m.pages.length) || 0), 0);
+  }
+
+  function setStatus(msg) {
+    document.getElementById('status').textContent = msg;
+  }
+
+  function nodeById(id) { return model.nodes.find((n) => n.id === id); }
+  function edgeById(id) { return model.edges.find((e) => e.id === id); }
+
+  function applyScale() {
+    world.style.transform = 'scale(' + scale + ')';
+  }
+
+  function initials(label) {
+    return (label || '?').split(/\s+/).slice(0, 2).map((w) => w[0] || '').join('').toUpperCase();
+  }
+
+  function renderNodes(filter) {
+    const q = (filter || '').trim().toLowerCase();
+    const frag = document.createDocumentFragment();
+    model.nodes.forEach((node) => {
+      const match = !q || node.label.toLowerCase().includes(q)
+        || (node.route || '').toLowerCase().includes(q)
+        || (node.pages || []).some((p) => (p.label + p.route + p.note).toLowerCase().includes(q));
+      const el = document.createElement('article');
+      el.className = 'node' + (selectedKind === 'node' && selectedId === node.id ? ' selected' : '') + (q && !match ? ' dim' : '');
+      el.dataset.id = node.id;
+      el.dataset.lane = node.lane;
+      el.dataset.type = node.type;
+      el.style.left = node.x + 'px';
+      el.style.top = node.y + 'px';
+
+      const license = /lisans:/i.test(node.route || '') ? '<span class="chip license">' + escapeHtml(node.route) + '</span>'
+        : (node.route ? '<span class="chip">' + escapeHtml(node.route) + '</span>' : '');
+      const portalOnly = /portal-only/i.test(node.route + ' ' + ((node.pages || []).map((p) => p.note).join(' ')))
+        ? '<span class="chip warn">Company UI yok</span>' : '';
+
+      const pages = (node.pages || []).map((p) => (
+        '<li><div><strong>' + escapeHtml(p.label) + '</strong>'
+        + (p.note ? '<span>' + escapeHtml(p.note) + '</span>' : '')
+        + '</div>'
+        + (p.route ? '<code>' + escapeHtml(p.route) + '</code>' : '')
+        + '</li>'
+      )).join('');
+
+      el.innerHTML =
+        '<div class="node-head">'
+        + '<div class="node-badge">' + escapeHtml(initials(node.label)) + '</div>'
+        + '<div class="node-title"><h3>' + escapeHtml(node.label) + '</h3>'
+        + '<p>' + escapeHtml(node.lane === 'company' ? 'Firma paneli' : 'Personel portalı')
+        + (node.type === 'hub' ? ' · hub' : '') + '</p>'
+        + '<div class="node-meta">' + license + portalOnly
+        + '<span class="chip ok">' + ((node.pages || []).length) + ' sayfa</span></div></div>'
+        + '<button type="button" class="collapse-btn" data-collapse title="Daralt/genişlet">▾</button>'
+        + '</div>'
+        + (node.flow ? '<div class="node-flow"><b>Akış:</b> ' + escapeHtml(node.flow) + '</div>' : '')
+        + '<div class="node-body"><ul class="page-list">' + pages + '</ul></div>';
+
+      el.addEventListener('pointerdown', onPointerDown);
+      el.addEventListener('click', onNodeClick);
+      el.addEventListener('dblclick', onNodeDblClick);
+      frag.appendChild(el);
+    });
+    nodesEl.innerHTML = '';
+    nodesEl.appendChild(frag);
+  }
+
+  function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, (c) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+    })[c]);
+  }
+
+  function cardRect(node) {
+    const el = nodesEl.querySelector('[data-id="' + node.id + '"]');
+    const w = el ? el.offsetWidth : 280;
+    const h = el ? el.offsetHeight : 120;
+    return { x: node.x, y: node.y, w, h, cx: node.x + w / 2, cy: node.y + h / 2 };
+  }
+
+  function anchors(a, b) {
+    const A = cardRect(a);
+    const B = cardRect(b);
+    const dx = B.cx - A.cx;
+    const dy = B.cy - A.cy;
+    let from, to;
+    if (Math.abs(dx) > Math.abs(dy)) {
+      from = dx > 0 ? { x: A.x + A.w, y: A.cy } : { x: A.x, y: A.cy };
+      to = dx > 0 ? { x: B.x, y: B.cy } : { x: B.x + B.w, y: B.cy };
+    } else {
+      from = dy > 0 ? { x: A.cx, y: A.y + A.h } : { x: A.cx, y: A.y };
+      to = dy > 0 ? { x: B.cx, y: B.y } : { x: B.cx, y: B.y + B.h };
+    }
+    return { from, to, cross: a.lane !== b.lane };
+  }
+
+  function curve(from, to) {
+    const mx = (from.x + to.x) / 2;
+    const my = (from.y + to.y) / 2;
+    const dx = Math.abs(to.x - from.x);
+    const c1x = from.x + (to.x - from.x) * 0.4;
+    const c1y = from.y;
+    const c2x = from.x + (to.x - from.x) * 0.6;
+    const c2y = to.y;
+    if (dx < 40) {
+      return { d: 'M' + from.x + ',' + from.y + ' C' + (from.x + 40) + ',' + from.y + ' ' + (to.x - 40) + ',' + to.y + ' ' + to.x + ',' + to.y, mx, my };
+    }
+    return { d: 'M' + from.x + ',' + from.y + ' C' + c1x + ',' + c1y + ' ' + c2x + ',' + c2y + ' ' + to.x + ',' + to.y, mx, my };
+  }
+
+  function renderEdges() {
+    const parts = [];
+    model.edges.forEach((edge) => {
+      const a = nodeById(edge.from);
+      const b = nodeById(edge.to);
+      if (!a || !b) return;
+      const { from, to, cross } = anchors(a, b);
+      const { d, mx, my } = curve(from, to);
+      const cls = (cross ? 'cross' : 'same')
+        + (edge.style === 'dashed' ? ' dashed' : '')
+        + (selectedKind === 'edge' && selectedId === edge.id ? ' selected' : '');
+      parts.push('<path class="' + cls + '" data-edge="' + edge.id + '" d="' + d + '" marker-end="url(#arrow-' + (cross ? 'cross' : 'same') + ')" />');
+      if (edge.label) {
+        parts.push('<text x="' + mx + '" y="' + (my - 6) + '" text-anchor="middle">' + escapeHtml(edge.label) + '</text>');
+      }
+    });
+    edgesEl.innerHTML =
+      '<defs>'
+      + '<marker id="arrow-cross" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">'
+      + '<path d="M0 0 L10 5 L0 10 z" fill="#d97706"/></marker>'
+      + '<marker id="arrow-same" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">'
+      + '<path d="M0 0 L10 5 L0 10 z" fill="#94a3b8"/></marker>'
+      + '</defs>' + parts.join('');
+
+    // Edge hit targets via transparent thicker paths — use pointer events on overlay? Keep simple: click via data on paths by enabling pointer-events on selected area
+    edgesEl.style.pointerEvents = 'none';
+  }
+
+  function scheduleEdges() {
+    if (edgeRaf) return;
+    edgeRaf = requestAnimationFrame(() => {
+      edgeRaf = 0;
+      renderEdges();
+    });
+  }
+
+  function renderAll() {
+    renderNodes(document.getElementById('search').value);
+    // edges after layout so heights are known
+    requestAnimationFrame(() => {
+      renderEdges();
+      updateSide();
+      setStatus(model.nodes.length + ' modül · ' + pageCount() + ' sayfa · ' + model.edges.length + ' bağ');
+    });
+  }
+
+  function selectNode(id) {
+    selectedId = id;
+    selectedKind = 'node';
+    document.querySelectorAll('.node').forEach((el) => {
+      el.classList.toggle('selected', el.dataset.id === id);
+      el.classList.remove('hit');
+    });
+    updateSide();
+  }
+
+  function selectEdge(id) {
+    selectedId = id;
+    selectedKind = 'edge';
+    document.querySelectorAll('.node').forEach((el) => el.classList.remove('selected'));
+    renderEdges();
+    updateSide();
+  }
+
+  function updateSide() {
+    const empty = document.getElementById('side-empty');
+    const form = document.getElementById('side-form');
+    if (!selectedId) {
+      empty.hidden = false;
+      form.hidden = true;
+      return;
+    }
+    empty.hidden = true;
+    form.hidden = false;
+    if (selectedKind === 'node') {
+      const n = nodeById(selectedId);
+      if (!n) return;
+      document.getElementById('f-label').value = n.label || '';
+      document.getElementById('f-lane').value = n.lane || 'company';
+      document.getElementById('f-type').value = n.type || 'module';
+      document.getElementById('f-route').value = n.route || '';
+      document.getElementById('f-flow').value = n.flow || '';
+      document.getElementById('f-pages').value = pageLines(n.pages);
+      document.getElementById('f-edge-label').value = '';
+      document.getElementById('f-label').disabled = false;
+      document.getElementById('f-lane').disabled = false;
+      document.getElementById('f-type').disabled = false;
+      document.getElementById('f-pages').disabled = false;
+    } else {
+      const e = edgeById(selectedId);
+      if (!e) return;
+      const a = nodeById(e.from);
+      const b = nodeById(e.to);
+      document.getElementById('f-label').value = (a?.label || '?') + ' → ' + (b?.label || '?');
+      document.getElementById('f-label').disabled = true;
+      document.getElementById('f-lane').disabled = true;
+      document.getElementById('f-type').disabled = true;
+      document.getElementById('f-pages').disabled = true;
+      document.getElementById('f-route').value = e.from + ' → ' + e.to;
+      document.getElementById('f-flow').value = '';
+      document.getElementById('f-edge-label').value = e.label || '';
+      document.getElementById('f-edge-style').value = e.style || 'solid';
+    }
+  }
+
+  function applyForm() {
+    if (!selectedId) return;
+    if (selectedKind === 'node') {
+      const n = nodeById(selectedId);
+      if (!n) return;
+      n.label = document.getElementById('f-label').value.trim() || n.label;
+      n.lane = document.getElementById('f-lane').value;
+      n.type = document.getElementById('f-type').value;
+      n.route = document.getElementById('f-route').value.trim();
+      n.flow = document.getElementById('f-flow').value.trim();
+      n.pages = parsePages(document.getElementById('f-pages').value);
+      saveModel();
+      renderAll();
+      selectNode(n.id);
+    } else {
+      const e = edgeById(selectedId);
+      if (!e) return;
+      e.label = document.getElementById('f-edge-label').value.trim();
+      e.style = document.getElementById('f-edge-style').value;
+      saveModel();
+      renderEdges();
+      updateSide();
+    }
+  }
+
+  function onPointerDown(ev) {
+    if (ev.button !== 0) return;
+    if (ev.target.closest('[data-collapse]')) return;
+    const el = ev.currentTarget;
+    const node = nodeById(el.dataset.id);
+    if (!node) return;
+    dragging = { id: node.id, el };
+    const rect = el.getBoundingClientRect();
+    dragOffset.x = (ev.clientX - rect.left) / scale;
+    dragOffset.y = (ev.clientY - rect.top) / scale;
+    el.setPointerCapture(ev.pointerId);
+    ev.preventDefault();
+  }
+
+  function onPointerMove(ev) {
+    if (!dragging) return;
+    const wrapRect = wrap.getBoundingClientRect();
+    const x = (ev.clientX - wrapRect.left + wrap.scrollLeft) / scale - dragOffset.x;
+    const y = (ev.clientY - wrapRect.top + wrap.scrollTop) / scale - dragOffset.y;
+    const node = nodeById(dragging.id);
+    node.x = Math.max(0, Math.round(x));
+    node.y = Math.max(0, Math.round(y));
+    dragging.el.style.left = node.x + 'px';
+    dragging.el.style.top = node.y + 'px';
+    scheduleEdges();
+  }
+
+  function onPointerUp() {
+    if (!dragging) return;
+    dragging = null;
+    saveModel();
+    scheduleEdges();
+  }
+
+  function onNodeClick(ev) {
+    const id = ev.currentTarget.dataset.id;
+    if (ev.target.closest('[data-collapse]')) {
+      const body = ev.currentTarget.querySelector('.node-body');
+      const flow = ev.currentTarget.querySelector('.node-flow');
+      const hidden = body.style.display === 'none';
+      body.style.display = hidden ? '' : 'none';
+      if (flow) flow.style.display = hidden ? '' : 'none';
+      ev.target.textContent = hidden ? '▾' : '▸';
+      scheduleEdges();
+      return;
+    }
+    if (linkMode) {
+      if (!linkFrom) {
+        linkFrom = id;
+        ev.currentTarget.classList.add('hit');
+        setStatus('Bağ: hedef modülü seçin');
+        return;
+      }
+      if (linkFrom === id) {
+        linkFrom = null;
+        ev.currentTarget.classList.remove('hit');
+        return;
+      }
+      model.edges.push({ id: uid('e'), from: linkFrom, to: id, label: '', style: 'solid' });
+      linkFrom = null;
+      linkMode = false;
+      document.getElementById('btn-link').classList.remove('active');
+      saveModel();
+      renderAll();
+      return;
+    }
+    selectNode(id);
+  }
+
+  function onNodeDblClick(ev) {
+    const n = nodeById(ev.currentTarget.dataset.id);
+    if (!n) return;
+    const next = prompt('Modül adı:', n.label);
+    if (next !== null && next.trim()) {
+      n.label = next.trim();
+      saveModel();
+      renderAll();
+      selectNode(n.id);
+    }
+  }
+
+  // Edge selection: click near curves via capturing clicks on world with hit-test — simple list in side when needed
+  // Allow selecting edges by Alt+click on node pair — skip; use edge list via double-click status
+  edgesEl.addEventListener('click', () => {});
+
+  document.getElementById('btn-apply').onclick = applyForm;
+  document.getElementById('btn-delete').onclick = () => {
+    if (!selectedId) return;
+    if (selectedKind === 'node') {
+      model.nodes = model.nodes.filter((n) => n.id !== selectedId);
+      model.edges = model.edges.filter((e) => e.from !== selectedId && e.to !== selectedId);
+    } else {
+      model.edges = model.edges.filter((e) => e.id !== selectedId);
+    }
+    selectedId = null;
+    selectedKind = null;
+    saveModel();
+    renderAll();
+  };
+
+  document.getElementById('btn-add-module').onclick = () => {
+    const node = {
+      id: uid('m'), lane: 'company', type: 'module', x: 80, y: 80,
+      label: 'Yeni Modül', route: '', flow: '',
+      pages: [{ label: 'Yeni Sayfa', route: '/', note: '' }],
+    };
+    model.nodes.push(node);
+    saveModel();
+    renderAll();
+    selectNode(node.id);
+  };
+
+  document.getElementById('btn-add-hub').onclick = () => {
+    const node = {
+      id: uid('h'), lane: 'company', type: 'hub', x: 700, y: 100,
+      label: 'Yeni Hub', route: '', flow: 'Kesişim noktası',
+      pages: [],
+    };
+    model.nodes.push(node);
+    saveModel();
+    renderAll();
+    selectNode(node.id);
+  };
+
+  document.getElementById('btn-link').onclick = () => {
+    linkMode = !linkMode;
+    linkFrom = null;
+    document.getElementById('btn-link').classList.toggle('active', linkMode);
+    setStatus(linkMode ? 'Bağ modu açık: kaynak → hedef' : '');
+  };
+
+  document.getElementById('btn-export').onclick = () => {
+    const blob = new Blob([JSON.stringify(model, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'alatax-akis-sema-v2.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
+  document.getElementById('file-import').onchange = (ev) => {
+    const file = ev.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const p = JSON.parse(reader.result);
+        if (!p.nodes || !p.edges) throw new Error('nodes/edges yok');
+        p.version = 2;
+        model = p;
+        saveModel();
+        selectedId = null;
+        renderAll();
+      } catch (err) {
+        alert('JSON hatası: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+    ev.target.value = '';
+  };
+
+  document.getElementById('btn-reset').onclick = () => {
+    if (!confirm('Seed şemasına dönülsün mü? Yerel düzenlemeler silinir.')) return;
+    localStorage.removeItem(STORAGE_KEY);
+    model = buildSeed();
+    saveModel();
+    selectedId = null;
+    renderAll();
+  };
+
+  document.getElementById('btn-help').onclick = () => document.getElementById('help').classList.toggle('open');
+  document.getElementById('search').oninput = () => renderNodes(document.getElementById('search').value);
+
+  document.getElementById('btn-zoom-in').onclick = () => { scale = Math.min(1.6, scale + 0.1); applyScale(); };
+  document.getElementById('btn-zoom-out').onclick = () => { scale = Math.max(0.45, scale - 0.1); applyScale(); };
+  document.getElementById('btn-fit').onclick = () => {
+    scale = 0.72;
+    applyScale();
+    wrap.scrollTo({ left: 0, top: 0, behavior: 'smooth' });
+  };
+
+  wrap.addEventListener('wheel', (e) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      scale = Math.max(0.45, Math.min(1.6, scale + (e.deltaY > 0 ? -0.06 : 0.06)));
+      applyScale();
+    }
+  }, { passive: false });
+
+  window.addEventListener('pointermove', onPointerMove);
+  window.addEventListener('pointerup', onPointerUp);
+  window.addEventListener('keydown', (e) => {
+    const tag = (e.target && e.target.tagName) || '';
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+    if ((e.key === 'Delete' || e.key === 'Backspace') && selectedId) {
+      e.preventDefault();
+      document.getElementById('btn-delete').click();
+    }
+    if (e.key === 'Escape') {
+      linkMode = false;
+      linkFrom = null;
+      document.getElementById('btn-link').classList.remove('active');
+      selectedId = null;
+      selectedKind = null;
+      renderAll();
+    }
+  });
+
+  // Edge pick: click status area — add simple edge picker via Alt+click path simulation
+  // Expose edge list click from side: when user focuses edge label field after selecting via…
+  // Quick edge select: double-click status not needed. Add clickable edge labels in a compact way:
+  world.addEventListener('click', (ev) => {
+    if (ev.target.tagName === 'path' && ev.target.dataset.edge) {
+      selectEdge(ev.target.dataset.edge);
+    }
+  });
+  // Enable pointer events only when Alt held
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Alt') edgesEl.style.pointerEvents = 'auto';
+  });
+  window.addEventListener('keyup', (e) => {
+    if (e.key === 'Alt') edgesEl.style.pointerEvents = 'none';
+  });
+
+  // boot
+  model = loadModel();
+  applyScale();
+  renderAll();
+})();
+</script>
+</body>
+</html>

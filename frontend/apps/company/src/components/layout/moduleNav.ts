@@ -4,7 +4,6 @@ import {
   BsBriefcase,
   BsFileEarmarkText,
   BsCalendarCheck,
-  BsPersonCheck,
   BsPersonBadge,
   BsGraphUp,
   BsMortarboard,
@@ -33,6 +32,11 @@ export interface MenuItem {
   permission?: MenuItemPermission;
   /** Yönetim ContextSidebar grup başlığı */
   group?: StudioGroup;
+  /**
+   * Öğe-seviyesi modül lisansı (ModuleRail grup moduleKey'inden bağımsız).
+   * Örn. Personel altında oryantasyon: moduleKey 'onboarding'.
+   */
+  moduleKey?: string;
 }
 
 export interface ModuleGroup {
@@ -75,6 +79,18 @@ export const operationalModuleGroups: ModuleGroup[] = [
       { path: '/employees/organization', labelKey: 'nav.employeesOrganization', permission: { module: 'employees', page: 'organization' } },
       { path: '/employees/custom-fields', labelKey: 'nav.employeesCustomFields', permission: { module: 'employees', page: 'custom_fields' } },
       { path: '/employees/reports', labelKey: 'nav.employeesReports', permission: { module: 'employees', page: 'reports' } },
+      {
+        path: '/onboarding',
+        labelKey: 'nav.onboardingProcesses',
+        permission: { module: 'onboarding', page: 'processes' },
+        moduleKey: 'onboarding',
+      },
+      {
+        path: '/onboarding/templates',
+        labelKey: 'nav.onboardingTemplates',
+        permission: { module: 'onboarding', page: 'templates' },
+        moduleKey: 'onboarding',
+      },
     ],
   },
   {
@@ -156,19 +172,6 @@ export const operationalModuleGroups: ModuleGroup[] = [
       { path: '/documents/categories', labelKey: 'nav.documentsCategories', permission: { module: 'documents', page: 'categories' } },
       { path: '/documents/reports', labelKey: 'nav.documentsReports', permission: { module: 'documents', page: 'reports' } },
       { path: '/documents/custom-fields', labelKey: 'nav.documentsCustomFields', permission: { module: 'documents', page: 'custom_fields' } },
-    ],
-  },
-  {
-    id: 'onboarding',
-    icon: BsPersonCheck,
-    labelKey: 'nav.onboarding',
-    color: '#ec4899',
-    basePath: '/onboarding',
-    moduleKey: 'onboarding',
-    permissionModule: 'onboarding',
-    items: [
-      { path: '/onboarding', labelKey: 'nav.onboardingProcesses', permission: { module: 'onboarding', page: 'processes' } },
-      { path: '/onboarding/templates', labelKey: 'nav.onboardingTemplates', permission: { module: 'onboarding', page: 'templates' } },
     ],
   },
   {
@@ -294,15 +297,20 @@ export const moduleGroups: ModuleGroup[] = [
 
 export function getFilteredMenuItems(
   module: ModuleGroup,
-  user: { type: string; permissions: string[] } | null
+  user: { type: string; permissions: string[] } | null,
+  activeModules: string[] = []
 ): MenuItem[] {
   if (!user) return [];
 
-  if (user.type === 'company_admin' || user.type === 'super_admin') {
-    return module.items;
-  }
-
   return module.items.filter((item) => {
+    if (item.moduleKey && !activeModules.includes(item.moduleKey)) {
+      return false;
+    }
+
+    if (user.type === 'company_admin' || user.type === 'super_admin') {
+      return true;
+    }
+
     if (!item.permission) return true;
 
     const { module: permModule, page } = item.permission;
