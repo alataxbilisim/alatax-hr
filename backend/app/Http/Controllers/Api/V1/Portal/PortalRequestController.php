@@ -7,6 +7,7 @@ use App\Models\Employee;
 use App\Models\EmployeeRequest;
 use App\Models\RequestType;
 use App\Services\LookupService;
+use App\Services\RequestTypeFormFieldsAdapter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +16,7 @@ class PortalRequestController extends BaseController
 {
     public function __construct(
         protected LookupService $lookups,
+        protected RequestTypeFormFieldsAdapter $formFieldsAdapter,
     ) {}
 
     /**
@@ -41,7 +43,7 @@ class PortalRequestController extends BaseController
         $employee = Employee::where('user_id', $user->id)->first();
 
         if (! $employee) {
-            return $this->error('Personel kaydı bulunamadı', null, 404);
+            return $this->error('Personel kaydı bulunamadı', 404);
         }
 
         $query = EmployeeRequest::where('employee_id', $employee->id)
@@ -78,7 +80,7 @@ class PortalRequestController extends BaseController
         $employee = Employee::where('user_id', $user->id)->first();
 
         if (! $employee) {
-            return $this->error('Personel kaydı bulunamadı', null, 404);
+            return $this->error('Personel kaydı bulunamadı', 404);
         }
 
         $employeeRequest = EmployeeRequest::where('employee_id', $employee->id)
@@ -87,7 +89,7 @@ class PortalRequestController extends BaseController
             ->first();
 
         if (! $employeeRequest) {
-            return $this->error('Talep bulunamadı', null, 404);
+            return $this->error('Talep bulunamadı', 404);
         }
 
         return $this->success($employeeRequest);
@@ -102,7 +104,13 @@ class PortalRequestController extends BaseController
         $employee = Employee::where('user_id', $user->id)->first();
 
         if (! $employee) {
-            return $this->error('Personel kaydı bulunamadı', null, 404);
+            return $this->error('Personel kaydı bulunamadı', 404);
+        }
+
+        // multipart: form_data JSON string gelebilir
+        if (is_string($request->input('form_data'))) {
+            $decoded = json_decode($request->input('form_data'), true);
+            $request->merge(['form_data' => is_array($decoded) ? $decoded : []]);
         }
 
         $validated = $request->validate([
@@ -130,13 +138,18 @@ class PortalRequestController extends BaseController
             ->first();
 
         if (! $requestType) {
-            return $this->error('Geçersiz talep türü', null, 422);
+            return $this->error('Geçersiz talep türü', 422);
         }
 
         // Ek dosya zorunlu mu?
         if ($requestType->requires_attachment && empty($request->file('attachments'))) {
-            return $this->error('Bu talep türü için dosya eklenmesi zorunludur', null, 422);
+            return $this->error('Bu talep türü için dosya eklenmesi zorunludur', 422);
         }
+
+        $validated['form_data'] = $this->formFieldsAdapter->validateFormData(
+            $requestType->form_fields,
+            $validated['form_data'] ?? []
+        );
 
         return DB::transaction(function () use ($request, $validated, $user, $employee) {
             // Dosyaları yükle
@@ -188,7 +201,7 @@ class PortalRequestController extends BaseController
         $employee = Employee::where('user_id', $user->id)->first();
 
         if (! $employee) {
-            return $this->error('Personel kaydı bulunamadı', null, 404);
+            return $this->error('Personel kaydı bulunamadı', 404);
         }
 
         $employeeRequest = EmployeeRequest::where('employee_id', $employee->id)
@@ -197,7 +210,7 @@ class PortalRequestController extends BaseController
             ->first();
 
         if (! $employeeRequest) {
-            return $this->error('Talep bulunamadı veya düzenlenemez', null, 404);
+            return $this->error('Talep bulunamadı veya düzenlenemez', 404);
         }
 
         $validated = $request->validate([
@@ -231,7 +244,7 @@ class PortalRequestController extends BaseController
         $employee = Employee::where('user_id', $user->id)->first();
 
         if (! $employee) {
-            return $this->error('Personel kaydı bulunamadı', null, 404);
+            return $this->error('Personel kaydı bulunamadı', 404);
         }
 
         $employeeRequest = EmployeeRequest::where('employee_id', $employee->id)
@@ -240,7 +253,7 @@ class PortalRequestController extends BaseController
             ->first();
 
         if (! $employeeRequest) {
-            return $this->error('Talep bulunamadı veya iptal edilemez', null, 404);
+            return $this->error('Talep bulunamadı veya iptal edilemez', 404);
         }
 
         $employeeRequest->cancel();

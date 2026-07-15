@@ -15,6 +15,8 @@ export {
   isFieldVisible,
   isFieldReadonly,
   isValidTurkishNationalId,
+  adaptRequestTypeFormFields,
+  buildRequestTypeFormDefinition,
 } from '../form-engine';
 export type {
   FormEngineProps,
@@ -23,4 +25,7 @@ export type {
   FormEngineValues,
   FormFieldMeta,
   FormLayout,
+  FormLayoutSection,
+  FormFieldPermission,
+  RequestTypeFormFieldRaw,
 } from '../form-engine';

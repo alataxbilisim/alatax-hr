@@ -1,6 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { portalApi, lookupsApi, type LookupItem } from '@shared/services/api';
-import { Select } from '@shared/components';
+import {
+  Select,
+  FormEngine,
+  buildRequestTypeFormDefinition,
+  type FormDefinitionPayload,
+  type FormEngineSubmitPayload,
+} from '@shared/components';
+import { useTranslation } from '@shared/i18n';
 import toast from 'react-hot-toast';
 import { BsPlus, BsInboxes, BsX } from 'react-icons/bs';
 
@@ -10,6 +17,7 @@ interface RequestType {
   icon: string | null;
   color: string | null;
   description: string | null;
+  form_fields?: unknown;
 }
 
 interface EmployeeRequest {
@@ -31,6 +39,7 @@ const statusClassMap: Record<string, string> = {
 };
 
 const RequestsPage: React.FC = () => {
+  const { t } = useTranslation(['common', 'validation']);
   const [requests, setRequests] = useState<EmployeeRequest[]>([]);
   const [requestTypes, setRequestTypes] = useState<RequestType[]>([]);
   const [statusLookups, setStatusLookups] = useState<LookupItem[]>([]);
@@ -45,6 +54,16 @@ const RequestsPage: React.FC = () => {
     description: '',
     priority: 'normal',
   });
+
+  const selectedType = useMemo(
+    () => requestTypes.find((type) => String(type.id) === formData.request_type_id) ?? null,
+    [formData.request_type_id, requestTypes]
+  );
+
+  const dynamicDefinition: FormDefinitionPayload | null = useMemo(() => {
+    if (!selectedType) return null;
+    return buildRequestTypeFormDefinition(selectedType.form_fields, selectedType.name);
+  }, [selectedType]);
 
   useEffect(() => {
     void loadData();
@@ -63,7 +82,7 @@ const RequestsPage: React.FC = () => {
       setStatusLookups(statusRes.data.data ?? []);
       setPriorityLookups(priorityRes.data.data ?? []);
     } catch {
-      toast.error('Veriler yüklenemedi');
+      toast.error(t('formEngine.portalRequestLoadError'));
     } finally {
       setLoading(false);
     }
@@ -89,10 +108,9 @@ const RequestsPage: React.FC = () => {
     return <span className="badge bg-secondary">{label}</span>;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submitRequest = async (extraFormData: Record<string, unknown>) => {
     if (!formData.request_type_id || !formData.title) {
-      toast.error('Lütfen zorunlu alanları doldurun');
+      toast.error(t('formEngine.portalRequestRequired'));
       return;
     }
 
@@ -103,28 +121,39 @@ const RequestsPage: React.FC = () => {
       data.append('title', formData.title);
       data.append('priority', formData.priority);
       if (formData.description) data.append('description', formData.description);
+      data.append('form_data', JSON.stringify(extraFormData));
 
       await portalApi.requests.create(data);
-      toast.success('Talep oluşturuldu');
+      toast.success(t('formEngine.portalRequestCreated'));
       setShowModal(false);
       setFormData({ request_type_id: '', title: '', description: '', priority: 'normal' });
       void loadData();
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
-      toast.error(err.response?.data?.message || 'Talep oluşturulamadı');
+      const message =
+        error && typeof error === 'object' && 'response' in error
+          ? String(
+              (error as { response?: { data?: { message?: string } } }).response?.data?.message ??
+                t('formEngine.portalRequestCreateError')
+            )
+          : t('formEngine.portalRequestCreateError');
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }
   };
 
+  const handleDynamicSubmit = async (payload: FormEngineSubmitPayload) => {
+    await submitRequest(payload.custom_fields);
+  };
+
   const handleCancel = async (id: number) => {
-    if (!confirm('Bu talebi iptal etmek istediğinize emin misiniz?')) return;
+    if (!confirm(t('formEngine.portalRequestCancelConfirm'))) return;
     try {
       await portalApi.requests.cancel(id);
-      toast.success('Talep iptal edildi');
+      toast.success(t('formEngine.portalRequestCancelled'));
       void loadData();
     } catch {
-      toast.error('İptal işlemi başarısız');
+      toast.error(t('formEngine.portalRequestCancelError'));
     }
   };
 
@@ -132,12 +161,12 @@ const RequestsPage: React.FC = () => {
     <div className="animate-fade-in">
       <div className="page-header">
         <div className="page-header-content">
-          <h1 className="page-title">Taleplerim</h1>
-          <p className="page-subtitle">Tüm taleplerinizi görüntüleyin ve yönetin</p>
+          <h1 className="page-title">{t('formEngine.portalRequestsTitle')}</h1>
+          <p className="page-subtitle">{t('formEngine.portalRequestsSubtitle')}</p>
         </div>
         <div className="page-header-actions">
           <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-            <BsPlus size={20} /> Yeni Talep
+            <BsPlus size={20} /> {t('formEngine.portalRequestNew')}
           </button>
         </div>
       </div>
@@ -154,12 +183,12 @@ const RequestsPage: React.FC = () => {
                 <table className="table table-hover mb-0">
                   <thead>
                     <tr>
-                      <th>Talep</th>
-                      <th>Tür</th>
-                      <th>Durum</th>
-                      <th>Öncelik</th>
-                      <th>Tarih</th>
-                      <th>İşlem</th>
+                      <th>{t('formEngine.portalColRequest')}</th>
+                      <th>{t('formEngine.portalColType')}</th>
+                      <th>{t('formEngine.portalColStatus')}</th>
+                      <th>{t('formEngine.portalColPriority')}</th>
+                      <th>{t('formEngine.portalColDate')}</th>
+                      <th>{t('formEngine.portalColActions')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -181,7 +210,7 @@ const RequestsPage: React.FC = () => {
                               className="btn btn-sm btn-ghost text-danger"
                               onClick={() => void handleCancel(request.id)}
                             >
-                              İptal
+                              {t('formEngine.portalCancel')}
                             </button>
                           )}
                         </td>
@@ -210,11 +239,11 @@ const RequestsPage: React.FC = () => {
                         </div>
                       )}
                       <div className="mobile-card-row">
-                        <span className="mobile-card-label">Öncelik</span>
+                        <span className="mobile-card-label">{t('formEngine.portalColPriority')}</span>
                         {getPriorityBadge(request.priority)}
                       </div>
                       <div className="mobile-card-row">
-                        <span className="mobile-card-label">Tarih</span>
+                        <span className="mobile-card-label">{t('formEngine.portalColDate')}</span>
                         <span className="mobile-card-value">
                           {new Date(request.created_at).toLocaleDateString('tr-TR')}
                         </span>
@@ -226,7 +255,7 @@ const RequestsPage: React.FC = () => {
                           className="btn btn-outline-primary btn-sm"
                           onClick={() => void handleCancel(request.id)}
                         >
-                          İptal Et
+                          {t('formEngine.portalCancel')}
                         </button>
                       </div>
                     )}
@@ -237,32 +266,31 @@ const RequestsPage: React.FC = () => {
           ) : (
             <div className="empty-state">
               <BsInboxes size={64} className="text-muted mb-3" />
-              <h3>Henüz talebiniz yok</h3>
-              <p>Yeni bir talep oluşturarak başlayın</p>
+              <h3>{t('formEngine.portalRequestsEmpty')}</h3>
+              <p>{t('formEngine.portalRequestsEmptyHint')}</p>
               <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-                <BsPlus /> İlk Talebinizi Oluşturun
+                <BsPlus /> {t('formEngine.portalRequestFirst')}
               </button>
             </div>
           )}
         </div>
       </div>
 
-      <button className="fab" onClick={() => setShowModal(true)} aria-label="Yeni Talep">
+      <button className="fab" onClick={() => setShowModal(true)} aria-label={t('formEngine.portalRequestNew')}>
         <BsPlus size={24} />
       </button>
 
       {showModal && (
         <div className="modal-mobile open">
           <div className="modal-mobile-header">
-            <h3 className="modal-mobile-title">Yeni Talep</h3>
+            <h3 className="modal-mobile-title">{t('formEngine.portalRequestNew')}</h3>
             <button className="modal-mobile-close" onClick={() => setShowModal(false)}>
               <BsX size={24} />
             </button>
           </div>
-          <form onSubmit={(e) => void handleSubmit(e)}>
-            <div className="modal-mobile-body">
+          <div className="modal-mobile-body">
               <div className="mb-3">
-                <label className="form-label">Talep Türü *</label>
+                <label className="form-label">{t('formEngine.portalTypeLabel')}</label>
                 <Select
                   value={formData.request_type_id}
                   onChange={(v) => setFormData({ ...formData, request_type_id: v })}
@@ -271,23 +299,23 @@ const RequestsPage: React.FC = () => {
                     label: type.name,
                   }))}
                   allowEmpty
-                  placeholder="Seçiniz"
-                  aria-label="Talep türü"
+                  placeholder={t('formEngine.selectPlaceholder')}
+                  aria-label={t('formEngine.portalTypeLabel')}
                 />
               </div>
               <div className="mb-3">
-                <label className="form-label">Talep Başlığı *</label>
+                <label className="form-label">{t('formEngine.portalTitleLabel')}</label>
                 <input
                   type="text"
                   className="form-control"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="Talep başlığını yazın"
-                  required
+                  placeholder={t('formEngine.portalTitlePlaceholder')}
+                  required={!dynamicDefinition}
                 />
               </div>
               <div className="mb-3">
-                <label className="form-label">Öncelik</label>
+                <label className="form-label">{t('formEngine.portalColPriority')}</label>
                 <Select
                   value={formData.priority}
                   onChange={(v) => setFormData({ ...formData, priority: v || 'normal' })}
@@ -296,34 +324,56 @@ const RequestsPage: React.FC = () => {
                     label: opt.label,
                     color: opt.color,
                   }))}
-                  placeholder="Öncelik seçin"
-                  aria-label="Öncelik"
+                  placeholder={t('formEngine.selectPlaceholder')}
+                  aria-label={t('formEngine.portalColPriority')}
                 />
               </div>
               <div className="mb-3">
-                <label className="form-label">Açıklama</label>
+                <label className="form-label">{t('formEngine.portalDescriptionLabel')}</label>
                 <textarea
                   className="form-control"
                   rows={4}
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Talebinizi detaylı açıklayın"
+                  placeholder={t('formEngine.portalDescriptionPlaceholder')}
                 />
               </div>
+
+              {dynamicDefinition ? (
+                <FormEngine
+                  definition={dynamicDefinition}
+                  onSubmit={handleDynamicSubmit}
+                  loading={submitting}
+                  submitLabel={t('formEngine.portalSubmit')}
+                  cancelLabel={t('formEngine.cancel')}
+                  savingLabel={t('formEngine.saving')}
+                  onCancel={() => setShowModal(false)}
+                  messages={{
+                    required: t('validation:required'),
+                    email: t('validation:email'),
+                    selectPlaceholder: t('formEngine.selectPlaceholder'),
+                  }}
+                />
+              ) : (
+                <div className="modal-mobile-footer" style={{ padding: 0, border: 'none' }}>
+                  <button
+                    type="button"
+                    className="btn btn-outline-primary"
+                    onClick={() => setShowModal(false)}
+                  >
+                    {t('formEngine.cancel')}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    disabled={submitting}
+                    onClick={() => void submitRequest({})}
+                  >
+                    {submitting ? t('formEngine.saving') : t('formEngine.portalSubmit')}
+                  </button>
+                </div>
+              )}
             </div>
-            <div className="modal-mobile-footer">
-              <button
-                type="button"
-                className="btn btn-outline-primary"
-                onClick={() => setShowModal(false)}
-              >
-                İptal
-              </button>
-              <button type="submit" className="btn btn-primary" disabled={submitting}>
-                {submitting ? 'Gönderiliyor...' : 'Talep Oluştur'}
-              </button>
-            </div>
-          </form>
         </div>
       )}
     </div>

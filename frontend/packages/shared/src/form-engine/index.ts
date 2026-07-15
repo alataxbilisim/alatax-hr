@@ -15,6 +15,11 @@ export {
   isFieldVisible,
 } from './buildZodSchema';
 export { buildSubmitPayload } from './buildSubmitPayload';
+export {
+  adaptRequestTypeFormFields,
+  buildRequestTypeFormDefinition,
+} from './adaptRequestTypeFormFields';
+export type { RequestTypeFormFieldRaw } from './adaptRequestTypeFormFields';
 export { FormEngine } from './FormEngine';
 export type { FormEngineProps } from './FormEngine';
 export { FormEngineField } from './FormEngineField';
