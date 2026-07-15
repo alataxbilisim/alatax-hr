@@ -3,58 +3,44 @@
 namespace App\Http\Controllers\Api\V1\Portal;
 
 use App\Http\Controllers\Api\V1\BaseController;
-use App\Models\ActivityLog;
 use App\Models\AttendanceRecord;
 use App\Models\EmployeeShift;
+use App\Services\Timesheet\AttendanceClockService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use InvalidArgumentException;
 
 class PortalTimesheetController extends BaseController
 {
+    public function __construct(
+        protected AttendanceClockService $clock,
+    ) {}
+
     /**
      * Giriş yap (Clock In)
      */
     public function clockIn(Request $request): JsonResponse
     {
-        $user = auth()->user();
-        $today = now()->toDateString();
-
-        // Check if already clocked in today
-        $existing = AttendanceRecord::where('company_id', $user->company_id)
-            ->where('user_id', $user->id)
-            ->whereDate('date', $today)
-            ->first();
-
-        if ($existing && $existing->clock_in) {
-            return $this->error('Bugün zaten giriş yapmışsınız', 422);
-        }
-
         $validated = $request->validate([
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
         ]);
 
-        $data = [
-            'company_id' => $user->company_id,
-            'user_id' => $user->id,
-            'date' => $today,
-            'clock_in' => now()->format('H:i'),
-            'clock_in_method' => 'mobile',
-            'clock_in_latitude' => $validated['latitude'] ?? null,
-            'clock_in_longitude' => $validated['longitude'] ?? null,
-            'clock_in_ip' => $request->ip(),
-            'status' => 'present',
-        ];
-
-        if ($existing) {
-            $existing->update($data);
-            $record = $existing;
-        } else {
-            $record = AttendanceRecord::create($data);
+        try {
+            $result = $this->clock->clockIn($request->user(), [
+                'latitude' => $validated['latitude'] ?? null,
+                'longitude' => $validated['longitude'] ?? null,
+                'ip' => $request->ip(),
+                'method' => 'mobile',
+                'source' => AttendanceClockService::SOURCE_PORTAL,
+                'device_info' => $request->userAgent(),
+            ]);
+        } catch (InvalidArgumentException $e) {
+            return $this->error($e->getMessage(), 422);
         }
 
-        ActivityLog::log('clock_in', $record, 'Giriş yapıldı');
+        $record = $result['record'];
 
         return $this->success([
             'clock_in' => $record->clock_in,
@@ -68,40 +54,25 @@ class PortalTimesheetController extends BaseController
      */
     public function clockOut(Request $request): JsonResponse
     {
-        $user = auth()->user();
-        $today = now()->toDateString();
-
-        $record = AttendanceRecord::where('company_id', $user->company_id)
-            ->where('user_id', $user->id)
-            ->whereDate('date', $today)
-            ->first();
-
-        if (! $record || ! $record->clock_in) {
-            return $this->error('Önce giriş yapmalısınız', 422);
-        }
-
-        if ($record->clock_out) {
-            return $this->error('Bugün zaten çıkış yapmışsınız', 422);
-        }
-
         $validated = $request->validate([
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
         ]);
 
-        $record->update([
-            'clock_out' => now()->format('H:i'),
-            'clock_out_method' => 'mobile',
-            'clock_out_latitude' => $validated['latitude'] ?? null,
-            'clock_out_longitude' => $validated['longitude'] ?? null,
-            'clock_out_ip' => $request->ip(),
-        ]);
+        try {
+            $result = $this->clock->clockOut($request->user(), [
+                'latitude' => $validated['latitude'] ?? null,
+                'longitude' => $validated['longitude'] ?? null,
+                'ip' => $request->ip(),
+                'method' => 'mobile',
+                'source' => AttendanceClockService::SOURCE_PORTAL,
+                'device_info' => $request->userAgent(),
+            ]);
+        } catch (InvalidArgumentException $e) {
+            return $this->error($e->getMessage(), 422);
+        }
 
-        // Calculate total hours
-        $record->total_hours = $record->calculateTotalHours();
-        $record->save();
-
-        ActivityLog::log('clock_out', $record, 'Çıkış yapıldı');
+        $record = $result['record'];
 
         return $this->success([
             'clock_in' => $record->clock_in,
@@ -138,7 +109,7 @@ class PortalTimesheetController extends BaseController
             'break_end' => null,
         ]);
 
-        ActivityLog::log('break_started', $record, 'Mola başladı');
+        \App\Models\ActivityLog::log('break_started', $record, 'Mola başladı');
 
         return $this->success([
             'break_start' => $record->break_start,
@@ -170,7 +141,7 @@ class PortalTimesheetController extends BaseController
             'break_end' => now()->format('H:i'),
         ]);
 
-        ActivityLog::log('break_ended', $record, 'Mola bitti');
+        \App\Models\ActivityLog::log('break_ended', $record, 'Mola bitti');
 
         return $this->success([
             'break_start' => $record->break_start,
@@ -214,13 +185,11 @@ class PortalTimesheetController extends BaseController
             $status['break_end'] = $record->break_end;
             $status['total_hours'] = $record->total_hours;
 
-            // Calculate current working duration if clocked in but not out
             if ($status['is_clocked_in'] && ! $status['is_clocked_out']) {
                 $clockIn = Carbon::parse($today.' '.$record->clock_in);
                 $now = now();
                 $minutes = $now->diffInMinutes($clockIn);
 
-                // Subtract break time if on break
                 if ($status['is_on_break']) {
                     $breakStart = Carbon::parse($today.' '.$record->break_start);
                     $minutes -= $now->diffInMinutes($breakStart);
@@ -235,9 +204,6 @@ class PortalTimesheetController extends BaseController
         return $this->success($status, 'Bugünkü durum');
     }
 
-    /**
-     * Haftalık attendance kayıtları
-     */
     public function weeklyRecords(Request $request): JsonResponse
     {
         $user = auth()->user();
@@ -252,7 +218,9 @@ class PortalTimesheetController extends BaseController
 
         $weekData = [];
         for ($date = $startOfWeek->copy(); $date <= $endOfWeek; $date->addDay()) {
-            $record = $records->firstWhere('date', $date->toDateString());
+            $record = $records->first(function (AttendanceRecord $r) use ($date): bool {
+                return $r->date->toDateString() === $date->toDateString();
+            });
             $weekData[] = [
                 'date' => $date->toDateString(),
                 'day_name' => $date->translatedFormat('l'),
@@ -263,27 +231,21 @@ class PortalTimesheetController extends BaseController
             ];
         }
 
-        $summary = [
+        return $this->success([
             'week_start' => $startOfWeek->toDateString(),
             'week_end' => $endOfWeek->toDateString(),
             'total_hours' => $records->sum('total_hours'),
             'working_days' => $records->where('status', 'present')->count(),
             'records' => $weekData,
-        ];
-
-        return $this->success($summary, 'Haftalık kayıtlar');
+        ], 'Haftalık kayıtlar');
     }
 
-    /**
-     * Aylık attendance kayıtları
-     */
     public function monthlyRecords(Request $request): JsonResponse
     {
         $user = auth()->user();
-        $year = $request->get('year', now()->year);
-        $month = $request->get('month', now()->month);
-
-        $startOfMonth = Carbon::createFromDate($year, $month, 1)->startOfMonth();
+        $year = (int) $request->get('year', now()->year);
+        $month = (int) $request->get('month', now()->month);
+        $startOfMonth = Carbon::create($year, $month, 1)->startOfMonth();
         $endOfMonth = $startOfMonth->copy()->endOfMonth();
 
         $records = AttendanceRecord::where('company_id', $user->company_id)
@@ -292,20 +254,17 @@ class PortalTimesheetController extends BaseController
             ->orderBy('date')
             ->get();
 
-        $summary = [
+        return $this->success([
             'year' => $year,
             'month' => $month,
             'month_name' => $startOfMonth->translatedFormat('F Y'),
             'total_hours' => $records->sum('total_hours'),
             'overtime_hours' => $records->sum('overtime_hours'),
-            'working_days' => $records->where('status', 'present')->count(),
+            'working_days' => $records->whereNotNull('clock_in')->count(),
             'late_days' => $records->where('status', 'late')->count(),
-            'absent_days' => $records->where('status', 'absent')->count(),
-            'leave_days' => $records->where('status', 'leave')->count(),
-            'records' => $records->map(function ($r) {
+            'records' => $records->map(function (AttendanceRecord $r) {
                 return [
-                    'id' => $r->id,
-                    'date' => $r->date->format('Y-m-d'),
+                    'date' => $r->date->toDateString(),
                     'day_name' => $r->date->translatedFormat('l'),
                     'clock_in' => $r->clock_in,
                     'clock_out' => $r->clock_out,
@@ -313,14 +272,9 @@ class PortalTimesheetController extends BaseController
                     'status' => $r->status,
                 ];
             }),
-        ];
-
-        return $this->success($summary, 'Aylık kayıtlar');
+        ], 'Aylık kayıtlar');
     }
 
-    /**
-     * Haftalık vardiya takvimi
-     */
     public function shifts(Request $request): JsonResponse
     {
         $user = auth()->user();

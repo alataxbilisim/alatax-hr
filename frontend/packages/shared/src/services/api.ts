@@ -906,6 +906,8 @@ export const attendanceApi = {
   update: (id: number, data: Record<string, unknown>) => api.put(`/attendance/${id}`, data),
   approve: (id: number) => api.post(`/attendance/${id}/approve`),
   bulkApprove: (ids: number[]) => api.post('/attendance/bulk-approve', { ids }),
+  issueKioskToken: (data?: { branch_id?: number }) =>
+    api.post('/attendance/kiosk/token', data ?? {}),
 };
 
 // Expenses API (Company HR) — portal own API ayrı (portalApi.expenses)
@@ -1083,6 +1085,8 @@ export const portalApi = {
     weeklyRecords: (weekStart?: string) => api.get('/portal/timesheet/weekly', { params: { week_start: weekStart } }),
     monthlyRecords: (year?: number, month?: number) => api.get('/portal/timesheet/monthly', { params: { year, month } }),
     shifts: (weekStart?: string) => api.get('/portal/timesheet/shifts', { params: { week_start: weekStart } }),
+    qrScan: (data: { token: string; latitude?: number; longitude?: number }) =>
+      api.post('/portal/timesheet/qr-scan', data),
   },
   
   // Expenses (Masraf Yönetimi)

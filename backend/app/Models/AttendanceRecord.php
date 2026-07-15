@@ -23,12 +23,15 @@ class AttendanceRecord extends Model
         'overtime_hours',
         'clock_in_method',
         'clock_out_method',
+        'source',
+        'branch_id',
         'clock_in_latitude',
         'clock_in_longitude',
         'clock_out_latitude',
         'clock_out_longitude',
         'clock_in_ip',
         'clock_out_ip',
+        'device_info',
         'status',
         'notes',
         'is_approved',
@@ -73,6 +76,17 @@ class AttendanceRecord extends Model
     {
         return $this->belongsTo(User::class, 'approved_by');
     }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
+    public const SOURCE_QR = 'qr';
+
+    public const SOURCE_PORTAL = 'portal';
+
+    public const SOURCE_MANUAL = 'manual';
 
     public function calculateTotalHours(): float
     {

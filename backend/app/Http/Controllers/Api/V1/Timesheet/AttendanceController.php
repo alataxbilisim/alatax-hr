@@ -91,6 +91,7 @@ class AttendanceController extends BaseController
 
         $validated['company_id'] = $this->getCompanyId();
         $validated['clock_in_method'] = 'manual';
+        $validated['source'] = 'manual';
 
         $existing = AttendanceRecord::query()
             ->where('user_id', $validated['user_id'])

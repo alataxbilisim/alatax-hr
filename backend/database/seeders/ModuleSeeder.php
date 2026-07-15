@@ -138,6 +138,26 @@ class ModuleSeeder extends Seeder
                 'price_yearly' => 1990,
                 'sort_order' => 18,
             ],
+            [
+                'name' => 'Puantaj / PDKS',
+                'slug' => 'timesheet',
+                'description' => 'Giriş-çıkış, QR kiosk, vardiya ve yoklama panosu',
+                'icon' => 'bi-clock-history',
+                'is_core' => false,
+                'price_monthly' => 199,
+                'price_yearly' => 1990,
+                'sort_order' => 19,
+            ],
+            [
+                'name' => 'Masraf Yönetimi',
+                'slug' => 'expense-management',
+                'description' => 'Masraf talepleri, kategori ve onay kuyruğu',
+                'icon' => 'bi-receipt',
+                'is_core' => false,
+                'price_monthly' => 149,
+                'price_yearly' => 1490,
+                'sort_order' => 20,
+            ],
         ];
 
         foreach ($modules as $module) {

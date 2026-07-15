@@ -1025,6 +1025,8 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:timesheet.attendance.create');
             Route::post('/bulk-approve', [\App\Http\Controllers\Api\V1\Timesheet\AttendanceController::class, 'bulkApprove'])
                 ->middleware('permission:timesheet.attendance.approve');
+            Route::post('/kiosk/token', [\App\Http\Controllers\Api\V1\Timesheet\AttendanceKioskController::class, 'issueToken'])
+                ->middleware('permission:timesheet.kiosk.view');
             Route::get('/{id}', [\App\Http\Controllers\Api\V1\Timesheet\AttendanceController::class, 'show'])
                 ->middleware('permission:timesheet.attendance.view');
             Route::put('/{id}', [\App\Http\Controllers\Api\V1\Timesheet\AttendanceController::class, 'update'])
@@ -1173,6 +1175,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/weekly', [\App\Http\Controllers\Api\V1\Portal\PortalTimesheetController::class, 'weeklyRecords']);
             Route::get('/monthly', [\App\Http\Controllers\Api\V1\Portal\PortalTimesheetController::class, 'monthlyRecords']);
             Route::get('/shifts', [\App\Http\Controllers\Api\V1\Portal\PortalTimesheetController::class, 'shifts']);
+            Route::post('/qr-scan', [\App\Http\Controllers\Api\V1\Portal\PortalAttendanceQrController::class, 'scan']);
         });
 
         // Masraf Yönetimi

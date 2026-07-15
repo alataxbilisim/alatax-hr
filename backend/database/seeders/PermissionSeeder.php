@@ -248,6 +248,7 @@ class PermissionSeeder extends Seeder
             'timesheet' => [
                 'attendance' => ['view', 'create', 'edit', 'approve'],
                 'shifts' => ['view', 'create', 'edit', 'delete'],
+                'kiosk' => ['view'],
             ],
 
             // Masraf Yönetimi Modülü
@@ -456,6 +457,7 @@ class PermissionSeeder extends Seeder
 
                     // Puantaj / yoklama
                     'timesheet.attendance.*',
+                    'timesheet.kiosk.view',
 
                     // Onboarding - Tam yetki
                     'onboarding.*',

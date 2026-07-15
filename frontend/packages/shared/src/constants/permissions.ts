@@ -137,6 +137,7 @@ export const PAGES = {
   [MODULES.TIMESHEET]: {
     ATTENDANCE: 'attendance',
     SHIFTS: 'shifts',
+    KIOSK: 'kiosk',
   },
   
   // Expenses Modülü
@@ -221,6 +222,7 @@ export const PAGE_ACTIONS: Record<string, Record<string, ActionType[]>> = {
   [MODULES.TIMESHEET]: {
     attendance: ['view', 'create', 'edit', 'approve'],
     shifts: ['view', 'create', 'edit', 'delete'],
+    kiosk: ['view'],
   },
   [MODULES.EXPENSES]: {
     claims: ['view', 'create', 'edit', 'delete', 'approve'],
@@ -321,6 +323,7 @@ export const PAGE_LABELS: Record<string, Record<string, string>> = {
   [MODULES.TIMESHEET]: {
     attendance: 'Puantaj',
     shifts: 'Vardiyalar',
+    kiosk: 'PDKS Ekranı',
   },
   [MODULES.EXPENSES]: {
     claims: 'Masraf Talepleri',

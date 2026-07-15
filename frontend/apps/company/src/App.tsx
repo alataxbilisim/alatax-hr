@@ -162,6 +162,7 @@ import ExpensesPage from './pages/expenses/ExpensesPage';
 
 // Attendance / Timesheet
 import AttendancePage from './pages/attendance/AttendancePage';
+import PdksKioskPage from './pages/attendance/PdksKioskPage';
 
 // Onboarding Module
 import OnboardingPage from './pages/onboarding/OnboardingPage';
@@ -250,6 +251,20 @@ const App: React.FC = () => {
 
         {/* Public kariyer başvurusu (auth yok) */}
         <Route path="/careers/:companySlug/:positionSlug" element={<PublicCareerApplyPage />} />
+
+        {/* PDKS kiosk — tam ekran (MainLayout dışında) */}
+        <Route
+          path="/attendance/kiosk"
+          element={
+            <ProtectedRoute>
+              <ModuleProtectedRoute moduleKey={MODULE_KEYS.TIMESHEET}>
+                <PermissionProtectedRoute module="timesheet" page="kiosk" action="view">
+                  <PdksKioskPage />
+                </PermissionProtectedRoute>
+              </ModuleProtectedRoute>
+            </ProtectedRoute>
+          }
+        />
 
         {/* Protected Routes */}
         <Route element={<MainLayout />}>

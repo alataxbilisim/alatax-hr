@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { portalApi } from '@shared/services/api';
+import { useTranslation } from '@shared/i18n';
 import toast from 'react-hot-toast';
 import {
   BsClock,
@@ -8,6 +10,7 @@ import {
   BsCup,
   BsPlay,
   BsCalendar3,
+  BsQrCodeScan,
 } from 'react-icons/bs';
 
 interface TodayStatus {
@@ -41,6 +44,7 @@ interface WeeklySummary {
 }
 
 const TimesheetPage: React.FC = () => {
+  const { t } = useTranslation('common');
   const [todayStatus, setTodayStatus] = useState<TodayStatus | null>(null);
   const [weeklySummary, setWeeklySummary] = useState<WeeklySummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -199,6 +203,10 @@ const TimesheetPage: React.FC = () => {
           <h1 className="page-title">Puantaj</h1>
           <p className="page-subtitle">Giriş/çıkış saatlerinizi kaydedin</p>
         </div>
+        <Link to="/timesheet/qr" className="btn btn-outline-primary btn-touch">
+          <BsQrCodeScan className="me-2" />
+          {t('pdks.openQrScan')}
+        </Link>
       </div>
 
       {/* Tabs */}

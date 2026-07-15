@@ -26,6 +26,7 @@ import TrainingPage from './pages/TrainingPage';
 import PerformancePage from './pages/PerformancePage';
 import SurveysPage from './pages/SurveysPage';
 import TimesheetPage from './pages/TimesheetPage';
+import PortalQrScanPage from './pages/PortalQrScanPage';
 import ExpensesPage from './pages/ExpensesPage';
 
 // Styles
@@ -142,6 +143,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/performance" element={<PerformancePage />} />
         <Route path="/surveys" element={<SurveysPage />} />
         <Route path="/timesheet" element={<TimesheetPage />} />
+        <Route path="/timesheet/qr" element={<PortalQrScanPage />} />
         <Route path="/expenses" element={<ExpensesPage />} />
         <Route path="/announcements" element={<AnnouncementsPage />} />
         <Route path="/requests" element={<RequestsPage />} />
