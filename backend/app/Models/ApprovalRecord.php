@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Services\Approval\ApprovalFlowEngine;
+use App\Services\Notification\NotificationService;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Facades\DB;
 
 class ApprovalRecord extends Model
 {
@@ -36,7 +39,6 @@ class ApprovalRecord extends Model
         'step_order' => 'integer',
     ];
 
-    // Durumlar
     const STATUS_PENDING = 'pending';
 
     const STATUS_APPROVED = 'approved';
@@ -58,7 +60,6 @@ class ApprovalRecord extends Model
         ];
     }
 
-    // Relationships
     public function instance(): BelongsTo
     {
         return $this->belongsTo(ApprovalInstance::class, 'approval_instance_id');
@@ -89,7 +90,6 @@ class ApprovalRecord extends Model
         return $this->belongsTo(User::class, 'escalated_to');
     }
 
-    // Scopes
     public function scopePending($query)
     {
         return $query->where('status', self::STATUS_PENDING);
@@ -105,153 +105,135 @@ class ApprovalRecord extends Model
         return $query->where('approver_id', $userId);
     }
 
-    // Methods
-    public function approve(?string $comment = null): void
+    /**
+     * @return bool true = karar işlendi; false = yarış/idempotent no-op
+     */
+    public function approve(?string $comment = null, ?int $actingApproverId = null): bool
     {
-        $this->update([
-            'status' => self::STATUS_APPROVED,
-            'comment' => $comment,
-            'decided_at' => now(),
-            'is_current' => false,
-        ]);
-
-        // Log kaydı
-        ActivityLog::log(
-            'approve',
-            $this->approvable,
-            "Onay adımı tamamlandı: {$this->step->name}",
-            null,
-            ['step' => $this->step_order, 'comment' => $comment]
-        );
-
-        // Sonraki adıma geç veya tamamla
-        $this->moveToNextStep();
-    }
-
-    public function reject(string $reason): void
-    {
-        $this->update([
-            'status' => self::STATUS_REJECTED,
-            'comment' => $reason,
-            'decided_at' => now(),
-            'is_current' => false,
-        ]);
-
-        $this->instance?->markRejected();
-
-        // Talebi reddet
-        $approvable = $this->approvable;
-        if (method_exists($approvable, 'onWorkflowRejected')) {
-            $approvable->onWorkflowRejected($reason, (int) $this->approver_id);
-        }
-
-        ActivityLog::log(
-            'reject',
-            $approvable,
-            "Talep reddedildi: {$reason}",
-            null,
-            ['step' => $this->step_order, 'reason' => $reason]
-        );
-
-        app(\App\Services\Notification\NotificationService::class)
-            ->notifyWorkflowOutcome($approvable, 'rejected', $reason);
-    }
-
-    public function skip(?string $reason = null): void
-    {
-        $this->update([
-            'status' => self::STATUS_SKIPPED,
-            'comment' => $reason ?? 'Adım atlandı',
-            'decided_at' => now(),
-            'is_current' => false,
-        ]);
-
-        $this->moveToNextStep();
-    }
-
-    protected function moveToNextStep(): void
-    {
-        $approvable = $this->approvable;
-        $workflow = $this->workflow;
-        $instance = $this->instance;
-        $evaluator = app(\App\Services\ApprovalStepConditionEvaluator::class);
-        $context = [
-            'total_days' => $approvable->getAttribute('total_days'),
-            'leave_type_id' => $approvable->getAttribute('leave_type_id'),
-            'user_id' => $approvable->getAttribute('user_id'),
-            'requester_id' => $approvable->getAttribute('user_id'),
-            'amount' => $approvable->getAttribute('amount')
-                ?? $approvable->getAttribute('total_amount'),
-            'total_amount' => $approvable->getAttribute('total_amount'),
-            'department_id' => $approvable->getAttribute('department_id'),
-        ];
-
-        $nextStep = null;
-        $order = $this->step_order;
-
-        while (true) {
-            $candidate = $workflow->getNextStep($order);
-            if (! $candidate) {
-                break;
+        return (bool) DB::transaction(function () use ($comment, $actingApproverId): bool {
+            if ($this->approval_instance_id) {
+                ApprovalInstance::query()->whereKey($this->approval_instance_id)->lockForUpdate()->first();
             }
 
-            if ($evaluator->matches($candidate->condition, $approvable, $context)) {
-                $nextStep = $candidate;
-                break;
+            $this->refresh();
+
+            if ($this->status !== self::STATUS_PENDING || ! $this->is_current) {
+                return false;
             }
 
-            self::create([
-                'company_id' => $this->company_id,
-                'approval_instance_id' => $this->approval_instance_id,
-                'approval_workflow_id' => $workflow->id,
-                'approval_step_id' => $candidate->id,
-                'approvable_type' => $this->approvable_type,
-                'approvable_id' => $this->approvable_id,
-                'approver_id' => null,
-                'status' => self::STATUS_SKIPPED,
-                'comment' => 'Koşul tutmadı — adım atlandı',
+            $payload = [
+                'status' => self::STATUS_APPROVED,
+                'comment' => $comment,
                 'decided_at' => now(),
-                'step_order' => $candidate->step_order,
                 'is_current' => false,
-            ]);
+            ];
 
-            $order = $candidate->step_order;
-        }
-
-        if ($nextStep) {
-            $approver = $nextStep->findApprover($approvable);
-
-            $nextRecord = self::create([
-                'company_id' => $this->company_id,
-                'approval_instance_id' => $this->approval_instance_id,
-                'approval_workflow_id' => $workflow->id,
-                'approval_step_id' => $nextStep->id,
-                'approvable_type' => $this->approvable_type,
-                'approvable_id' => $this->approvable_id,
-                'approver_id' => $approver?->id,
-                'status' => self::STATUS_PENDING,
-                'step_order' => $nextStep->step_order,
-                'is_current' => true,
-            ]);
-
-            $instance?->markInProgress($nextStep->step_order);
-
-            if (in_array('current_step', $approvable->getFillable(), true)) {
-                $approvable->update(['current_step' => $nextStep->step_order]);
+            if ($actingApproverId !== null) {
+                $payload['approver_id'] = $actingApproverId;
             }
 
-            if ($approver) {
-                event(new \App\Events\ApprovalRequested($nextRecord, $approver, $approvable, $nextStep));
-            }
-        } else {
-            $instance?->markApproved();
+            $this->update($payload);
+            $this->loadMissing('step');
 
-            if (method_exists($approvable, 'onWorkflowCompleted')) {
-                $approvable->onWorkflowCompleted((int) $this->approver_id);
+            ActivityLog::log(
+                'approve',
+                $this->approvable,
+                'Onay adımı tamamlandı: '.($this->step?->name ?? '#' . $this->step_order),
+                null,
+                ['step' => $this->step_order, 'comment' => $comment]
+            );
+
+            app(ApprovalFlowEngine::class)->afterApproval(
+                $this->fresh(['step', 'workflow', 'instance', 'approvable'])
+            );
+
+            return true;
+        });
+    }
+
+    public function reject(string $reason, ?int $actingApproverId = null): bool
+    {
+        return (bool) DB::transaction(function () use ($reason, $actingApproverId): bool {
+            if ($this->approval_instance_id) {
+                ApprovalInstance::query()->whereKey($this->approval_instance_id)->lockForUpdate()->first();
             }
 
-            app(\App\Services\Notification\NotificationService::class)
-                ->notifyWorkflowOutcome($approvable, 'approved');
-        }
+            $this->refresh();
+
+            if ($this->status !== self::STATUS_PENDING || ! $this->is_current) {
+                return false;
+            }
+
+            $payload = [
+                'status' => self::STATUS_REJECTED,
+                'comment' => $reason,
+                'decided_at' => now(),
+                'is_current' => false,
+            ];
+
+            if ($actingApproverId !== null) {
+                $payload['approver_id'] = $actingApproverId;
+            }
+
+            $this->update($payload);
+
+            app(ApprovalFlowEngine::class)->afterRejection($this);
+
+            $this->instance?->markRejected();
+
+            $approvable = $this->approvable;
+            if ($approvable && method_exists($approvable, 'onWorkflowRejected')) {
+                $approvable->onWorkflowRejected($reason, (int) ($actingApproverId ?? $this->approver_id));
+            }
+
+            ActivityLog::log(
+                'reject',
+                $approvable,
+                "Talep reddedildi: {$reason}",
+                null,
+                ['step' => $this->step_order, 'reason' => $reason]
+            );
+
+            if ($approvable) {
+                app(NotificationService::class)
+                    ->notifyWorkflowOutcome($approvable, 'rejected', $reason);
+            }
+
+            return true;
+        });
+    }
+
+    public function skip(?string $reason = null, ?int $actingApproverId = null): bool
+    {
+        return (bool) DB::transaction(function () use ($reason, $actingApproverId): bool {
+            if ($this->approval_instance_id) {
+                ApprovalInstance::query()->whereKey($this->approval_instance_id)->lockForUpdate()->first();
+            }
+
+            $this->refresh();
+
+            if ($this->status !== self::STATUS_PENDING || ! $this->is_current) {
+                return false;
+            }
+
+            $payload = [
+                'status' => self::STATUS_SKIPPED,
+                'comment' => $reason ?? 'Adım atlandı',
+                'decided_at' => now(),
+                'is_current' => false,
+            ];
+
+            if ($actingApproverId !== null) {
+                $payload['approver_id'] = $actingApproverId;
+            }
+
+            $this->update($payload);
+
+            app(ApprovalFlowEngine::class)->afterSkip(
+                $this->fresh(['step', 'workflow', 'instance', 'approvable'])
+            );
+
+            return true;
+        });
     }
 }

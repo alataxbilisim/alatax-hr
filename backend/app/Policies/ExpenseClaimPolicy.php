@@ -62,13 +62,19 @@ class ExpenseClaimPolicy
             return true;
         }
 
-        $currentRecord = $claim->approvalRecords()
+        $actorRecord = $this->workflow->findPendingRecordForActor($claim, $user->id);
+
+        if ($actorRecord) {
+            return true;
+        }
+
+        $hasPendingWorkflow = $claim->approvalRecords()
             ->where('is_current', true)
             ->where('status', ApprovalRecord::STATUS_PENDING)
-            ->first();
+            ->exists();
 
-        if ($currentRecord) {
-            return $this->workflow->canApprove($currentRecord, $user->id);
+        if ($hasPendingWorkflow) {
+            return false;
         }
 
         if ($scope === DataScopeLevel::Team) {

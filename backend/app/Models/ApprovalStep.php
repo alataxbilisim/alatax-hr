@@ -25,6 +25,7 @@ class ApprovalStep extends Model
         'condition',
         'parallel_group',
         'completion_policy',
+        'escalation_days',
     ];
 
     protected $casts = [
@@ -34,6 +35,8 @@ class ApprovalStep extends Model
         'timeout_hours' => 'integer',
         'condition' => 'array',
         'parallel_group' => 'integer',
+        'completion_policy' => 'string',
+        'escalation_days' => 'integer',
     ];
 
     // Onaylayıcı tipleri (legacy + Faz 4B)
@@ -82,6 +85,10 @@ class ApprovalStep extends Model
     const TIMEOUT_AUTO_APPROVE = 'auto_approve';
 
     const TIMEOUT_AUTO_REJECT = 'auto_reject';
+
+    const COMPLETION_ALL = 'all';
+
+    const COMPLETION_ANY = 'any';
 
     // Relationships
     public function workflow(): BelongsTo

@@ -236,14 +236,14 @@ Fark yaratacak 4 şey:
 - [x] **B1:** Sıralı çok adım; red + `resubmit` yeni instance; adım sırası 403
 - [x] **B2:** `dynamic_manager` / `dynamic_skip_manager` / role / user; unresolved → hr_manager (atlanmaz); vekalet motor testi
 - [x] **B3:** Adım `condition` jsonb whitelist evaluator (`>`, `<`, `=`, `in`); koşul tutmayan SKIPPED
-- [ ] **B4:** `parallel_group` + `completion_policy` runtime; eskalasyon SLA job; timeout_action
+- [x] **B4:** `parallel_group` + `completion_policy` runtime; eskalasyon SLA job (hatırlatma + üst bildirim; yetki devretmez)
 - [ ] **B5:** Ayarlar Stüdyosu akış tasarımcısı (Modül Ayarları)
 - [x] Bildirim TODO stub: `ApprovalRequested` → database notification (tam 4C değil)
 - [x] Zincir veri modeli genişletildi (condition / parallel_group kolonları); paralel runtime B4
-- [x] Çalıştırma motoru (izin): başlat → bildir(stub) → onay/red → sonraki → koşul → vekalet (eskalasyon B4)
+- [x] Çalıştırma motoru (izin): başlat → bildir → onay/red → sonraki → koşul → vekalet → paralel/eskalasyon (B4)
 - [ ] Genelleştirme (üst katman): tetikleyici + aksiyon kataloğu
 - [ ] UI Ayarlar Stüdyosu’na taşınır (B5)
-- [ ] Zamanlanmış tetikleyiciler / eskalasyon job’ları (B4+)
+- [x] Zamanlanmış tetikleyiciler / eskalasyon job’ları (B4: `approvals:process-escalations`)
 - [x] Feature testler: B0–B3 motor + LeaveRequestPolicy regresyon
 
 **4C. Bildirim Merkezi**

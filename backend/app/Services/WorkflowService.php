@@ -11,15 +11,21 @@ use App\Models\ApprovalRecord;
 use App\Models\ApprovalStep;
 use App\Models\ApprovalWorkflow;
 use App\Models\User;
+use App\Services\Approval\ApprovalFlowEngine;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class WorkflowService
 {
+    public function __construct(
+        protected ApprovalFlowEngine $flowEngine,
+    ) {}
+
     /**
      * Bir talep için workflow başlat.
      * Akış yoksa legacy: null döner, entity pending kalır (otomatik onay YOK).
+     * Paralel dalga: birden fazla pending açılır; dönüş = ilk (en düşük step_order) kayıt.
      */
     public function startWorkflow(Model $approvable, array $context = []): ?ApprovalRecord
     {
@@ -39,8 +45,7 @@ class WorkflowService
             return null;
         }
 
-        $firstStep = $workflow->getFirstStep();
-        if (! $firstStep) {
+        if (! $workflow->getFirstStep()) {
             Log::warning('approval.workflow.empty_steps', [
                 'workflow_id' => $workflow->id,
                 'company_id' => $companyId,
@@ -49,17 +54,11 @@ class WorkflowService
             return null;
         }
 
-        $evaluator = app(ApprovalStepConditionEvaluator::class);
-        $resolvedFirst = null;
-        $skippedSteps = [];
-
-        foreach ($workflow->steps()->orderBy('step_order')->get() as $step) {
-            if ($evaluator->matches($step->condition, $approvable, $context)) {
-                $resolvedFirst = $step;
-                break;
-            }
-            $skippedSteps[] = $step;
-        }
+        [$resolvedFirst, $skippedSteps] = $this->flowEngine->findFirstMatchingStep(
+            $workflow,
+            $approvable,
+            $context
+        );
 
         if (! $resolvedFirst) {
             Log::warning('approval.workflow.no_matching_steps', [
@@ -70,16 +69,12 @@ class WorkflowService
             return null;
         }
 
-        $firstStep = $resolvedFirst;
-
-        $approver = $firstStep->findApprover($approvable);
-
         $instance = ApprovalInstance::create([
             'company_id' => $companyId,
             'approval_workflow_id' => $workflow->id,
             'approvable_type' => get_class($approvable),
             'approvable_id' => $approvable->id,
-            'current_step' => $firstStep->step_order,
+            'current_step' => $resolvedFirst->step_order,
             'status' => ApprovalInstance::STATUS_IN_PROGRESS,
             'started_at' => now(),
         ]);
@@ -87,40 +82,21 @@ class WorkflowService
         if ($this->approvableHasWorkflowColumns($approvable)) {
             $approvable->update([
                 'approval_workflow_id' => $workflow->id,
-                'current_step' => $firstStep->step_order,
+                'current_step' => $resolvedFirst->step_order,
                 'workflow_status' => 'in_progress',
             ]);
         }
 
-        foreach ($skippedSteps as $skipped) {
-            ApprovalRecord::create([
-                'company_id' => $companyId,
-                'approval_instance_id' => $instance->id,
-                'approval_workflow_id' => $workflow->id,
-                'approval_step_id' => $skipped->id,
-                'approvable_type' => get_class($approvable),
-                'approvable_id' => $approvable->id,
-                'approver_id' => null,
-                'status' => ApprovalRecord::STATUS_SKIPPED,
-                'comment' => 'Koşul tutmadı — adım atlandı',
-                'decided_at' => now(),
-                'step_order' => $skipped->step_order,
-                'is_current' => false,
-            ]);
-        }
+        $records = $this->flowEngine->openWave(
+            $instance,
+            $workflow,
+            $approvable,
+            $context,
+            $resolvedFirst,
+            $skippedSteps
+        );
 
-        $record = ApprovalRecord::create([
-            'company_id' => $companyId,
-            'approval_instance_id' => $instance->id,
-            'approval_workflow_id' => $workflow->id,
-            'approval_step_id' => $firstStep->id,
-            'approvable_type' => get_class($approvable),
-            'approvable_id' => $approvable->id,
-            'approver_id' => $approver?->id,
-            'status' => ApprovalRecord::STATUS_PENDING,
-            'step_order' => $firstStep->step_order,
-            'is_current' => true,
-        ]);
+        $record = $records[0] ?? null;
 
         ActivityLog::log(
             'workflow_started',
@@ -130,13 +106,10 @@ class WorkflowService
             [
                 'workflow_id' => $workflow->id,
                 'instance_id' => $instance->id,
-                'approver_id' => $approver?->id,
+                'approver_id' => $record?->approver_id,
+                'opened_count' => count($records),
             ]
         );
-
-        if ($approver) {
-            $this->notifyApprover($approver, $approvable, $firstStep, $record);
-        }
 
         return $record;
     }
@@ -146,7 +119,6 @@ class WorkflowService
      */
     public function resubmitWorkflow(Model $approvable, array $context = []): ?ApprovalRecord
     {
-        // Açık instance varsa kapat (güvenlik)
         ApprovalInstance::query()
             ->where('approvable_type', get_class($approvable))
             ->where('approvable_id', $approvable->id)
@@ -161,7 +133,6 @@ class WorkflowService
                 ]);
             });
 
-        // Eski current record'ları kapat
         ApprovalRecord::query()
             ->where('approvable_type', get_class($approvable))
             ->where('approvable_id', $approvable->id)
@@ -179,9 +150,6 @@ class WorkflowService
         return $this->startWorkflow($approvable, $context);
     }
 
-    /**
-     * Onay işlemi (canApprove kapısı — /approvals kuyruğu).
-     */
     public function approve(ApprovalRecord $record, int $approverId, ?string $comment = null): bool
     {
         if (! $this->canApprove($record, $approverId)) {
@@ -197,22 +165,9 @@ class WorkflowService
      */
     public function processAuthorizedApproval(ApprovalRecord $record, int $approverId, ?string $comment = null): bool
     {
-        if ($record->status !== ApprovalRecord::STATUS_PENDING || ! $record->is_current) {
-            return false;
-        }
-
-        $record->update([
-            'approver_id' => $approverId,
-        ]);
-
-        $record->approve($comment);
-
-        return true;
+        return $record->approve($comment, $approverId);
     }
 
-    /**
-     * Red işlemi (canApprove kapısı).
-     */
     public function reject(ApprovalRecord $record, int $approverId, string $reason): bool
     {
         if (! $this->canApprove($record, $approverId)) {
@@ -222,27 +177,11 @@ class WorkflowService
         return $this->processAuthorizedRejection($record, $approverId, $reason);
     }
 
-    /**
-     * Policy-authorized red köprüsü.
-     */
     public function processAuthorizedRejection(ApprovalRecord $record, int $approverId, string $reason): bool
     {
-        if ($record->status !== ApprovalRecord::STATUS_PENDING || ! $record->is_current) {
-            return false;
-        }
-
-        $record->update([
-            'approver_id' => $approverId,
-        ]);
-
-        $record->reject($reason);
-
-        return true;
+        return $record->reject($reason, $approverId);
     }
 
-    /**
-     * Adım atlama
-     */
     public function skip(ApprovalRecord $record, int $approverId, ?string $reason = null): bool
     {
         if (! $this->canApprove($record, $approverId)) {
@@ -255,18 +194,33 @@ class WorkflowService
             return false;
         }
 
-        $record->update([
-            'approver_id' => $approverId,
-        ]);
-
-        $record->skip($reason);
-
-        return true;
+        return $record->skip($reason, $approverId);
     }
 
     /**
-     * Kullanıcının onaylayabileceği bekleyen kayıtları getir
+     * Aktörün onaylayabileceği pending current kayıt (paralel grup güvenliği).
+     * Yetkiyi GENİŞLETMEZ — yalnızca doğru kaydı seçer.
      */
+    public function findPendingRecordForActor(Model $approvable, int $userId): ?ApprovalRecord
+    {
+        $records = ApprovalRecord::query()
+            ->where('approvable_type', get_class($approvable))
+            ->where('approvable_id', $approvable->id)
+            ->where('is_current', true)
+            ->where('status', ApprovalRecord::STATUS_PENDING)
+            ->orderBy('step_order')
+            ->orderBy('id')
+            ->get();
+
+        foreach ($records as $record) {
+            if ($this->canApprove($record, $userId)) {
+                return $record;
+            }
+        }
+
+        return null;
+    }
+
     public function getPendingApprovalsForUser(int $userId, int $companyId): \Illuminate\Database\Eloquent\Collection
     {
         $delegatorIds = ApprovalDelegation::where('company_id', $companyId)
@@ -285,9 +239,6 @@ class WorkflowService
             ->get();
     }
 
-    /**
-     * Bir talebin onay geçmişini getir
-     */
     public function getApprovalHistory(Model $approvable): \Illuminate\Database\Eloquent\Collection
     {
         return ApprovalRecord::where('approvable_type', get_class($approvable))
@@ -297,9 +248,6 @@ class WorkflowService
             ->get();
     }
 
-    /**
-     * Kullanıcının onaylama yetkisi var mı? (atanan / vekil / admin)
-     */
     public function canApprove(ApprovalRecord $record, int $userId): bool
     {
         if ($record->status !== ApprovalRecord::STATUS_PENDING) {
@@ -374,10 +322,6 @@ class WorkflowService
         return $mapping[$class] ?? strtolower($class);
     }
 
-    /**
-     * Onaycıya bildirim (ApprovalRequested event → NotificationService).
-     * Vekalet: findApprover vekili döner; listener asıl onaycıyı da bilgilendirir.
-     */
     protected function notifyApprover(User $approver, Model $approvable, ApprovalStep $step, ApprovalRecord $record): void
     {
         event(new ApprovalRequested($record, $approver, $approvable, $step));

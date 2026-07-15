@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\V1\Expenses;
 use App\Http\Controllers\Api\V1\BaseController;
 use App\Http\Requests\Expenses\MarkPaidExpenseClaimRequest;
 use App\Models\ActivityLog;
-use App\Models\ApprovalRecord;
 use App\Models\ExpenseClaim;
 use App\Services\DataScopeService;
 use App\Services\LookupService;
@@ -79,10 +78,10 @@ class ExpenseClaimController extends BaseController
             'note' => 'nullable|string|max:500',
         ]);
 
-        $currentRecord = $expenseClaim->approvalRecords()
-            ->where('is_current', true)
-            ->where('status', ApprovalRecord::STATUS_PENDING)
-            ->first();
+        $currentRecord = $this->workflowService->findPendingRecordForActor(
+            $expenseClaim,
+            (int) auth()->id()
+        );
 
         if ($currentRecord) {
             $ok = $this->workflowService->processAuthorizedApproval(
@@ -130,10 +129,10 @@ class ExpenseClaimController extends BaseController
             'reason' => 'required|string|max:500',
         ]);
 
-        $currentRecord = $expenseClaim->approvalRecords()
-            ->where('is_current', true)
-            ->where('status', ApprovalRecord::STATUS_PENDING)
-            ->first();
+        $currentRecord = $this->workflowService->findPendingRecordForActor(
+            $expenseClaim,
+            (int) auth()->id()
+        );
 
         if ($currentRecord) {
             $ok = $this->workflowService->processAuthorizedRejection(

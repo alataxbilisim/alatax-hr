@@ -64,6 +64,12 @@ return [
         'approval_returned_title' => 'Talebiniz iade edildi',
         'approval_returned_body' => ':entity iade edildi. :reason',
 
+        'approval_reminder_title' => 'Onay hatırlatması',
+        'approval_reminder_body' => ':entity için onayınız hâlâ bekleniyor (:step, :days gün).',
+
+        'approval_escalated_title' => 'Onay eskalasyonu',
+        'approval_escalated_body' => ':entity onayında gecikme var (:step, :days gün). Üst kademe bilgilendirildi.',
+
         'leave_approved_title' => 'İzin talebiniz onaylandı',
         'leave_approved_body' => 'İzin talebiniz :date tarihinde onaylandı.',
 

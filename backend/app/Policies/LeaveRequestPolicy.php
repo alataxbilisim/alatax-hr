@@ -70,13 +70,21 @@ class LeaveRequestPolicy
             return true;
         }
 
-        $currentRecord = $leaveRequest->approvalRecords()
+        // Paralel grup: aktöre ait pending kaydı seç (first() yanlış kayda bakmaz)
+        $actorRecord = $this->workflow->findPendingRecordForActor($leaveRequest, $user->id);
+
+        if ($actorRecord) {
+            return true;
+        }
+
+        $hasPendingWorkflow = $leaveRequest->approvalRecords()
             ->where('is_current', true)
             ->where('status', ApprovalRecord::STATUS_PENDING)
-            ->first();
+            ->exists();
 
-        if ($currentRecord) {
-            return $this->workflow->canApprove($currentRecord, $user->id);
+        if ($hasPendingWorkflow) {
+            // Aktif motor kaydı var ama bu aktörün kaydı değil → yetki GENİŞLEMEZ
+            return false;
         }
 
         // Legacy serbest onay KAPALI: yalnızca team / department kuralı

@@ -42,6 +42,22 @@ return [
             'body_key' => 'messages.notifications.approval_returned_body',
         ],
 
+        'approval.reminder' => [
+            'group' => 'approvals',
+            'panel' => 'company',
+            'path' => '/leaves',
+            'title_key' => 'messages.notifications.approval_reminder_title',
+            'body_key' => 'messages.notifications.approval_reminder_body',
+        ],
+
+        'approval.escalated' => [
+            'group' => 'approvals',
+            'panel' => 'company',
+            'path' => '/leaves',
+            'title_key' => 'messages.notifications.approval_escalated_title',
+            'body_key' => 'messages.notifications.approval_escalated_body',
+        ],
+
         'leave.approved' => [
             'group' => 'requests',
             'panel' => 'portal',

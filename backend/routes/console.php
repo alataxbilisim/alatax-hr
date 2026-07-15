@@ -31,3 +31,9 @@ Schedule::command('documents:process-expiry-alerts')
     ->withoutOverlapping(120)
     ->onOneServer()
     ->name('documents-expiry-alerts');
+
+Schedule::command('approvals:process-escalations')
+    ->dailyAt('07:00')
+    ->withoutOverlapping(120)
+    ->onOneServer()
+    ->name('approvals-escalations');

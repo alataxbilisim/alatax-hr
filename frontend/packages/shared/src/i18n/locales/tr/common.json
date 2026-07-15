@@ -346,7 +346,13 @@
     "balanceReason": "Gerekçe",
     "balanceReasonRequired": "Manuel bakiye düzeltmesi için gerekçe zorunludur (en az 3 karakter).",
     "balanceUpdated": "Bakiye güncellendi",
-    "balanceUpdateFailed": "Bakiye güncellemesi başarısız"
+    "balanceUpdateFailed": "Bakiye güncellemesi başarısız",
+    "approvalSteps": "Onay adımları",
+    "parallelGroup": "Paralel grup {{group}}",
+    "approver": "Onaycı",
+    "stepStatus": "Durum",
+    "noApprovalSteps": "Onay adımı kaydı yok",
+    "rejectionReason": "Red Nedeni"
   },
   "expenses": {
     "title": "Masraflar",

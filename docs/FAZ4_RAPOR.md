@@ -220,6 +220,69 @@ Kanıt: `App.tsx` employees bloğu “No module restriction” + sadece `Protect
 
 Yok (kararlar 1–7 uygulandı). B4 paralel runtime / B5 Stüdyo UI bilinçli ertelendi.
 
+---
+
+## Faz 4B-B4 — Paralel onay grupları + eskalasyon (15 Temmuz 2026)
+
+**Branch:** `faz4-form-engine` · **Suite:** 410 passed / 0 fail · company `tsc` 0 · Select sentinel OK · PUSH yok
+
+### Teşhis (kısa)
+
+| Konu | Durum |
+|------|--------|
+| Şema | `parallel_group` (nullable int), `completion_policy` (`all`/`any`, default `all`) — runtime yoktu |
+| İlerletme | `ApprovalRecord::moveToNextStep` tek pending açıyordu → `ApprovalFlowEngine` |
+| Güvenlik | Policy/controller `first()` paralelde yanlış kayda bakabilirdi → `findPendingRecordForActor` (yetki genişlemez) |
+
+### Delegasyon (paralel)
+
+| Durum | Davranış |
+|-------|----------|
+| Vekil | `findApprover` vekili yazar; `canApprove` vekili kabul eder |
+| Asıl | 4C-1 `notifyApprovalRequested` çift hedef |
+| Eskalasyon | Yetki **devretmez**; yalnız bildirim |
+
+### completion_policy
+
+| Policy | Açılış | İlerleme | Red |
+|--------|--------|----------|-----|
+| `all` | Grup adımları aynı anda pending | Hepsi onaylanınca sonraki dalga | Herhangi red → rejected + kalan skip |
+| `any` | Aynı | Biri onay → kardeşler auto-skip (audit) + ilerler; yarışta tek ilerleme (`lockForUpdate`) | Aynı |
+| `parallel_group` NULL | Tek adım | B0–B3 sıralı davranış | Değişmedi |
+
+### Eskalasyon
+
+| Kural | Detay |
+|-------|--------|
+| Kaynak | `approval_steps.escalation_days` veya workflow `escalation_days` (nullable = kapalı) |
+| Eşik | pending gün ≥ N → `approval.reminder` (onaycıya) |
+| Eşik+2 | → `approval.escalated` (üst yönetici; yoksa company admin/İK) |
+| İdempotent | `approval_escalation_alerts` unique `(record, alert_level)` |
+| Schedule | `approvals:process-escalations` günlük 07:00 |
+
+### Katalog
+
+- `approval.reminder` / `approval.escalated` (+ `messages.notifications.*`)
+
+### Görünürlük
+
+- Leave `show` → `approval_records` + step `parallel_group`
+- Company LeavesPage detay: paralel grup etiketi (`t()`)
+
+### Test
+
+| Suite | Sonuç |
+|-------|--------|
+| `ApprovalWorkflowMotorB4Test` (6) | ✅ |
+| B0–B3 + `LeaveRequestPolicyDataScopeTest` | ✅ |
+| Tam suite | **410 passed** |
+
+### KARAR BEKLENENLER
+
+Yok.
+
+---
+
 ### Yarın önce bak (kullanıcı testi — 5 madde)
 
 1. Demo firmada `php artisan approvals:seed-default-leave-workflows` çalıştır; yeni izin talebi oluştur → yöneticide bildirim/kuyruk.

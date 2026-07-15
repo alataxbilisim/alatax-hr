@@ -39,6 +39,20 @@ interface LeaveType {
   is_active: boolean;
 }
 
+interface ApprovalStepRecord {
+  id: number;
+  status: string;
+  step_order: number;
+  comment?: string | null;
+  step?: {
+    id: number;
+    name: string;
+    parallel_group?: number | null;
+    completion_policy?: string | null;
+  } | null;
+  approver?: { id: number; name: string } | null;
+}
+
 interface LeaveRequest {
   id: number;
   user: { id: number; name: string };
@@ -54,6 +68,7 @@ interface LeaveRequest {
   rejected_by?: { id: number; name: string };
   rejection_reason?: string;
   created_at: string;
+  approval_records?: ApprovalStepRecord[];
 }
 
 type TabType = 'requests' | 'types' | 'balances' | 'calendar' | 'holidays' | 'policies' | 'reports';
@@ -97,6 +112,20 @@ const LeavesPage: React.FC = () => {
 
   // Action states
   const [actionLoading, setActionLoading] = useState<number | null>(null);
+
+  const openRequestDetail = async (request: LeaveRequest) => {
+    setSelectedRequest(request);
+    setDetailModalOpen(true);
+    try {
+      const response = await leavesApi.requests.get(request.id);
+      const data = (response.data as { data?: LeaveRequest }).data ?? (response.data as LeaveRequest);
+      if (data?.id) {
+        setSelectedRequest(data);
+      }
+    } catch {
+      // Liste satırı yeterli; detay zenginleştirmesi opsiyonel
+    }
+  };
 
   // Tab değişince URL'i güncelle (activeTab pathname'den türetilir)
   const handleTabChange = (tab: TabType) => {
@@ -304,8 +333,7 @@ const LeavesPage: React.FC = () => {
             className="btn btn-ghost btn-icon"
             title="Detay"
             onClick={() => {
-              setSelectedRequest(r);
-              setDetailModalOpen(true);
+              void openRequestDetail(r);
             }}
           >
             <BsEye />
@@ -650,10 +678,47 @@ const LeavesPage: React.FC = () => {
             )}
             {selectedRequest.rejection_reason && (
               <div>
-                <label className="form-label text-muted">Red Nedeni</label>
+                <label className="form-label text-muted">{t('leaves.rejectionReason')}</label>
                 <p style={{ color: 'var(--danger)' }}>{selectedRequest.rejection_reason}</p>
               </div>
             )}
+            <div>
+              <label className="form-label text-muted">{t('leaves.approvalSteps')}</label>
+              {(selectedRequest.approval_records?.length ?? 0) === 0 ? (
+                <p style={{ color: 'var(--text-tertiary)', fontSize: 'var(--fs-sm)' }}>
+                  {t('leaves.noApprovalSteps')}
+                </p>
+              ) : (
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {selectedRequest.approval_records?.map((rec) => (
+                    <li
+                      key={rec.id}
+                      style={{
+                        border: '1px solid var(--border-color)',
+                        borderRadius: 'var(--radius-sm)',
+                        padding: '0.5rem 0.75rem',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <span style={{ fontWeight: 500 }}>
+                          #{rec.step_order} {rec.step?.name ?? '—'}
+                        </span>
+                        <span className="badge badge-secondary">{rec.status}</span>
+                      </div>
+                      {rec.step?.parallel_group != null && (
+                        <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-secondary)', marginTop: 4 }}>
+                          {t('leaves.parallelGroup', { group: rec.step.parallel_group })}
+                          {rec.step.completion_policy ? ` · ${rec.step.completion_policy}` : ''}
+                        </div>
+                      )}
+                      <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-tertiary)', marginTop: 2 }}>
+                        {t('leaves.approver')}: {rec.approver?.name ?? '—'}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
         )}
       </Modal>

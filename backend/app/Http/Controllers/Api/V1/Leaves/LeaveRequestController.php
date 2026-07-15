@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\V1\Leaves;
 use App\Enums\LeaveRequestStatus;
 use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\ActivityLog;
-use App\Models\ApprovalRecord;
 use App\Models\LeaveBalance;
 use App\Models\LeaveRequest;
 use App\Models\LeaveType;
@@ -149,10 +148,17 @@ class LeaveRequestController extends BaseController
     {
         $this->authorize('view', $leaveRequest);
 
-        return $this->success(
-            $leaveRequest->load(['user', 'leaveType', 'approvedBy', 'rejectedBy']),
-            'İzin talebi detayları'
-        );
+        $leaveRequest->load([
+            'user',
+            'leaveType',
+            'approvedBy',
+            'rejectedBy',
+            'approvalRecords' => fn ($q) => $q->orderBy('step_order')->orderBy('id'),
+            'approvalRecords.step',
+            'approvalRecords.approver:id,name',
+        ]);
+
+        return $this->success($leaveRequest, 'İzin talebi detayları');
     }
 
     /**
@@ -172,10 +178,10 @@ class LeaveRequestController extends BaseController
             'note' => 'nullable|string|max:500',
         ]);
 
-        $currentRecord = $leaveRequest->approvalRecords()
-            ->where('is_current', true)
-            ->where('status', ApprovalRecord::STATUS_PENDING)
-            ->first();
+        $currentRecord = $this->workflowService->findPendingRecordForActor(
+            $leaveRequest,
+            (int) auth()->id()
+        );
 
         if ($currentRecord) {
             $ok = $this->workflowService->processAuthorizedApproval(
@@ -219,10 +225,10 @@ class LeaveRequestController extends BaseController
             'reason' => 'required|string|max:500',
         ]);
 
-        $currentRecord = $leaveRequest->approvalRecords()
-            ->where('is_current', true)
-            ->where('status', ApprovalRecord::STATUS_PENDING)
-            ->first();
+        $currentRecord = $this->workflowService->findPendingRecordForActor(
+            $leaveRequest,
+            (int) auth()->id()
+        );
 
         if ($currentRecord) {
             $ok = $this->workflowService->processAuthorizedRejection(

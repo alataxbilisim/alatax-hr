@@ -21,6 +21,7 @@ class ApprovalWorkflow extends Model
         'is_active',
         'is_default',
         'conditions',
+        'escalation_days',
         'created_by',
         'updated_by',
     ];
@@ -29,6 +30,7 @@ class ApprovalWorkflow extends Model
         'is_active' => 'boolean',
         'is_default' => 'boolean',
         'conditions' => 'array',
+        'escalation_days' => 'integer',
     ];
 
     // Desteklenen entity tipleri
