@@ -10,7 +10,7 @@
 |--------|--------|--------|
 | Z1 | `salary_records`, employees senkron, backfill, Employee Ücret sekmesi, Portal Ücretim, maskeli audit | `673448b` |
 | Z2 | `salary_bands` CRUD + bant göstergesi | `0160494` |
-| Z3 | Zam dönemi + onay motoru (`salary_review`) + atomik uygulama + `ApprovalStep` user-entity fix | *(bu commit)* |
+| Z3 | Zam dönemi + onay motoru (`salary_review`) + atomik uygulama + `ApprovalStep` user-entity fix | 7b137cb |
 
 ## Doğrulama
 
