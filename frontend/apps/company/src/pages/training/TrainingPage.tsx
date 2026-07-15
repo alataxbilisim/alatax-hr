@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { trainingApi, usersApi, lookupsApi, type LookupItem } from '@shared/services/api';
 import { Select } from '@shared/components';
+import { useTranslation } from '@shared/i18n';
 import toast from 'react-hot-toast';
 import { DataTable, ConfirmDialog, EmptyState, Modal } from '../../components/ui';
 import TrainingForm from '../../components/training/TrainingForm';
@@ -43,6 +44,15 @@ interface Session {
   status: string;
 }
 
+interface ParticipantRow {
+  id: number;
+  user_id: number;
+  status: string;
+  score?: number | null;
+  passed?: boolean | null;
+  user?: { id: number; name: string; email?: string };
+}
+
 interface User {
   id: number;
   name: string;
@@ -59,6 +69,7 @@ const statusBadgeClass: Record<string, string> = {
 };
 
 const TrainingPage: React.FC = () => {
+  const { t } = useTranslation('common');
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -87,6 +98,9 @@ const TrainingPage: React.FC = () => {
 
   const [participantsModalOpen, setParticipantsModalOpen] = useState(false);
   const [currentSession, setCurrentSession] = useState<Session | null>(null);
+  const [participants, setParticipants] = useState<ParticipantRow[]>([]);
+  const [participantsLoading, setParticipantsLoading] = useState(false);
+  const [attendanceSaving, setAttendanceSaving] = useState(false);
   const [addParticipantOpen, setAddParticipantOpen] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUserId, setSelectedUserId] = useState('');
@@ -231,16 +245,72 @@ const TrainingPage: React.FC = () => {
     }
   };
 
+  const openParticipants = async (session: Session) => {
+    setCurrentSession(session);
+    setParticipantsModalOpen(true);
+    setParticipantsLoading(true);
+    setParticipants([]);
+    try {
+      const res = await trainingApi.sessions.get(session.id);
+      const payload = res.data.data;
+      const list: ParticipantRow[] = Array.isArray(payload?.participants)
+        ? payload.participants
+        : [];
+      setParticipants(
+        list.map((row) => ({
+          id: row.id,
+          user_id: row.user_id,
+          status: row.status || 'registered',
+          score: row.score ?? null,
+          passed: row.passed ?? null,
+          user: row.user,
+        })),
+      );
+    } catch {
+      toast.error(t('trainingAttendance.loadError'));
+    } finally {
+      setParticipantsLoading(false);
+    }
+  };
+
+  const setParticipantStatus = (participantId: number, status: string) => {
+    setParticipants((prev) =>
+      prev.map((p) => (p.id === participantId ? { ...p, status } : p)),
+    );
+  };
+
+  const handleSaveAttendance = async () => {
+    if (!currentSession) return;
+    setAttendanceSaving(true);
+    try {
+      await trainingApi.sessions.updateAttendance(currentSession.id, {
+        attendances: participants.map((p) => ({
+          user_id: p.user_id,
+          status: p.status,
+          score: p.score ?? null,
+          passed: p.passed ?? null,
+        })),
+      });
+      toast.success(t('trainingAttendance.saveSuccess'));
+      void loadSessions();
+    } catch {
+      toast.error(t('trainingAttendance.saveError'));
+    } finally {
+      setAttendanceSaving(false);
+    }
+  };
+
   const handleAddParticipant = async () => {
     if (!currentSession || !selectedUserId) return;
     try {
       await trainingApi.sessions.addParticipant(currentSession.id, Number(selectedUserId));
-      toast.success('Katılımcı eklendi');
+      toast.success(t('trainingAttendance.addSuccess'));
       setAddParticipantOpen(false);
       setSelectedUserId('');
-      loadSessions();
+      await openParticipants(currentSession);
+      void loadSessions();
     } catch {
-      toast.error('Katılımcı eklenemedi');
+      toast.error(t('trainingAttendance.addError'));
     }
   };
 
@@ -354,11 +424,10 @@ const TrainingPage: React.FC = () => {
           <button
             className="btn btn-ghost btn-icon btn-sm"
             onClick={() => {
-              setCurrentSession(s);
-              setParticipantsModalOpen(true);
-              loadUsers();
+              void openParticipants(s);
+              void loadUsers();
             }}
-            title="Katılımcılar"
+            title={t('trainingAttendance.title')}
           >
             <BsPeople size={14} />
           </button>
@@ -534,21 +603,79 @@ const TrainingPage: React.FC = () => {
       <Modal
         isOpen={participantsModalOpen}
         onClose={() => setParticipantsModalOpen(false)}
-        title={`Katılımcılar - ${currentSession?.title}`}
-        size="md"
+        title={`${t('trainingAttendance.title')}: ${currentSession?.training?.title || currentSession?.title || ''}`}
+        size="lg"
       >
-        <div style={{ marginBottom: '1rem' }}>
-          <button
-            className="btn btn-primary btn-sm"
-            onClick={() => setAddParticipantOpen(true)}
-          >
-            <BsPersonPlus size={16} />
-            Katılımcı Ekle
-          </button>
+        <div className="space-y-4">
+          <div className="flex justify-between items-center gap-2" style={{ marginBottom: '1rem' }}>
+            <p className="text-sm text-secondary">
+              {participantsLoading
+                ? t('trainingAttendance.loading')
+                : t('trainingAttendance.count', { count: participants.length })}
+            </p>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button type="button" className="btn btn-secondary btn-sm" onClick={() => setAddParticipantOpen(true)}>
+                <BsPersonPlus size={16} />
+                {t('trainingAttendance.add')}
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={() => void handleSaveAttendance()}
+                disabled={attendanceSaving || participantsLoading || participants.length === 0}
+              >
+                {attendanceSaving ? t('trainingAttendance.saving') : t('trainingAttendance.save')}
+              </button>
+            </div>
+          </div>
+          {participantsLoading ? (
+            <p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '2rem' }}>
+              {t('trainingAttendance.loading')}
+            </p>
+          ) : participants.length === 0 ? (
+            <EmptyState
+              icon={<BsPeople className="w-12 h-12" />}
+              title={t('trainingAttendance.empty')}
+              description={t('trainingAttendance.emptyHint')}
+            />
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table className="w-full text-sm" style={{ width: '100%' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--border-default)', textAlign: 'left' }}>
+                    <th style={{ padding: '0.5rem 0.75rem' }}>{t('trainingAttendance.colName')}</th>
+                    <th style={{ padding: '0.5rem 0.75rem' }}>{t('trainingAttendance.colStatus')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {participants.map((p) => (
+                    <tr key={p.id} style={{ borderBottom: '1px solid var(--border-default)' }}>
+                      <td style={{ padding: '0.5rem 0.75rem' }}>
+                        <div style={{ fontWeight: 500 }}>{p.user?.name ?? `#${p.user_id}`}</div>
+                        {p.user?.email ? (
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{p.user.email}</div>
+                        ) : null}
+                      </td>
+                      <td style={{ padding: '0.5rem 0.75rem', minWidth: '10rem' }}>
+                        <Select
+                          value={p.status}
+                          onChange={(v) => setParticipantStatus(p.id, v || 'registered')}
+                          options={[
+                            { value: 'registered', label: t('trainingAttendance.status.registered') },
+                            { value: 'attended', label: t('trainingAttendance.status.attended') },
+                            { value: 'absent', label: t('trainingAttendance.status.absent') },
+                            { value: 'excused', label: t('trainingAttendance.status.excused') },
+                          ]}
+                          aria-label={t('trainingAttendance.colStatus')}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
-        <p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '2rem' }}>
-          Katılımcı listesi API&apos;den yüklenecek.
-        </p>
       </Modal>
 
       <Modal
