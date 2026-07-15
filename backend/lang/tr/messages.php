@@ -78,6 +78,9 @@ return [
 
         'onboarding_task_assigned_title' => 'Yeni onboarding görevi',
         'onboarding_task_assigned_body' => 'Size görev atandı: :task (:process).',
+
+        'document_expiring_title' => 'Süreli evrak uyarısı',
+        'document_expiring_body' => '":entity" belgesinin süresi :days gün içinde doluyor (:date).',
     ],
 
 ];

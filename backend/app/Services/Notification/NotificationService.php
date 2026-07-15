@@ -240,6 +240,7 @@ class NotificationService
             'reason' => (string) ($payload['reason'] ?? ''),
             'task' => (string) ($payload['task_title'] ?? $payload['entity'] ?? ''),
             'process' => (string) ($payload['process_title'] ?? ''),
+            'days' => (string) ($payload['days'] ?? $payload['threshold_days'] ?? ''),
         ];
     }
 

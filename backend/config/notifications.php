@@ -82,6 +82,14 @@ return [
             'body_key' => 'messages.notifications.onboarding_task_assigned_body',
         ],
 
+        'document.expiring' => [
+            'group' => 'documents',
+            'panel' => 'company',
+            'path' => '/documents',
+            'title_key' => 'messages.notifications.document_expiring_title',
+            'body_key' => 'messages.notifications.document_expiring_body',
+        ],
+
     ],
 
 ];

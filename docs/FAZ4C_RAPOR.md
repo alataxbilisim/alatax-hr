@@ -62,3 +62,44 @@ in-app her zaman; email kapalıysa atlanır. Company Ayarlar + Portal Profil.
 ### Kapsam dışı (4C-2+)
 
 SMS, push, şablon editörü, FormEngine yüzeyi, `approval.returned` iş akışı tetikleyicisi.
+
+---
+
+## Scheduler — İlk zamanlanmış işler
+
+### İş listesi
+
+| Komut | Zaman | Ne yapar |
+|-------|--------|----------|
+| `leaves:process-monthly-accruals` | Her ayın 1'i 01:15 | Tüm aktif firmalar → `LeaveCalculationService::processMonthlyAccruals` (firma hata izolasyonu) |
+| `leaves:process-year-carryover` | 1 Ocak 02:00 | Yıl sonu devir → `processYearEndCarryover` (geçen yıl → yeni yıl) |
+| `documents:process-expiry-alerts` | Her gün 06:30 | `expiry_date` = bugün+30 / +7 → İK + personel `document.expiring` (eşik başına 1 kez) |
+
+Overlap: `withoutOverlapping` + `onOneServer` (üçü de).
+
+### Mimari
+
+| Parça | Not |
+|-------|-----|
+| Manuel API | Controller → `LeaveCalculationService` (değişmedi) |
+| Scheduler | Command → `LeaveAccrualBatchService` → aynı `LeaveCalculationService` |
+| Evrak | `DocumentExpiryAlertService` + `document_expiry_alerts` unique(doc, threshold) |
+| Katalog | `document.expiring` eklendi |
+
+### schedule:list
+
+```
+15 1 1 * *  php artisan leaves:process-monthly-accruals
+0  2 1 1 *  php artisan leaves:process-year-carryover
+30 6 * * *  php artisan documents:process-expiry-alerts
+```
+
+### Doğrulama
+
+| Metrik | Sonuç |
+|--------|--------|
+| `SchedulerJobsTest` | **2 passed** |
+| Tam suite | **404 passed / 0 fail** (1582 assertions) |
+| company `tsc` | **0** |
+| Sentinel `admin@demo.test` @ `alatax_hr` | **yes** |
+| Wipe / push | **yok** (ekleyici migration `document_expiry_alerts`) |
