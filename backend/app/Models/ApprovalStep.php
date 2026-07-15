@@ -180,6 +180,42 @@ class ApprovalStep extends Model
      */
     protected function getBaseApprover(Model $approvable): ?User
     {
+        // Belirli kullanıcı / rol / unvan: talep sahibi (user) gerekmez
+        // (salary_review gibi entity'lerde user ilişkisi yoktur).
+        if (in_array($this->approver_type, [
+            self::APPROVER_USER,
+            self::APPROVER_SPECIFIC_USER,
+            self::APPROVER_ROLE,
+            self::APPROVER_SPECIFIC_ROLE,
+            self::APPROVER_HR,
+            self::APPROVER_CFO,
+            self::APPROVER_CEO,
+        ], true)) {
+            return match ($this->approver_type) {
+                self::APPROVER_USER,
+                self::APPROVER_SPECIFIC_USER => $this->specificUser,
+
+                self::APPROVER_ROLE,
+                self::APPROVER_SPECIFIC_ROLE => User::where('company_id', $approvable->company_id)
+                    ->whereHas('roles', fn ($q) => $q->where('name', $this->specific_role))
+                    ->first(),
+
+                self::APPROVER_HR => User::where('company_id', $approvable->company_id)
+                    ->whereHas('roles', fn ($q) => $q->where('name', 'hr_manager'))
+                    ->first(),
+
+                self::APPROVER_CFO => User::where('company_id', $approvable->company_id)
+                    ->whereHas('roles', fn ($q) => $q->where('name', 'cfo'))
+                    ->first(),
+
+                self::APPROVER_CEO => User::where('company_id', $approvable->company_id)
+                    ->whereHas('roles', fn ($q) => $q->where('name', 'ceo'))
+                    ->first(),
+
+                default => null,
+            };
+        }
+
         $requestingUser = $approvable->user ?? null;
 
         if (! $requestingUser) {
@@ -197,26 +233,6 @@ class ApprovalStep extends Model
             self::APPROVER_DYNAMIC_SKIP_MANAGER => $this->resolveSkipManager($employee),
 
             self::APPROVER_DEPARTMENT_HEAD => $this->resolveDepartmentHead($employee),
-
-            self::APPROVER_USER,
-            self::APPROVER_SPECIFIC_USER => $this->specificUser,
-
-            self::APPROVER_ROLE,
-            self::APPROVER_SPECIFIC_ROLE => User::where('company_id', $approvable->company_id)
-                ->whereHas('roles', fn ($q) => $q->where('name', $this->specific_role))
-                ->first(),
-
-            self::APPROVER_HR => User::where('company_id', $approvable->company_id)
-                ->whereHas('roles', fn ($q) => $q->where('name', 'hr_manager'))
-                ->first(),
-
-            self::APPROVER_CFO => User::where('company_id', $approvable->company_id)
-                ->whereHas('roles', fn ($q) => $q->where('name', 'cfo'))
-                ->first(),
-
-            self::APPROVER_CEO => User::where('company_id', $approvable->company_id)
-                ->whereHas('roles', fn ($q) => $q->where('name', 'ceo'))
-                ->first(),
 
             default => null,
         };

@@ -317,6 +317,7 @@ class WorkflowService
             'ExpenseClaim' => ApprovalWorkflow::ENTITY_EXPENSE_REQUEST,
             'TrainingRequest' => ApprovalWorkflow::ENTITY_TRAINING_REQUEST,
             'Document' => ApprovalWorkflow::ENTITY_DOCUMENT_APPROVAL,
+            'SalaryReviewPeriod' => ApprovalWorkflow::ENTITY_SALARY_REVIEW,
         ];
 
         return $mapping[$class] ?? strtolower($class);

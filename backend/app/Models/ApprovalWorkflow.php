@@ -44,6 +44,8 @@ class ApprovalWorkflow extends Model
 
     const ENTITY_DOCUMENT_APPROVAL = 'document_approval';
 
+    const ENTITY_SALARY_REVIEW = 'salary_review';
+
     public static function getEntityTypes(): array
     {
         return [
@@ -52,6 +54,7 @@ class ApprovalWorkflow extends Model
             self::ENTITY_EXPENSE_REQUEST => 'Masraf Talebi',
             self::ENTITY_TRAINING_REQUEST => 'Eğitim Talebi',
             self::ENTITY_DOCUMENT_APPROVAL => 'Evrak Onayı',
+            self::ENTITY_SALARY_REVIEW => 'Zam Dönemi',
         ];
     }
 
