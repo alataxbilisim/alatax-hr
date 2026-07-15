@@ -1,5 +1,53 @@
 # PDKS Raporu
 
+## PDKS-2 — Vardiya + hesap + düzeltme + raporlar (16 Temmuz 2026)
+
+**Branch:** `faz4-form-engine` · **Suite:** 435 passed / 0 fail · company+portal `tsc` 0 · Select sentinel OK · PUSH yok · DB wipe yok
+
+### Zincir tablosu
+
+| Zincir | Commit | Özet | Test |
+|--------|--------|------|------|
+| Z1 Vardiya tanım+ata | `a2d9a75` | Shift CRUD, employee-shifts tekil/toplu, FE Vardiyalar/Atama, portal Vardiyalarım, DataScope 403 | `PdksShiftAssignmentTest` (7) |
+| Z2 Hesap motoru | `c2aaaba` | `late/early/missing_minutes` migration, `AttendanceCalcService`, clock-out tetik, gece `timesheet:mark-incomplete`, firma varsayılanı | `PdksAttendanceCalcTest` (7) |
+| Z3 Düzeltme+rapor | `a614122` | Manuel create/edit UI + zorunlu `reason` + ActivityLog + recalc; raporlar+Excel; manager create/edit seed | `PdksAttendanceCorrectionReportTest` (5) |
+
+### Yetki (DataScope — yeni model yok)
+
+| Rol | Kapsam | Vardiya / düzeltme |
+|-----|--------|-------------------|
+| admin / hr_manager | company | tümü (+ shifts.*) |
+| hr_specialist | department | kendi departmanı |
+| manager | team | kendi ekibi; dışı → 403 |
+| branch_manager | branch | create/edit + shifts view/create/edit |
+
+### API (yeni)
+
+- `GET/POST/PUT/DELETE /api/v1/shifts`
+- `GET/POST /api/v1/employee-shifts`, `POST .../bulk`, `DELETE .../{id}`
+- `GET /api/v1/attendance/reports`, `GET .../reports/export`
+- create/update attendance: `reason` zorunlu → ActivityLog eski→yeni
+
+### FE
+
+- Company: `/attendance/shifts`, `/attendance/shift-assignments`, `/attendance/reports`
+- AttendancePage: ekle/düzenle modalı
+- Portal Puantajım: **Vardiyalarım** sekmesi (`GET /portal/timesheet/shifts`)
+- Firma Ayarları: `default_work_start/end`, `late_tolerance_minutes`
+
+### Hesap kuralları
+
+- Atanmış vardiya varsa ona göre; yoksa firma varsayılanı
+- Tolerans içi gecikme → `present`, late_minutes=0
+- Clock-out → calc; kaynak fark etmez (portal/QR/manuel)
+- Gece 01:30: dün clock-out’suz → `absent` + missing (idempotent)
+
+### DB / push
+
+Ekleyici migration uygulandı (`late_minutes`, `early_leave_minutes`, `missing_minutes`). Fresh/wipe yok. Lokal 3 commit; **push yok**.
+
+---
+
 ## PDKS-1 — QR ile giriş-çıkış (15 Temmuz 2026)
 
 **Branch:** `faz4-form-engine` · **Suite:** 416 passed / 0 fail · company+portal `tsc` 0 · Select sentinel OK · PUSH yok
