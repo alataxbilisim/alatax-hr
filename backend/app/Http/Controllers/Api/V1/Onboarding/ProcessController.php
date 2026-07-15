@@ -7,6 +7,7 @@ use App\Models\ActivityLog;
 use App\Models\OnboardingProcess;
 use App\Models\OnboardingTask;
 use App\Services\LookupService;
+use App\Services\Onboarding\OnboardingProcessService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -14,6 +15,7 @@ class ProcessController extends BaseController
 {
     public function __construct(
         protected LookupService $lookups,
+        protected OnboardingProcessService $processService,
     ) {}
 
     /**
@@ -32,6 +34,10 @@ class ProcessController extends BaseController
                 'status'
             );
             $query->where('status', $request->status);
+        }
+
+        if ($request->filled('user_id')) {
+            $query->where('user_id', (int) $request->input('user_id'));
         }
 
         if ($request->has('assigned_to')) {
@@ -58,19 +64,13 @@ class ProcessController extends BaseController
             'assigned_to' => 'nullable|exists:users,id',
         ]);
 
-        $validated['company_id'] = $this->getCompanyId();
-        $validated['status'] = OnboardingProcess::STATUS_PENDING;
+        $process = $this->processService->startProcess([
+            ...$validated,
+            'company_id' => $this->getCompanyId(),
+            'created_by' => auth()->id(),
+        ]);
 
-        $process = OnboardingProcess::create($validated);
-
-        // Create tasks from template
-        if ($process->template_id) {
-            $process->createTasksFromTemplate();
-        }
-
-        ActivityLog::log('create', $process, 'Onboarding süreci başlatıldı: '.$process->title);
-
-        return $this->success($process->load(['user', 'template', 'tasks']), 'Onboarding süreci oluşturuldu', 201);
+        return $this->success($process, 'Onboarding süreci oluşturuldu', 201);
     }
 
     /**

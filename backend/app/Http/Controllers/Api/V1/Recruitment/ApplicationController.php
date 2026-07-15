@@ -9,8 +9,10 @@ use App\Http\Requests\Recruitment\StoreJobApplicationRequest;
 use App\Http\Resources\EmployeeResource;
 use App\Models\ActivityLog;
 use App\Models\ApplicationStatusLog;
+use App\Models\Employee;
 use App\Models\JobApplication;
 use App\Models\JobPosition;
+use App\Models\OnboardingProcess;
 use App\Services\LookupService;
 use App\Services\Recruitment\ConvertApplicationToEmployeeService;
 use Illuminate\Http\JsonResponse;
@@ -251,7 +253,7 @@ class ApplicationController extends BaseController
     }
 
     /**
-     * hired → personel ön-doldurma (onboarding otomatik değil).
+     * hired → personel ön-doldurma + varsayılan onboarding tetikleme (B-5).
      */
     public function convertToEmployee(ConvertApplicationToEmployeeRequest $request, int $id): JsonResponse
     {
@@ -271,13 +273,33 @@ class ApplicationController extends BaseController
             return $this->error($e->getMessage(), 422);
         }
 
+        $onboarding = $result['onboarding'];
+        $process = $onboarding['process'] ?? null;
+
+        $message = $result['created']
+            ? 'Personel kaydı ön-dolduruldu'
+            : 'Personel kaydı zaten mevcut (idempotent)';
+        if (! empty($onboarding['warning'])) {
+            $message .= ' — '.$onboarding['warning'];
+        } elseif (! empty($onboarding['started'])) {
+            $message .= ' — Onboarding süreci başlatıldı';
+        }
+
         return $this->success([
             'employee' => new EmployeeResource($result['employee']),
             'created' => $result['created'],
             'prefill' => $result['prefill'],
             'application_id' => $application->id,
             'converted_employee_id' => $result['employee']->id,
-        ], $result['created'] ? 'Personel kaydı ön-dolduruldu' : 'Personel kaydı zaten mevcut (idempotent)');
+            'onboarding' => [
+                'started' => (bool) ($onboarding['started'] ?? false),
+                'skipped' => (bool) ($onboarding['skipped'] ?? true),
+                'warning' => $onboarding['warning'] ?? null,
+                'process_id' => $process?->id,
+                'process_title' => $process?->title,
+                'process_status' => $process?->status,
+            ],
+        ], $message);
     }
 
     /**
@@ -319,7 +341,43 @@ class ApplicationController extends BaseController
             'source' => $app->source,
             'consent_kvkk' => (bool) $app->consent_kvkk,
             'converted_employee_id' => $app->converted_employee_id,
+            'onboarding_process' => $this->resolveOnboardingSummary($app),
             'created_at' => $app->created_at?->toDateTimeString(),
+        ];
+    }
+
+    /**
+     * @return array{id: int, title: string, status: string}|null
+     */
+    private function resolveOnboardingSummary(JobApplication $app): ?array
+    {
+        if (! $app->converted_employee_id) {
+            return null;
+        }
+
+        $employee = Employee::query()
+            ->withoutGlobalScopes()
+            ->where('company_id', $app->company_id)
+            ->find($app->converted_employee_id);
+
+        if ($employee === null || $employee->user_id === null) {
+            return null;
+        }
+
+        $process = OnboardingProcess::query()
+            ->where('company_id', $app->company_id)
+            ->where('user_id', $employee->user_id)
+            ->latest('id')
+            ->first();
+
+        if ($process === null) {
+            return null;
+        }
+
+        return [
+            'id' => $process->id,
+            'title' => $process->title,
+            'status' => $process->status,
         ];
     }
 }

@@ -1,7 +1,12 @@
-import React from 'react';
-import { BsBriefcase, BsCurrencyDollar, BsShieldCheck } from 'react-icons/bs';
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useTranslation } from '@shared/i18n';
+import { onboardingApi } from '@shared/services/api';
+import { BsBriefcase, BsCurrencyDollar, BsShieldCheck, BsMortarboard } from 'react-icons/bs';
 
 interface Employee {
+  user_id?: number | null;
+  user?: { id: number };
   hire_date?: string;
   contract_start_date?: string;
   contract_end_date?: string;
@@ -17,11 +22,57 @@ interface Employee {
   notes?: string;
 }
 
+interface ActiveOnboarding {
+  id: number;
+  title: string;
+  status: string;
+}
+
 interface WorkTabProps {
   employee: Employee;
 }
 
 const WorkTab: React.FC<WorkTabProps> = ({ employee }) => {
+  const { t } = useTranslation('common');
+  const [onboarding, setOnboarding] = useState<ActiveOnboarding | null>(null);
+  const [onboardingLoading, setOnboardingLoading] = useState(false);
+
+  const userId = employee.user_id ?? employee.user?.id ?? null;
+
+  useEffect(() => {
+    if (!userId) {
+      setOnboarding(null);
+      return;
+    }
+
+    let cancelled = false;
+    setOnboardingLoading(true);
+
+    void onboardingApi.processes
+      .list({ user_id: userId, per_page: 5 })
+      .then((response) => {
+        if (cancelled) return;
+        const page = response.data.data;
+        const rows: Array<{ id: number; title: string; status: string }> = page?.data ?? [];
+        const active = rows.find((p) => p.status === 'pending' || p.status === 'in_progress') ?? null;
+        setOnboarding(active);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setOnboarding(null);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setOnboardingLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
   const formatDate = (date?: string) => {
     if (!date) return '-';
     return new Date(date).toLocaleDateString('tr-TR', {
@@ -140,6 +191,40 @@ const WorkTab: React.FC<WorkTabProps> = ({ employee }) => {
         </div>
       </div>
 
+      {/* Onboarding — mevcut Work sekmesi (yeni sekme yok) */}
+      <div className="card">
+        <div className="card-header">
+          <h3 className="card-title">
+            <BsMortarboard style={{ marginRight: 'var(--sp-2)' }} />
+            {t('recruitment.onboardingBadge')}
+          </h3>
+        </div>
+        <div className="card-body">
+          {onboardingLoading ? (
+            <span style={{ color: 'var(--text-tertiary)', fontSize: 'var(--fs-body)' }}>…</span>
+          ) : onboarding ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', fontSize: 'var(--fs-body)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-2)' }}>
+                <span style={{ color: 'var(--text-tertiary)' }}>{t('recruitment.onboardingActive')}</span>
+                <span className="badge badge-info">{onboarding.status}</span>
+              </div>
+              <div style={{ fontWeight: 500 }}>{onboarding.title}</div>
+              <Link
+                to={`/onboarding/processes/${onboarding.id}`}
+                className="btn btn-sm btn-outline-primary"
+                style={{ alignSelf: 'flex-start' }}
+              >
+                {t('recruitment.onboardingOpen')}
+              </Link>
+            </div>
+          ) : (
+            <span style={{ color: 'var(--text-tertiary)', fontSize: 'var(--fs-body)' }}>
+              {t('recruitment.onboardingNone')}
+            </span>
+          )}
+        </div>
+      </div>
+
       {/* Notlar */}
       {employee.notes && (
         <div className="card" style={{ gridColumn: '1 / -1' }}>
@@ -158,4 +243,3 @@ const WorkTab: React.FC<WorkTabProps> = ({ employee }) => {
 };
 
 export default WorkTab;
-

@@ -60,6 +60,7 @@ interface EmployeeDocumentRow {
 interface Employee {
   id: number;
   employee_code: string;
+  user_id?: number | null;
   position?: string;
   title?: string;
   status: string;

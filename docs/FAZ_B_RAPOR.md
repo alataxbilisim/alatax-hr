@@ -274,3 +274,48 @@ Commit’ler: `8e343d5` feat(B-3); `1c6b5b4` policy ad fix.
 | Sentinel `admin@demo.test` @ `alatax_hr` | **yes** |
 | Push / wipe | yok |
 
+---
+
+## B-5 — Onboarding otomatik tetikleme (hired → convert)
+
+### Adım 0 — Teşhis
+
+| Soru | Bulgu |
+|------|--------|
+| Manuel başlatma | `ProcessController::store` → süreç create + `createTasksFromTemplate()` |
+| Convert sonrası | employee + `user_id` + `converted_employee_id` (branch/dept opsiyonel) |
+| Varsayılan şablon | **`is_default` zaten var** (+ TemplateForm toggle) |
+| Dept/position eşleme | Şemada **yok** → **KARAR BEKLENİYOR** (uygulanmadı) |
+
+### Şablon seçim stratejisi
+
+| Öncelik | Kural | Durum |
+|---------|--------|--------|
+| (a) | Aktif `is_default` şablon | ✅ |
+| (b) | Department/position eşleşmesi | ❌ DUR — kolon yok |
+| (c) | Hiçbiri yoksa süreç yok + uyarı `"Onboarding şablonu yok"` | ✅ |
+
+### Servis çıkarma
+
+**Evet** — `OnboardingProcessService::startProcess()` ortak yol; manuel store + convert `startForEmployee()` aynı koddan geçer. Çift mantık yok.
+
+### Uygulama
+
+| Parça | Detay |
+|-------|--------|
+| BE | `ConvertApplicationToEmployeeService` → `startForEmployee`; response `onboarding.{started,skipped,warning,process_*}` |
+| İdempotent | Aynı aday 2. convert → ikinci süreç açılmaz |
+| FE aday | ApplicationDetailModal → süreç linki + toast uyarısı |
+| FE personel | WorkTab (mevcut sekme) → aktif süreç + link |
+| FormEngine | Yeni yüzey **açılmadı** |
+
+### Doğrulama
+
+| Metrik | Sonuç |
+|--------|--------|
+| `OnboardingAutoStartTest` + B-2 convert | **9 passed** |
+| Tam suite (`docker compose exec app php artisan test`) | **393 passed / 0 fail** (1527 assertions) |
+| company `tsc --noEmit` | **0** |
+| Sentinel `admin@demo.test` @ `alatax_hr` | **yes** (wipe yok) |
+| Push | **yok** (bugünkü push sonrası lokal commit) |
+

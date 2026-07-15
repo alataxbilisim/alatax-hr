@@ -427,8 +427,14 @@
     "careerInactive": "Bu ilan başvuruya kapalı",
     "convertToEmployee": "Personele Dönüştür",
     "convertSuccess": "Personel kaydı ön-dolduruldu",
+    "convertAlready": "Personel kaydı zaten mevcut",
+    "convertWithOnboarding": "Personel oluşturuldu ve onboarding başlatıldı",
     "convertFailed": "Personele dönüşüm başarısız",
-    "convertAlready": "Personel kaydı zaten oluşturulmuş",
+    "onboardingOpen": "Onboarding sürecine git",
+    "onboardingBadge": "Onboarding",
+    "onboardingActive": "Aktif onboarding süreci",
+    "onboardingNone": "Aktif onboarding yok",
+    "onboardingLoadFailed": "Onboarding süreci yüklenemedi",
     "applicationsTitle": "Başvurular"
   },
   "formEngine": {

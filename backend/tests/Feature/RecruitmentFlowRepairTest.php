@@ -252,6 +252,9 @@ class RecruitmentFlowRepairTest extends TestCase
         $this->assertNotNull($employeeId);
         $this->assertSame('zeynep.kara@example.com', $first->json('data.employee.personal_email'));
         $this->assertSame('Zeynep Kara', $first->json('data.prefill.name'));
+        // Şablonsuz firma: süreç yok, uyarı dönmeli (B-5)
+        $this->assertFalse($first->json('data.onboarding.started'));
+        $this->assertSame('Onboarding şablonu yok', $first->json('data.onboarding.warning'));
 
         $this->assertDatabaseHas('employees', [
             'id' => $employeeId,

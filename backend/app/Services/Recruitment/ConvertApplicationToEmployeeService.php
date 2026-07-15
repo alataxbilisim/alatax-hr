@@ -7,20 +7,36 @@ use App\Enums\UserType;
 use App\Models\ActivityLog;
 use App\Models\Employee;
 use App\Models\JobApplication;
+use App\Models\OnboardingProcess;
 use App\Models\User;
+use App\Services\Onboarding\OnboardingProcessService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 
 /**
- * hired → personel ön-doldurma (onboarding otomatik tetik YOK — FAZ B-2).
+ * hired → personel ön-doldurma + varsayılan şablonla onboarding tetikleme (B-5).
  */
 class ConvertApplicationToEmployeeService
 {
+    public function __construct(
+        protected OnboardingProcessService $onboardingProcessService,
+    ) {}
+
     /**
      * @param  array{employee_code?: string|null, branch_id?: int|null, hire_date?: string|null, department_id?: int|null}  $options
-     * @return array{employee: Employee, created: bool, prefill: array<string, mixed>}
+     * @return array{
+     *   employee: Employee,
+     *   created: bool,
+     *   prefill: array<string, mixed>,
+     *   onboarding: array{
+     *     started: bool,
+     *     skipped: bool,
+     *     warning: string|null,
+     *     process: OnboardingProcess|null
+     *   }
+     * }
      */
     public function convert(JobApplication $application, User $actor, array $options = []): array
     {
@@ -39,10 +55,13 @@ class ConvertApplicationToEmployeeService
                 ->find($application->converted_employee_id);
 
             if ($existing) {
+                $onboarding = $this->existingOnboardingForEmployee($existing);
+
                 return [
                     'employee' => $existing->load(['user', 'branch', 'department']),
                     'created' => false,
                     'prefill' => $this->prefillFromApplication($application),
+                    'onboarding' => $onboarding,
                 ];
             }
         }
@@ -101,12 +120,49 @@ class ConvertApplicationToEmployeeService
                 ]
             );
 
+            $onboarding = $this->onboardingProcessService->startForEmployee(
+                $employee->fresh(),
+                $actor->id
+            );
+
             return [
                 'employee' => $employee->load(['user', 'branch', 'department']),
                 'created' => true,
                 'prefill' => $this->prefillFromApplication($application),
+                'onboarding' => $onboarding,
             ];
         });
+    }
+
+    /**
+     * İkinci convert: yeni süreç açılmaz; varsa mevcut aktif süreç döner.
+     *
+     * @return array{started: bool, skipped: bool, warning: string|null, process: OnboardingProcess|null}
+     */
+    private function existingOnboardingForEmployee(Employee $employee): array
+    {
+        if ($employee->user_id === null) {
+            return [
+                'started' => false,
+                'skipped' => true,
+                'warning' => null,
+                'process' => null,
+            ];
+        }
+
+        $process = OnboardingProcess::query()
+            ->where('company_id', $employee->company_id)
+            ->where('user_id', $employee->user_id)
+            ->active()
+            ->latest('id')
+            ->first();
+
+        return [
+            'started' => false,
+            'skipped' => true,
+            'warning' => null,
+            'process' => $process?->load(['user', 'template', 'tasks']),
+        ];
     }
 
     /**

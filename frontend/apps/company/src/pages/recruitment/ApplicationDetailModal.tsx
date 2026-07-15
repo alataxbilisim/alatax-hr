@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from '@shared/i18n';
 import { recruitmentApi, lookupsApi, type LookupItem } from '@shared/services/api';
 import { Select } from '@shared/components';
@@ -15,6 +16,7 @@ import {
   BsCalendar,
   BsChatDots,
   BsPersonPlus,
+  BsMortarboard,
 } from 'react-icons/bs';
 
 interface ApplicationDetail {
@@ -34,6 +36,7 @@ interface ApplicationDetail {
   notes: string | null;
   rating: number | null;
   converted_employee_id?: number | null;
+  onboarding_process?: { id: number; title: string; status: string } | null;
   status_logs: Array<{
     id: number;
     status: string;
@@ -179,8 +182,33 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
     setConverting(true);
     try {
       const res = await recruitmentApi.applications.convertToEmployee(applicationId);
-      const created = Boolean(res.data.data?.created);
-      toast.success(created ? t('recruitment.convertSuccess') : t('recruitment.convertAlready'));
+      const data = res.data.data;
+      const created = Boolean(data?.created);
+      const warning =
+        data && typeof data === 'object' && 'onboarding' in data && data.onboarding
+          && typeof data.onboarding === 'object' && data.onboarding !== null
+          && 'warning' in data.onboarding
+          && typeof data.onboarding.warning === 'string'
+          ? data.onboarding.warning
+          : null;
+      const started =
+        data && typeof data === 'object' && 'onboarding' in data && data.onboarding
+          && typeof data.onboarding === 'object' && data.onboarding !== null
+          && 'started' in data.onboarding
+          ? Boolean(data.onboarding.started)
+          : false;
+
+      if (warning) {
+        toast.success(
+          created
+            ? `${t('recruitment.convertSuccess')} — ${warning}`
+            : `${t('recruitment.convertAlready')} — ${warning}`
+        );
+      } else if (started) {
+        toast.success(t('recruitment.convertWithOnboarding'));
+      } else {
+        toast.success(created ? t('recruitment.convertSuccess') : t('recruitment.convertAlready'));
+      }
       void loadApplication();
       onUpdate();
     } catch {
@@ -274,7 +302,15 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
               )}
             </div>
             {application.status === 'hired' && (
-              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', flexWrap: 'wrap', gap: '0.5rem' }}>
+                {application.onboarding_process ? (
+                  <Link
+                    to={`/onboarding/processes/${application.onboarding_process.id}`}
+                    className="btn btn-secondary btn-sm"
+                  >
+                    <BsMortarboard size={14} /> {t('recruitment.onboardingOpen')}
+                  </Link>
+                ) : null}
                 <button
                   type="button"
                   className="btn btn-primary btn-sm"
