@@ -152,6 +152,9 @@ class ApprovalRecord extends Model
             null,
             ['step' => $this->step_order, 'reason' => $reason]
         );
+
+        app(\App\Services\Notification\NotificationService::class)
+            ->notifyWorkflowOutcome($approvable, 'rejected', $reason);
     }
 
     public function skip(?string $reason = null): void
@@ -246,6 +249,9 @@ class ApprovalRecord extends Model
             if (method_exists($approvable, 'onWorkflowCompleted')) {
                 $approvable->onWorkflowCompleted((int) $this->approver_id);
             }
+
+            app(\App\Services\Notification\NotificationService::class)
+                ->notifyWorkflowOutcome($approvable, 'approved');
         }
     }
 }

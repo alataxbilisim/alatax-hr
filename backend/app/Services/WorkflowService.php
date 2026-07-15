@@ -374,6 +374,10 @@ class WorkflowService
         return $mapping[$class] ?? strtolower($class);
     }
 
+    /**
+     * Onaycıya bildirim (ApprovalRequested event → NotificationService).
+     * Vekalet: findApprover vekili döner; listener asıl onaycıyı da bilgilendirir.
+     */
     protected function notifyApprover(User $approver, Model $approvable, ApprovalStep $step, ApprovalRecord $record): void
     {
         event(new ApprovalRequested($record, $approver, $approvable, $step));

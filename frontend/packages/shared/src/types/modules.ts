@@ -41,7 +41,13 @@ export interface User extends BaseEntity {
     /** Company ContextSidebar geniş mi (true) / 48px daraltılmış mı (false) */
     contextSidebarExpanded?: boolean;
     locale?: string;
-    notifications?: boolean;
+    notifications?: {
+      email?: {
+        approvals?: boolean;
+        requests?: boolean;
+        tasks?: boolean;
+      };
+    };
   };
   company?: Company | null;
   roles?: Role[];
@@ -619,12 +625,16 @@ export interface ActivityLog extends BaseEntity {
 // NOTIFICATION TYPES
 // ============================================
 
-export interface Notification extends BaseEntity {
-  user_id: number;
+export interface Notification {
+  id: string;
   type: string;
   title: string;
   message: string;
+  link?: string | null;
+  panel?: string | null;
   data?: Record<string, unknown>;
   read_at?: string | null;
+  created_at?: string;
+  company_id?: number | null;
 }
 

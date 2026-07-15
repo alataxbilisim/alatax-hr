@@ -6,12 +6,11 @@ import { RootState, AppDispatch } from '../store';
 import { logout } from '@shared/store/slices/authSlice';
 import { toggleTheme, toggleSidebar, setSidebarOpen } from '@shared/store/slices/themeSlice';
 import { useTranslation } from '@shared/i18n';
-import { Select } from '@shared/components';
+import { Select, NotificationBell } from '@shared/components';
 import {
   BsBoxArrowRight,
   BsSun,
   BsMoon,
-  BsBell,
   BsList,
   BsX,
   BsChevronRight,
@@ -398,9 +397,7 @@ const MainLayout: React.FC = () => {
               {mode === 'dark' ? <BsSun size={18} /> : <BsMoon size={18} />}
             </button>
 
-            <button type="button" className="header-btn has-notification" title="Bildirimler">
-              <BsBell size={18} />
-            </button>
+            <NotificationBell />
 
             <div className="dropdown" ref={userMenuRef}>
               <button

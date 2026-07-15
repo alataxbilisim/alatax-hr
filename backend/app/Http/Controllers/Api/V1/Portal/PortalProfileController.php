@@ -34,6 +34,7 @@ class PortalProfileController extends BaseController
                 'email' => $user->email,
                 'phone' => $user->phone,
                 'avatar' => $user->avatar,
+                'preferences' => $user->preferences ?? [],
             ],
             'employee' => new EmployeeResource($employee),
         ]);
@@ -67,6 +68,14 @@ class PortalProfileController extends BaseController
             'emergency_contact_name' => 'sometimes|nullable|string|max:255',
             'emergency_contact_phone' => 'sometimes|nullable|string|max:20',
             'emergency_contact_relation' => 'sometimes|nullable|string|max:100',
+
+            // Bildirim tercihleri (4C-1)
+            'preferences' => 'sometimes|array',
+            'preferences.notifications' => 'sometimes|array',
+            'preferences.notifications.email' => 'sometimes|array',
+            'preferences.notifications.email.approvals' => 'sometimes|boolean',
+            'preferences.notifications.email.requests' => 'sometimes|boolean',
+            'preferences.notifications.email.tasks' => 'sometimes|boolean',
         ]);
 
         // Kullanıcı bilgilerini güncelle
@@ -74,6 +83,21 @@ class PortalProfileController extends BaseController
         $userUpdates = array_intersect_key($validated, array_flip($userFields));
         if (! empty($userUpdates)) {
             $user->update($userUpdates);
+        }
+
+        if (isset($validated['preferences'])) {
+            $existing = $user->preferences ?? [];
+            $incoming = $validated['preferences'];
+            if (isset($incoming['notifications']) && is_array($incoming['notifications'])) {
+                $existingNotif = is_array($existing['notifications'] ?? null) ? $existing['notifications'] : [];
+                $incomingNotif = $incoming['notifications'];
+                if (isset($incomingNotif['email']) && is_array($incomingNotif['email'])) {
+                    $existingEmail = is_array($existingNotif['email'] ?? null) ? $existingNotif['email'] : [];
+                    $incomingNotif['email'] = array_merge($existingEmail, $incomingNotif['email']);
+                }
+                $incoming['notifications'] = array_merge($existingNotif, $incomingNotif);
+            }
+            $user->update(['preferences' => array_merge($existing, $incoming)]);
         }
 
         // Personel bilgilerini güncelle

@@ -94,7 +94,7 @@ class OnboardingProcess extends Model
         }
 
         foreach ($this->template->tasks as $index => $taskData) {
-            OnboardingTask::create([
+            $task = OnboardingTask::create([
                 'company_id' => $this->company_id,
                 'process_id' => $this->id,
                 'title' => $taskData['title'] ?? 'Görev '.($index + 1),
@@ -103,10 +103,15 @@ class OnboardingProcess extends Model
                 'order' => $index,
                 'is_required' => $taskData['is_required'] ?? true,
                 'due_date' => isset($taskData['days_offset'])
-                    ? $this->start_date->addDays($taskData['days_offset'])
+                    ? $this->start_date->copy()->addDays($taskData['days_offset'])
                     : null,
                 'assigned_to' => $taskData['assigned_to'] ?? $this->assigned_to,
             ]);
+
+            if ($task->assigned_to) {
+                app(\App\Services\Notification\NotificationService::class)
+                    ->notifyOnboardingTaskAssigned($task->load('process'));
+            }
         }
     }
 

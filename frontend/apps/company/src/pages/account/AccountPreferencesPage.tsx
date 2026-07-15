@@ -13,6 +13,8 @@ const AccountPreferencesPage: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
   const { mode, density } = useSelector((state: RootState) => state.theme);
 
+  const emailPrefs = user?.preferences?.notifications?.email;
+
   const [theme, setThemeLocal] = useState<ThemeMode>(
     (user?.preferences?.theme as ThemeMode) || mode
   );
@@ -20,19 +22,28 @@ const AccountPreferencesPage: React.FC = () => {
     (user?.preferences?.density as DensityMode) || density
   );
   const [locale, setLocale] = useState(user?.preferences?.locale || 'tr');
+  const [emailApprovals, setEmailApprovals] = useState(emailPrefs?.approvals !== false);
+  const [emailRequests, setEmailRequests] = useState(emailPrefs?.requests !== false);
+  const [emailTasks, setEmailTasks] = useState(emailPrefs?.tasks !== false);
   const [saving, setSaving] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     try {
-      const response = await authApi.updateProfile({
-        preferences: {
-          theme,
-          density: densityLocal,
-          locale,
+      const preferences = {
+        theme,
+        density: densityLocal,
+        locale,
+        notifications: {
+          email: {
+            approvals: emailApprovals,
+            requests: emailRequests,
+            tasks: emailTasks,
+          },
         },
-      });
+      };
+      const response = await authApi.updateProfile({ preferences });
       const updated = response.data.data.user;
       dispatch(setUser(updated));
       localStorage.setItem('user', JSON.stringify(updated));
@@ -94,6 +105,37 @@ const AccountPreferencesPage: React.FC = () => {
                 <option value="tr">{t('account.localeTr')}</option>
                 <option value="en">{t('account.localeEn')}</option>
               </select>
+            </div>
+
+            <div className="form-group">
+              <div className="form-label">{t('account.notifEmailTitle')}</div>
+              <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', marginBottom: 'var(--space-2)' }}>
+                {t('account.notifEmailHint')}
+              </p>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', marginBottom: 'var(--sp-2)' }}>
+                <input
+                  type="checkbox"
+                  checked={emailApprovals}
+                  onChange={(e) => setEmailApprovals(e.target.checked)}
+                />
+                {t('account.notifEmailApprovals')}
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', marginBottom: 'var(--sp-2)' }}>
+                <input
+                  type="checkbox"
+                  checked={emailRequests}
+                  onChange={(e) => setEmailRequests(e.target.checked)}
+                />
+                {t('account.notifEmailRequests')}
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
+                <input
+                  type="checkbox"
+                  checked={emailTasks}
+                  onChange={(e) => setEmailTasks(e.target.checked)}
+                />
+                {t('account.notifEmailTasks')}
+              </label>
             </div>
 
             <button type="submit" className="btn btn-primary" disabled={saving}>

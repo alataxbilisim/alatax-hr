@@ -10,7 +10,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notification;
 
 /**
- * B0 stub: in-app (database) bildirim — 4C kanal motoruna geçici köprü.
+ * @deprecated 4C-1: ApprovalRequested listener → NotificationService / CatalogNotification.
+ * Dosya geriye uyumluluk için tutulur; yeni kod NotificationService kullanır.
  */
 class ApprovalRequestedNotification extends Notification implements ShouldQueue
 {

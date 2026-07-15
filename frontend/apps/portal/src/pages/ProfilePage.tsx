@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useTranslation } from '@shared/i18n';
 import { RootState } from '../store';
 import { portalApi } from '@shared/services/api';
 import toast from 'react-hot-toast';
@@ -10,6 +11,15 @@ interface ProfileData {
     name: string;
     email: string;
     phone: string | null;
+    preferences?: {
+      notifications?: {
+        email?: {
+          approvals?: boolean;
+          requests?: boolean;
+          tasks?: boolean;
+        };
+      };
+    };
   };
   employee: {
     employee_code: string;
@@ -28,11 +38,13 @@ interface ProfileData {
 }
 
 const ProfilePage: React.FC = () => {
+  const { t } = useTranslation('common');
   const { user } = useSelector((state: RootState) => state.auth);
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
+  const [savingNotif, setSavingNotif] = useState(false);
   
   // Editable fields
   const [editData, setEditData] = useState({
@@ -52,6 +64,9 @@ const ProfilePage: React.FC = () => {
     password_confirmation: '',
   });
 
+  const [emailApprovals, setEmailApprovals] = useState(true);
+  const [emailRequests, setEmailRequests] = useState(true);
+  const [emailTasks, setEmailTasks] = useState(true);
   useEffect(() => {
     loadProfile();
   }, []);
@@ -70,6 +85,10 @@ const ProfilePage: React.FC = () => {
         emergency_contact_phone: data.employee?.emergency_contact_phone || '',
         emergency_contact_relation: data.employee?.emergency_contact_relation || '',
       });
+      const emailPrefs = data.user?.preferences?.notifications?.email;
+      setEmailApprovals(emailPrefs?.approvals !== false);
+      setEmailRequests(emailPrefs?.requests !== false);
+      setEmailTasks(emailPrefs?.tasks !== false);
     } catch {
       toast.error('Profil yüklenemedi');
     } finally {
@@ -315,6 +334,74 @@ const ProfilePage: React.FC = () => {
                   {savingPassword ? 'Güncelleniyor...' : 'Şifreyi Güncelle'}
                 </button>
               </form>
+            </div>
+          </div>
+        </div>
+
+        {/* Bildirim tercihleri */}
+        <div className="col-lg-6 mb-4">
+          <div className="card">
+            <div className="card-header">
+              <h3 className="card-title">{t('account.notifEmailTitle')}</h3>
+            </div>
+            <div className="card-body">
+              <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', marginBottom: 'var(--space-3)' }}>
+                {t('account.notifEmailHint')}
+              </p>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', marginBottom: 'var(--sp-2)' }}>
+                <input
+                  type="checkbox"
+                  checked={emailApprovals}
+                  onChange={(e) => setEmailApprovals(e.target.checked)}
+                />
+                {t('account.notifEmailApprovals')}
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', marginBottom: 'var(--sp-2)' }}>
+                <input
+                  type="checkbox"
+                  checked={emailRequests}
+                  onChange={(e) => setEmailRequests(e.target.checked)}
+                />
+                {t('account.notifEmailRequests')}
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', marginBottom: 'var(--space-3)' }}>
+                <input
+                  type="checkbox"
+                  checked={emailTasks}
+                  onChange={(e) => setEmailTasks(e.target.checked)}
+                />
+                {t('account.notifEmailTasks')}
+              </label>
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={savingNotif}
+                onClick={() => {
+                  void (async () => {
+                    setSavingNotif(true);
+                    try {
+                      await portalApi.profile.update({
+                        preferences: {
+                          notifications: {
+                            email: {
+                              approvals: emailApprovals,
+                              requests: emailRequests,
+                              tasks: emailTasks,
+                            },
+                          },
+                        },
+                      });
+                      toast.success(t('account.preferencesSuccess'));
+                    } catch {
+                      toast.error(t('account.preferencesError'));
+                    } finally {
+                      setSavingNotif(false);
+                    }
+                  })();
+                }}
+              >
+                {savingNotif ? t('loading') : t('save')}
+              </button>
             </div>
           </div>
         </div>

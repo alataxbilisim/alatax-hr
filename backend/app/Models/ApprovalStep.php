@@ -154,6 +154,20 @@ class ApprovalStep extends Model
     }
 
     /**
+     * Temel onaylayıcı (vekalet hariç) — bildirim çift hedefi için.
+     */
+    public function resolveBaseApprover(Model $approvable): ?User
+    {
+        $approver = $this->getBaseApprover($approvable);
+
+        if (! $approver && $this->usesHierarchyApprover()) {
+            $approver = $this->resolveHrManagerFallback((int) $approvable->company_id);
+        }
+
+        return $approver;
+    }
+
+    /**
      * Temel onaylayıcı (vekalet hariç).
      * Hiyerarşi: Employee.manager_id → manager.user_id (Faz 2 DataScope ile aynı).
      */

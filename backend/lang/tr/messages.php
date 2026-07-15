@@ -47,4 +47,37 @@ return [
         'hello' => 'Merhaba',
     ],
 
+    'notifications' => [
+        'mail_action' => 'Panele Git',
+        'entity_leave' => 'İzin talebi',
+        'entity_expense' => 'Masraf talebi',
+
+        'approval_requested_title' => 'Onay bekleniyor',
+        'approval_requested_body' => ':entity için onayınız bekleniyor (:step).',
+
+        'approval_approved_title' => 'Talebiniz onaylandı',
+        'approval_approved_body' => ':entity onaylandı (:date).',
+
+        'approval_rejected_title' => 'Talebiniz reddedildi',
+        'approval_rejected_body' => ':entity reddedildi. :reason',
+
+        'approval_returned_title' => 'Talebiniz iade edildi',
+        'approval_returned_body' => ':entity iade edildi. :reason',
+
+        'leave_approved_title' => 'İzin talebiniz onaylandı',
+        'leave_approved_body' => 'İzin talebiniz :date tarihinde onaylandı.',
+
+        'leave_rejected_title' => 'İzin talebiniz reddedildi',
+        'leave_rejected_body' => 'İzin talebiniz reddedildi. :reason',
+
+        'expense_approved_title' => 'Masraf talebiniz onaylandı',
+        'expense_approved_body' => 'Masraf talebiniz :date tarihinde onaylandı.',
+
+        'expense_rejected_title' => 'Masraf talebiniz reddedildi',
+        'expense_rejected_body' => 'Masraf talebiniz reddedildi. :reason',
+
+        'onboarding_task_assigned_title' => 'Yeni onboarding görevi',
+        'onboarding_task_assigned_body' => 'Size görev atandı: :task (:process).',
+    ],
+
 ];

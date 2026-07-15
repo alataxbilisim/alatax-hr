@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../store';
 import { logout } from '@shared/store/slices/authSlice';
 import { toggleTheme } from '@shared/store/slices/themeSlice';
+import { NotificationBell } from '@shared/components';
 import {
   BsSpeedometer2,
   BsPersonCircle,
@@ -15,7 +16,6 @@ import {
   BsBoxArrowRight,
   BsSun,
   BsMoon,
-  BsBell,
   BsList,
   BsMortarboard,
   BsGraphUp,
@@ -270,10 +270,7 @@ const PortalLayout: React.FC = () => {
             >
               {mode === 'dark' ? <BsSun size={18} /> : <BsMoon size={18} />}
             </button>
-            <button type="button" className="header-btn" title="Bildirimler" aria-label="Notifications">
-              <BsBell size={18} />
-              <span className="header-btn-badge">3</span>
-            </button>
+            <NotificationBell />
             {!isMobile && (
               <button
                 type="button"

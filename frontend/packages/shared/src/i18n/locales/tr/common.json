@@ -137,7 +137,18 @@
     "localeTr": "Türkçe",
     "localeEn": "English",
     "preferencesSuccess": "Tercihler kaydedildi",
-    "preferencesError": "Tercihler kaydedilemedi"
+    "preferencesError": "Tercihler kaydedilemedi",
+    "notifEmailTitle": "E-posta bildirimleri",
+    "notifEmailHint": "Uygulama içi bildirimler her zaman açıktır. E-posta kanallarını buradan yönetebilirsiniz.",
+    "notifEmailApprovals": "Onaylar",
+    "notifEmailRequests": "Talepler (izin / masraf)",
+    "notifEmailTasks": "Görevler (onboarding)"
+  },
+  "notifications": {
+    "title": "Bildirimler",
+    "markAllRead": "Tümünü okundu işaretle",
+    "empty": "Henüz bildirim yok",
+    "loadError": "Bildirimler yüklenemedi"
   },
   "studio": {
     "groups": {

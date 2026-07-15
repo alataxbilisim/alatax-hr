@@ -154,6 +154,11 @@ class ProcessController extends BaseController
 
         ActivityLog::log('create', $task, 'Onboarding görevi eklendi: '.$task->title);
 
+        if ($task->assigned_to) {
+            app(\App\Services\Notification\NotificationService::class)
+                ->notifyOnboardingTaskAssigned($task->load('process'));
+        }
+
         return $this->success($task, 'Görev eklendi', 201);
     }
 

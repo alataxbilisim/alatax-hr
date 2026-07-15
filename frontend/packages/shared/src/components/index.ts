@@ -6,6 +6,7 @@ export { TwoFactorChallenge } from './TwoFactorChallenge';
 export type { TwoFactorChallengeProps } from './TwoFactorChallenge';
 export { default as InviteAcceptPage } from './InviteAcceptPage';
 export { default as ForcedPasswordChangePage } from './ForcedPasswordChangePage';
+export { NotificationBell } from './NotificationBell';
 export {
   FormEngine,
   FormEngineField,

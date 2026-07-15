@@ -278,6 +278,11 @@ class AuthController extends BaseController
             'preferences.theme' => 'sometimes|in:dark,light',
             'preferences.locale' => 'sometimes|in:tr,en',
             'preferences.density' => 'sometimes|in:comfortable,compact',
+            'preferences.notifications' => 'sometimes|array',
+            'preferences.notifications.email' => 'sometimes|array',
+            'preferences.notifications.email.approvals' => 'sometimes|boolean',
+            'preferences.notifications.email.requests' => 'sometimes|boolean',
+            'preferences.notifications.email.tasks' => 'sometimes|boolean',
         ]);
 
         // Avatar yükleme
@@ -286,12 +291,20 @@ class AuthController extends BaseController
             $validated['avatar'] = $path;
         }
 
-        // Preferences merge
+        // Preferences merge (nested notifications.email korunur)
         if (isset($validated['preferences'])) {
-            $validated['preferences'] = array_merge(
-                $user->preferences ?? [],
-                $validated['preferences']
-            );
+            $existing = $user->preferences ?? [];
+            $incoming = $validated['preferences'];
+            if (isset($incoming['notifications']) && is_array($incoming['notifications'])) {
+                $existingNotif = is_array($existing['notifications'] ?? null) ? $existing['notifications'] : [];
+                $incomingNotif = $incoming['notifications'];
+                if (isset($incomingNotif['email']) && is_array($incomingNotif['email'])) {
+                    $existingEmail = is_array($existingNotif['email'] ?? null) ? $existingNotif['email'] : [];
+                    $incomingNotif['email'] = array_merge($existingEmail, $incomingNotif['email']);
+                }
+                $incoming['notifications'] = array_merge($existingNotif, $incomingNotif);
+            }
+            $validated['preferences'] = array_merge($existing, $incoming);
         }
 
         $user->update($validated);
