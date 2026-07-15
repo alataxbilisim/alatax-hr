@@ -28,6 +28,7 @@ import { useFormValidation } from '@shared/hooks/useFormValidation';
 import { required, email, url } from '@shared/utils/validation';
 import { Modal } from '../../components/ui';
 import ApiKeyForm from './ApiKeyForm';
+import { useTranslation } from '@shared/i18n';
 
 interface Module {
   id: number;
@@ -41,6 +42,7 @@ interface Module {
 type TabType = 'general' | 'smtp' | 'sms' | 'settings' | 'notifications' | 'api-keys' | 'license' | 'integrations' | 'modules';
 
 const SettingsPage: React.FC = () => {
+  const { t } = useTranslation('common');
   const [activeTab, setActiveTab] = useState<TabType>('general');
 
   // Company data
@@ -141,6 +143,9 @@ const SettingsPage: React.FC = () => {
       date_format: 'd/m/Y',
       currency: 'TRY',
       working_days: [1, 2, 3, 4, 5] as number[],
+      default_work_start: '09:00',
+      default_work_end: '18:00',
+      late_tolerance_minutes: 15,
     },
   });
 
@@ -228,7 +233,16 @@ const SettingsPage: React.FC = () => {
       }
 
       if (data.general) {
-        setGeneralValues(data.general);
+        setGeneralValues({
+          timezone: data.general.timezone || 'Europe/Istanbul',
+          language: data.general.language || 'tr',
+          date_format: data.general.date_format || 'd/m/Y',
+          currency: data.general.currency || 'TRY',
+          working_days: data.general.working_days || [1, 2, 3, 4, 5],
+          default_work_start: data.general.default_work_start || '09:00',
+          default_work_end: data.general.default_work_end || '18:00',
+          late_tolerance_minutes: data.general.late_tolerance_minutes ?? 15,
+        });
       }
 
       if (data.integrations) {
@@ -1116,6 +1130,39 @@ const SettingsPage: React.FC = () => {
                         </label>
                       ))}
                     </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">{t('settings.defaultWorkStart')}</label>
+                    <input
+                      type="time"
+                      name="default_work_start"
+                      className="form-control"
+                      value={generalValues.default_work_start}
+                      onChange={handleGeneralChange}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">{t('settings.defaultWorkEnd')}</label>
+                    <input
+                      type="time"
+                      name="default_work_end"
+                      className="form-control"
+                      value={generalValues.default_work_end}
+                      onChange={handleGeneralChange}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">{t('settings.lateTolerance')}</label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={180}
+                      name="late_tolerance_minutes"
+                      className="form-control"
+                      value={generalValues.late_tolerance_minutes}
+                      onChange={handleGeneralChange}
+                    />
                   </div>
                 </div>
 

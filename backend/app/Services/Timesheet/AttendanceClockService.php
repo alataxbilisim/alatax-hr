@@ -18,6 +18,10 @@ class AttendanceClockService
 
     public const SOURCE_MANUAL = 'manual';
 
+    public function __construct(
+        protected AttendanceCalcService $calc,
+    ) {}
+
     /**
      * @param  array{
      *   latitude?: float|null,
@@ -123,11 +127,13 @@ class AttendanceClockService
         $record->total_hours = $record->calculateTotalHours();
         $record->save();
 
+        $record = $this->calc->recalculate($record->fresh());
+
         ActivityLog::log('clock_out', $record, 'Çıkış yapıldı');
 
         return [
             'action' => 'clock_out',
-            'record' => $record->fresh(),
+            'record' => $record,
             'clock_time' => $this->formatTime($record->clock_out),
         ];
     }

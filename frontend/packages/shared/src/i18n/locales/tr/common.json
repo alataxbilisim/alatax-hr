@@ -648,5 +648,10 @@
       "absent": "Gelmedi",
       "excused": "Mazeretli"
     }
+  },
+  "settings": {
+    "defaultWorkStart": "Varsayılan mesai başlangıcı",
+    "defaultWorkEnd": "Varsayılan mesai bitişi",
+    "lateTolerance": "Geç kalma toleransı (dk)"
   }
 }

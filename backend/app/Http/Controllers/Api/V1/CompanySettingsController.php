@@ -31,6 +31,9 @@ class CompanySettingsController extends BaseController
                 'date_format' => 'd/m/Y',
                 'currency' => 'TRY',
                 'working_days' => [1, 2, 3, 4, 5],
+                'default_work_start' => '09:00',
+                'default_work_end' => '18:00',
+                'late_tolerance_minutes' => 15,
             ],
             'notifications' => $settings['notifications'] ?? [
                 'email_enabled' => true,
@@ -86,6 +89,9 @@ class CompanySettingsController extends BaseController
             'general.currency' => 'sometimes|string|max:10',
             'general.working_days' => 'sometimes|array',
             'general.working_days.*' => 'integer|min:0|max:6',
+            'general.default_work_start' => 'sometimes|date_format:H:i',
+            'general.default_work_end' => 'sometimes|date_format:H:i',
+            'general.late_tolerance_minutes' => 'sometimes|integer|min:0|max:180',
 
             'notifications' => 'sometimes|array',
             'notifications.email_enabled' => 'sometimes|boolean',

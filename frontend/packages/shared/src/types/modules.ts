@@ -215,6 +215,9 @@ export interface GeneralSettings {
   date_format: string;
   currency: string;
   working_days: number[];
+  default_work_start?: string;
+  default_work_end?: string;
+  late_tolerance_minutes?: number;
 }
 
 export interface IntegrationSettings {

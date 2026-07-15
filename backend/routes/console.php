@@ -37,3 +37,9 @@ Schedule::command('approvals:process-escalations')
     ->withoutOverlapping(120)
     ->onOneServer()
     ->name('approvals-escalations');
+
+Schedule::command('timesheet:mark-incomplete')
+    ->dailyAt('01:30')
+    ->withoutOverlapping(120)
+    ->onOneServer()
+    ->name('timesheet-mark-incomplete');
