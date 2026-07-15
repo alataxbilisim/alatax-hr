@@ -738,9 +738,15 @@ export const onboardingApi = {
       api.post(`/onboarding/processes/${processId}/tasks`, data),
     completeTask: (processId: number, taskId: number, data?: Record<string, unknown>) => 
       api.post(`/onboarding/processes/${processId}/tasks/${taskId}/complete`, data),
-    skipTask: (processId: number, taskId: number) => 
+    skipTask: (processId: number, taskId: number) =>
       api.post(`/onboarding/processes/${processId}/tasks/${taskId}/skip`),
-    dashboard: () => 
+    finalizeOffboarding: (processId: number) =>
+      api.post(`/onboarding/processes/${processId}/finalize-offboarding`),
+    cancelOffboarding: (processId: number) =>
+      api.post(`/onboarding/processes/${processId}/cancel-offboarding`),
+    clearanceForm: (processId: number) =>
+      api.get(`/onboarding/processes/${processId}/clearance-form`, { responseType: 'blob' }),
+    dashboard: () =>
       api.get('/onboarding/dashboard'),
   },
 };
@@ -1153,6 +1159,16 @@ export const employeesApi = {
   ) => api.post(`/employees/${id}/portal-access`, data),
   revokePortalAccess: (id: number) => 
     api.delete(`/employees/${id}/portal-access`),
+  startOffboarding: (
+    id: number,
+    data: {
+      termination_reason_code: string;
+      termination_date: string;
+      exit_notes?: string;
+      template_id?: number;
+      assigned_to?: number;
+    }
+  ) => api.post(`/employees/${id}/offboarding`, data),
   getCustomFields: () => api.get('/employees/custom-fields'),
   getDepartments: () => api.get('/employees/departments'),
   getManagers: () => api.get('/employees/managers'),

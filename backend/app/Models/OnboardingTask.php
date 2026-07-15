@@ -79,11 +79,13 @@ class OnboardingTask extends Model
     // Methods
     public function complete(int $userId, ?array $data = null): void
     {
+        $merged = array_merge($this->data ?? [], $data ?? []);
+
         $this->update([
             'status' => self::STATUS_COMPLETED,
             'completed_at' => now(),
             'completed_by' => $userId,
-            'data' => $data,
+            'data' => $merged !== [] ? $merged : $this->data,
         ]);
 
         $this->process->updateProgress();

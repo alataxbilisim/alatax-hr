@@ -168,6 +168,7 @@ class PermissionSeeder extends Seeder
                 // Alan seviyesi (Faz 2) — field_permissions tablosu Faz 4'e
                 'salary' => ['view', 'edit'],
                 'tckn' => ['view'],
+                'terminate' => ['create'], // İşten çıkış sihirbazı
             ],
 
             // İşe Alım Modülü

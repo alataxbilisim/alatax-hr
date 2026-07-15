@@ -16,12 +16,15 @@ import {
   BsKey,
   BsKeyFill,
   BsListCheck,
+  BsBoxArrowRight,
 } from 'react-icons/bs';
 import { employeesApi } from '@shared/services/api';
 import { getErrorMessage } from '@shared/services/apiHelpers';
 import toast from 'react-hot-toast';
 import { useTranslation } from '@shared/i18n';
 import { ConfirmDialog, Modal } from '../../components/ui';
+import OffboardingWizard from '../../components/employees/OffboardingWizard';
+import { usePermission } from '@shared/hooks/usePermission';
 import {
   GeneralTab,
   PersonalTab,
@@ -126,6 +129,8 @@ const EmployeeDetailPage: React.FC = () => {
   const { t } = useTranslation('common');
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const { canCreate } = usePermission();
+  const canTerminate = canCreate('employees', 'terminate');
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('general');
@@ -141,6 +146,7 @@ const EmployeeDetailPage: React.FC = () => {
   const [portalAccessModalOpen, setPortalAccessModalOpen] = useState(false);
   const [revokeAccessDialogOpen, setRevokeAccessDialogOpen] = useState(false);
   const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
+  const [offboardingOpen, setOffboardingOpen] = useState(false);
 
   const tabs: TabItem[] = [
     { id: 'general', label: 'Genel', icon: <BsPersonBadge /> },
@@ -316,6 +322,15 @@ const EmployeeDetailPage: React.FC = () => {
           </div>
         </div>
         <div className="detail-identity-actions">
+          {canTerminate && employee.status !== 'terminated' && employee.user_id && (
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => setOffboardingOpen(true)}
+            >
+              <BsBoxArrowRight /> {t('offboarding.startButton')}
+            </button>
+          )}
           <button
             type="button"
             className="btn btn-primary btn-sm"
@@ -579,6 +594,15 @@ const EmployeeDetailPage: React.FC = () => {
           </div>
         </div>
       </Modal>
+
+      <OffboardingWizard
+        isOpen={offboardingOpen}
+        onClose={() => setOffboardingOpen(false)}
+        employeeId={Number(id)}
+        onStarted={(processId) => {
+          navigate(`/onboarding/processes/${processId}`);
+        }}
+      />
     </div>
   );
 };

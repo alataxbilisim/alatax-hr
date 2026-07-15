@@ -290,6 +290,8 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:employees.list.edit');
             Route::delete('/{id}/portal-access', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'revokePortalAccess'])
                 ->middleware('permission:employees.list.edit');
+            Route::post('/{id}/offboarding', [\App\Http\Controllers\Api\V1\OffboardingController::class, 'start'])
+                ->middleware('permission:employees.terminate.create');
 
             Route::get('/{id}/leaves', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'getLeaves'])
                 ->middleware('permission:employees.list.view');
@@ -582,6 +584,12 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:onboarding.processes.delete');
             Route::post('/processes/{process}/tasks/{task}/complete', [\App\Http\Controllers\Api\V1\Onboarding\ProcessController::class, 'completeTask'])
                 ->middleware('permission:onboarding.processes.edit');
+            Route::post('/processes/{process}/finalize-offboarding', [\App\Http\Controllers\Api\V1\Onboarding\ProcessController::class, 'finalizeOffboarding'])
+                ->middleware('permission:employees.terminate.create');
+            Route::post('/processes/{process}/cancel-offboarding', [\App\Http\Controllers\Api\V1\Onboarding\ProcessController::class, 'cancelOffboarding'])
+                ->middleware('permission:employees.terminate.create');
+            Route::get('/processes/{process}/clearance-form', [\App\Http\Controllers\Api\V1\Onboarding\ProcessController::class, 'clearanceForm'])
+                ->middleware('permission:onboarding.processes.view');
         });
 
         // İzin Yönetimi Modülü
