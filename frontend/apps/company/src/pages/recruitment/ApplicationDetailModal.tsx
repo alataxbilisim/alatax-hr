@@ -389,7 +389,7 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
                 {Object.keys(application.form_data || {}).length > 0 && (
                   <div>
                     <h4 style={{ fontSize: '0.9375rem', marginBottom: '0.75rem', color: 'var(--text-primary)' }}>
-                      Form Bilgileri
+                      {t('recruitment.formDataTitle')}
                     </h4>
                     <div style={{ display: 'grid', gap: '0.5rem' }}>
                       {Object.entries(application.form_data).map(([key, value]) => (

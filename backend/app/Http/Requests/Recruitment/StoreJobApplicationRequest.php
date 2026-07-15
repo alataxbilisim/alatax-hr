@@ -26,6 +26,7 @@ class StoreJobApplicationRequest extends FormRequest
             'notes' => ['nullable', 'string', 'max:2000'],
             'consent_kvkk' => ['required', 'accepted'],
             'cv' => ['nullable', 'file', 'mimes:pdf,doc,docx', 'max:10240'],
+            'form_data' => ['nullable', 'array'],
         ];
     }
 

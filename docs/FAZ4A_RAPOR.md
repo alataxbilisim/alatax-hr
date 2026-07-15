@@ -401,3 +401,74 @@ Neden: eski form varsayılan kalır; geri dönüş tek tık; auto-flag riski yok
 
 - Faz 2 field-permission / DataScope / policy + A/B + 4A testleri yeşil (tam suite 375).  
 - Klasik formlar duruyor; FormEngine yolları paralel.
+
+---
+
+## 4A-4 — application_forms raptı (işe alım FormEngine)
+
+**Tarih:** 15 Temmuz 2026  
+**Branch:** `faz4-form-engine`  
+**Push:** yok · **DB wipe:** yok
+
+### ADIM 0 — Teşhis (kısa)
+
+| Konu | Bulgu |
+|------|--------|
+| `application_forms.fields` | `{id, type, label, required?, options?, placeholder?}` — FormBuilder store `in:text,email,phone,textarea,select,checkbox,radio,file,date` |
+| FormBuilder CRUD | `/api/v1/recruitment/forms` — company FE arşivde; aktif SPA’da yok |
+| `job_applications.form_data` | Public apply yazar; manuel create artık da yazar (4A-4) |
+| B-2 public apply | `first_name/last_name/email/phone` + `consent_kvkk` + `cv` (pdf/doc/docx, 10MB) + `throttle:public` |
+| Z2 adapter | Aynı sözleşme → **yeniden kullanıldı** (`RequestTypeFormFieldsAdapter` + map options) |
+
+### Adapter / bypass kararı
+
+| Karar | Sonuç |
+|-------|--------|
+| `application_forms` tablosu | **KALIR** — FK `job_positions.form_id` bozulmaz |
+| Yeni stüdyo yolu | `custom_field_definitions` + `form_definitions` (`job_application`) |
+| `form_id` → `form_definitions` bypass | **DUR / KARAR BEKLENİYOR** — migration (yeni FK) gerekir; gece işi değil |
+| Runtime render | Pozisyon `application_forms.fields` → Z2 adapter → FormEngine |
+
+### Adım tablosu
+
+| Adım | Durum | Not |
+|------|-------|-----|
+| 0 Teşhis | ✅ | |
+| 1 Stüdyo + katalog + `form_id` UI | ✅ | `/settings/forms/job_application`; JobPositionForm form seçimi |
+| 2 Public FormEngine | ✅ | `GET .../form` + `/careers/:companySlug/:positionSlug`; formsuz = B-2 klasik |
+| 3 HR form_data + manuel aday | ✅ | Detay başlığı i18n; AddCandidateForm dinamik alan |
+| 4 Test + suite | ✅ | 386 passed; company tsc 0 |
+
+### Public güvenlik önlemleri
+
+1. `throttle:public` (20/dk/IP) — form + apply  
+2. CV: `mimes:pdf,doc,docx`, `max:10240`  
+3. Tenant: `companySlug` + aktif ilan; yanlış slug 404  
+4. Public form payload: yalnız form tanımı + ilan özeti (hassas alan yok)  
+5. `consent_kvkk` her zaman zorunlu (stüdyoda gizlenemez; submit accepted)  
+6. Custom `form_data` alanları adapter ile tip/required doğrulanır  
+
+### Doğrulama
+
+| Kontrol | Sonuç |
+|---------|--------|
+| Tam suite | **386 passed** / 0 fail |
+| company tsc | **0** |
+| Sentinel `admin@demo.test` @ `alatax_hr` | mevcut (id=82) |
+| Seed | `job_application` sistem alan **7** (idempotent) |
+
+### KARAR BEKLENİYOR
+
+1. `job_positions.form_id` → `form_definitions` köprüsü (migration) mi, yoksa `application_forms` uzun vadede mi kalır?  
+2. FormBuilder arşiv CRUD’unu stüdyo ile tamamen emekli etme zamanı?
+
+### GÖRSEL TUR BORCU
+
+Önceki yüzeyler (5) + bu işin kariyer formu = **6**:
+
+1. Personel FormEngine  
+2. İzin FormEngine  
+3. Portal talep FormEngine  
+4. Anket audience  
+5. Eğitim yoklama  
+6. **Kariyer public apply** (`/careers/{companySlug}/{positionSlug}`) — form’lu + formsuz

@@ -5,10 +5,15 @@ namespace App\Http\Controllers\Api\V1\Public;
 use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Models\JobPosition;
+use App\Services\PublicApplicationFormService;
 use Illuminate\Http\JsonResponse;
 
 class JobController extends Controller
 {
+    public function __construct(
+        protected PublicApplicationFormService $publicFormService,
+    ) {}
+
     /**
      * Firma bazlı açık pozisyonlar
      */
@@ -90,6 +95,7 @@ class JobController extends Controller
                 'salary_range' => $position->salary_range,
                 'company' => [
                     'name' => $position->company->name,
+                    'slug' => $position->company->slug,
                     'logo' => $position->company->logo ? asset('storage/'.$position->company->logo) : null,
                 ],
                 'form' => $position->form ? [
@@ -98,6 +104,35 @@ class JobController extends Controller
                     'fields' => $position->form->fields ?? [],
                 ] : null,
             ],
+        ]);
+    }
+
+    /**
+     * Public FormEngine tanımı — yalnız aktif ilan + companySlug tenant.
+     * Hassas alan sızdırılmaz.
+     */
+    public function form(string $companySlug, string $positionSlug): JsonResponse
+    {
+        $position = $this->publicFormService->resolveActivePosition($companySlug, $positionSlug);
+
+        if ($position === null) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pozisyon bulunamadı veya başvurular kapatılmış',
+            ], 404);
+        }
+
+        $company = Company::query()->where('slug', $companySlug)->first();
+        if ($company === null) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Firma bulunamadı',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $this->publicFormService->buildPublicFormPayload($position, $company),
         ]);
     }
 }

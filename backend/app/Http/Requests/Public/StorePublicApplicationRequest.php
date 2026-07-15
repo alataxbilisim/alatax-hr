@@ -17,6 +17,14 @@ class StorePublicApplicationRequest extends FormRequest
         if (is_string($routeSlug) && $routeSlug !== '' && ! $this->filled('company_slug')) {
             $this->merge(['company_slug' => $routeSlug]);
         }
+
+        $formData = $this->input('form_data');
+        if (is_string($formData) && $formData !== '') {
+            $decoded = json_decode($formData, true);
+            if (is_array($decoded)) {
+                $this->merge(['form_data' => $decoded]);
+            }
+        }
     }
 
     /**

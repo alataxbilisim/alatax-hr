@@ -15,7 +15,7 @@ import {
   BsShieldLock,
 } from 'react-icons/bs';
 
-const SUPPORTED_ENTITIES = ['employee', 'leave_request'] as const;
+const SUPPORTED_ENTITIES = ['employee', 'leave_request', 'job_application'] as const;
 type StudioEntityType = (typeof SUPPORTED_ENTITIES)[number];
 
 function isStudioEntityType(value: string | undefined): value is StudioEntityType {
@@ -42,12 +42,18 @@ const FormLayoutEditorPage: React.FC = () => {
     if (entityType === 'leave_request') {
       return '/leaves/form-engine/new';
     }
+    if (entityType === 'job_application') {
+      return null;
+    }
     return '/employees/form-engine/new';
   }, [entityType]);
 
   const title = useMemo(() => {
     if (entityType === 'leave_request') {
       return t('formEngine.editorTitleLeave');
+    }
+    if (entityType === 'job_application') {
+      return t('formEngine.editorTitleJobApplication');
     }
     return t('formEngine.editorTitle');
   }, [entityType, t]);
@@ -177,9 +183,11 @@ const FormLayoutEditorPage: React.FC = () => {
           <p className="page-subtitle">{t('formEngine.editorSubtitle')}</p>
         </div>
         <div className="page-header-actions" style={{ display: 'flex', gap: '0.5rem' }}>
-          <Link to={pilotPath} className="btn btn-secondary btn-sm">
-            {t('formEngine.previewPilot')}
-          </Link>
+          {pilotPath ? (
+            <Link to={pilotPath} className="btn btn-secondary btn-sm">
+              {t('formEngine.previewPilot')}
+            </Link>
+          ) : null}
           <button
             type="button"
             className="btn btn-primary btn-sm"

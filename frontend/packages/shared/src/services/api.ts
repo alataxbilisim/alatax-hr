@@ -462,6 +462,7 @@ export const recruitmentApi = {
       notes?: string | null;
       consent_kvkk: boolean;
       source?: string;
+      form_data?: Record<string, unknown> | null;
     }) => api.post('/recruitment/applications', data),
     updateStatus: (id: number, data: { status: string; note?: string }) => 
       api.put(`/recruitment/applications/${id}/status`, data),
@@ -945,12 +946,14 @@ export const analyticsApi = {
 export const publicApi = {
   // Jobs
   jobs: {
-    list: (companySlug: string) => 
+    list: (companySlug: string) =>
       api.get(`/public/companies/${companySlug}/jobs`),
-    get: (positionSlug: string) => 
+    get: (positionSlug: string) =>
       api.get(`/public/jobs/${positionSlug}`),
+    form: (companySlug: string, positionSlug: string) =>
+      api.get(`/public/companies/${companySlug}/jobs/${positionSlug}/form`),
   },
-  
+
   // Applications — companySlug tenant için zorunlu
   apply: (companySlug: string, positionSlug: string, data: FormData) => {
     if (!data.has('company_slug')) {

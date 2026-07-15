@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal } from '../ui';
 import { recruitmentApi, lookupsApi, type LookupItem } from '@shared/services/api';
 import { Select } from '@shared/components';
+import { useTranslation } from '@shared/i18n';
 import toast from 'react-hot-toast';
 
 interface JobPositionFormValues {
@@ -16,6 +17,13 @@ interface JobPositionFormValues {
   salary_min?: number;
   salary_max?: number;
   status: string;
+  form_id: string;
+}
+
+interface ApplicationFormOption {
+  id: number;
+  name: string;
+  is_active?: boolean;
 }
 
 interface JobPositionFormProps {
@@ -34,6 +42,7 @@ interface JobPositionFormProps {
     salary_min?: number;
     salary_max?: number;
     status?: string;
+    form_id?: number | null;
   };
 }
 
@@ -43,11 +52,13 @@ const JobPositionForm: React.FC<JobPositionFormProps> = ({
   onSuccess,
   position,
 }) => {
+  const { t } = useTranslation('common');
   const isEditing = !!position?.id;
   const [loading, setLoading] = useState(false);
   const [workTypeOptions, setWorkTypeOptions] = useState<LookupItem[]>([]);
   const [experienceOptions, setExperienceOptions] = useState<LookupItem[]>([]);
   const [statusOptions, setStatusOptions] = useState<LookupItem[]>([]);
+  const [applicationForms, setApplicationForms] = useState<ApplicationFormOption[]>([]);
   const [formData, setFormData] = useState<JobPositionFormValues>({
     title: '',
     department: '',
@@ -59,6 +70,7 @@ const JobPositionForm: React.FC<JobPositionFormProps> = ({
     salary_min: undefined,
     salary_max: undefined,
     status: 'draft',
+    form_id: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -69,13 +81,31 @@ const JobPositionForm: React.FC<JobPositionFormProps> = ({
       lookupsApi.forType('work_type'),
       lookupsApi.forType('experience_level'),
       lookupsApi.forType('job_position_status'),
+      recruitmentApi.forms.list({ per_page: 100 }),
     ])
-      .then(([workRes, expRes, statusRes]) => {
+      .then(([workRes, expRes, statusRes, formsRes]) => {
         setWorkTypeOptions(workRes.data.data ?? []);
         setExperienceOptions(expRes.data.data ?? []);
         setStatusOptions(statusRes.data.data ?? []);
+        const formsPayload = formsRes.data.data;
+        const rows: unknown[] = Array.isArray(formsPayload)
+          ? formsPayload
+          : formsPayload && typeof formsPayload === 'object' && Array.isArray(formsPayload.data)
+            ? formsPayload.data
+            : [];
+        const options: ApplicationFormOption[] = [];
+        for (const row of rows) {
+          if (!row || typeof row !== 'object') continue;
+          const id = 'id' in row ? row.id : undefined;
+          const name = 'name' in row ? row.name : undefined;
+          const isActive = 'is_active' in row ? row.is_active : undefined;
+          if (typeof id !== 'number' || typeof name !== 'string') continue;
+          if (isActive === false) continue;
+          options.push({ id, name });
+        }
+        setApplicationForms(options);
       })
-      .catch(() => toast.error('Lookup listeleri yüklenemedi'));
+      .catch(() => toast.error(t('recruitment.lookupsLoadFailed')));
 
     if (position) {
       setFormData({
@@ -89,6 +119,7 @@ const JobPositionForm: React.FC<JobPositionFormProps> = ({
         salary_min: position.salary_min,
         salary_max: position.salary_max,
         status: position.status || 'draft',
+        form_id: position.form_id ? String(position.form_id) : '',
       });
     } else {
       setFormData({
@@ -102,10 +133,11 @@ const JobPositionForm: React.FC<JobPositionFormProps> = ({
         salary_min: undefined,
         salary_max: undefined,
         status: 'draft',
+        form_id: '',
       });
     }
     setErrors({});
-  }, [isOpen, position]);
+  }, [isOpen, position, t]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -154,18 +186,34 @@ const JobPositionForm: React.FC<JobPositionFormProps> = ({
 
     setLoading(true);
     try {
+      const payload = {
+        title: formData.title,
+        department: formData.department,
+        location: formData.location,
+        employment_type: formData.employment_type,
+        experience_level: formData.experience_level,
+        description: formData.description,
+        requirements: formData.requirements,
+        salary_min: formData.salary_min,
+        salary_max: formData.salary_max,
+        status: formData.status,
+        form_id: formData.form_id ? Number(formData.form_id) : null,
+      };
       if (isEditing && position?.id) {
-        await recruitmentApi.positions.update(position.id, formData);
+        await recruitmentApi.positions.update(position.id, payload);
         toast.success('Pozisyon güncellendi');
       } else {
-        await recruitmentApi.positions.create(formData);
+        await recruitmentApi.positions.create(payload);
         toast.success('Pozisyon oluşturuldu');
       }
       onSuccess();
       onClose();
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { errors?: Record<string, string[]> } } };
-      if (err.response?.data?.errors) {
+      const err =
+        error && typeof error === 'object' && 'response' in error
+          ? (error as { response?: { data?: { errors?: Record<string, string[]> } } })
+          : null;
+      if (err?.response?.data?.errors) {
         const backendErrors: Record<string, string> = {};
         Object.entries(err.response.data.errors).forEach(([key, msgs]) => {
           backendErrors[key] = msgs[0];
@@ -339,6 +387,26 @@ const JobPositionForm: React.FC<JobPositionFormProps> = ({
             placeholder="Seçiniz..."
             aria-label="Pozisyon durumu"
           />
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">{t('recruitment.applicationForm')}</label>
+          <Select
+            value={formData.form_id}
+            onChange={(v) => setFormData((prev) => ({ ...prev, form_id: v }))}
+            options={applicationForms.map((f) => ({
+              value: String(f.id),
+              label: f.name,
+            }))}
+            allowEmpty
+            emptyLabel={t('recruitment.noApplicationForm')}
+            clearable
+            placeholder={t('recruitment.selectApplicationForm')}
+            aria-label={t('recruitment.applicationForm')}
+          />
+          <p style={{ marginTop: '0.35rem', color: 'var(--text-secondary)', fontSize: 'var(--fs-caption)' }}>
+            {t('recruitment.applicationFormHint')}
+          </p>
         </div>
       </form>
     </Modal>

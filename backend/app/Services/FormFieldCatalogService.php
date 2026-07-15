@@ -131,6 +131,44 @@ class FormFieldCatalogService
     }
 
     /**
+     * İş başvurusu formu standart alanları (B-2 public apply kolonlarıyla hizalı).
+     * consent_kvkk stüdyoda gizlenemez / zorunluluktan çıkarılamaz.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function jobApplicationSystemFieldCatalog(): array
+    {
+        return [
+            ['system_key' => 'first_name', 'field_label' => 'Ad', 'field_type' => CustomFieldDefinition::TYPE_TEXT, 'is_required' => true, 'sort_order' => 10, 'section' => 'candidate'],
+            ['system_key' => 'last_name', 'field_label' => 'Soyad', 'field_type' => CustomFieldDefinition::TYPE_TEXT, 'is_required' => true, 'sort_order' => 20, 'section' => 'candidate'],
+            ['system_key' => 'email', 'field_label' => 'E-posta', 'field_type' => CustomFieldDefinition::TYPE_EMAIL, 'is_required' => true, 'sort_order' => 30, 'section' => 'candidate'],
+            ['system_key' => 'phone', 'field_label' => 'Telefon', 'field_type' => CustomFieldDefinition::TYPE_PHONE, 'is_required' => false, 'sort_order' => 40, 'section' => 'candidate'],
+            ['system_key' => 'cv', 'field_label' => 'CV', 'field_type' => CustomFieldDefinition::TYPE_FILE, 'is_required' => false, 'sort_order' => 50, 'section' => 'candidate'],
+            ['system_key' => 'cover_letter', 'field_label' => 'Ön Yazı', 'field_type' => CustomFieldDefinition::TYPE_TEXTAREA, 'is_required' => false, 'sort_order' => 60, 'section' => 'candidate'],
+            [
+                'system_key' => 'consent_kvkk',
+                'field_label' => 'KVKK aday rızası',
+                'field_type' => CustomFieldDefinition::TYPE_CHECKBOX,
+                'is_required' => true,
+                'sort_order' => 70,
+                'section' => 'consent',
+            ],
+        ];
+    }
+
+    public function defaultJobApplicationLayout(): array
+    {
+        return $this->layoutFromCatalog(
+            $this->jobApplicationSystemFieldCatalog(),
+            [
+                'candidate' => ['id' => 'candidate', 'label' => 'Aday Bilgileri', 'sort_order' => 0],
+                'consent' => ['id' => 'consent', 'label' => 'KVKK', 'sort_order' => 1],
+                'custom' => ['id' => 'custom', 'label' => 'Özel Alanlar', 'sort_order' => 2],
+            ]
+        );
+    }
+
+    /**
      * Entity’ye göre varsayılan layout.
      *
      * @return array{sections: list<array<string, mixed>>}
@@ -139,12 +177,13 @@ class FormFieldCatalogService
     {
         return match ($entityType) {
             CustomFieldDefinition::ENTITY_LEAVE_REQUEST => $this->defaultLeaveRequestLayout(),
+            CustomFieldDefinition::ENTITY_JOB_APPLICATION => $this->defaultJobApplicationLayout(),
             default => $this->defaultEmployeeLayout(),
         };
     }
 
     /**
-     * Idempotent sistem alan + varsayılan layout seed (employee + leave_request).
+     * Idempotent sistem alan + varsayılan layout seed (employee + leave_request + job_application).
      *
      * @return array{fields: int, layouts: int}
      */
@@ -158,6 +197,10 @@ class FormFieldCatalogService
         $fieldCount += $this->seedEntityCatalog(
             CustomFieldDefinition::ENTITY_LEAVE_REQUEST,
             $this->leaveRequestSystemFieldCatalog()
+        );
+        $fieldCount += $this->seedEntityCatalog(
+            CustomFieldDefinition::ENTITY_JOB_APPLICATION,
+            $this->jobApplicationSystemFieldCatalog()
         );
 
         FormDefinition::withoutGlobalScopes()->updateOrCreate(
@@ -184,7 +227,19 @@ class FormFieldCatalogService
             ]
         );
 
-        return ['fields' => $fieldCount, 'layouts' => 2];
+        FormDefinition::withoutGlobalScopes()->updateOrCreate(
+            [
+                'company_id' => null,
+                'entity_type' => CustomFieldDefinition::ENTITY_JOB_APPLICATION,
+            ],
+            [
+                'name' => 'İş Başvurusu Formu (Sistem)',
+                'is_active' => true,
+                'layout' => $this->defaultJobApplicationLayout(),
+            ]
+        );
+
+        return ['fields' => $fieldCount, 'layouts' => 3];
     }
 
     /**

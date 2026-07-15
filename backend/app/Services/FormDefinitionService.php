@@ -195,6 +195,15 @@ class FormDefinitionService
                 $override->field_permission = $perm;
             }
 
+            // KVKK rızası stüdyodan kaldırılamaz / gizlenemez
+            if ($base->system_key === 'consent_kvkk'
+                && $entityType === CustomFieldDefinition::ENTITY_JOB_APPLICATION) {
+                $override->is_hidden = false;
+                $override->is_required = true;
+                $override->is_required_override = true;
+                $override->field_permission = null;
+            }
+
             $override->updated_by = $userId;
             $override->save();
 
@@ -248,13 +257,14 @@ class FormDefinitionService
     public const SUPPORTED_ENTITIES = [
         CustomFieldDefinition::ENTITY_EMPLOYEE,
         CustomFieldDefinition::ENTITY_LEAVE_REQUEST,
+        CustomFieldDefinition::ENTITY_JOB_APPLICATION,
     ];
 
     private function assertSupportedEntity(string $entityType): void
     {
         if (! in_array($entityType, self::SUPPORTED_ENTITIES, true)) {
             throw ValidationException::withMessages([
-                'entity_type' => ['Desteklenen form tanımları: employee, leave_request.'],
+                'entity_type' => ['Desteklenen form tanımları: employee, leave_request, job_application.'],
             ]);
         }
     }

@@ -99,6 +99,7 @@ import LoginPage from './pages/auth/LoginPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import { InviteAcceptPage, ForcedPasswordChangePage } from '@shared/components';
+import PublicCareerApplyPage from './pages/recruitment/PublicCareerApplyPage';
 
 // Dashboard
 import DashboardPage from './pages/DashboardPage';
@@ -246,6 +247,9 @@ const App: React.FC = () => {
             }
           />
         </Route>
+
+        {/* Public kariyer başvurusu (auth yok) */}
+        <Route path="/careers/:companySlug/:positionSlug" element={<PublicCareerApplyPage />} />
 
         {/* Protected Routes */}
         <Route element={<MainLayout />}>

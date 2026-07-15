@@ -115,6 +115,13 @@ class ApplicationController extends BaseController
             $cvOriginal = $file->getClientOriginalName();
         }
 
+        $formData = null;
+        if ($position->form_id) {
+            $position->loadMissing('form');
+            $formData = app(\App\Services\PublicApplicationFormService::class)
+                ->validateCustomFormData($position, $validated['form_data'] ?? null);
+        }
+
         $application = JobApplication::create([
             'company_id' => $companyId,
             'job_position_id' => $position->id,
@@ -124,6 +131,7 @@ class ApplicationController extends BaseController
             'phone' => $validated['phone'] ?? null,
             'cv_path' => $cvPath,
             'cv_original_name' => $cvOriginal,
+            'form_data' => $formData,
             'status' => JobApplicationStatus::New,
             'source' => $validated['source'] ?? 'manual',
             'notes' => $validated['notes'] ?? null,

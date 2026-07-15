@@ -10,11 +10,17 @@ use App\Models\ActivityLog;
 use App\Models\Company;
 use App\Models\JobApplication;
 use App\Models\JobPosition;
+use App\Services\PublicApplicationFormService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class ApplicationController extends Controller
 {
+    public function __construct(
+        protected PublicApplicationFormService $publicFormService,
+    ) {}
+
     /**
      * Public başvuru — status=active (JobPositionStatus baskın doğruluk).
      * Tenant: company_slug zorunlu; pozisyon firma ile eşleşmeli.
@@ -38,6 +44,7 @@ class ApplicationController extends Controller
         }
 
         $position = JobPosition::query()
+            ->with(['form'])
             ->where('slug', $positionSlug)
             ->where('company_id', $company->id)
             ->where('status', JobPositionStatus::Active)
@@ -52,6 +59,19 @@ class ApplicationController extends Controller
                 'success' => false,
                 'message' => 'Pozisyon bulunamadı veya başvurular kapatılmış',
             ], 404);
+        }
+
+        try {
+            $formData = $this->publicFormService->validateCustomFormData(
+                $position,
+                $validated['form_data'] ?? null
+            );
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Form alanları geçersiz',
+                'errors' => $e->errors(),
+            ], 422);
         }
 
         $cvPath = null;
@@ -72,7 +92,7 @@ class ApplicationController extends Controller
                 'phone' => $validated['phone'] ?? null,
                 'cv_path' => $cvPath,
                 'cv_original_name' => $cvOriginal,
-                'form_data' => $validated['form_data'] ?? null,
+                'form_data' => $formData !== [] ? $formData : ($validated['form_data'] ?? null),
                 'status' => JobApplicationStatus::New,
                 'source' => 'website',
                 'consent_kvkk' => true,

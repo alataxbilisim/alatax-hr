@@ -1199,6 +1199,9 @@ Route::prefix('v1')->group(function () {
         // Pozisyon detayı (slug ile)
         Route::get('/jobs/{positionSlug}', [\App\Http\Controllers\Api\V1\Public\JobController::class, 'show']);
 
+        // Başvuru formu tanımı (FormEngine — yalnız aktif ilan, tenant slug zorunlu)
+        Route::get('/companies/{companySlug}/jobs/{positionSlug}/form', [\App\Http\Controllers\Api\V1\Public\JobController::class, 'form']);
+
         // Başvuru gönder (company_slug body veya route param — tenant)
         Route::post('/jobs/{positionSlug}/apply', [\App\Http\Controllers\Api\V1\Public\ApplicationController::class, 'store']);
         Route::post('/companies/{companySlug}/jobs/{positionSlug}/apply', [\App\Http\Controllers\Api\V1\Public\ApplicationController::class, 'store']);

@@ -175,7 +175,17 @@ class RequestTypeFormFieldsAdapter
         }
 
         $out = [];
-        foreach ($options as $opt) {
+        $isList = array_is_list($options);
+
+        foreach ($options as $key => $opt) {
+            if (! $isList && (is_string($opt) || is_numeric($opt))) {
+                $out[] = [
+                    'value' => (string) $key,
+                    'label' => (string) $opt,
+                ];
+
+                continue;
+            }
             if (is_string($opt) || is_numeric($opt)) {
                 $out[] = ['value' => (string) $opt, 'label' => (string) $opt];
 
