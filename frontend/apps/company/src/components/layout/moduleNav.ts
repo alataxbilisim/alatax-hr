@@ -76,6 +76,8 @@ export const operationalModuleGroups: ModuleGroup[] = [
       { path: '/employees', labelKey: 'nav.employeesList', permission: { module: 'employees', page: 'list' } },
       { path: '/employees/departments', labelKey: 'nav.employeesDepartments', permission: { module: 'employees', page: 'departments' } },
       { path: '/employees/positions', labelKey: 'nav.employeesPositions', permission: { module: 'employees', page: 'positions' } },
+      { path: '/employees/salary-bands', labelKey: 'nav.employeesSalaryBands', permission: { module: 'employees', page: 'salary' } },
+      { path: '/employees/salary-reviews', labelKey: 'nav.employeesSalaryReviews', permission: { module: 'employees', page: 'salary' } },
       { path: '/employees/organization', labelKey: 'nav.employeesOrganization', permission: { module: 'employees', page: 'organization' } },
       { path: '/employees/custom-fields', labelKey: 'nav.employeesCustomFields', permission: { module: 'employees', page: 'custom_fields' } },
       { path: '/employees/reports', labelKey: 'nav.employeesReports', permission: { module: 'employees', page: 'reports' } },

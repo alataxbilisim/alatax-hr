@@ -131,6 +131,9 @@ import EmployeeDetailPage from './pages/employees/EmployeeDetailPage';
 import EmployeeCustomFieldsPage from './pages/employees/EmployeeCustomFieldsPage';
 import DepartmentsPage from './pages/employees/DepartmentsPage';
 import PositionsPage from './pages/employees/PositionsPage';
+import SalaryBandsPage from './pages/employees/SalaryBandsPage';
+import SalaryReviewPeriodsPage from './pages/employees/SalaryReviewPeriodsPage';
+import SalaryReviewDetailPage from './pages/employees/SalaryReviewDetailPage';
 import OrganizationChartPage from './pages/employees/OrganizationChartPage';
 import EmployeeReportsPage from './pages/employees/EmployeeReportsPage';
 
@@ -322,6 +325,18 @@ const App: React.FC = () => {
           <Route
             path="/employees/positions"
             element={withPermission(<PositionsPage />, 'employees', 'positions', 'view')}
+          />
+          <Route
+            path="/employees/salary-bands"
+            element={withPermission(<SalaryBandsPage />, 'employees', 'salary', 'view')}
+          />
+          <Route
+            path="/employees/salary-reviews"
+            element={withPermission(<SalaryReviewPeriodsPage />, 'employees', 'salary', 'view')}
+          />
+          <Route
+            path="/employees/salary-reviews/:id"
+            element={withPermission(<SalaryReviewDetailPage />, 'employees', 'salary', 'view')}
           />
           <Route
             path="/employees/organization"
