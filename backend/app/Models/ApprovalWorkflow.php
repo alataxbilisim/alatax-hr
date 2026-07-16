@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use App\Traits\BelongsToCompany;
 use App\Traits\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ApprovalWorkflow extends Model
 {
-    use BelongsToCompany, HasAuditColumns, HasFactory, SoftDeletes;
+    use Auditable, BelongsToCompany, HasAuditColumns, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -67,6 +68,11 @@ class ApprovalWorkflow extends Model
     public function records(): HasMany
     {
         return $this->hasMany(ApprovalRecord::class);
+    }
+
+    public function instances(): HasMany
+    {
+        return $this->hasMany(ApprovalInstance::class);
     }
 
     public function leaveTypes(): HasMany

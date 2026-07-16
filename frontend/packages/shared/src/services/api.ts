@@ -1387,6 +1387,53 @@ export const formDefinitionsApi = {
     api.put(`/form-definitions/${entityType}`, data),
 };
 
+/** Onay akışı yapılandırma (4B-B5 Stüdyo) — motor runtime değil */
+export interface WorkflowStepPayload {
+  id?: number;
+  name: string;
+  approver_type: string;
+  specific_user_id?: number | null;
+  specific_role?: string | null;
+  is_required?: boolean;
+  can_skip?: boolean;
+  condition?: {
+    field?: string;
+    op?: string;
+    operator?: string;
+    value?: string | number | boolean | null;
+  } | null;
+  parallel_group?: number | null;
+  completion_policy?: 'all' | 'any';
+  escalation_days?: number | null;
+}
+
+export interface WorkflowPayload {
+  id?: number;
+  name: string;
+  entity_type: string;
+  description?: string | null;
+  is_active?: boolean;
+  is_default?: boolean;
+  escalation_days?: number | null;
+  conditions?: unknown;
+  steps?: WorkflowStepPayload[];
+  steps_count?: number;
+}
+
+export const workflowsApi = {
+  list: (params?: { entity_type?: string; is_active?: boolean | number }) =>
+    api.get('/workflows', { params }),
+  get: (id: number) => api.get(`/workflows/${id}`),
+  create: (data: WorkflowPayload) => api.post('/workflows', data),
+  update: (id: number, data: Partial<WorkflowPayload> & { steps?: WorkflowStepPayload[] }) =>
+    api.put(`/workflows/${id}`, data),
+  delete: (id: number) => api.delete(`/workflows/${id}`),
+  seedDefaultLeave: () => api.post('/workflows/seed-default-leave'),
+  entityTypes: () => api.get('/workflows/entity-types'),
+  approverTypes: () => api.get('/workflows/approver-types'),
+  conditionMeta: () => api.get('/workflows/condition-meta'),
+};
+
 /** Lookup Engine — form dropdown (GET /lookups/{type}) + yönetim CRUD */
 export interface LookupItem {
   id: number;

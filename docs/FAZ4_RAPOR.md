@@ -1395,3 +1395,64 @@ Kullanım varsa → `is_active=false` (pasif). Pasif değer yeni formlarda seçi
 **DUR — görsel kontrol (kullanıcı):** Personel formu (kişisel + iş + belge + özel alan select) + İzin talep/tür/tatil dropdown’ları tutarlı mı; izin türleri API’den geliyor mu; durum filtreleri lookup label. **SelectContent opak menü** (`--bg-elevated`) — şeffaflık bug düzeltildi.
 
 **Kalan sonraki gruplar:** İşe Alım (kanban hibrit) + Masraf/Varlık/Doküman/Performans/Eğitim/Anket.
+
+---
+
+## 4B-B5 — Stüdyo Onay Zinciri Editörü (C2)
+
+**Tarih:** 2026-07-16  
+**Branch:** `faz4-form-engine`  
+**Motor:** ApprovalFlowEngine / B0–B4 **dokunulmadı** (21 motor testi yeşil).
+
+### ADIM 0 — Teşhis
+
+| Konu | Bulgu |
+|------|--------|
+| Tablolar | `approval_workflows` + `approval_steps` (+ instances/records/delegations) |
+| Alanlar | `step_order`, `approver_type` (dinamik/rol/kişi + legacy), `condition` jsonb, `parallel_group`, `completion_policy`, `escalation_days` |
+| CRUD API | Vardı ama **legacy** (dinamik tip / condition / parallel yok) |
+| Seed | `approvals:seed-default-leave-workflows` → `leave_request` + `dynamic_manager` |
+| Entity | leave kesin; expense/asset/training/document/salary_review modelde |
+| Snapshot | Instance’ta step snapshot **yok** → yapısal edit riskli |
+| Migration | UI için ek kolon gerekmedi (DUR notu yok) |
+
+### Guard kararları
+
+| Guard | Seçim |
+|-------|--------|
+| (a) Aktif instance + adım değişikliği | **409** — “önce sonuçlandırın” (snapshot yok) |
+| (b) Silme | Bağlı **herhangi** instance → **409** |
+| (c) Entity’de aktif workflow zorunlu mu? | **Hayır** — workflow’suz = mevcut otomatik/yok davranışı |
+
+Metadata-only update (ad, açıklama, aktif) açık instance varken serbest.
+
+### API
+
+| Method | Path | Permission |
+|--------|------|------------|
+| GET/POST | `/api/v1/workflows` | view / create |
+| GET/PUT/PATCH/DELETE | `/api/v1/workflows/{id}` | view / edit / delete |
+| POST | `/api/v1/workflows/seed-default-leave` | create |
+| GET | `/workflows/entity-types`, `/approver-types`, `/condition-meta` | view |
+
+Service: `WorkflowManagementService` — steps tek payload transaction sync.  
+Policy: `ApprovalWorkflowPolicy` (company scope). Audit: `Auditable` + ActivityLog.
+
+### UI
+
+- `/settings/workflows` liste (entity filtre) + `/settings/workflows/:id|new` editör  
+- ModuleRail YÖNETİM/Özelleştirme → **Onay Akışları** (`management.workflows.view`)  
+- ↑↓ sıralama, koşul, parallel/any, canlı önizleme (`1 → 2a∥2b`), varsayılan izin seed butonu
+
+### Doğrulama
+
+| Metrik | Sonuç |
+|--------|--------|
+| `WorkflowManagementApiTest` | **8 passed** |
+| Motor B0–B4 | **21 passed** (değişmedi) |
+| Tam suite | **467 passed / 0 fail** |
+| company `tsc` | **0** |
+| Select sentinel | **PASSED** |
+| DB wipe | **yok** |
+
+**DUR — KULLANICI GÖRSEL KONTROLÜ BEKLİYOR:** Stüdyo → Onay Akışları editörü (adım kartları, koşul, paralel önizleme, seed butonu).

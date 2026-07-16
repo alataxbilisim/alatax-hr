@@ -277,6 +277,7 @@ export const pinnedModuleGroups: ModuleGroup[] = [
       { path: '/settings/forms/employee', labelKey: 'studio.formLayoutEmployee', permission: { module: 'management', page: 'forms' }, group: 'customize' },
       { path: '/settings/forms/leave_request', labelKey: 'studio.formLayoutLeave', permission: { module: 'management', page: 'forms' }, group: 'customize' },
       { path: '/settings/forms/job_application', labelKey: 'studio.formLayoutJobApplication', permission: { module: 'management', page: 'forms' }, group: 'customize' },
+      { path: '/settings/workflows', labelKey: 'studio.workflows', permission: { module: 'management', page: 'workflows' }, group: 'customize' },
       { path: '/leaves/types', labelKey: 'studio.leaveTypes', permission: { module: 'leaves', page: 'types' }, group: 'modules' },
       { path: '/documents/categories', labelKey: 'studio.documentCategories', permission: { module: 'documents', page: 'categories' }, group: 'modules' },
       { path: '/assets/categories', labelKey: 'studio.assetCategories', permission: { module: 'assets', page: 'categories' }, group: 'modules' },

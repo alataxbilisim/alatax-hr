@@ -717,17 +717,21 @@ Route::prefix('v1')->group(function () {
                     ->middleware('permission:leaves.accrual_policies.edit');
             });
         });
-        // Onay İş Akışları (Workflow Engine)
+        // Onay İş Akışları (yapılandırma — motor runtime ayrı /approvals)
         Route::middleware('company_admin')->prefix('workflows')->group(function () {
             Route::get('/entity-types', [\App\Http\Controllers\Api\V1\Workflow\WorkflowController::class, 'getEntityTypes'])
                 ->middleware('permission:management.workflows.view');
             Route::get('/approver-types', [\App\Http\Controllers\Api\V1\Workflow\WorkflowController::class, 'getApproverTypes'])
+                ->middleware('permission:management.workflows.view');
+            Route::get('/condition-meta', [\App\Http\Controllers\Api\V1\Workflow\WorkflowController::class, 'getConditionMeta'])
                 ->middleware('permission:management.workflows.view');
             Route::get('/by-entity/{entityType}', [\App\Http\Controllers\Api\V1\Workflow\WorkflowController::class, 'getByEntityType'])
                 ->middleware('permission:management.workflows.view');
             Route::get('/', [\App\Http\Controllers\Api\V1\Workflow\WorkflowController::class, 'index'])
                 ->middleware('permission:management.workflows.view');
             Route::post('/', [\App\Http\Controllers\Api\V1\Workflow\WorkflowController::class, 'store'])
+                ->middleware('permission:management.workflows.create');
+            Route::post('/seed-default-leave', [\App\Http\Controllers\Api\V1\Workflow\WorkflowController::class, 'seedDefaultLeave'])
                 ->middleware('permission:management.workflows.create');
             Route::get('/{id}', [\App\Http\Controllers\Api\V1\Workflow\WorkflowController::class, 'show'])
                 ->middleware('permission:management.workflows.view');

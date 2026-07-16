@@ -51,6 +51,7 @@ export const PAGES = {
     SETTINGS: 'settings',
     WEBHOOKS: 'webhooks',
     API_KEYS: 'api_keys',
+    WORKFLOWS: 'workflows',
   },
   
   // Employees Modülü
@@ -158,6 +159,7 @@ export const PAGE_ACTIONS: Record<string, Record<string, ActionType[]>> = {
     settings: ['view', 'edit'],
     webhooks: ['view', 'create', 'edit', 'delete'],
     api_keys: ['view', 'create', 'edit', 'delete'],
+    workflows: ['view', 'create', 'edit', 'delete'],
   },
   [MODULES.EMPLOYEES]: {
     list: ['view', 'create', 'edit', 'delete', 'export', 'import'],
@@ -259,6 +261,7 @@ export const PAGE_LABELS: Record<string, Record<string, string>> = {
     settings: 'Ayarlar',
     webhooks: 'Webhook\'lar',
     api_keys: 'API Anahtarları',
+    workflows: 'Onay Akışları',
   },
   [MODULES.EMPLOYEES]: {
     list: 'Personel Listesi',

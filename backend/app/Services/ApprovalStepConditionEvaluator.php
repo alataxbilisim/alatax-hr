@@ -32,6 +32,18 @@ class ApprovalStepConditionEvaluator
         'in',
     ];
 
+    /** @return list<string> */
+    public static function allowedFields(): array
+    {
+        return self::ALLOWED_FIELDS;
+    }
+
+    /** @return list<string> */
+    public static function allowedOps(): array
+    {
+        return self::ALLOWED_OPS;
+    }
+
     /**
      * @param  array<string, mixed>|null  $condition
      * @param  array<string, mixed>  $context

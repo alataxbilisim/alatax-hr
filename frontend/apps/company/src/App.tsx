@@ -127,6 +127,8 @@ import EmployeeForm from './components/EmployeeForm';
 import EmployeeFormEnginePage from './pages/employees/EmployeeFormEnginePage';
 import LeaveRequestFormEnginePage from './pages/leaves/LeaveRequestFormEnginePage';
 import FormLayoutEditorPage from './pages/settings/FormLayoutEditorPage';
+import WorkflowsListPage from './pages/settings/WorkflowsListPage';
+import WorkflowEditorPage from './pages/settings/WorkflowEditorPage';
 import EmployeeDetailPage from './pages/employees/EmployeeDetailPage';
 import EmployeeCustomFieldsPage from './pages/employees/EmployeeCustomFieldsPage';
 import DepartmentsPage from './pages/employees/DepartmentsPage';
@@ -863,6 +865,26 @@ const App: React.FC = () => {
               <ProtectedRoute>
                 <PermissionProtectedRoute module="management" page="forms" action="view">
                   <FormLayoutEditorPage />
+                </PermissionProtectedRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings/workflows"
+            element={
+              <ProtectedRoute>
+                <PermissionProtectedRoute module="management" page="workflows" action="view">
+                  <WorkflowsListPage />
+                </PermissionProtectedRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings/workflows/:id"
+            element={
+              <ProtectedRoute>
+                <PermissionProtectedRoute module="management" page="workflows" action="view">
+                  <WorkflowEditorPage />
                 </PermissionProtectedRoute>
               </ProtectedRoute>
             }
