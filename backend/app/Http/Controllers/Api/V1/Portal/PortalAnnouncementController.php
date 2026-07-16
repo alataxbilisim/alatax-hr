@@ -5,11 +5,16 @@ namespace App\Http\Controllers\Api\V1\Portal;
 use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\Announcement;
 use App\Models\Employee;
+use App\Services\Announcements\AnnouncementPublishService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class PortalAnnouncementController extends BaseController
 {
+    public function __construct(
+        protected AnnouncementPublishService $publisher,
+    ) {}
+
     /**
      * Duyuruları listele
      */
@@ -19,11 +24,13 @@ class PortalAnnouncementController extends BaseController
         $employee = Employee::where('user_id', $user->id)->first();
 
         if (! $employee) {
-            return $this->error('Personel kaydı bulunamadı', null, 404);
+            return $this->error('Personel kaydı bulunamadı', 404);
         }
 
+        $visibleIds = $this->publisher->visibleForEmployee($employee)->pluck('id');
+
         $query = Announcement::where('company_id', $user->company_id)
-            ->active()
+            ->whereIn('id', $visibleIds)
             ->orderByPinned();
 
         // Tip filtresi
@@ -171,9 +178,8 @@ class PortalAnnouncementController extends BaseController
             ->pluck('announcement_id')
             ->toArray();
 
-        $count = Announcement::where('company_id', $user->company_id)
-            ->active()
-            ->whereNotIn('id', $readAnnouncementIds)
+        $count = $this->publisher->visibleForEmployee($employee)
+            ->filter(fn ($a) => ! in_array($a->id, $readAnnouncementIds, true))
             ->count();
 
         return $this->success(['count' => $count]);

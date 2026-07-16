@@ -358,3 +358,49 @@ Commit’ler: `8e343d5` feat(B-3); `1c6b5b4` policy ad fix.
 | Select sentinel | **PASSED** |
 | DB wipe | **yok** |
 
+---
+
+## C5 — Company yönetim boşlukları (duyuru + vardiya + bordro)
+
+**Tarih:** 2026-07-16  
+**Branch:** `faz4-form-engine`  
+**Commit:** `feat(faz4): C5 duyuru + vardiya + bordro yönetimi — company boşluklar`
+
+### ADIM 0 — Teşhis
+
+| Alan | Etiket | Ne yapıldı |
+|------|--------|------------|
+| Duyuru | **KISMİ** | Portal okuma vardı; Company CRUD + publish kuruldu |
+| Vardiya | **VAR** (PDKS-2) | CRUD/atama zaten vardı; portal tarih eşleşmesi bugfix + test ile kanıt |
+| Bordro | **KISMİ** | Portal “Bordrolarım” vardı; Company PDF upload/yayın + `payslip.published` kuruldu |
+
+### Route / permission
+
+| Method | Path | Permission |
+|--------|------|------------|
+| CRUD + publish | `/api/v1/announcements` | `announcements.list.*` |
+| CRUD + publish/download | `/api/v1/payslips` | `payroll.payslips.*` |
+| (mevcut) | `/api/v1/shifts`, `/employee-shifts` | `timesheet.shifts.*` |
+
+### Olaylar
+
+- `announcement.published` → hedef kitle (C4 hattı)
+- `payslip.published` → personel (katalog + bildirim)
+
+### FE (Company)
+
+- `/announcements` — liste + oluştur/düzenle/sil + yayınla (düz metin)
+- `/payslips` — PDF yükle + yayınla
+- Vardiya UI: mevcut `/attendance/shifts` (yeniden yazılmadı)
+
+### Doğrulama
+
+| Metrik | Sonuç |
+|--------|--------|
+| `CompanyGapsC5Test` | **3 passed** |
+| Tam suite | **484 passed / 0 fail** |
+| 3 SPA `tsc` | **0** |
+| Select sentinel | **PASSED** |
+| DB wipe | **yok** |
+| Portal UI redesign | **yok** |
+

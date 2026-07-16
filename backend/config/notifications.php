@@ -217,6 +217,16 @@ return [
             'variables' => ['user', 'entity', 'date', 'title'],
         ],
 
+        'payslip.published' => [
+            'group' => 'documents',
+            'panel' => 'portal',
+            'path' => '/payslips',
+            'email_default' => true,
+            'title_key' => 'messages.notifications.payslip_published_title',
+            'body_key' => 'messages.notifications.payslip_published_body',
+            'variables' => ['user', 'entity', 'date', 'title'],
+        ],
+
     ],
 
 ];

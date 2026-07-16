@@ -290,12 +290,15 @@ class PortalTimesheetController extends BaseController
 
         $weekData = [];
         for ($date = $startOfWeek->copy(); $date <= $endOfWeek; $date->addDay()) {
-            $shift = $shifts->firstWhere('date', $date->toDateString());
+            // date cast Carbon; string firstWhere eşleşmez — weeklyRecords ile aynı desen
+            $assignment = $shifts->first(function (EmployeeShift $row) use ($date): bool {
+                return $row->date->toDateString() === $date->toDateString();
+            });
             $weekData[] = [
                 'date' => $date->toDateString(),
                 'day_name' => $date->translatedFormat('l'),
-                'shift' => $shift?->shift,
-                'notes' => $shift?->notes,
+                'shift' => $assignment?->shift,
+                'notes' => $assignment?->notes,
             ];
         }
 

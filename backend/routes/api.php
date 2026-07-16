@@ -1057,6 +1057,40 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:surveys.list.view');
         });
 
+        // Duyurular (C5 — company CRUD)
+        Route::prefix('announcements')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\V1\Announcements\AnnouncementController::class, 'index'])
+                ->middleware('permission:announcements.list.view');
+            Route::post('/', [\App\Http\Controllers\Api\V1\Announcements\AnnouncementController::class, 'store'])
+                ->middleware('permission:announcements.list.create');
+            Route::get('/{id}', [\App\Http\Controllers\Api\V1\Announcements\AnnouncementController::class, 'show'])
+                ->middleware('permission:announcements.list.view');
+            Route::put('/{id}', [\App\Http\Controllers\Api\V1\Announcements\AnnouncementController::class, 'update'])
+                ->middleware('permission:announcements.list.edit');
+            Route::delete('/{id}', [\App\Http\Controllers\Api\V1\Announcements\AnnouncementController::class, 'destroy'])
+                ->middleware('permission:announcements.list.delete');
+            Route::post('/{id}/publish', [\App\Http\Controllers\Api\V1\Announcements\AnnouncementController::class, 'publish'])
+                ->middleware('permission:announcements.list.edit');
+            Route::post('/{id}/unpublish', [\App\Http\Controllers\Api\V1\Announcements\AnnouncementController::class, 'unpublish'])
+                ->middleware('permission:announcements.list.edit');
+        });
+
+        // Bordro yükleme (C5 — PDF upload/yayın; ücret motoru değil)
+        Route::prefix('payslips')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\V1\Payroll\PayslipController::class, 'index'])
+                ->middleware('permission:payroll.payslips.view');
+            Route::post('/', [\App\Http\Controllers\Api\V1\Payroll\PayslipController::class, 'store'])
+                ->middleware('permission:payroll.payslips.create');
+            Route::get('/{id}', [\App\Http\Controllers\Api\V1\Payroll\PayslipController::class, 'show'])
+                ->middleware('permission:payroll.payslips.view');
+            Route::get('/{id}/download', [\App\Http\Controllers\Api\V1\Payroll\PayslipController::class, 'download'])
+                ->middleware('permission:payroll.payslips.view');
+            Route::post('/{id}/publish', [\App\Http\Controllers\Api\V1\Payroll\PayslipController::class, 'publish'])
+                ->middleware('permission:payroll.payslips.edit');
+            Route::delete('/{id}', [\App\Http\Controllers\Api\V1\Payroll\PayslipController::class, 'destroy'])
+                ->middleware('permission:payroll.payslips.delete');
+        });
+
         // HR Analytics Modülü
         Route::middleware('module.access:hr-analytics')->prefix('analytics')->group(function () {
             Route::get('/summary', [\App\Http\Controllers\Api\V1\Analytics\HrAnalyticsController::class, 'summary'])

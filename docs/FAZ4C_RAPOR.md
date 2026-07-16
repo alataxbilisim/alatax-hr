@@ -123,7 +123,7 @@ Branch: `faz4-form-engine`
 | `asset.assigned` | **eklendi** | Zimmet `AssetController::assign` |
 | `security.password_changed` / `two_factor_*` | **eklendi** | Tercihle kapatılamaz |
 | `request.approved/rejected` | katalog / **DUR** | Company HR onay endpoint yok |
-| `announcement.published` | katalog / **DUR** | Company publish CRUD yok |
+| `announcement.published` | katalog → **C5 kapandı** | Company publish + hedef kitle (C5) |
 | Push (Capacitor) | **DUR** | Ayrı dalga — altyapı kurulmadı |
 | `ApprovalRequestedNotification` stub | no-op | Gerçek yol: `NotificationService` |
 

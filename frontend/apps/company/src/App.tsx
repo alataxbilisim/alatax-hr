@@ -195,6 +195,8 @@ import ActivityLogsPage from './pages/audit/ActivityLogsPage';
 
 // Surveys Module
 import SurveysPage from './pages/surveys/SurveysPage';
+import AnnouncementsPage from './pages/announcements/AnnouncementsPage';
+import PayslipsAdminPage from './pages/payroll/PayslipsAdminPage';
 
 // Analytics Module
 import AnalyticsPage from './pages/analytics/AnalyticsPage';
@@ -827,6 +829,28 @@ const App: React.FC = () => {
                 <ModuleProtectedRoute moduleKey={MODULE_KEYS.SURVEYS}>
                   <SurveysPage />
                 </ModuleProtectedRoute>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/announcements"
+            element={
+              <ProtectedRoute>
+                <PermissionProtectedRoute module="announcements" page="list" action="view">
+                  <AnnouncementsPage />
+                </PermissionProtectedRoute>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/payslips"
+            element={
+              <ProtectedRoute>
+                <PermissionProtectedRoute module="payroll" page="payslips" action="view">
+                  <PayslipsAdminPage />
+                </PermissionProtectedRoute>
               </ProtectedRoute>
             }
           />

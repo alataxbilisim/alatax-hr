@@ -111,6 +111,9 @@ return [
 
         'announcement_published_title' => 'Yeni duyuru',
         'announcement_published_body' => 'Yeni duyuru yayınlandı: :title (:date).',
+
+        'payslip_published_title' => 'Bordronuz yayınlandı',
+        'payslip_published_body' => ':title dönemine ait bordronuz yayınlandı (:date).',
     ],
 
 ];

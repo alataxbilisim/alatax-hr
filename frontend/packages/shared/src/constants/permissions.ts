@@ -36,6 +36,8 @@ export const MODULES = {
   ANALYTICS: 'analytics',
   TIMESHEET: 'timesheet',
   EXPENSES: 'expenses',
+  ANNOUNCEMENTS: 'announcements',
+  PAYROLL: 'payroll',
 } as const;
 
 export type ModuleType = typeof MODULES[keyof typeof MODULES];
@@ -149,6 +151,14 @@ export const PAGES = {
     CLAIMS: 'claims',
     CATEGORIES: 'categories',
   },
+
+  [MODULES.ANNOUNCEMENTS]: {
+    LIST: 'list',
+  },
+
+  [MODULES.PAYROLL]: {
+    PAYSLIPS: 'payslips',
+  },
 } as const;
 
 // Sayfa bazlı aksiyon tanımları (hangi sayfada hangi aksiyonlar mevcut)
@@ -233,6 +243,12 @@ export const PAGE_ACTIONS: Record<string, Record<string, ActionType[]>> = {
     claims: ['view', 'create', 'edit', 'delete', 'approve'],
     categories: ['view', 'create', 'edit', 'delete'],
   },
+  [MODULES.ANNOUNCEMENTS]: {
+    list: ['view', 'create', 'edit', 'delete'],
+  },
+  [MODULES.PAYROLL]: {
+    payslips: ['view', 'create', 'edit', 'delete'],
+  },
 };
 
 // Modül etiketleri (UI için)
@@ -251,6 +267,8 @@ export const MODULE_LABELS: Record<ModuleType, string> = {
   [MODULES.ANALYTICS]: 'HR Analitik',
   [MODULES.TIMESHEET]: 'Puantaj',
   [MODULES.EXPENSES]: 'Masraf Yönetimi',
+  [MODULES.ANNOUNCEMENTS]: 'Duyurular',
+  [MODULES.PAYROLL]: 'Bordro',
 };
 
 // Sayfa etiketleri (UI için)
@@ -334,6 +352,12 @@ export const PAGE_LABELS: Record<string, Record<string, string>> = {
   [MODULES.EXPENSES]: {
     claims: 'Masraf Talepleri',
     categories: 'Kategoriler',
+  },
+  [MODULES.ANNOUNCEMENTS]: {
+    list: 'Duyurular',
+  },
+  [MODULES.PAYROLL]: {
+    payslips: 'Bordrolar',
   },
 };
 

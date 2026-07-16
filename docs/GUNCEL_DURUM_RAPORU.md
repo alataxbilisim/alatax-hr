@@ -41,7 +41,7 @@ ALATAX HR, Türkiye odaklı multi-tenant B2B HR SaaS’tır. Backend Laravel 12 
 | Auth | Sanctum Bearer; TOTP 2FA; davet + must_change_password (A2) |
 | RBAC | `{module}.{page}.{action}` + wildcard; Policy + DataScope |
 | Tenancy | `company_id` + `BelongsToCompany` global scope; client’tan `company_id` **asla** alınmaz |
-| Bordro | **Kapsam dışı** (ROADMAP); Payslip yalnızca portal read |
+| Bordro | ROADMAP Faz 8 motoru hâlâ ufuk; **C5** Company PDF upload/yayın + Portal “Bordrolarım” |
 | Kurallar | `.cursorrules` — API katmanları, migration, i18n `t()`, DataTable, FormRequest |
 
 ---
@@ -121,7 +121,7 @@ A1/A2 commit’leri remote’ta (önceki push’lar). A3–A5 + gece docs henüz
 
 **Core (3):** `user-management`, `company-management`, `audit-logs`  
 **Satılabilir (10):** `job-applications`, `document-management`, `onboarding`, `leave-management`, `performance`, `training`, `asset-management`, `hr-analytics`, `surveys` (+ bir daha — toplam ~13)  
-**Yok:** payroll/bordro modülü seed’de yok
+**Yok:** tam bordro motoru (Faz 8); C5’te `payroll.payslips.*` permission + upload var
 
 ### 5.3 API
 
@@ -174,8 +174,8 @@ Son migration’lar: leave_types system flags, must_change_password, branch_id, 
 
 - İzin talebi update/delete/cancel route eksik (controller kısmi)
 - Leave balance update/bulkUpdate **route yok** (AKIS 🔴)
-- Bordro upload/HR API yok; duyuru admin yok; vardiya CRUD yok
-- ApprovalRequestedNotification = stub (tam 4C değil)
+- ~~Bordro upload/HR API yok; duyuru admin yok; vardiya CRUD yok~~ → **C5** (duyuru CRUD + bordro upload; vardiya PDKS’te zaten vardı)
+- ApprovalRequestedNotification = stub (C4’te no-op; gerçek yol NotificationService)
 - Custom field validation TODO
 - Masraf kategori company panel route zayıf
 
@@ -246,7 +246,8 @@ Detay: `docs/FAZ_A_RAPOR.md`
 2. **İzin iptal** — cancel route eksik  
 3. **İşe alım public başvuru** — şema/status uyumsuz; Kanban boş riski  
 4. **hired → employee/onboarding** wire yok  
-5. **Puantaj** — portal clock-in OK; company HR attendance paneli yok; vardiya CRUD yok  
+5. **Puantaj** — portal clock-in OK; company attendance + vardiya CRUD **var** (PDKS/C5); Portal shifts tarih eşleşmesi C5’te düzeltildi  
+
 6. **Masraf** — portal OK; company HR UI + workflow zayıf  
 7. **Form Engine / Stüdyo / tam bildirim** yok  
 8. Nav/route drift (6 path)

@@ -12,6 +12,7 @@ class AnnouncementRead extends Model
     protected $fillable = [
         'announcement_id',
         'user_id',
+        'employee_id',
         'read_at',
         'acknowledged',
         'acknowledged_at',

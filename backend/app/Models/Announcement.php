@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use App\Traits\BelongsToCompany;
 use App\Traits\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Announcement extends Model
 {
-    use BelongsToCompany, HasAuditColumns, HasFactory, SoftDeletes;
+    use Auditable, BelongsToCompany, HasAuditColumns, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -25,6 +26,7 @@ class Announcement extends Model
         'target_departments',
         'target_positions',
         'target_employees',
+        'target_branches',
         'image_path',
         'attachments',
         'is_published',
@@ -43,6 +45,7 @@ class Announcement extends Model
         'target_departments' => 'array',
         'target_positions' => 'array',
         'target_employees' => 'array',
+        'target_branches' => 'array',
         'attachments' => 'array',
         'is_published' => 'boolean',
         'is_pinned' => 'boolean',
@@ -112,17 +115,27 @@ class Announcement extends Model
         }
 
         // Departman kontrolü
-        if ($this->target_departments && in_array($employee->department_id, $this->target_departments)) {
+        if ($this->target_departments && $employee->department_id
+            && in_array($employee->department_id, $this->target_departments, true)) {
             return true;
         }
 
-        // Pozisyon kontrolü
-        if ($this->target_positions && in_array($employee->position, $this->target_positions)) {
+        // Şube kontrolü
+        if ($this->target_branches && $employee->branch_id
+            && in_array($employee->branch_id, $this->target_branches, true)) {
             return true;
+        }
+
+        // Pozisyon kontrolü (legacy string veya position_id)
+        if ($this->target_positions) {
+            $pos = $employee->position_id ?? $employee->position ?? null;
+            if ($pos !== null && in_array($pos, $this->target_positions, false)) {
+                return true;
+            }
         }
 
         // Personel kontrolü
-        if ($this->target_employees && in_array($employee->id, $this->target_employees)) {
+        if ($this->target_employees && in_array($employee->id, $this->target_employees, true)) {
             return true;
         }
 
@@ -134,11 +147,22 @@ class Announcement extends Model
      */
     public function markAsReadBy(User $user): void
     {
-        $this->reads()->firstOrCreate(
-            ['user_id' => $user->id],
-            ['read_at' => now()]
-        );
+        $employeeId = Employee::query()->where('user_id', $user->id)->value('id');
 
+        $attrs = [
+            'user_id' => $user->id,
+            'read_at' => now(),
+        ];
+        if ($employeeId) {
+            $attrs['employee_id'] = $employeeId;
+        }
+
+        $existing = $this->reads()->where('user_id', $user->id)->first();
+        if ($existing) {
+            return;
+        }
+
+        $this->reads()->create($attrs);
         $this->increment('view_count');
     }
 

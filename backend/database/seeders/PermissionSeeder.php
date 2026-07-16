@@ -258,6 +258,16 @@ class PermissionSeeder extends Seeder
                 'claims' => ['view', 'create', 'edit', 'delete', 'approve'],
                 'categories' => ['view', 'create', 'edit', 'delete'],
             ],
+
+            // Duyurular (C5)
+            'announcements' => [
+                'list' => ['view', 'create', 'edit', 'delete'],
+            ],
+
+            // Bordro yükleme (C5 — bordro motoru değil)
+            'payroll' => [
+                'payslips' => ['view', 'create', 'edit', 'delete'],
+            ],
         ];
 
         // Yetkileri oluştur
@@ -478,6 +488,10 @@ class PermissionSeeder extends Seeder
                     // Anketler
                     'surveys.*',
 
+                    // Duyurular + bordro
+                    'announcements.*',
+                    'payroll.*',
+
                     // Analitik
                     'analytics.*',
 
@@ -547,6 +561,10 @@ class PermissionSeeder extends Seeder
 
                     // Anketler
                     'surveys.list.view', 'surveys.list.create', 'surveys.list.edit',
+
+                    // Duyurular + bordro
+                    'announcements.list.view', 'announcements.list.create', 'announcements.list.edit', 'announcements.list.delete',
+                    'payroll.payslips.view', 'payroll.payslips.create', 'payroll.payslips.edit', 'payroll.payslips.delete',
 
                     // Analitik
                     'analytics.reports.view',

@@ -21,7 +21,7 @@ class PortalPayslipController extends BaseController
         $employee = Employee::where('user_id', $user->id)->first();
 
         if (! $employee) {
-            return $this->error('Personel kaydı bulunamadı', null, 404);
+            return $this->error('Personel kaydı bulunamadı', 404);
         }
 
         $query = Payslip::where('employee_id', $employee->id)
@@ -62,7 +62,7 @@ class PortalPayslipController extends BaseController
         $employee = Employee::where('user_id', $user->id)->first();
 
         if (! $employee) {
-            return $this->error('Personel kaydı bulunamadı', null, 404);
+            return $this->error('Personel kaydı bulunamadı', 404);
         }
 
         $payslip = Payslip::where('employee_id', $employee->id)
@@ -71,7 +71,7 @@ class PortalPayslipController extends BaseController
             ->first();
 
         if (! $payslip) {
-            return $this->error('Bordro bulunamadı', null, 404);
+            return $this->error('Bordro bulunamadı', 404);
         }
 
         // Okundu olarak işaretle
@@ -109,7 +109,7 @@ class PortalPayslipController extends BaseController
         $employee = Employee::where('user_id', $user->id)->first();
 
         if (! $employee) {
-            return $this->error('Personel kaydı bulunamadı', null, 404);
+            return $this->error('Personel kaydı bulunamadı', 404);
         }
 
         $payslip = Payslip::where('employee_id', $employee->id)
@@ -118,18 +118,29 @@ class PortalPayslipController extends BaseController
             ->first();
 
         if (! $payslip) {
-            return $this->error('Bordro bulunamadı', null, 404);
+            return $this->error('Bordro bulunamadı', 404);
         }
 
-        if (! $payslip->file_path || ! Storage::disk('public')->exists($payslip->file_path)) {
-            return $this->error('Bordro dosyası bulunamadı', null, 404);
+        if (! $payslip->file_path) {
+            return $this->error('Bordro dosyası bulunamadı', 404);
+        }
+
+        $disk = null;
+        if (Storage::disk('private')->exists($payslip->file_path)) {
+            $disk = 'private';
+        } elseif (Storage::disk('public')->exists($payslip->file_path)) {
+            $disk = 'public';
+        }
+
+        if ($disk === null) {
+            return $this->error('Bordro dosyası bulunamadı', 404);
         }
 
         ActivityLog::log('export', $payslip, 'bordro export edildi');
 
         $fileName = "Bordro_{$payslip->year}_{$payslip->month}.pdf";
 
-        return Storage::disk('public')->download($payslip->file_path, $fileName);
+        return Storage::disk($disk)->download($payslip->file_path, $fileName);
     }
 
     /**
@@ -141,7 +152,7 @@ class PortalPayslipController extends BaseController
         $employee = Employee::where('user_id', $user->id)->first();
 
         if (! $employee) {
-            return $this->error('Personel kaydı bulunamadı', null, 404);
+            return $this->error('Personel kaydı bulunamadı', 404);
         }
 
         $years = Payslip::where('employee_id', $employee->id)

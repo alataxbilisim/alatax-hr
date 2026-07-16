@@ -81,6 +81,8 @@ export const operationalModuleGroups: ModuleGroup[] = [
       { path: '/employees/organization', labelKey: 'nav.employeesOrganization', permission: { module: 'employees', page: 'organization' } },
       { path: '/employees/custom-fields', labelKey: 'nav.employeesCustomFields', permission: { module: 'employees', page: 'custom_fields' } },
       { path: '/employees/reports', labelKey: 'nav.employeesReports', permission: { module: 'employees', page: 'reports' } },
+      { path: '/announcements', labelKey: 'nav.announcements', permission: { module: 'announcements', page: 'list' } },
+      { path: '/payslips', labelKey: 'nav.payslipsAdmin', permission: { module: 'payroll', page: 'payslips' } },
       {
         path: '/onboarding',
         labelKey: 'nav.onboardingProcesses',

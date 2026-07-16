@@ -903,6 +903,28 @@ export const surveysApi = {
   results: (id: number) => api.get(`/surveys/${id}/results`),
 };
 
+// Company duyurular (C5)
+export const announcementsApi = {
+  list: (params?: Record<string, unknown>) => api.get('/announcements', { params }),
+  get: (id: number) => api.get(`/announcements/${id}`),
+  create: (data: Record<string, unknown>) => api.post('/announcements', data),
+  update: (id: number, data: Record<string, unknown>) => api.put(`/announcements/${id}`, data),
+  delete: (id: number) => api.delete(`/announcements/${id}`),
+  publish: (id: number) => api.post(`/announcements/${id}/publish`),
+  unpublish: (id: number) => api.post(`/announcements/${id}/unpublish`),
+};
+
+// Company bordro (C5)
+export const payslipsApi = {
+  list: (params?: Record<string, unknown>) => api.get('/payslips', { params }),
+  get: (id: number) => api.get(`/payslips/${id}`),
+  create: (data: FormData) =>
+    api.post('/payslips', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  publish: (id: number) => api.post(`/payslips/${id}/publish`),
+  delete: (id: number) => api.delete(`/payslips/${id}`),
+  download: (id: number) => api.get(`/payslips/${id}/download`, { responseType: 'blob' }),
+};
+
 // Attendance API (Company HR)
 export const attendanceApi = {
   list: (params?: Record<string, unknown>) => api.get('/attendance', { params }),
