@@ -77,4 +77,11 @@ class LeaveBalance extends Model
         $this->pending_days -= $days;
         $this->save();
     }
+
+    /** Onaylı izin iptalinde kullanılan günü iade et. */
+    public function restoreUsed(float $days): void
+    {
+        $this->used_days = max(0, (float) $this->used_days - $days);
+        $this->save();
+    }
 }

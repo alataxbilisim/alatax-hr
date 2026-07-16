@@ -75,6 +75,8 @@ return [
 
         'leave_rejected_title' => 'İzin talebiniz reddedildi',
         'leave_rejected_body' => 'İzin talebiniz reddedildi. :reason',
+        'leave_cancelled_title' => 'İzin talebi iptal edildi',
+        'leave_cancelled_body' => ':user adlı personelin izin talebi iptal edildi (:date).',
 
         'expense_approved_title' => 'Masraf talebiniz onaylandı',
         'expense_approved_body' => 'Masraf talebiniz :date tarihinde onaylandı.',

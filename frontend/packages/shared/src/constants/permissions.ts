@@ -12,6 +12,7 @@ export const ACTIONS = {
   EXPORT: 'export',
   IMPORT: 'import',
   APPROVE: 'approve',
+  CANCEL: 'cancel',
 } as const;
 
 export type ActionType = typeof ACTIONS[keyof typeof ACTIONS];
@@ -174,7 +175,7 @@ export const PAGE_ACTIONS: Record<string, Record<string, ActionType[]>> = {
     custom_fields: ['view', 'create', 'edit', 'delete'],
   },
   [MODULES.LEAVES]: {
-    requests: ['view', 'create', 'edit', 'delete', 'approve'],
+    requests: ['view', 'create', 'edit', 'delete', 'approve', 'cancel'],
     types: ['view', 'create', 'edit', 'delete'],
     balances: ['view', 'edit'],
     calendar: ['view'],
@@ -340,6 +341,7 @@ export const ACTION_LABELS: Record<ActionType, string> = {
   [ACTIONS.EXPORT]: 'Dışa Aktar',
   [ACTIONS.IMPORT]: 'İçe Aktar',
   [ACTIONS.APPROVE]: 'Onayla',
+  [ACTIONS.CANCEL]: 'İptal',
 };
 
 // Yetki oluşturma yardımcı fonksiyonu

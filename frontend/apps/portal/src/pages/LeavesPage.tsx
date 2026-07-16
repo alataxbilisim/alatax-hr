@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { portalApi } from '@shared/services/api';
 import { Select } from '@shared/components';
+import { useTranslation } from '@shared/i18n';
 import toast from 'react-hot-toast';
 import { BsPlus, BsCalendarCheck, BsX } from 'react-icons/bs';
 
@@ -30,6 +31,7 @@ interface LeaveBalance {
 }
 
 const LeavesPage: React.FC = () => {
+  const { t } = useTranslation('common');
   const [leaves, setLeaves] = useState<LeaveRequest[]>([]);
   const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
   const [balances, setBalances] = useState<LeaveBalance[]>([]);
@@ -106,13 +108,13 @@ const LeavesPage: React.FC = () => {
   };
 
   const handleCancel = async (id: number) => {
-    if (!confirm('Bu izin talebini iptal etmek istediğinize emin misiniz?')) return;
+    if (!confirm(t('leaves.cancelConfirm'))) return;
     try {
       await portalApi.leaves.cancel(id);
-      toast.success('İzin talebi iptal edildi');
+      toast.success(t('leaves.cancelSuccess'));
       loadData();
     } catch {
-      toast.error('İptal işlemi başarısız');
+      toast.error(t('leaves.cancelFailed'));
     }
   };
 
@@ -184,7 +186,7 @@ const LeavesPage: React.FC = () => {
                               className="btn btn-sm btn-ghost text-danger"
                               onClick={() => handleCancel(leave.id)}
                             >
-                              İptal
+                              {t('leaves.cancelRequest')}
                             </button>
                           )}
                         </td>
@@ -227,7 +229,7 @@ const LeavesPage: React.FC = () => {
                           className="btn btn-outline-primary btn-sm"
                           onClick={() => handleCancel(leave.id)}
                         >
-                          İptal Et
+                          {t('leaves.cancelRequest')}
                         </button>
                       </div>
                     )}

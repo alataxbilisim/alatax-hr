@@ -658,7 +658,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/requests/{leave_request}/resubmit', [\App\Http\Controllers\Api\V1\Leaves\LeaveRequestController::class, 'resubmit'])
                 ->middleware('permission:leaves.requests.create');
             Route::post('/requests/{leave_request}/cancel', [\App\Http\Controllers\Api\V1\Leaves\LeaveRequestController::class, 'cancel'])
-                ->middleware('permission:leaves.requests.delete|leaves.requests.create');
+                ->middleware('permission:leaves.requests.delete|leaves.requests.create|leaves.requests.cancel');
 
             Route::get('/calendar', [\App\Http\Controllers\Api\V1\Leaves\LeaveCalendarController::class, 'index'])
                 ->middleware('permission:leaves.calendar.view');

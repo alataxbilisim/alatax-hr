@@ -3,6 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from '@shared/i18n';
 import { leavesApi, lookupsApi, type LookupItem } from '@shared/services/api';
 import { Select } from '@shared/components';
+import { usePermission } from '@shared/hooks/usePermission';
+import { getErrorMessage } from '@shared/services/apiHelpers';
 import toast from 'react-hot-toast';
 import { DataTable, ConfirmDialog, Modal } from '../../components/ui';
 import LeaveRequestForm from '../../components/leaves/LeaveRequestForm';
@@ -21,6 +23,7 @@ import {
   BsTrash,
   BsEye,
   BsFilter,
+  BsSlashCircleFill,
 } from 'react-icons/bs';
 
 interface LeaveType {
@@ -77,7 +80,11 @@ const LeavesPage: React.FC = () => {
   const { t } = useTranslation('common');
   const location = useLocation();
   const navigate = useNavigate();
-  
+  const { canDelete, hasPermission, isAdmin } = usePermission();
+  const canCancelPending = canDelete('leaves', 'requests') || isAdmin();
+  const canCancelApproved =
+    hasPermission('leaves', 'requests', 'cancel') || isAdmin();
+
   // URL'e göre aktif tab (effect yok — pathname'den türet)
   const activeTab: TabType = useMemo(() => {
     const path = location.pathname;
@@ -227,6 +234,21 @@ const LeavesPage: React.FC = () => {
     }
   };
 
+  const handleCancel = async (request: LeaveRequest) => {
+    if (!window.confirm(t('leaves.cancelConfirm'))) return;
+
+    setActionLoading(request.id);
+    try {
+      await leavesApi.requests.cancel(request.id);
+      toast.success(t('leaves.cancelSuccess'));
+      loadRequests();
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, t('leaves.cancelFailed')));
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const handleDeleteType = (type: LeaveType) => {
     setTypeToDelete(type);
     setDeleteTypeDialogOpen(true);
@@ -326,7 +348,33 @@ const LeavesPage: React.FC = () => {
               >
                 <BsX />
               </button>
+              {canCancelPending && (
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-icon"
+                  onClick={() => void handleCancel(r)}
+                  disabled={actionLoading === r.id}
+                  title={t('leaves.cancelRequest')}
+                  aria-label={t('leaves.cancelRequest')}
+                  style={{ color: 'var(--warning)' }}
+                >
+                  <BsSlashCircleFill />
+                </button>
+              )}
             </>
+          )}
+          {r.status === 'approved' && canCancelApproved && (
+            <button
+              type="button"
+              className="btn btn-ghost btn-icon"
+              onClick={() => void handleCancel(r)}
+              disabled={actionLoading === r.id}
+              title={t('leaves.cancelRequest')}
+              aria-label={t('leaves.cancelRequest')}
+              style={{ color: 'var(--warning)' }}
+            >
+              <BsSlashCircleFill />
+            </button>
           )}
           <button
             type="button"

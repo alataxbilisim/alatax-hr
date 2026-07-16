@@ -9,16 +9,19 @@ use App\Models\LeaveBalance;
 use App\Models\LeaveRequest;
 use App\Models\LeaveType;
 use App\Services\DataScopeService;
+use App\Services\Leaves\LeaveRequestCancelService;
 use App\Services\WorkflowService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class LeaveRequestController extends BaseController
 {
     public function __construct(
         protected DataScopeService $dataScope,
         protected WorkflowService $workflowService,
+        protected LeaveRequestCancelService $cancelService,
     ) {}
 
     /**
@@ -293,31 +296,43 @@ class LeaveRequestController extends BaseController
     }
 
     /**
-     * Cancel a leave request (yalnızca pending — approved sonrası ayrı akış).
+     * Cancel leave request:
+     * - pending → sahip veya DataScope
+     * - approved → leaves.requests.cancel + DataScope (bakiye iadesi)
      */
     public function cancel(LeaveRequest $leaveRequest): JsonResponse
     {
-        $this->authorize('delete', $leaveRequest);
+        $this->authorize('cancel', $leaveRequest);
 
-        if ($leaveRequest->status !== LeaveRequestStatus::Pending) {
-            return $this->error('Sadece bekleyen talepler iptal edilebilir', 422);
+        $oldStatus = (string) ($leaveRequest->status instanceof LeaveRequestStatus
+            ? $leaveRequest->status->value
+            : $leaveRequest->status);
+        $days = (float) $leaveRequest->total_days;
+
+        try {
+            $updated = $this->cancelService->cancel($leaveRequest, auth()->user());
+        } catch (ValidationException $e) {
+            return $this->error(
+                collect($e->errors())->flatten()->first() ?? 'İptal edilemedi',
+                422,
+                $e->errors()
+            );
         }
-
-        $pendingDays = (float) $leaveRequest->total_days;
-        LeaveRequest::withoutAuditing(fn () => $leaveRequest->cancel());
 
         ActivityLog::log(
             'cancelled',
-            $leaveRequest,
-            'İzin talebi iptal edildi: '.$leaveRequest->leaveType?->name,
-            ['status' => LeaveRequestStatus::Pending->value, 'pending_days_restored' => $pendingDays],
+            $updated,
+            'İzin talebi iptal edildi: '.$updated->leaveType?->name,
+            [
+                'status' => $oldStatus,
+                'days' => $days,
+                'balance_restored' => $oldStatus === LeaveRequestStatus::Approved->value
+                    || $oldStatus === LeaveRequest::STATUS_APPROVED,
+            ],
             ['status' => LeaveRequestStatus::Cancelled->value]
         );
 
-        return $this->success(
-            $leaveRequest->fresh()->load(['leaveType', 'user']),
-            'İzin talebi iptal edildi'
-        );
+        return $this->success($updated, 'İzin talebi iptal edildi');
     }
 
     /**

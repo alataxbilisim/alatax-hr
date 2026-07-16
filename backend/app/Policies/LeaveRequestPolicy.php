@@ -48,12 +48,38 @@ class LeaveRequestPolicy
 
     public function delete(User $user, LeaveRequest $leaveRequest): bool
     {
-        // İptal: sahibi veya DataScope içinde yetkili (şube/dept/team/company)
+        // Pending iptal: sahibi veya DataScope içinde yetkili
         if ((int) $leaveRequest->user_id === $user->id) {
             return true;
         }
 
         return $this->dataScope->allowsUserId($user, (int) $leaveRequest->user_id);
+    }
+
+    /**
+     * İptal yetkisi:
+     * - pending → delete ile aynı (sahip / DataScope)
+     * - approved → leaves.requests.cancel + DataScope (İK/admin)
+     */
+    public function cancel(User $user, LeaveRequest $leaveRequest): bool
+    {
+        $status = (string) ($leaveRequest->status instanceof \BackedEnum
+            ? $leaveRequest->status->value
+            : $leaveRequest->status);
+
+        if ($status === LeaveRequest::STATUS_PENDING) {
+            return $this->delete($user, $leaveRequest);
+        }
+
+        if ($status === LeaveRequest::STATUS_APPROVED) {
+            if (! $user->can('leaves.requests.cancel')) {
+                return false;
+            }
+
+            return $this->dataScope->allowsUserId($user, (int) $leaveRequest->user_id);
+        }
+
+        return false;
     }
 
     /**

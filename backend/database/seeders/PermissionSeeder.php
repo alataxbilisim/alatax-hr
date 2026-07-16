@@ -184,7 +184,7 @@ class PermissionSeeder extends Seeder
 
             // İzin Yönetimi Modülü
             'leaves' => [
-                'requests' => ['view', 'create', 'edit', 'delete', 'approve'],
+                'requests' => ['view', 'create', 'edit', 'delete', 'approve', 'cancel'],
                 'types' => ['view', 'create', 'edit', 'delete'],
                 'balances' => ['view', 'edit'],
                 'calendar' => ['view'],

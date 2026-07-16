@@ -283,7 +283,7 @@ class LeaveFlowRepairTest extends TestCase
         $this->assertEquals(0.0, (float) $balance->pending_days);
     }
 
-    public function test_cancel_approved_rejected(): void
+    public function test_cancel_approved_rejected_for_owner(): void
     {
         $owner = $this->makeEmployeeUser($this->branchA);
         $request = LeaveRequest::create([
@@ -299,7 +299,107 @@ class LeaveFlowRepairTest extends TestCase
 
         Sanctum::actingAs($owner);
         $this->postJson("/api/v1/leaves/requests/{$request->id}/cancel")
-            ->assertStatus(422);
+            ->assertForbidden();
+    }
+
+    public function test_admin_cancel_approved_restores_used_days(): void
+    {
+        $admin = $this->makeAdmin();
+        $owner = $this->makeEmployeeUser($this->branchA);
+        $balance = $this->makeBalance($owner, 14, 0);
+        $balance->update(['used_days' => 2]);
+
+        $request = LeaveRequest::create([
+            'company_id' => $this->company->id,
+            'user_id' => $owner->id,
+            'leave_type_id' => $this->leaveType->id,
+            'start_date' => now()->addDays(10)->toDateString(),
+            'end_date' => now()->addDays(11)->toDateString(),
+            'total_days' => 2,
+            'status' => LeaveRequestStatus::Approved,
+            'reason' => 'Test',
+        ]);
+
+        Sanctum::actingAs($admin);
+        $this->postJson("/api/v1/leaves/requests/{$request->id}/cancel")
+            ->assertOk()
+            ->assertJsonPath('data.status', 'cancelled');
+
+        $balance->refresh();
+        $this->assertEquals(0.0, (float) $balance->used_days);
+    }
+
+    public function test_cancel_pending_closes_approval_instance(): void
+    {
+        $owner = $this->makeEmployeeUser($this->branchA);
+        $admin = $this->makeAdmin();
+        $this->makeBalance($owner, 14, 2);
+
+        $request = LeaveRequest::create([
+            'company_id' => $this->company->id,
+            'user_id' => $owner->id,
+            'leave_type_id' => $this->leaveType->id,
+            'start_date' => now()->addDays(8)->toDateString(),
+            'end_date' => now()->addDays(9)->toDateString(),
+            'total_days' => 2,
+            'status' => LeaveRequestStatus::Pending,
+            'reason' => 'Workflow iptal',
+        ]);
+
+        $workflow = \App\Models\ApprovalWorkflow::create([
+            'company_id' => $this->company->id,
+            'name' => 'İzin WF',
+            'entity_type' => \App\Models\ApprovalWorkflow::ENTITY_LEAVE_REQUEST,
+            'is_active' => true,
+            'is_default' => true,
+        ]);
+        $step = \App\Models\ApprovalStep::create([
+            'approval_workflow_id' => $workflow->id,
+            'step_order' => 1,
+            'name' => 'İK',
+            'approver_type' => \App\Models\ApprovalStep::APPROVER_USER,
+            'specific_user_id' => $admin->id,
+            'is_required' => true,
+            'escalation_days' => 3,
+        ]);
+
+        $instance = \App\Models\ApprovalInstance::create([
+            'company_id' => $this->company->id,
+            'approval_workflow_id' => $workflow->id,
+            'approvable_type' => LeaveRequest::class,
+            'approvable_id' => $request->id,
+            'current_step' => 1,
+            'status' => \App\Models\ApprovalInstance::STATUS_IN_PROGRESS,
+            'started_at' => now(),
+        ]);
+
+        \App\Models\ApprovalRecord::create([
+            'company_id' => $this->company->id,
+            'approval_instance_id' => $instance->id,
+            'approval_workflow_id' => $workflow->id,
+            'approval_step_id' => $step->id,
+            'approvable_type' => LeaveRequest::class,
+            'approvable_id' => $request->id,
+            'approver_id' => $admin->id,
+            'status' => \App\Models\ApprovalRecord::STATUS_PENDING,
+            'step_order' => 1,
+            'is_current' => true,
+        ]);
+
+        Sanctum::actingAs($owner);
+        $this->postJson("/api/v1/leaves/requests/{$request->id}/cancel")->assertOk();
+
+        $this->assertSame(
+            \App\Models\ApprovalInstance::STATUS_CANCELLED,
+            $instance->fresh()->status
+        );
+        $this->assertSame(
+            \App\Models\ApprovalRecord::STATUS_SKIPPED,
+            \App\Models\ApprovalRecord::query()
+                ->where('approvable_id', $request->id)
+                ->first()
+                ?->status
+        );
     }
 
     public function test_cancel_other_users_request_403_for_employee(): void

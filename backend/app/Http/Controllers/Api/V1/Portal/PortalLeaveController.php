@@ -2,17 +2,24 @@
 
 namespace App\Http\Controllers\Api\V1\Portal;
 
+use App\Enums\LeaveRequestStatus;
 use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\ActivityLog;
 use App\Models\LeaveBalance;
 use App\Models\LeaveRequest;
 use App\Models\LeaveType;
+use App\Services\Leaves\LeaveRequestCancelService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class PortalLeaveController extends BaseController
 {
+    public function __construct(
+        protected LeaveRequestCancelService $cancelService,
+    ) {}
+
     /**
      * İzin türlerini listele
      */
@@ -211,30 +218,34 @@ class PortalLeaveController extends BaseController
     }
 
     /**
-     * İzin talebini iptal et
+     * İzin talebini iptal et — personel yalnız kendi pending talebini.
      */
     public function cancel(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
 
-        $leaveRequest = LeaveRequest::where('user_id', $user->id)
+        $leaveRequest = LeaveRequest::query()
+            ->where('user_id', $user->id)
             ->where('id', $id)
-            ->whereIn('status', ['pending', 'approved'])
+            ->where('status', LeaveRequest::STATUS_PENDING)
             ->first();
 
         if (! $leaveRequest) {
-            return $this->error('İzin talebi bulunamadı veya iptal edilemez', null, 404);
+            return $this->error('İzin talebi bulunamadı veya iptal edilemez', 404);
         }
 
-        // Geçmiş tarihli izinler iptal edilemez
-        if ($leaveRequest->start_date->isPast()) {
-            return $this->error('Geçmiş tarihli izinler iptal edilemez', null, 422);
+        try {
+            $updated = $this->cancelService->cancel($leaveRequest, $user);
+        } catch (ValidationException $e) {
+            return $this->error(
+                collect($e->errors())->flatten()->first() ?? 'İptal edilemedi',
+                422,
+                $e->errors()
+            );
         }
 
-        LeaveRequest::withoutAuditing(fn () => $leaveRequest->update(['status' => 'cancelled']));
+        ActivityLog::log('leave_cancelled', $updated, 'İzin talebi iptal edildi');
 
-        ActivityLog::log('leave_cancelled', $leaveRequest, 'İzin talebi iptal edildi');
-
-        return $this->success(null, 'İzin talebi iptal edildi');
+        return $this->success($updated, 'İzin talebi iptal edildi');
     }
 }

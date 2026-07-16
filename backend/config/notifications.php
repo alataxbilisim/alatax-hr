@@ -74,6 +74,14 @@ return [
             'body_key' => 'messages.notifications.leave_rejected_body',
         ],
 
+        'leave.cancelled' => [
+            'group' => 'requests',
+            'panel' => 'company',
+            'path' => '/leaves',
+            'title_key' => 'messages.notifications.leave_cancelled_title',
+            'body_key' => 'messages.notifications.leave_cancelled_body',
+        ],
+
         'expense.approved' => [
             'group' => 'requests',
             'panel' => 'portal',

@@ -238,15 +238,21 @@ class LeaveRequest extends Model
 
     public function cancel(): void
     {
-        if ($this->status === LeaveRequestStatus::Pending) {
-            $balance = LeaveBalance::where('user_id', $this->user_id)
-                ->where('leave_type_id', $this->leave_type_id)
-                ->where('year', $this->start_date->year)
-                ->first();
+        $status = $this->status instanceof LeaveRequestStatus
+            ? $this->status
+            : LeaveRequestStatus::tryFrom((string) $this->status);
 
-            if ($balance) {
-                $balance->rejectPending($this->total_days);
-            }
+        $balance = LeaveBalance::where('user_id', $this->user_id)
+            ->where('leave_type_id', $this->leave_type_id)
+            ->where('year', $this->start_date->year)
+            ->first();
+
+        if ($balance && $status === LeaveRequestStatus::Pending) {
+            $balance->rejectPending($this->total_days);
+        }
+
+        if ($balance && $status === LeaveRequestStatus::Approved) {
+            $balance->restoreUsed((float) $this->total_days);
         }
 
         $this->update(['status' => self::STATUS_CANCELLED]);

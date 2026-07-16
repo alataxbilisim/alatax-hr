@@ -319,3 +319,42 @@ Commit’ler: `8e343d5` feat(B-3); `1c6b5b4` policy ad fix.
 | Sentinel `admin@demo.test` @ `alatax_hr` | **yes** (wipe yok) |
 | Push | **yok** (bugünkü push sonrası lokal commit) |
 
+---
+
+## C1 — AKIS kritik kopukları (bakiye + iptal)
+
+**Tarih:** 2026-07-16  
+**Branch:** `faz4-form-engine`
+
+### ADIM 0 — Teşhis
+
+| Madde | Durum | Not |
+|-------|--------|-----|
+| Bakiye `PUT/PATCH .../balance/{id}` + bulk | ✅ B-1 | Route + FE `LeaveBalancesTab` zaten bağlı — atlandı |
+| Negatif bakiye | ✅ | `min:0` FormRequest — korundu |
+| Pending iptal | ✅ B-1 | Genişletildi |
+| Onaylı iptal + bakiye iadesi | 🔴→✅ | C1 ile eklendi |
+| Approval instance kapanışı | 🔴→✅ | C1 |
+| `leave.cancelled` bildirimi | 🔴→✅ | C1 |
+| Company FE iptal aksiyonu | 🔴→✅ | C1 |
+| Portal pending iptal | ✅ | Bakiye/workflow servise alındı |
+
+### Route / permission
+
+| Method | Path | Permission |
+|--------|------|------------|
+| (mevcut) `PUT/PATCH` | `/leaves/balance/{id}` | `leaves.balances.edit` |
+| (mevcut) `POST` | `/leaves/balance/bulk` | `leaves.balances.edit` |
+| `POST` | `/leaves/requests/{id}/cancel` | `delete\|create\|cancel` + Policy `cancel` |
+| Yeni izin | `leaves.requests.cancel` | Onaylı iptal (İK) |
+
+### Doğrulama
+
+| Metrik | Sonuç |
+|--------|--------|
+| `LeaveFlowRepairTest` | **13 passed** |
+| Tam suite | **459 passed / 0 fail** |
+| company + portal `tsc` | **0** |
+| Select sentinel | **PASSED** |
+| DB wipe | **yok** |
+
