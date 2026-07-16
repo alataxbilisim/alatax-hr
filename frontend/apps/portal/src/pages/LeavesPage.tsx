@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { portalApi } from '@shared/services/api';
 import { Select } from '@shared/components';
 import { useTranslation } from '@shared/i18n';
@@ -129,6 +130,9 @@ const LeavesPage: React.FC = () => {
           <button className="btn btn-primary" onClick={() => setShowModal(true)}>
             <BsPlus size={20} /> Yeni İzin Talebi
           </button>
+          <Link to="/leaves/form-engine" className="btn btn-outline-secondary btn-sm ms-2">
+            {t('formEngine.openFormEngine')}
+          </Link>
         </div>
       </div>
 

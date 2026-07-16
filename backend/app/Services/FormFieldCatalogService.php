@@ -169,6 +169,70 @@ class FormFieldCatalogService
     }
 
     /**
+     * Masraf talebi header alanları (Portal ExpensesPage claim formu ile hizalı).
+     * Kalemler (items[]) FormEngine dışı kalır.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function expenseSystemFieldCatalog(): array
+    {
+        return [
+            ['system_key' => 'title', 'field_label' => 'Başlık', 'field_type' => CustomFieldDefinition::TYPE_TEXT, 'is_required' => true, 'sort_order' => 10, 'section' => 'claim'],
+            ['system_key' => 'expense_date', 'field_label' => 'Masraf Tarihi', 'field_type' => CustomFieldDefinition::TYPE_DATE, 'is_required' => true, 'sort_order' => 20, 'section' => 'claim'],
+            ['system_key' => 'description', 'field_label' => 'Açıklama', 'field_type' => CustomFieldDefinition::TYPE_TEXTAREA, 'is_required' => false, 'sort_order' => 30, 'section' => 'claim'],
+            ['system_key' => 'currency', 'field_label' => 'Para Birimi', 'field_type' => CustomFieldDefinition::TYPE_SELECT, 'is_required' => false, 'sort_order' => 40, 'section' => 'claim'],
+        ];
+    }
+
+    public function defaultExpenseLayout(): array
+    {
+        return $this->layoutFromCatalog(
+            $this->expenseSystemFieldCatalog(),
+            [
+                'claim' => ['id' => 'claim', 'label' => 'Masraf Talebi', 'sort_order' => 0],
+                'custom' => ['id' => 'custom', 'label' => 'Özel Alanlar', 'sort_order' => 1],
+            ]
+        );
+    }
+
+    /**
+     * Varlık kaydı formu (AssetForm ile hizalı). Zimmet ayrı form.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function assetSystemFieldCatalog(): array
+    {
+        return [
+            ['system_key' => 'name', 'field_label' => 'Varlık Adı', 'field_type' => CustomFieldDefinition::TYPE_TEXT, 'is_required' => true, 'sort_order' => 10, 'section' => 'general'],
+            ['system_key' => 'category_id', 'field_label' => 'Kategori', 'field_type' => CustomFieldDefinition::TYPE_NUMBER, 'is_required' => true, 'sort_order' => 20, 'section' => 'general'],
+            ['system_key' => 'description', 'field_label' => 'Açıklama', 'field_type' => CustomFieldDefinition::TYPE_TEXTAREA, 'is_required' => false, 'sort_order' => 30, 'section' => 'general'],
+            ['system_key' => 'asset_code', 'field_label' => 'Demirbaş Kodu', 'field_type' => CustomFieldDefinition::TYPE_TEXT, 'is_required' => false, 'sort_order' => 40, 'section' => 'identity'],
+            ['system_key' => 'serial_number', 'field_label' => 'Seri Numarası', 'field_type' => CustomFieldDefinition::TYPE_TEXT, 'is_required' => false, 'sort_order' => 50, 'section' => 'identity'],
+            ['system_key' => 'brand', 'field_label' => 'Marka', 'field_type' => CustomFieldDefinition::TYPE_TEXT, 'is_required' => false, 'sort_order' => 60, 'section' => 'identity'],
+            ['system_key' => 'model', 'field_label' => 'Model', 'field_type' => CustomFieldDefinition::TYPE_TEXT, 'is_required' => false, 'sort_order' => 70, 'section' => 'identity'],
+            ['system_key' => 'purchase_date', 'field_label' => 'Satın Alma Tarihi', 'field_type' => CustomFieldDefinition::TYPE_DATE, 'is_required' => false, 'sort_order' => 80, 'section' => 'purchase'],
+            ['system_key' => 'purchase_price', 'field_label' => 'Satın Alma Fiyatı', 'field_type' => CustomFieldDefinition::TYPE_NUMBER, 'is_required' => false, 'sort_order' => 90, 'section' => 'purchase'],
+            ['system_key' => 'warranty_end_date', 'field_label' => 'Garanti Bitiş', 'field_type' => CustomFieldDefinition::TYPE_DATE, 'is_required' => false, 'sort_order' => 100, 'section' => 'purchase'],
+            ['system_key' => 'condition', 'field_label' => 'Kondisyon', 'field_type' => CustomFieldDefinition::TYPE_SELECT, 'is_required' => false, 'sort_order' => 110, 'section' => 'status'],
+            ['system_key' => 'location', 'field_label' => 'Lokasyon', 'field_type' => CustomFieldDefinition::TYPE_TEXT, 'is_required' => false, 'sort_order' => 120, 'section' => 'status'],
+        ];
+    }
+
+    public function defaultAssetLayout(): array
+    {
+        return $this->layoutFromCatalog(
+            $this->assetSystemFieldCatalog(),
+            [
+                'general' => ['id' => 'general', 'label' => 'Genel', 'sort_order' => 0],
+                'identity' => ['id' => 'identity', 'label' => 'Kimlik', 'sort_order' => 1],
+                'purchase' => ['id' => 'purchase', 'label' => 'Satın Alma', 'sort_order' => 2],
+                'status' => ['id' => 'status', 'label' => 'Durum', 'sort_order' => 3],
+                'custom' => ['id' => 'custom', 'label' => 'Özel Alanlar', 'sort_order' => 4],
+            ]
+        );
+    }
+
+    /**
      * Entity’ye göre varsayılan layout.
      *
      * @return array{sections: list<array<string, mixed>>}
@@ -178,12 +242,14 @@ class FormFieldCatalogService
         return match ($entityType) {
             CustomFieldDefinition::ENTITY_LEAVE_REQUEST => $this->defaultLeaveRequestLayout(),
             CustomFieldDefinition::ENTITY_JOB_APPLICATION => $this->defaultJobApplicationLayout(),
+            CustomFieldDefinition::ENTITY_EXPENSE => $this->defaultExpenseLayout(),
+            CustomFieldDefinition::ENTITY_ASSET => $this->defaultAssetLayout(),
             default => $this->defaultEmployeeLayout(),
         };
     }
 
     /**
-     * Idempotent sistem alan + varsayılan layout seed (employee + leave_request + job_application).
+     * Idempotent sistem alan + varsayılan layout seed.
      *
      * @return array{fields: int, layouts: int}
      */
@@ -202,44 +268,38 @@ class FormFieldCatalogService
             CustomFieldDefinition::ENTITY_JOB_APPLICATION,
             $this->jobApplicationSystemFieldCatalog()
         );
-
-        FormDefinition::withoutGlobalScopes()->updateOrCreate(
-            [
-                'company_id' => null,
-                'entity_type' => CustomFieldDefinition::ENTITY_EMPLOYEE,
-            ],
-            [
-                'name' => 'Personel Formu (Sistem)',
-                'is_active' => true,
-                'layout' => $this->defaultEmployeeLayout(),
-            ]
+        $fieldCount += $this->seedEntityCatalog(
+            CustomFieldDefinition::ENTITY_EXPENSE,
+            $this->expenseSystemFieldCatalog()
+        );
+        $fieldCount += $this->seedEntityCatalog(
+            CustomFieldDefinition::ENTITY_ASSET,
+            $this->assetSystemFieldCatalog()
         );
 
-        FormDefinition::withoutGlobalScopes()->updateOrCreate(
-            [
-                'company_id' => null,
-                'entity_type' => CustomFieldDefinition::ENTITY_LEAVE_REQUEST,
-            ],
-            [
-                'name' => 'İzin Talebi Formu (Sistem)',
-                'is_active' => true,
-                'layout' => $this->defaultLeaveRequestLayout(),
-            ]
-        );
+        $layouts = [
+            [CustomFieldDefinition::ENTITY_EMPLOYEE, 'Personel Formu (Sistem)', $this->defaultEmployeeLayout()],
+            [CustomFieldDefinition::ENTITY_LEAVE_REQUEST, 'İzin Talebi Formu (Sistem)', $this->defaultLeaveRequestLayout()],
+            [CustomFieldDefinition::ENTITY_JOB_APPLICATION, 'İş Başvurusu Formu (Sistem)', $this->defaultJobApplicationLayout()],
+            [CustomFieldDefinition::ENTITY_EXPENSE, 'Masraf Talebi Formu (Sistem)', $this->defaultExpenseLayout()],
+            [CustomFieldDefinition::ENTITY_ASSET, 'Varlık Formu (Sistem)', $this->defaultAssetLayout()],
+        ];
 
-        FormDefinition::withoutGlobalScopes()->updateOrCreate(
-            [
-                'company_id' => null,
-                'entity_type' => CustomFieldDefinition::ENTITY_JOB_APPLICATION,
-            ],
-            [
-                'name' => 'İş Başvurusu Formu (Sistem)',
-                'is_active' => true,
-                'layout' => $this->defaultJobApplicationLayout(),
-            ]
-        );
+        foreach ($layouts as [$entityType, $name, $layout]) {
+            FormDefinition::withoutGlobalScopes()->updateOrCreate(
+                [
+                    'company_id' => null,
+                    'entity_type' => $entityType,
+                ],
+                [
+                    'name' => $name,
+                    'is_active' => true,
+                    'layout' => $layout,
+                ]
+            );
+        }
 
-        return ['fields' => $fieldCount, 'layouts' => 3];
+        return ['fields' => $fieldCount, 'layouts' => count($layouts)];
     }
 
     /**

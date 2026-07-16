@@ -31,6 +31,7 @@ import { InviteAcceptPage, ForcedPasswordChangePage } from '@shared/components';
 import DashboardPage from './pages/DashboardPage';
 import ProfilePage from './pages/ProfilePage';
 import LeavesPage from './pages/LeavesPage';
+import LeaveFormEnginePage from './pages/LeaveFormEnginePage';
 import DocumentsPage from './pages/DocumentsPage';
 import PayslipsPage from './pages/PayslipsPage';
 import SalaryPage from './pages/SalaryPage';
@@ -42,6 +43,7 @@ import SurveysPage from './pages/SurveysPage';
 import TimesheetPage from './pages/TimesheetPage';
 import PortalQrScanPage from './pages/PortalQrScanPage';
 import ExpensesPage from './pages/ExpensesPage';
+import ExpenseFormEnginePage from './pages/ExpenseFormEnginePage';
 
 // Styles
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -152,6 +154,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/leaves" element={<LeavesPage />} />
+        <Route path="/leaves/form-engine" element={<LeaveFormEnginePage />} />
         <Route path="/documents" element={<DocumentsPage />} />
         <Route path="/payslips" element={<PayslipsPage />} />
         <Route path="/salary" element={<SalaryPage />} />
@@ -161,6 +164,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/timesheet" element={<TimesheetPage />} />
         <Route path="/timesheet/qr" element={<PortalQrScanPage />} />
         <Route path="/expenses" element={<ExpensesPage />} />
+        <Route path="/expenses/form-engine" element={<ExpenseFormEnginePage />} />
         <Route path="/announcements" element={<AnnouncementsPage />} />
         <Route path="/requests" element={<RequestsPage />} />
       </Route>

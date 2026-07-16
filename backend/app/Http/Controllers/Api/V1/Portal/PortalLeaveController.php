@@ -8,6 +8,8 @@ use App\Models\ActivityLog;
 use App\Models\LeaveBalance;
 use App\Models\LeaveRequest;
 use App\Models\LeaveType;
+use App\Models\CustomFieldDefinition;
+use App\Services\CustomFieldValidationService;
 use App\Services\Leaves\LeaveRequestCancelService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,6 +20,7 @@ class PortalLeaveController extends BaseController
 {
     public function __construct(
         protected LeaveRequestCancelService $cancelService,
+        protected CustomFieldValidationService $customFieldValidation,
     ) {}
 
     /**
@@ -121,7 +124,14 @@ class PortalLeaveController extends BaseController
             'end_date' => 'required|date|after_or_equal:start_date',
             'reason' => 'nullable|string|max:500',
             'document' => 'nullable|file|max:5120', // Max 5MB
+            'custom_fields' => 'nullable',
         ]);
+
+        $customFields = $this->customFieldValidation->parseInput($request->input('custom_fields'));
+        $this->customFieldValidation->validate(
+            CustomFieldDefinition::ENTITY_LEAVE_REQUEST,
+            $customFields
+        );
 
         // İzin türünü kontrol et
         $leaveType = LeaveType::where('id', $validated['leave_type_id'])
@@ -146,13 +156,13 @@ class PortalLeaveController extends BaseController
         // Hafta sonlarını çıkar (opsiyonel)
         // $totalDays = $startDate->diffInWeekdays($endDate) + 1;
 
-        return DB::transaction(function () use ($request, $validated, $user, $totalDays) {
+        return DB::transaction(function () use ($request, $validated, $user, $totalDays, $customFields) {
             $documentPath = null;
             if ($request->hasFile('document')) {
                 $documentPath = $request->file('document')->store('leave_documents/'.$user->company_id, 'public');
             }
 
-            $leaveRequest = LeaveRequest::withoutAuditing(function () use ($validated, $user, $totalDays, $documentPath) {
+            $leaveRequest = LeaveRequest::withoutAuditing(function () use ($validated, $user, $totalDays, $documentPath, $customFields) {
                 return LeaveRequest::create([
                     'company_id' => $user->company_id,
                     'user_id' => $user->id,
@@ -161,6 +171,7 @@ class PortalLeaveController extends BaseController
                     'end_date' => $validated['end_date'],
                     'total_days' => $totalDays,
                     'reason' => $validated['reason'] ?? null,
+                    'custom_fields' => $customFields,
                     'document_path' => $documentPath,
                     'status' => 'pending',
                 ]);

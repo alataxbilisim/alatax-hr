@@ -472,3 +472,50 @@ Neden: eski form varsayılan kalır; geri dönüş tek tık; auto-flag riski yok
 4. Anket audience  
 5. Eğitim yoklama  
 6. **Kariyer public apply** (`/careers/{companySlug}/{positionSlug}`) — form’lu + formsuz
+
+---
+
+## 4A-5 / C3 — Form Engine yayılımı (leave / expense / asset)
+
+**Tarih:** 2026-07-16  
+**Branch:** `faz4-form-engine`  
+**Klasik formlar:** varsayılan kaldı (ayrı pilot route).
+
+### Teşhis özeti
+
+| Entity | Klasik | FormEngine öncesi | Alan # |
+|--------|--------|-------------------|--------|
+| `leave_request` | Company modal + Portal | Company pilot vardı; jsonb yok | **6** |
+| `expense` | Portal claim+items | yok | **4** (header) |
+| `asset` | Company AssetForm | yok | **12** |
+| Z2 `request_types` | Portal talepler | ayrı entity (`employee_request`) — **çakışma yok** | — |
+
+### Runtime deseni
+
+| Yüzey | Desen |
+|-------|--------|
+| leave Company | mevcut `/leaves/form-engine/new` + `custom_fields` persist |
+| leave Portal | **ayrı route** `/leaves/form-engine` (klasik `/leaves` varsayılan) |
+| expense Portal | **ayrı route** `/expenses/form-engine` (header FE + kalem klasik) |
+| asset Company | **ayrı route** `/assets/form-engine/new` |
+
+Portal okuma: `GET /api/v1/portal/form-definitions/{leave_request|expense}`.
+
+### Stüdyo
+
+Tek menü **Form Düzenleri** → `/settings/forms` indeks; ortak `FormLayoutEditorPage` (`employee|leave_request|job_application|expense|asset`).
+
+### DUR notları
+
+1. **`form_id` → form_definitions bypass:** hâlâ açık (4A-4); `application_forms`’a dokunulmadı.  
+2. **B3 condition-meta + custom alan:** bu dalgada **yapılmadı** — custom_fields yalnızca persist; onay koşulunda kullanılmaz.
+
+### Doğrulama
+
+| Metrik | Sonuç |
+|--------|--------|
+| `FormEngineExpansionC3Test` | **5 passed** |
+| Tam suite | **472 passed / 0 fail** |
+| 3 SPA `tsc` | **0** |
+| Select sentinel | **PASSED** |
+| DB wipe | **yok** |

@@ -7,6 +7,8 @@ use App\Models\ActivityLog;
 use App\Models\ExpenseCategory;
 use App\Models\ExpenseClaim;
 use App\Models\ExpenseItem;
+use App\Models\CustomFieldDefinition;
+use App\Services\CustomFieldValidationService;
 use App\Services\LookupService;
 use App\Services\WorkflowService;
 use Illuminate\Http\JsonResponse;
@@ -19,6 +21,7 @@ class PortalExpenseController extends BaseController
     public function __construct(
         protected LookupService $lookups,
         protected WorkflowService $workflowService,
+        protected CustomFieldValidationService $customFieldValidation,
     ) {}
 
     /**
@@ -81,6 +84,8 @@ class PortalExpenseController extends BaseController
             'title' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
             'expense_date' => 'required|date',
+            'currency' => 'nullable|string|max:10',
+            'custom_fields' => 'nullable',
             'items' => 'required|array|min:1',
             'items.*.expense_category_id' => 'required|exists:expense_categories,id',
             'items.*.description' => 'required|string|max:255',
@@ -91,15 +96,23 @@ class PortalExpenseController extends BaseController
             'items.*.notes' => 'nullable|string|max:500',
         ]);
 
+        $customFields = $this->customFieldValidation->parseInput($request->input('custom_fields'));
+        $this->customFieldValidation->validate(
+            CustomFieldDefinition::ENTITY_EXPENSE,
+            $customFields
+        );
+
         $user = auth()->user();
 
-        $claim = ExpenseClaim::withoutAuditing(function () use ($user, $validated) {
+        $claim = ExpenseClaim::withoutAuditing(function () use ($user, $validated, $customFields) {
             $claim = ExpenseClaim::create([
                 'company_id' => $user->company_id,
                 'user_id' => $user->id,
                 'title' => $validated['title'],
                 'description' => $validated['description'] ?? null,
+                'custom_fields' => $customFields,
                 'expense_date' => $validated['expense_date'],
+                'currency' => $validated['currency'] ?? 'TRY',
                 'claim_number' => ExpenseClaim::generateClaimNumber($user->company_id),
                 'total_amount' => 0,
                 'status' => ExpenseClaim::STATUS_DRAFT,

@@ -18,6 +18,26 @@ class CustomFieldValidationService
     ) {}
 
     /**
+     * FormData JSON string veya array → array|null.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function parseInput(mixed $raw): ?array
+    {
+        if ($raw === null || $raw === '') {
+            return null;
+        }
+
+        if (is_string($raw)) {
+            $decoded = json_decode($raw, true);
+
+            return is_array($decoded) ? $decoded : null;
+        }
+
+        return is_array($raw) ? $raw : null;
+    }
+
+    /**
      * @param  array<string, mixed>|null  $customFields
      *
      * @throws ValidationException

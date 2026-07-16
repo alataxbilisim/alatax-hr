@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { portalApi, lookupsApi, type LookupItem } from '@shared/services/api';
 import { Select } from '@shared/components';
+import { useTranslation } from '@shared/i18n';
 import toast from 'react-hot-toast';
 import { BsPlus, BsReceipt, BsX, BsTrash } from 'react-icons/bs';
 
@@ -48,6 +50,7 @@ const statusClassMap: Record<string, string> = {
 };
 
 const ExpensesPage: React.FC = () => {
+  const { t } = useTranslation('common');
   const [claims, setClaims] = useState<ExpenseClaim[]>([]);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [statusLookups, setStatusLookups] = useState<LookupItem[]>([]);
@@ -206,6 +209,9 @@ const ExpensesPage: React.FC = () => {
           <button className="btn btn-primary" onClick={() => setShowModal(true)}>
             <BsPlus size={20} /> Yeni Masraf
           </button>
+          <Link to="/expenses/form-engine" className="btn btn-outline-secondary btn-sm ms-2">
+            {t('formEngine.openFormEngine')}
+          </Link>
         </div>
       </div>
 

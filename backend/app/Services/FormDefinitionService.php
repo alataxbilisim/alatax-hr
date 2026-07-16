@@ -258,13 +258,15 @@ class FormDefinitionService
         CustomFieldDefinition::ENTITY_EMPLOYEE,
         CustomFieldDefinition::ENTITY_LEAVE_REQUEST,
         CustomFieldDefinition::ENTITY_JOB_APPLICATION,
+        CustomFieldDefinition::ENTITY_EXPENSE,
+        CustomFieldDefinition::ENTITY_ASSET,
     ];
 
     private function assertSupportedEntity(string $entityType): void
     {
         if (! in_array($entityType, self::SUPPORTED_ENTITIES, true)) {
             throw ValidationException::withMessages([
-                'entity_type' => ['Desteklenen form tanımları: employee, leave_request, job_application.'],
+                'entity_type' => ['Desteklenen form tanımları: employee, leave_request, job_application, expense, asset.'],
             ]);
         }
     }

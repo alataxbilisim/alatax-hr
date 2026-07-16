@@ -5,7 +5,8 @@ import { DataTable, ConfirmDialog, EmptyState } from '../../components/ui';
 import AssetForm from '../../components/assets/AssetForm';
 import CategoryForm from '../../components/assets/CategoryForm';
 import AssignmentForm from '../../components/assets/AssignmentForm';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from '@shared/i18n';
 import {
   BsPlus,
   BsLaptop,
@@ -57,6 +58,7 @@ const statusBadgeClass: Record<string, string> = {
 const AssetsPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation('common');
 
   const activeTab: TabType = useMemo(() => {
     if (location.pathname.includes('/assets/categories')) return 'categories';
@@ -373,6 +375,11 @@ const AssetsPage: React.FC = () => {
           <h1 className="page-title">Varlıklar</h1>
         </div>
         <div className="page-header-actions">
+          {activeTab === 'assets' ? (
+            <Link to="/assets/form-engine/new" className="btn btn-secondary btn-sm">
+              {t('formEngine.openFormEngine')}
+            </Link>
+          ) : null}
           <button
             type="button"
             className="btn btn-primary btn-sm"

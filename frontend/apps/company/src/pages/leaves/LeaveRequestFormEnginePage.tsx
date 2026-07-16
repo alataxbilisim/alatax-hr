@@ -128,6 +128,10 @@ const LeaveRequestFormEnginePage: React.FC = () => {
         formData.append('document', documentValue);
       }
 
+      if (Object.keys(payload.custom_fields).length > 0) {
+        formData.append('custom_fields', JSON.stringify(payload.custom_fields));
+      }
+
       await leavesApi.requests.create(formData);
       toast.success(t('formEngine.leaveCreateSuccess'));
       navigate('/leaves');

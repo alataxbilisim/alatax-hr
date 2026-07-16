@@ -127,8 +127,10 @@ import EmployeeForm from './components/EmployeeForm';
 import EmployeeFormEnginePage from './pages/employees/EmployeeFormEnginePage';
 import LeaveRequestFormEnginePage from './pages/leaves/LeaveRequestFormEnginePage';
 import FormLayoutEditorPage from './pages/settings/FormLayoutEditorPage';
+import FormsIndexPage from './pages/settings/FormsIndexPage';
 import WorkflowsListPage from './pages/settings/WorkflowsListPage';
 import WorkflowEditorPage from './pages/settings/WorkflowEditorPage';
+import AssetFormEnginePage from './pages/assets/AssetFormEnginePage';
 import EmployeeDetailPage from './pages/employees/EmployeeDetailPage';
 import EmployeeCustomFieldsPage from './pages/employees/EmployeeCustomFieldsPage';
 import DepartmentsPage from './pages/employees/DepartmentsPage';
@@ -776,6 +778,16 @@ const App: React.FC = () => {
             }
           />
           <Route
+            path="/assets/form-engine/new"
+            element={
+              <ProtectedRoute>
+                <ModuleProtectedRoute moduleKey={MODULE_KEYS.ASSET_MANAGEMENT}>
+                  <AssetFormEnginePage />
+                </ModuleProtectedRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/assets/categories"
             element={
               <ProtectedRoute>
@@ -855,6 +867,16 @@ const App: React.FC = () => {
               <ProtectedRoute>
                 <PermissionProtectedRoute module="management" page="custom_fields" action="view">
                   <CustomFieldsIndexPage />
+                </PermissionProtectedRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings/forms"
+            element={
+              <ProtectedRoute>
+                <PermissionProtectedRoute module="management" page="forms" action="view">
+                  <FormsIndexPage />
                 </PermissionProtectedRoute>
               </ProtectedRoute>
             }

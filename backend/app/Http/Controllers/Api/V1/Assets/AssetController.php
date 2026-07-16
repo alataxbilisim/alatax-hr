@@ -6,7 +6,9 @@ use App\Enums\AssetStatus;
 use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\ActivityLog;
 use App\Models\Asset;
+use App\Models\CustomFieldDefinition;
 use App\Models\User;
+use App\Services\CustomFieldValidationService;
 use App\Services\LookupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,6 +17,7 @@ class AssetController extends BaseController
 {
     public function __construct(
         protected LookupService $lookups,
+        protected CustomFieldValidationService $customFieldValidation,
     ) {}
 
     /**
@@ -71,6 +74,7 @@ class AssetController extends BaseController
             'condition' => 'nullable|string|max:100',
             'location' => 'nullable|string|max:255',
             'specifications' => 'nullable|array',
+            'custom_fields' => 'nullable|array',
         ]);
 
         $companyId = $this->getCompanyId();
@@ -81,8 +85,15 @@ class AssetController extends BaseController
             'condition'
         );
 
+        $customFields = $this->customFieldValidation->parseInput($request->input('custom_fields'));
+        $this->customFieldValidation->validate(
+            CustomFieldDefinition::ENTITY_ASSET,
+            $customFields
+        );
+
         $asset = Asset::create([
             ...$validated,
+            'custom_fields' => $customFields,
             'company_id' => $companyId,
             'status' => 'available',
             'condition' => $validated['condition'] ?? 'new',

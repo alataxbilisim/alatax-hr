@@ -995,6 +995,11 @@ export const publicApi = {
 export const portalApi = {
   // Dashboard
   dashboard: () => api.get('/portal/dashboard'),
+
+  /** Form Engine tanımları (leave_request / expense — salt okuma) */
+  formDefinitions: {
+    get: (entityType: string) => api.get(`/portal/form-definitions/${entityType}`),
+  },
   
   // Profile
   profile: {

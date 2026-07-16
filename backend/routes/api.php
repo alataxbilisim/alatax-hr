@@ -1159,6 +1159,9 @@ Route::prefix('v1')->group(function () {
         // Dashboard
         Route::get('/dashboard', [\App\Http\Controllers\Api\V1\Portal\PortalDashboardController::class, 'index']);
 
+        // Form Engine tanımları (okuma — leave_request / expense)
+        Route::get('/form-definitions/{entityType}', [\App\Http\Controllers\Api\V1\Portal\PortalFormDefinitionController::class, 'show']);
+
         // Profil
         Route::get('/profile', [\App\Http\Controllers\Api\V1\Portal\PortalProfileController::class, 'show']);
         Route::put('/profile', [\App\Http\Controllers\Api\V1\Portal\PortalProfileController::class, 'update']);

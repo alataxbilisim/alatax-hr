@@ -30,6 +30,7 @@ class Asset extends Model
         'condition',
         'status',
         'location',
+        'custom_fields',
         'specifications',
         'created_by',
     ];
@@ -39,6 +40,7 @@ class Asset extends Model
         'warranty_end_date' => 'date',
         'purchase_price' => 'decimal:2',
         'specifications' => 'array',
+        'custom_fields' => 'array',
         'condition' => AssetCondition::class,
         'status' => AssetStatus::class,
     ];

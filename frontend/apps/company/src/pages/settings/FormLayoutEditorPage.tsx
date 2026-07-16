@@ -15,11 +15,27 @@ import {
   BsShieldLock,
 } from 'react-icons/bs';
 
-const SUPPORTED_ENTITIES = ['employee', 'leave_request', 'job_application'] as const;
-type StudioEntityType = (typeof SUPPORTED_ENTITIES)[number];
+const SUPPORTED_ENTITIES: readonly string[] = [
+  'employee',
+  'leave_request',
+  'job_application',
+  'expense',
+  'asset',
+];
+type StudioEntityType = string;
 
 function isStudioEntityType(value: string | undefined): value is StudioEntityType {
-  return SUPPORTED_ENTITIES.some((entity) => entity === value);
+  return typeof value === 'string' && SUPPORTED_ENTITIES.includes(value);
+}
+
+function isFormDefinitionPayload(value: unknown): value is FormDefinitionPayload {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+  if (!('name' in value) || !('fields' in value)) {
+    return false;
+  }
+  return typeof value.name === 'string' && Array.isArray(value.fields);
 }
 
 /**
@@ -39,22 +55,18 @@ const FormLayoutEditorPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
 
   const pilotPath = useMemo(() => {
-    if (entityType === 'leave_request') {
-      return '/leaves/form-engine/new';
-    }
-    if (entityType === 'job_application') {
-      return null;
-    }
+    if (entityType === 'leave_request') return '/leaves/form-engine/new';
+    if (entityType === 'job_application') return null;
+    if (entityType === 'expense') return null;
+    if (entityType === 'asset') return '/assets/form-engine/new';
     return '/employees/form-engine/new';
   }, [entityType]);
 
   const title = useMemo(() => {
-    if (entityType === 'leave_request') {
-      return t('formEngine.editorTitleLeave');
-    }
-    if (entityType === 'job_application') {
-      return t('formEngine.editorTitleJobApplication');
-    }
+    if (entityType === 'leave_request') return t('formEngine.editorTitleLeave');
+    if (entityType === 'job_application') return t('formEngine.editorTitleJobApplication');
+    if (entityType === 'expense') return t('formEngine.editorTitleExpense');
+    if (entityType === 'asset') return t('formEngine.editorTitleAsset');
     return t('formEngine.editorTitle');
   }, [entityType, t]);
 
@@ -62,7 +74,10 @@ const FormLayoutEditorPage: React.FC = () => {
     try {
       setLoading(true);
       const res = await formDefinitionsApi.get(entityType);
-      const data = res.data.data as FormDefinitionPayload;
+      const data = res.data.data;
+      if (!isFormDefinitionPayload(data)) {
+        throw new Error(t('formEngine.editorLoadError'));
+      }
       setDefinition(data);
       setFields(data.fields ?? []);
       setLayout(data.layout);

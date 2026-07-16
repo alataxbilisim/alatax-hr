@@ -8,6 +8,8 @@ use App\Models\ActivityLog;
 use App\Models\LeaveBalance;
 use App\Models\LeaveRequest;
 use App\Models\LeaveType;
+use App\Models\CustomFieldDefinition;
+use App\Services\CustomFieldValidationService;
 use App\Services\DataScopeService;
 use App\Services\Leaves\LeaveRequestCancelService;
 use App\Services\WorkflowService;
@@ -22,6 +24,7 @@ class LeaveRequestController extends BaseController
         protected DataScopeService $dataScope,
         protected WorkflowService $workflowService,
         protected LeaveRequestCancelService $cancelService,
+        protected CustomFieldValidationService $customFieldValidation,
     ) {}
 
     /**
@@ -69,7 +72,14 @@ class LeaveRequestController extends BaseController
             'end_date' => 'required|date|after_or_equal:start_date',
             'reason' => 'nullable|string|max:1000',
             'document' => 'nullable|file|max:5120', // Max 5MB
+            'custom_fields' => 'nullable',
         ]);
+
+        $customFields = $this->customFieldValidation->parseInput($request->input('custom_fields'));
+        $this->customFieldValidation->validate(
+            CustomFieldDefinition::ENTITY_LEAVE_REQUEST,
+            $customFields
+        );
 
         $leaveType = LeaveType::findOrFail($validated['leave_type_id']);
 
@@ -119,6 +129,7 @@ class LeaveRequestController extends BaseController
             'end_date' => $validated['end_date'],
             'total_days' => $totalDays,
             'reason' => $validated['reason'] ?? null,
+            'custom_fields' => $customFields,
             'document_path' => $documentPath,
             'document_name' => $documentName,
             'status' => LeaveRequest::STATUS_PENDING,

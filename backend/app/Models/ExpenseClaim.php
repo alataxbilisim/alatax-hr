@@ -24,6 +24,7 @@ class ExpenseClaim extends Model
         'user_id',
         'title',
         'description',
+        'custom_fields',
         'claim_number',
         'expense_date',
         'total_amount',
@@ -42,6 +43,7 @@ class ExpenseClaim extends Model
 
     protected $casts = [
         'expense_date' => 'date',
+        'custom_fields' => 'array',
         'total_amount' => 'decimal:2',
         'submitted_at' => 'datetime',
         'approved_at' => 'datetime',
