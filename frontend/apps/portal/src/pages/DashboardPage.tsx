@@ -1,240 +1,297 @@
-import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { RootState } from '../store';
+import { useSelector } from 'react-redux';
+import { useTranslation } from '@shared/i18n';
 import { portalApi } from '@shared/services/api';
+import { getErrorMessage } from '@shared/services/apiHelpers';
 import toast from 'react-hot-toast';
 import {
   BsCalendarPlus,
-  BsFileEarmarkText,
-  BsCurrencyDollar,
+  BsReceipt,
   BsInboxes,
+  BsCalendarCheck,
   BsMegaphone,
   BsArrowRight,
 } from 'react-icons/bs';
+import { RootState } from '../store';
+import {
+  AppButton,
+  AppCard,
+  EmptyState,
+  SkeletonLoader,
+  StatusBadge,
+} from '../components/ui';
 
-interface DashboardData {
-  employee: {
-    name: string;
-    position: string;
-    department: string;
-    hire_date: string;
-  };
-  stats: {
-    leave_balance: Array<{
-      type: string;
-      remaining: number;
-    }>;
-    pending_requests: number;
-  };
-  announcements: Array<{
-    id: number;
-    title: string;
-    summary: string;
-    type: string;
-    published_at: string;
-    is_pinned: boolean;
-  }>;
-  latest_payslip: {
-    id: number;
-    period_label: string;
-    is_viewed: boolean;
-  } | null;
+interface LeaveBalanceRow {
+  type: string;
+  remaining: number;
+}
+
+interface AnnouncementRow {
+  id: number;
+  title: string;
+  summary?: string | null;
+  type: string;
+  published_at: string;
+  is_pinned?: boolean;
+}
+
+interface RecentRequestRow {
+  id: number;
+  title: string;
+  status: string;
+  created_at: string;
+  request_type?: { name?: string } | null;
+}
+
+interface TodayStatus {
+  is_clocked_in: boolean;
+  is_clocked_out: boolean;
+  clock_in: string | null;
+  working_duration: string | null;
+}
+
+interface TodayShift {
+  start_time?: string;
+  end_time?: string;
+  name?: string;
+}
+
+function greetingKey(hour: number): 'morning' | 'afternoon' | 'evening' {
+  if (hour < 12) return 'morning';
+  if (hour < 18) return 'afternoon';
+  return 'evening';
 }
 
 const DashboardPage: React.FC = () => {
+  const { t } = useTranslation('common');
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.auth);
-  const [data, setData] = useState<DashboardData | null>(null);
+
   const [loading, setLoading] = useState(true);
+  const [leaveBalances, setLeaveBalances] = useState<LeaveBalanceRow[]>([]);
+  const [pendingRequests, setPendingRequests] = useState(0);
+  const [announcements, setAnnouncements] = useState<AnnouncementRow[]>([]);
+  const [recentRequests, setRecentRequests] = useState<RecentRequestRow[]>([]);
+  const [today, setToday] = useState<TodayStatus | null>(null);
+  const [shift, setShift] = useState<TodayShift | null>(null);
 
   useEffect(() => {
-    loadDashboard();
-  }, []);
+    const load = async () => {
+      try {
+        setLoading(true);
+        const [dashRes, todayRes, shiftsRes] = await Promise.all([
+          portalApi.dashboard(),
+          portalApi.timesheet.todayStatus().catch(() => null),
+          portalApi.timesheet.shifts().catch(() => null),
+        ]);
 
-  const loadDashboard = async () => {
-    try {
-      const response = await portalApi.dashboard();
-      setData(response.data.data);
-    } catch {
-      toast.error('Dashboard yüklenemedi');
-    } finally {
-      setLoading(false);
-    }
-  };
+        const dash: {
+          stats?: { leave_balance?: LeaveBalanceRow[]; pending_requests?: number };
+          announcements?: AnnouncementRow[];
+          recent_requests?: RecentRequestRow[];
+        } = dashRes.data.data;
+
+        setLeaveBalances(dash.stats?.leave_balance ?? []);
+        setPendingRequests(dash.stats?.pending_requests ?? 0);
+        setAnnouncements((dash.announcements ?? []).slice(0, 3));
+        setRecentRequests(
+          (dash.recent_requests ?? [])
+            .filter((r) => r.status === 'pending')
+            .slice(0, 3),
+        );
+
+        if (todayRes) {
+          const status: TodayStatus = todayRes.data.data;
+          setToday(status);
+        }
+
+        if (shiftsRes) {
+          const todayStr = new Date().toISOString().slice(0, 10);
+          const shiftData: {
+            shifts?: Array<{ date: string; shift?: TodayShift | null }>;
+          } = shiftsRes.data.data;
+          const found = (shiftData.shifts ?? []).find((s) => s.date === todayStr);
+          setShift(found?.shift ?? null);
+        }
+      } catch (error: unknown) {
+        toast.error(getErrorMessage(error, t('portalDash.loadError')));
+      } finally {
+        setLoading(false);
+      }
+    };
+    void load();
+  }, [t]);
+
+  const firstName = useMemo(() => {
+    const name = user?.name?.trim() || '';
+    return name.split(/\s+/)[0] || name;
+  }, [user?.name]);
+
+  const greet = t(`portalDash.greeting.${greetingKey(new Date().getHours())}`, {
+    name: firstName,
+  });
+
+  const dateLabel = new Date().toLocaleDateString('tr-TR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
+
+  const remainingDays = leaveBalances.reduce((sum, b) => sum + (b.remaining || 0), 0);
+
+  const qrLabel = today?.is_clocked_in && !today.is_clocked_out
+    ? t('portalDash.qrOut')
+    : t('portalDash.qrIn');
 
   if (loading) {
     return (
-      <div className="page-loading">
-        <div className="loading-spinner"></div>
-        <p>Yükleniyor...</p>
+      <div className="portal-dash">
+        <SkeletonLoader height={28} width="60%" />
+        <SkeletonLoader height={14} width="40%" />
+        <SkeletonLoader height={160} count={1} />
+        <div className="portal-dash__grid">
+          <SkeletonLoader height={96} />
+          <SkeletonLoader height={96} />
+          <SkeletonLoader height={96} />
+          <SkeletonLoader height={96} />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="animate-fade-in">
-      {/* Welcome Banner */}
-      <div className="welcome-banner">
-        <h1>Hoş Geldiniz, {user?.name}!</h1>
-        <p>
-          {data?.employee?.position || 'Personel'} - {data?.employee?.department || ''}
+    <div className="portal-dash animate-fade-in">
+      <section className="portal-dash__hello">
+        <h1>{greet}</h1>
+        <p className="portal-dash__meta">
+          {dateLabel}
+          {shift?.start_time && shift?.end_time
+            ? ` · ${t('portalDash.shift', { start: shift.start_time, end: shift.end_time })}`
+            : ''}
         </p>
-      </div>
+      </section>
 
-      {/* Quick Actions */}
-      <div className="action-cards">
-        <div className="action-card" onClick={() => navigate('/leaves')}>
-          <div className="action-icon">
-            <BsCalendarPlus />
-          </div>
-          <div className="action-title">İzin Talebi</div>
-        </div>
+      <AppCard title={t('portalDash.todayTitle')}>
+        <p className="portal-dash__today-status">
+          {today?.is_clocked_in && !today.is_clocked_out && today.clock_in
+            ? t('portalDash.clockedInSince', {
+                time: today.clock_in,
+                duration: today.working_duration || '—',
+              })
+            : today?.is_clocked_out
+              ? t('portalDash.clockedOut')
+              : t('portalDash.notClockedIn')}
+        </p>
+        <AppButton size="lg" fullWidth onClick={() => navigate('/timesheet/qr')}>
+          {qrLabel}
+        </AppButton>
+      </AppCard>
 
-        <div className="action-card" onClick={() => navigate('/requests')}>
-          <div className="action-icon">
-            <BsInboxes />
-          </div>
-          <div className="action-title">Yeni Talep</div>
-        </div>
-
-        <div className="action-card" onClick={() => navigate('/payslips')}>
-          <div className="action-icon">
-            <BsCurrencyDollar />
-          </div>
-          <div className="action-title">Bordrolarım</div>
-        </div>
-
-        <div className="action-card" onClick={() => navigate('/documents')}>
-          <div className="action-icon">
-            <BsFileEarmarkText />
-          </div>
-          <div className="action-title">Belgelerim</div>
-        </div>
-      </div>
-
-      <div className="row">
-        {/* Leave Balance */}
-        <div className="col-lg-4 mb-4">
-          <div className="card">
-            <div className="card-header">
-              <h3 className="card-title">İzin Bakiyem</h3>
-            </div>
-            <div className="card-body">
-              {data?.stats?.leave_balance && data.stats.leave_balance.length > 0 ? (
-                data.stats.leave_balance.map((balance, index) => (
-                  <div key={index} className="balance-card mb-2">
-                    <div className="balance-info">
-                      <div className="balance-type">{balance.type}</div>
-                      <div className="balance-value">{balance.remaining}</div>
-                      <div className="balance-label">gün kaldı</div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-muted text-center">İzin bakiyesi yok</p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Latest Payslip */}
-        <div className="col-lg-4 mb-4">
-          <div className="card">
-            <div className="card-header d-flex justify-content-between align-items-center">
-              <h3 className="card-title">Son Bordro</h3>
-              <button
-                className="btn btn-sm btn-ghost"
-                onClick={() => navigate('/payslips')}
-              >
-                Tümü <BsArrowRight />
-              </button>
-            </div>
-            <div className="card-body">
-              {data?.latest_payslip ? (
-                <div
-                  className="payslip-card"
-                  onClick={() => navigate('/payslips')}
-                >
-                  <div>
-                    <div className="payslip-period">{data.latest_payslip.period_label}</div>
-                    <div className={`payslip-status ${data.latest_payslip.is_viewed ? 'viewed' : 'new'}`}>
-                      {data.latest_payslip.is_viewed ? 'Görüntülendi' : 'Yeni'}
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-muted text-center">Bordro yok</p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Pending Requests */}
-        <div className="col-lg-4 mb-4">
-          <div className="card">
-            <div className="card-header">
-              <h3 className="card-title">Bekleyen Talepler</h3>
-            </div>
-            <div className="card-body text-center">
-              <div className="stat-value" style={{ fontSize: '3rem', color: 'var(--primary)' }}>
-                {data?.stats?.pending_requests || 0}
-              </div>
-              <p className="text-muted">adet talep bekliyor</p>
-              <button
-                className="btn btn-outline-primary btn-sm"
-                onClick={() => navigate('/requests')}
-              >
-                Taleplerime Git
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Announcements */}
-      <div className="card">
-        <div className="card-header d-flex justify-content-between align-items-center">
-          <h3 className="card-title">
-            <BsMegaphone className="me-2" /> Duyurular
-          </h3>
-          <button
-            className="btn btn-sm btn-ghost"
-            onClick={() => navigate('/announcements')}
-          >
-            Tümü <BsArrowRight />
+      <section>
+        <h2 className="portal-card__title">{t('portalDash.quickActions')}</h2>
+        <div className="portal-dash__grid">
+          <button type="button" className="portal-dash__action" onClick={() => navigate('/leaves')}>
+            <span className="portal-dash__action-icon"><BsCalendarPlus size={18} /></span>
+            <span className="portal-dash__action-label">{t('portalDash.actionLeave')}</span>
+          </button>
+          <button type="button" className="portal-dash__action" onClick={() => navigate('/expenses')}>
+            <span className="portal-dash__action-icon"><BsReceipt size={18} /></span>
+            <span className="portal-dash__action-label">{t('portalDash.actionExpense')}</span>
+          </button>
+          <button type="button" className="portal-dash__action" onClick={() => navigate('/requests')}>
+            <span className="portal-dash__action-icon"><BsInboxes size={18} /></span>
+            <span className="portal-dash__action-label">{t('portalDash.actionRequest')}</span>
+          </button>
+          <button type="button" className="portal-dash__action" onClick={() => navigate('/leaves')}>
+            <span className="portal-dash__action-icon"><BsCalendarCheck size={18} /></span>
+            <span className="portal-dash__action-label">{t('portalDash.actionBalance')}</span>
+            <span className="portal-dash__action-meta">
+              {t('portalDash.balanceDays', { count: remainingDays })}
+            </span>
           </button>
         </div>
-        <div className="card-body">
-          {data?.announcements && data.announcements.length > 0 ? (
-            data.announcements.map((announcement) => (
-              <div
-                key={announcement.id}
-                className={`announcement-item ${announcement.type === 'urgent' ? 'urgent' : ''}`}
-                onClick={() => navigate(`/announcements/${announcement.id}`)}
+      </section>
+
+      <AppCard
+        title={t('portalDash.announcements')}
+        action={(
+          <button
+            type="button"
+            className="portal-btn portal-btn--ghost"
+            style={{ minHeight: 36, padding: '0 var(--sp-3)' }}
+            onClick={() => navigate('/announcements')}
+          >
+            {t('portalDash.seeAll')} <BsArrowRight />
+          </button>
+        )}
+      >
+        {announcements.length === 0 ? (
+          <EmptyState title={t('portalDash.noAnnouncements')} icon={<BsMegaphone size={32} />} />
+        ) : (
+          announcements.map((a) => (
+            <button
+              key={a.id}
+              type="button"
+              className="portal-dash__list-item"
+              onClick={() => navigate('/announcements')}
+            >
+              <span className="portal-dash__list-title">
+                {a.is_pinned ? '📌 ' : ''}
+                {a.title}
+              </span>
+              <span className="portal-dash__list-meta">
+                {new Date(a.published_at).toLocaleDateString('tr-TR')}
+                {a.type === 'urgent' ? ` · ${t('portalDash.urgent')}` : ''}
+              </span>
+            </button>
+          ))
+        )}
+      </AppCard>
+
+      <AppCard
+        title={t('portalDash.pendingWork')}
+        action={
+          pendingRequests > 0 ? (
+            <StatusBadge tone="warning">{pendingRequests}</StatusBadge>
+          ) : undefined
+        }
+      >
+        {recentRequests.length === 0 && pendingRequests === 0 ? (
+          <EmptyState title={t('portalDash.noPending')} />
+        ) : (
+          <>
+            {recentRequests.map((r) => (
+              <button
+                key={r.id}
+                type="button"
+                className="portal-dash__list-item"
+                onClick={() => navigate('/requests')}
               >
-                <div className="announcement-header">
-                  <span className="announcement-title">
-                    {announcement.is_pinned && '📌 '}
-                    {announcement.title}
-                  </span>
-                  <span className="announcement-date">
-                    {new Date(announcement.published_at).toLocaleDateString('tr-TR')}
-                  </span>
-                </div>
-                <div className="announcement-summary">
-                  {announcement.summary || ''}
-                </div>
-              </div>
-            ))
-          ) : (
-            <p className="text-muted text-center">Henüz duyuru yok</p>
-          )}
-        </div>
-      </div>
+                <span className="portal-dash__list-title">{r.title}</span>
+                <span className="portal-dash__list-meta">
+                  {r.request_type?.name || t('portalDash.request')}
+                  {' · '}
+                  {new Date(r.created_at).toLocaleDateString('tr-TR')}
+                </span>
+              </button>
+            ))}
+            {recentRequests.length === 0 && pendingRequests > 0 && (
+              <button
+                type="button"
+                className="portal-dash__list-item"
+                onClick={() => navigate('/requests')}
+              >
+                <span className="portal-dash__list-title">
+                  {t('portalDash.pendingCount', { count: pendingRequests })}
+                </span>
+              </button>
+            )}
+          </>
+        )}
+      </AppCard>
     </div>
   );
 };
 
 export default DashboardPage;
-

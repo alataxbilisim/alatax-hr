@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from '@shared/i18n';
-import { RootState } from '../store';
+import { AppDispatch, RootState } from '../store';
 import { portalApi } from '@shared/services/api';
+import { setTheme } from '@shared/store/slices/themeSlice';
 import toast from 'react-hot-toast';
-import { BsEnvelope, BsPhone, BsGeoAlt, BsCalendar, BsBuilding, BsCheck } from 'react-icons/bs';
+import { BsEnvelope, BsPhone, BsGeoAlt, BsCalendar, BsBuilding, BsCheck, BsMoon, BsSun } from 'react-icons/bs';
+import { AppCard } from '../components/ui';
+import { PORTAL_MORE_LINKS } from '../nav/portalMoreLinks';
 
 interface ProfileData {
   user: {
@@ -39,7 +43,9 @@ interface ProfileData {
 
 const ProfilePage: React.FC = () => {
   const { t } = useTranslation('common');
+  const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
+  const { mode } = useSelector((state: RootState) => state.theme);
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -158,6 +164,37 @@ const ProfilePage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <AppCard title={t('portalShell.themeTitle')} className="mb-4">
+        <p className="portal-dash__meta" style={{ marginBottom: 'var(--sp-3)' }}>
+          {t('portalShell.themeHint')}
+        </p>
+        <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
+          <button
+            type="button"
+            className={`portal-btn ${mode === 'light' ? 'portal-btn--primary' : 'portal-btn--ghost'}`}
+            onClick={() => dispatch(setTheme('light'))}
+          >
+            <BsSun size={18} /> {t('portalShell.themeLight')}
+          </button>
+          <button
+            type="button"
+            className={`portal-btn ${mode === 'dark' ? 'portal-btn--primary' : 'portal-btn--ghost'}`}
+            onClick={() => dispatch(setTheme('dark'))}
+          >
+            <BsMoon size={18} /> {t('portalShell.themeDark')}
+          </button>
+        </div>
+      </AppCard>
+
+      <AppCard title={t('portalShell.moreTitle')} flush className="mb-4">
+        {PORTAL_MORE_LINKS.map((item) => (
+          <Link key={item.path} to={item.path} className="portal-more-link">
+            <item.icon size={20} className="portal-more-link__icon" />
+            <span>{t(item.labelKey)}</span>
+          </Link>
+        ))}
+      </AppCard>
 
       <div className="row">
         {/* Contact Information */}

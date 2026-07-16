@@ -1,10 +1,23 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { Provider } from 'react-redux';
+import { Provider, useDispatch, useSelector } from 'react-redux';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
-import { useSelector } from 'react-redux';
-import { store, RootState } from './store';
+import { setTheme } from '@shared/store/slices/themeSlice';
+import { store, AppDispatch, RootState } from './store';
+
+/** Portal varsayılanı açık tema — yalnızca kayıtlı tercih yoksa. */
+const PortalThemeInit: React.FC = () => {
+  const dispatch = useDispatch<AppDispatch>();
+
+  useEffect(() => {
+    if (!localStorage.getItem('theme')) {
+      dispatch(setTheme('light'));
+    }
+  }, [dispatch]);
+
+  return null;
+};
 
 // Layouts
 import AuthLayout from './layouts/AuthLayout';
@@ -33,6 +46,7 @@ import ExpensesPage from './pages/ExpensesPage';
 // Styles
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './styles/portal.css';
+import './styles/portal-theme.css';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -172,6 +186,7 @@ const App: React.FC = () => {
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
+          <PortalThemeInit />
           <AppRoutes />
           <Toaster
             position="top-right"

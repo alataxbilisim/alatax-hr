@@ -9,6 +9,65 @@
   "actions": {
     "newEmployee": "Yeni Personel"
   },
+  "portalShell": {
+    "back": "Geri",
+    "bottomNav": "Alt gezinme",
+    "rail": "Yan menü",
+    "logout": "Çıkış yap",
+    "moreTitle": "Diğer",
+    "themeTitle": "Görünüm",
+    "themeHint": "Açık veya koyu tema seçin. Tercihiniz bu cihazda saklanır.",
+    "themeLight": "Açık",
+    "themeDark": "Koyu",
+    "nav": {
+      "home": "Ana Sayfa",
+      "leaves": "İzinler",
+      "qr": "QR Giriş/Çıkış",
+      "requests": "Talepler",
+      "profile": "Profil",
+      "more": "Diğer"
+    },
+    "more": {
+      "payslips": "Bordrolarım",
+      "salary": "Ücretim",
+      "documents": "Belgelerim",
+      "training": "Eğitimlerim",
+      "performance": "Performansım",
+      "surveys": "Anketler",
+      "expenses": "Masraflarım",
+      "announcements": "Duyurular",
+      "timesheet": "Puantaj"
+    }
+  },
+  "portalDash": {
+    "loadError": "Ana sayfa yüklenemedi",
+    "greeting": {
+      "morning": "Günaydın, {{name}}",
+      "afternoon": "İyi günler, {{name}}",
+      "evening": "İyi akşamlar, {{name}}"
+    },
+    "shift": "Vardiya {{start}}–{{end}}",
+    "todayTitle": "Bugün",
+    "clockedInSince": "Girişte — {{time}}'den beri · {{duration}}",
+    "clockedOut": "Bugün çıkış yapıldı",
+    "notClockedIn": "Henüz giriş yapılmadı",
+    "qrIn": "QR ile Giriş",
+    "qrOut": "QR ile Çıkış",
+    "quickActions": "Hızlı işlemler",
+    "actionLeave": "İzin Talebi",
+    "actionExpense": "Masraf Ekle",
+    "actionRequest": "Talep Oluştur",
+    "actionBalance": "İzin Bakiyem",
+    "balanceDays": "{{count}} gün kaldı",
+    "announcements": "Son duyurular",
+    "seeAll": "Tümü",
+    "noAnnouncements": "Henüz duyuru yok",
+    "urgent": "Acil",
+    "pendingWork": "Bekleyen işlerim",
+    "noPending": "Bekleyen talebiniz yok",
+    "pendingCount": "{{count}} talep onay bekliyor",
+    "request": "Talep"
+  },
   "nav": {
     "dashboard": "Dashboard",
     "dashboardOverview": "Genel Bakış",
@@ -470,6 +529,10 @@
     "balanceReasonRequired": "Manuel bakiye düzeltmesi için gerekçe zorunludur (en az 3 karakter).",
     "balanceUpdated": "Bakiye güncellendi",
     "balanceUpdateFailed": "Bakiye güncellemesi başarısız",
+    "cancelRequest": "İptal Et",
+    "cancelConfirm": "Bu izin talebini iptal etmek istediğinize emin misiniz?",
+    "cancelSuccess": "İzin talebi iptal edildi",
+    "cancelFailed": "İptal işlemi başarısız",
     "approvalSteps": "Onay adımları",
     "parallelGroup": "Paralel grup {{group}}",
     "approver": "Onaycı",

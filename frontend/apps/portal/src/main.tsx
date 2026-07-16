@@ -6,6 +6,7 @@ import '@shared/styles/theme.css';
 import '@shared/styles/components.css';
 import '@shared/styles/layout.css';
 import './styles/portal.css';
+import './styles/portal-theme.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
