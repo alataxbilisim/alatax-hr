@@ -52,6 +52,8 @@ export const PAGES = {
     WEBHOOKS: 'webhooks',
     API_KEYS: 'api_keys',
     WORKFLOWS: 'workflows',
+    FORMS: 'forms',
+    NOTIFICATIONS: 'notifications',
   },
   
   // Employees Modülü

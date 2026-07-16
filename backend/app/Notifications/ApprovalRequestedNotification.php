@@ -11,7 +11,7 @@ use Illuminate\Notifications\Notification;
 
 /**
  * @deprecated 4C-1: ApprovalRequested listener → NotificationService / CatalogNotification.
- * Dosya geriye uyumluluk için tutulur; yeni kod NotificationService kullanır.
+ * Stub tutulur; yeni kod NotificationService kullanır. via() boş — yanlışlıkla dispatch edilirse no-op.
  */
 class ApprovalRequestedNotification extends Notification implements ShouldQueue
 {
@@ -28,7 +28,7 @@ class ApprovalRequestedNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return [];
     }
 
     /**
@@ -39,11 +39,7 @@ class ApprovalRequestedNotification extends Notification implements ShouldQueue
         return [
             'type' => 'approval_requested',
             'approval_record_id' => $this->record->id,
-            'approval_step_id' => $this->step->id,
-            'step_name' => $this->step->name,
-            'approvable_type' => $this->record->approvable_type,
-            'approvable_id' => $this->record->approvable_id,
-            'message' => 'Onayınız bekleniyor: '.$this->step->name,
+            'deprecated' => true,
         ];
     }
 }

@@ -6,6 +6,7 @@ use App\Http\Resources\EmployeeResource;
 use App\Models\ActivityLog;
 use App\Models\User;
 use App\Services\InvitationService;
+use App\Services\Notification\NotificationService;
 use App\Services\TwoFactorService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,6 +20,7 @@ class AuthController extends BaseController
     public function __construct(
         protected TwoFactorService $twoFactor,
         protected InvitationService $invitations,
+        protected NotificationService $notifications,
     ) {}
 
     /**
@@ -283,6 +285,13 @@ class AuthController extends BaseController
             'preferences.notifications.email.approvals' => 'sometimes|boolean',
             'preferences.notifications.email.requests' => 'sometimes|boolean',
             'preferences.notifications.email.tasks' => 'sometimes|boolean',
+            'preferences.notifications.email.documents' => 'sometimes|boolean',
+            'preferences.notifications.email.reminders' => 'sometimes|boolean',
+            'preferences.notifications.in_app' => 'sometimes|array',
+            'preferences.notifications.in_app.approvals' => 'sometimes|boolean',
+            'preferences.notifications.in_app.requests' => 'sometimes|boolean',
+            'preferences.notifications.in_app.tasks' => 'sometimes|boolean',
+            'preferences.notifications.in_app.documents' => 'sometimes|boolean',
         ]);
 
         // Avatar yükleme
@@ -291,7 +300,7 @@ class AuthController extends BaseController
             $validated['avatar'] = $path;
         }
 
-        // Preferences merge (nested notifications.email korunur)
+        // Preferences merge (nested notifications.email / in_app korunur)
         if (isset($validated['preferences'])) {
             $existing = $user->preferences ?? [];
             $incoming = $validated['preferences'];
@@ -301,6 +310,12 @@ class AuthController extends BaseController
                 if (isset($incomingNotif['email']) && is_array($incomingNotif['email'])) {
                     $existingEmail = is_array($existingNotif['email'] ?? null) ? $existingNotif['email'] : [];
                     $incomingNotif['email'] = array_merge($existingEmail, $incomingNotif['email']);
+                    unset($incomingNotif['email']['security']);
+                }
+                if (isset($incomingNotif['in_app']) && is_array($incomingNotif['in_app'])) {
+                    $existingInApp = is_array($existingNotif['in_app'] ?? null) ? $existingNotif['in_app'] : [];
+                    $incomingNotif['in_app'] = array_merge($existingInApp, $incomingNotif['in_app']);
+                    unset($incomingNotif['in_app']['security']);
                 }
                 $incoming['notifications'] = array_merge($existingNotif, $incomingNotif);
             }
@@ -349,6 +364,8 @@ class AuthController extends BaseController
         $user->tokens()->where('id', '!=', $request->user()->currentAccessToken()->id)->delete();
 
         ActivityLog::log('password_change', $user, 'Şifre değiştirildi');
+
+        $this->notifications->notifySecurity($user->fresh() ?? $user, 'security.password_changed');
 
         return $this->success([
             'must_change_password' => false,
@@ -429,6 +446,8 @@ class AuthController extends BaseController
 
         ActivityLog::log('two_factor_enable', $user, "2FA etkinleştirildi: {$user->name}");
 
+        $this->notifications->notifySecurity($user->fresh() ?? $user, 'security.two_factor_enabled');
+
         return $this->success([
             'two_factor_enabled' => true,
         ], '2FA başarıyla etkinleştirildi');
@@ -476,6 +495,8 @@ class AuthController extends BaseController
         ]));
 
         ActivityLog::log('two_factor_disable', $user, "2FA devre dışı bırakıldı: {$user->name}");
+
+        $this->notifications->notifySecurity($user->fresh() ?? $user, 'security.two_factor_disabled');
 
         return $this->success(null, '2FA devre dışı bırakıldı');
     }

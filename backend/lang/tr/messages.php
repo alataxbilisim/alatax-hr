@@ -51,6 +51,7 @@ return [
         'mail_action' => 'Panele Git',
         'entity_leave' => 'İzin talebi',
         'entity_expense' => 'Masraf talebi',
+        'entity_salary_review' => 'Maaş revizyonu',
 
         'approval_requested_title' => 'Onay bekleniyor',
         'approval_requested_body' => ':entity için onayınız bekleniyor (:step).',
@@ -89,6 +90,27 @@ return [
 
         'document_expiring_title' => 'Süreli evrak uyarısı',
         'document_expiring_body' => '":entity" belgesinin süresi :days gün içinde doluyor (:date).',
+
+        'asset_assigned_title' => 'Yeni zimmet',
+        'asset_assigned_body' => 'Size zimmet atandı: :asset (:date).',
+
+        'security_password_changed_title' => 'Şifreniz değiştirildi',
+        'security_password_changed_body' => 'Hesap şifreniz :date tarihinde değiştirildi. Bu siz değilseniz hemen destek ile iletişime geçin.',
+
+        'security_two_factor_enabled_title' => 'İki adımlı doğrulama açıldı',
+        'security_two_factor_enabled_body' => 'Hesabınızda 2FA :date tarihinde etkinleştirildi.',
+
+        'security_two_factor_disabled_title' => 'İki adımlı doğrulama kapatıldı',
+        'security_two_factor_disabled_body' => 'Hesabınızda 2FA :date tarihinde kapatıldı. Bu siz değilseniz hemen destek ile iletişime geçin.',
+
+        'request_approved_title' => 'Talebiniz onaylandı',
+        'request_approved_body' => ':entity talebiniz :date tarihinde onaylandı.',
+
+        'request_rejected_title' => 'Talebiniz reddedildi',
+        'request_rejected_body' => ':entity talebiniz reddedildi. :reason',
+
+        'announcement_published_title' => 'Yeni duyuru',
+        'announcement_published_body' => 'Yeni duyuru yayınlandı: :title (:date).',
     ],
 
 ];

@@ -2,18 +2,31 @@ import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from '@shared/i18n';
 import { authApi } from '@shared/services/api';
+import {
+  NotificationPreferencesForm,
+  defaultNotificationPrefs,
+  type NotificationPrefsValue,
+} from '@shared/components';
 import { updateUserPreferences, setUser } from '@shared/store/slices/authSlice';
 import { setTheme, setDensity, type ThemeMode, type DensityMode } from '@shared/store/slices/themeSlice';
 import toast from 'react-hot-toast';
 import { RootState, AppDispatch } from '../../store';
+
+function prefsFromUser(
+  raw: { notifications?: { in_app?: Partial<NotificationPrefsValue['in_app']>; email?: Partial<NotificationPrefsValue['email']> } } | undefined
+): NotificationPrefsValue {
+  const base = defaultNotificationPrefs();
+  return {
+    in_app: { ...base.in_app, ...(raw?.notifications?.in_app ?? {}) },
+    email: { ...base.email, ...(raw?.notifications?.email ?? {}) },
+  };
+}
 
 const AccountPreferencesPage: React.FC = () => {
   const { t } = useTranslation('common');
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
   const { mode, density } = useSelector((state: RootState) => state.theme);
-
-  const emailPrefs = user?.preferences?.notifications?.email;
 
   const [theme, setThemeLocal] = useState<ThemeMode>(
     (user?.preferences?.theme as ThemeMode) || mode
@@ -22,9 +35,9 @@ const AccountPreferencesPage: React.FC = () => {
     (user?.preferences?.density as DensityMode) || density
   );
   const [locale, setLocale] = useState(user?.preferences?.locale || 'tr');
-  const [emailApprovals, setEmailApprovals] = useState(emailPrefs?.approvals !== false);
-  const [emailRequests, setEmailRequests] = useState(emailPrefs?.requests !== false);
-  const [emailTasks, setEmailTasks] = useState(emailPrefs?.tasks !== false);
+  const [notifPrefs, setNotifPrefs] = useState<NotificationPrefsValue>(() =>
+    prefsFromUser(user?.preferences)
+  );
   const [saving, setSaving] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -36,11 +49,8 @@ const AccountPreferencesPage: React.FC = () => {
         density: densityLocal,
         locale,
         notifications: {
-          email: {
-            approvals: emailApprovals,
-            requests: emailRequests,
-            tasks: emailTasks,
-          },
+          in_app: notifPrefs.in_app,
+          email: notifPrefs.email,
         },
       };
       const response = await authApi.updateProfile({ preferences });
@@ -65,7 +75,7 @@ const AccountPreferencesPage: React.FC = () => {
         <p className="page-subtitle">{t('account.preferencesSubtitle')}</p>
       </div>
 
-      <div className="card" style={{ maxWidth: 480 }}>
+      <div className="card" style={{ maxWidth: 640 }}>
         <div className="card-body">
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             <div className="form-group">
@@ -108,34 +118,12 @@ const AccountPreferencesPage: React.FC = () => {
             </div>
 
             <div className="form-group">
-              <div className="form-label">{t('account.notifEmailTitle')}</div>
-              <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', marginBottom: 'var(--space-2)' }}>
-                {t('account.notifEmailHint')}
-              </p>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', marginBottom: 'var(--sp-2)' }}>
-                <input
-                  type="checkbox"
-                  checked={emailApprovals}
-                  onChange={(e) => setEmailApprovals(e.target.checked)}
-                />
-                {t('account.notifEmailApprovals')}
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', marginBottom: 'var(--sp-2)' }}>
-                <input
-                  type="checkbox"
-                  checked={emailRequests}
-                  onChange={(e) => setEmailRequests(e.target.checked)}
-                />
-                {t('account.notifEmailRequests')}
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
-                <input
-                  type="checkbox"
-                  checked={emailTasks}
-                  onChange={(e) => setEmailTasks(e.target.checked)}
-                />
-                {t('account.notifEmailTasks')}
-              </label>
+              <div className="form-label">{t('account.notifMatrixTitle')}</div>
+              <NotificationPreferencesForm
+                value={notifPrefs}
+                onChange={setNotifPrefs}
+                disabled={saving}
+              />
             </div>
 
             <button type="submit" className="btn btn-primary" disabled={saving}>

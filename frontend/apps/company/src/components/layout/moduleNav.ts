@@ -276,6 +276,7 @@ export const pinnedModuleGroups: ModuleGroup[] = [
       { path: '/settings/custom-fields', labelKey: 'studio.customFields', permission: { module: 'management', page: 'custom_fields' }, group: 'customize' },
       { path: '/settings/forms', labelKey: 'studio.formLayouts', permission: { module: 'management', page: 'forms' }, group: 'customize' },
       { path: '/settings/workflows', labelKey: 'studio.workflows', permission: { module: 'management', page: 'workflows' }, group: 'customize' },
+      { path: '/settings/notification-templates', labelKey: 'studio.notificationTemplates', permission: { module: 'management', page: 'notifications' }, group: 'customize' },
       { path: '/leaves/types', labelKey: 'studio.leaveTypes', permission: { module: 'leaves', page: 'types' }, group: 'modules' },
       { path: '/documents/categories', labelKey: 'studio.documentCategories', permission: { module: 'documents', page: 'categories' }, group: 'modules' },
       { path: '/assets/categories', labelKey: 'studio.assetCategories', permission: { module: 'assets', page: 'categories' }, group: 'modules' },

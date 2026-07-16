@@ -1,5 +1,17 @@
-export { CustomFieldRenderer, Select, TwoFactorChallenge } from './components';
-export type { SelectOption, SelectProps, TwoFactorChallengeProps } from './components';
+export {
+  CustomFieldRenderer,
+  Select,
+  TwoFactorChallenge,
+  NotificationPreferencesForm,
+  defaultNotificationPrefs,
+} from './components';
+export type {
+  SelectOption,
+  SelectProps,
+  TwoFactorChallengeProps,
+  NotificationPrefsValue,
+  NotificationChannelGroup,
+} from './components';
 export * from './hooks';
 export * from './services';
 export * from './utils';

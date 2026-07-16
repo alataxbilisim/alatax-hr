@@ -439,6 +439,18 @@ Route::prefix('v1')->group(function () {
                 ->where('entityType', '[a-z_]+');
         });
 
+        // Bildirim şablonları (4C-2)
+        Route::middleware('company_admin')->prefix('notification-templates')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\V1\NotificationTemplateController::class, 'index'])
+                ->middleware('permission:management.notifications.view');
+            Route::put('/{eventKey}', [\App\Http\Controllers\Api\V1\NotificationTemplateController::class, 'upsert'])
+                ->middleware('permission:management.notifications.edit')
+                ->where('eventKey', '[a-z0-9_.]+');
+            Route::delete('/{eventKey}', [\App\Http\Controllers\Api\V1\NotificationTemplateController::class, 'destroy'])
+                ->middleware('permission:management.notifications.edit')
+                ->where('eventKey', '[a-z0-9_.]+');
+        });
+
         // Activity Logs — management.audit_logs (PermissionSeeder: underscore)
         // /export MUST be before /{id}
         Route::get('/activity-logs', [\App\Http\Controllers\Api\V1\ActivityLogController::class, 'index'])

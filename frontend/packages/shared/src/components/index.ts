@@ -8,6 +8,14 @@ export { default as InviteAcceptPage } from './InviteAcceptPage';
 export { default as ForcedPasswordChangePage } from './ForcedPasswordChangePage';
 export { NotificationBell } from './NotificationBell';
 export {
+  NotificationPreferencesForm,
+  defaultNotificationPrefs,
+} from './NotificationPreferencesForm';
+export type {
+  NotificationPrefsValue,
+  NotificationChannelGroup,
+} from './NotificationPreferencesForm';
+export {
   FormEngine,
   FormEngineField,
   buildZodSchema,

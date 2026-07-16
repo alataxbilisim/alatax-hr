@@ -10,6 +10,7 @@ use App\Models\CustomFieldDefinition;
 use App\Models\User;
 use App\Services\CustomFieldValidationService;
 use App\Services\LookupService;
+use App\Services\Notification\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -18,6 +19,7 @@ class AssetController extends BaseController
     public function __construct(
         protected LookupService $lookups,
         protected CustomFieldValidationService $customFieldValidation,
+        protected NotificationService $notifications,
     ) {}
 
     /**
@@ -219,6 +221,10 @@ class AssetController extends BaseController
 
         $user = User::find($validated['user_id']);
         ActivityLog::log('update', $asset, "Varlık zimmetlendi: {$user->name}");
+
+        if ($user !== null) {
+            $this->notifications->notifyAssetAssigned($asset->fresh() ?? $asset, $user);
+        }
 
         return $this->success($asset->load('currentAssignment.user'), 'Varlık zimmetlendi');
     }

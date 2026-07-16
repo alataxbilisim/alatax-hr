@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\BaseController;
 use App\Http\Resources\EmployeeResource;
 use App\Models\ActivityLog;
 use App\Models\Employee;
+use App\Services\Notification\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -13,6 +14,10 @@ use Illuminate\Validation\Rules\Password;
 
 class PortalProfileController extends BaseController
 {
+    public function __construct(
+        protected NotificationService $notifications,
+    ) {}
+
     /**
      * Profil bilgilerini getir
      */
@@ -69,13 +74,20 @@ class PortalProfileController extends BaseController
             'emergency_contact_phone' => 'sometimes|nullable|string|max:20',
             'emergency_contact_relation' => 'sometimes|nullable|string|max:100',
 
-            // Bildirim tercihleri (4C-1)
+            // Bildirim tercihleri (4C-2)
             'preferences' => 'sometimes|array',
             'preferences.notifications' => 'sometimes|array',
             'preferences.notifications.email' => 'sometimes|array',
             'preferences.notifications.email.approvals' => 'sometimes|boolean',
             'preferences.notifications.email.requests' => 'sometimes|boolean',
             'preferences.notifications.email.tasks' => 'sometimes|boolean',
+            'preferences.notifications.email.documents' => 'sometimes|boolean',
+            'preferences.notifications.email.reminders' => 'sometimes|boolean',
+            'preferences.notifications.in_app' => 'sometimes|array',
+            'preferences.notifications.in_app.approvals' => 'sometimes|boolean',
+            'preferences.notifications.in_app.requests' => 'sometimes|boolean',
+            'preferences.notifications.in_app.tasks' => 'sometimes|boolean',
+            'preferences.notifications.in_app.documents' => 'sometimes|boolean',
         ]);
 
         // Kullanıcı bilgilerini güncelle
@@ -94,6 +106,12 @@ class PortalProfileController extends BaseController
                 if (isset($incomingNotif['email']) && is_array($incomingNotif['email'])) {
                     $existingEmail = is_array($existingNotif['email'] ?? null) ? $existingNotif['email'] : [];
                     $incomingNotif['email'] = array_merge($existingEmail, $incomingNotif['email']);
+                    unset($incomingNotif['email']['security']);
+                }
+                if (isset($incomingNotif['in_app']) && is_array($incomingNotif['in_app'])) {
+                    $existingInApp = is_array($existingNotif['in_app'] ?? null) ? $existingNotif['in_app'] : [];
+                    $incomingNotif['in_app'] = array_merge($existingInApp, $incomingNotif['in_app']);
+                    unset($incomingNotif['in_app']['security']);
                 }
                 $incoming['notifications'] = array_merge($existingNotif, $incomingNotif);
             }
@@ -136,6 +154,8 @@ class PortalProfileController extends BaseController
         ]);
 
         ActivityLog::log('password_change', $user, 'Portal şifresi değiştirildi');
+
+        $this->notifications->notifySecurity($user->fresh() ?? $user, 'security.password_changed');
 
         return $this->success(null, 'Şifre başarıyla güncellendi');
     }

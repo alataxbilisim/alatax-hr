@@ -1439,6 +1439,29 @@ export const workflowsApi = {
   conditionMeta: () => api.get('/workflows/condition-meta'),
 };
 
+export interface NotificationTemplateRow {
+  event_key: string;
+  group: string;
+  variables: string[];
+  force: boolean;
+  default_subject: string;
+  default_body: string;
+  override: {
+    id: number;
+    subject: string;
+    body: string;
+    updated_at: string | null;
+  } | null;
+}
+
+export const notificationTemplatesApi = {
+  list: () => api.get('/notification-templates'),
+  upsert: (eventKey: string, data: { subject: string; body: string }) =>
+    api.put(`/notification-templates/${encodeURIComponent(eventKey)}`, data),
+  clear: (eventKey: string) =>
+    api.delete(`/notification-templates/${encodeURIComponent(eventKey)}`),
+};
+
 /** Lookup Engine — form dropdown (GET /lookups/{type}) + yönetim CRUD */
 export interface LookupItem {
   id: number;

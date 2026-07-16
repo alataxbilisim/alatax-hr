@@ -130,6 +130,7 @@ import FormLayoutEditorPage from './pages/settings/FormLayoutEditorPage';
 import FormsIndexPage from './pages/settings/FormsIndexPage';
 import WorkflowsListPage from './pages/settings/WorkflowsListPage';
 import WorkflowEditorPage from './pages/settings/WorkflowEditorPage';
+import NotificationTemplatesPage from './pages/settings/NotificationTemplatesPage';
 import AssetFormEnginePage from './pages/assets/AssetFormEnginePage';
 import EmployeeDetailPage from './pages/employees/EmployeeDetailPage';
 import EmployeeCustomFieldsPage from './pages/employees/EmployeeCustomFieldsPage';
@@ -907,6 +908,16 @@ const App: React.FC = () => {
               <ProtectedRoute>
                 <PermissionProtectedRoute module="management" page="workflows" action="view">
                   <WorkflowEditorPage />
+                </PermissionProtectedRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings/notification-templates"
+            element={
+              <ProtectedRoute>
+                <PermissionProtectedRoute module="management" page="notifications" action="view">
+                  <NotificationTemplatesPage />
                 </PermissionProtectedRoute>
               </ProtectedRoute>
             }

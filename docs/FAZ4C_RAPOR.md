@@ -103,3 +103,48 @@ Overlap: `withoutOverlapping` + `onOneServer` (üçü de).
 | company `tsc` | **0** |
 | Sentinel `admin@demo.test` @ `alatax_hr` | **yes** |
 | Wipe / push | **yok** (ekleyici migration `document_expiry_alerts`) |
+
+---
+
+## 4C-2 / C4 — Bildirim tamamlama (olaylar + tercihler + şablonlar)
+
+Branch: `faz4-form-engine`
+
+### Olay envanteri
+
+| Olay | Durum | Not |
+|------|--------|-----|
+| `approval.requested/approved/rejected/reminder/escalated` | vardı | Değişmedi; reminder e-posta varsayılan kapalı |
+| `approval.returned` | katalogda / DUR tetik | Workflow iade aksiyonu yok |
+| `leave.approved/rejected/cancelled` | vardı | — |
+| `expense.approved/rejected` | vardı | Outcome servisi + test |
+| `onboarding.task_assigned` | vardı | — |
+| `document.expiring` | vardı | Scheduler |
+| `asset.assigned` | **eklendi** | Zimmet `AssetController::assign` |
+| `security.password_changed` / `two_factor_*` | **eklendi** | Tercihle kapatılamaz |
+| `request.approved/rejected` | katalog / **DUR** | Company HR onay endpoint yok |
+| `announcement.published` | katalog / **DUR** | Company publish CRUD yok |
+| Push (Capacitor) | **DUR** | Ayrı dalga — altyapı kurulmadı |
+| `ApprovalRequestedNotification` stub | no-op | Gerçek yol: `NotificationService` |
+
+### Tercihler (B)
+
+`users.preferences.notifications.{in_app,email}.{approvals,requests,tasks,documents}` + `email.reminders` (varsayılan false).  
+Ortak `@shared/NotificationPreferencesForm` — Company `/account/preferences` + Portal Profil.  
+Güvenlik satırı kilitli.
+
+### Şablonlar (C)
+
+`notification_templates` (company_id + event_key unique). Stüdyo `/settings/notification-templates`.  
+Permission: `management.notifications.view|edit`. Render: override → lang varsayılan; `{{var}}` escape. Audit: Auditable.
+
+### Doğrulama
+
+| Metrik | Sonuç |
+|--------|--------|
+| `NotificationCompletionC4Test` | **9 passed** |
+| `NotificationCenterTest` | **9 passed** (regresyon yok) |
+| Tam suite | **481 passed / 0 fail** |
+| 3 SPA `tsc` | **0** |
+| Sentinel `admin@demo.test` @ `alatax_hr` | **yes** |
+| Wipe | **yok** |

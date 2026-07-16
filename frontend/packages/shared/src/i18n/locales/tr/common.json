@@ -207,7 +207,22 @@
     "notifEmailHint": "Uygulama içi bildirimler her zaman açıktır. E-posta kanallarını buradan yönetebilirsiniz.",
     "notifEmailApprovals": "Onaylar",
     "notifEmailRequests": "Talepler (izin / masraf)",
-    "notifEmailTasks": "Görevler (onboarding)"
+    "notifEmailTasks": "Görevler (onboarding)",
+    "notifMatrixTitle": "Bildirim tercihleri",
+    "notifMatrixHint": "Kategori ve kanal bazında aç/kapat. Güvenlik bildirimleri kapatılamaz.",
+    "notifCategory": "Kategori",
+    "notifChannelInApp": "Uygulama içi",
+    "notifChannelEmail": "E-posta",
+    "notifAlwaysOn": "Her zaman",
+    "notifLocked": "Zorunlu",
+    "notifGroup": {
+      "approvals": "Onaylar",
+      "requests": "Talepler (izin / masraf)",
+      "tasks": "Görevler / zimmet",
+      "documents": "Evrak uyarıları",
+      "reminders": "Onay hatırlatmaları (e-posta)",
+      "security": "Güvenlik (şifre / 2FA)"
+    }
   },
   "notifications": {
     "title": "Bildirimler",
@@ -236,6 +251,8 @@
     "formLayoutJobApplication": "İş başvurusu form düzeni",
     "formLayouts": "Form Düzenleri",
     "formLayoutsSubtitle": "Entity form alanlarını ve düzenini yönetin",
+    "notificationTemplates": "Bildirim Şablonları",
+    "notificationTemplatesSubtitle": "Olay başlık ve gövde metinlerini özelleştirin",
     "modulesSoon": "Yakında — derin bağlantılar",
     "leaveTypes": "İzin türleri",
     "documentCategories": "Evrak kategorileri",
@@ -251,6 +268,27 @@
     "customFieldsIndexSubtitle": "Modül özel alan sayfalarına gidin",
     "customFieldsIndexEmpty": "Erişebileceğiniz özel alan sayfası yok",
     "workflows": "Onay Akışları"
+  },
+  "notifTemplates": {
+    "listTitle": "Bildirim Şablonları",
+    "listSubtitle": "Katalog olayları için firma override (boş = sistem varsayılanı)",
+    "event": "Olay",
+    "group": "Grup",
+    "variables": "Değişkenler",
+    "subject": "Başlık",
+    "body": "Gövde",
+    "save": "Kaydet",
+    "reset": "Varsayılana dön",
+    "saveSuccess": "Şablon kaydedildi",
+    "saveError": "Şablon kaydedilemedi",
+    "resetSuccess": "Varsayılana döndürüldü",
+    "resetError": "Sıfırlama başarısız",
+    "loadError": "Şablonlar yüklenemedi",
+    "hasOverride": "Özel",
+    "systemDefault": "Sistem",
+    "edit": "Düzenle",
+    "cancel": "İptal",
+    "defaultPreview": "Sistem varsayılanı"
   },
   "workflows": {
     "listTitle": "Onay Akışları",

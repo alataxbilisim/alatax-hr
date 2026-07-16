@@ -154,6 +154,7 @@ class PermissionSeeder extends Seeder
                 'lookups' => ['view', 'create', 'edit', 'delete'],
                 'forms' => ['view', 'edit'],
                 'workflows' => ['view', 'create', 'edit', 'delete'],
+                'notifications' => ['view', 'edit'],
             ],
 
             // Personel Modülü
@@ -439,6 +440,7 @@ class PermissionSeeder extends Seeder
                     'management.custom_fields.view', 'management.custom_fields.create', 'management.custom_fields.edit',
                     'management.lookups.view', 'management.lookups.create', 'management.lookups.edit', 'management.lookups.delete',
                     'management.forms.view', 'management.forms.edit',
+                    'management.notifications.view', 'management.notifications.edit',
                     // api_keys / webhooks / workflows → yalnızca admin (company_admin / admin rolü)
 
                     // Personel - Tam yetki

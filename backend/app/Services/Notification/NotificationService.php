@@ -5,9 +5,11 @@ namespace App\Services\Notification;
 use App\Mail\NotificationMail;
 use App\Models\ApprovalRecord;
 use App\Models\ApprovalStep;
+use App\Models\Asset;
 use App\Models\ExpenseClaim;
 use App\Models\LeaveRequest;
 use App\Models\OnboardingTask;
+use App\Models\SalaryReviewPeriod;
 use App\Models\User;
 use App\Notifications\CatalogNotification;
 use Illuminate\Database\Eloquent\Model;
@@ -16,12 +18,17 @@ use Illuminate\Support\Facades\Mail;
 use InvalidArgumentException;
 
 /**
- * Bildirim merkezi — tek giriş noktası (4C-1).
+ * Bildirim merkezi — tek giriş noktası (4C).
  *
- * in-app her zaman; e-posta tercihe göre queued.
+ * Kanal: in-app + e-posta (tercih). Güvenlik olayları tercihle kapatılamaz.
+ * Şablon: company override → sistem varsayılanı; XSS escape.
  */
 class NotificationService
 {
+    public function __construct(
+        protected NotificationTemplateService $templates,
+    ) {}
+
     /**
      * @param  array{
      *   company_id?: int|null,
@@ -34,6 +41,7 @@ class NotificationService
      *   process_id?: int|null,
      *   process_title?: string|null,
      *   task_title?: string|null,
+     *   asset?: string|null,
      *   panel?: string|null,
      *   path?: string|null,
      *   link_params?: array<string, scalar|null>,
@@ -62,9 +70,11 @@ class NotificationService
             return;
         }
 
+        $companyId = $expectedCompanyId ?? (int) $user->company_id;
         $replacements = $this->buildReplacements($user, $payload);
-        $title = __($catalog['title_key'], $replacements);
-        $body = __($catalog['body_key'], $replacements);
+        $rendered = $this->templates->render($eventKey, $companyId, $replacements, $catalog);
+        $title = $rendered['title'];
+        $body = $rendered['body'];
 
         $panel = $payload['panel'] ?? $catalog['panel'] ?? 'company';
         $pathTemplate = $payload['path'] ?? $catalog['path'] ?? '/';
@@ -84,15 +94,18 @@ class NotificationService
             'process_id' => $payload['process_id'] ?? null,
         ];
 
-        // in-app her zaman (tercihten bağımsız)
-        $user->notify(new CatalogNotification(
-            $eventKey,
-            $data,
-            $expectedCompanyId ?? (int) $user->company_id,
-        ));
-
         $group = (string) ($catalog['group'] ?? 'approvals');
-        if ($this->wantsEmail($user, $group) && filled($user->email)) {
+        $forced = (bool) ($catalog['force'] ?? false) || $group === 'security';
+
+        if ($forced || $this->wantsInApp($user, $group)) {
+            $user->notify(new CatalogNotification(
+                $eventKey,
+                $data,
+                $companyId,
+            ));
+        }
+
+        if (($forced || $this->wantsEmail($user, $group, $eventKey, $catalog)) && filled($user->email)) {
             $mailer = app()->environment('testing')
                 ? 'array'
                 : (string) config('mail.default', 'smtp');
@@ -153,6 +166,7 @@ class NotificationService
 
         $eventKey = $this->outcomeEventKey($approvable, $outcome);
         $entity = $this->entityLabel($approvable);
+        [$panel, $path] = $this->panelPathForApprovable($approvable);
 
         $this->notify($requester, $eventKey, [
             'company_id' => $companyId,
@@ -162,8 +176,9 @@ class NotificationService
             'reason' => $reason,
             'approvable_type' => get_class($approvable),
             'approvable_id' => $approvable->getKey(),
-            'path' => $this->pathForApprovable($approvable),
-            'panel' => 'portal',
+            'path' => $path,
+            'panel' => $panel,
+            'link_params' => ['id' => $approvable->getKey()],
         ]);
     }
 
@@ -197,24 +212,123 @@ class NotificationService
         ]);
     }
 
-    public function wantsEmail(User $user, string $group): bool
+    /**
+     * Zimmet ataması — personel bildirimi.
+     */
+    public function notifyAssetAssigned(Asset $asset, User $assignee): void
     {
+        if ((int) $assignee->company_id !== (int) $asset->company_id) {
+            return;
+        }
+
+        $label = trim((string) ($asset->name ?? $asset->asset_code ?? 'Asset'));
+
+        $this->notify($assignee, 'asset.assigned', [
+            'company_id' => (int) $asset->company_id,
+            'entity' => $label,
+            'asset' => $label,
+            'user' => $assignee->name,
+            'date' => now()->toDateString(),
+            'path' => '/assets',
+            'panel' => 'portal',
+        ]);
+    }
+
+    /**
+     * Güvenlik olayı (tercihle kapatılamaz).
+     */
+    public function notifySecurity(User $user, string $eventKey): void
+    {
+        $this->notify($user, $eventKey, [
+            'company_id' => (int) $user->company_id,
+            'user' => $user->name,
+            'date' => now()->toDateString(),
+            'panel' => 'company',
+            'path' => '/account/preferences',
+        ]);
+    }
+
+    public function wantsInApp(User $user, string $group): bool
+    {
+        if ($group === 'security') {
+            return true;
+        }
+
+        $prefs = $user->preferences ?? [];
+        $inApp = data_get($prefs, 'notifications.in_app', []);
+
+        if (! is_array($inApp)) {
+            return true;
+        }
+
+        if (array_key_exists($group, $inApp)) {
+            return (bool) $inApp[$group];
+        }
+
+        return true;
+    }
+
+    /**
+     * @param  array<string, mixed>  $catalog
+     */
+    public function wantsEmail(User $user, string $group, string $eventKey = '', array $catalog = []): bool
+    {
+        if ($group === 'security' || (bool) ($catalog['force'] ?? false)) {
+            return true;
+        }
+
+        // Hatırlatma: varsayılan e-posta kapalı; yalnız açık tercih
+        if ($eventKey === 'approval.reminder') {
+            $reminders = data_get($user->preferences ?? [], 'notifications.email.reminders');
+            if ($reminders !== null) {
+                return (bool) $reminders;
+            }
+
+            return false;
+        }
+
         $prefs = $user->preferences ?? [];
         $emailPrefs = data_get($prefs, 'notifications.email', []);
 
         if (! is_array($emailPrefs)) {
-            return true;
+            return (bool) ($catalog['email_default'] ?? true);
         }
 
         if (array_key_exists($group, $emailPrefs)) {
             return (bool) $emailPrefs[$group];
         }
 
-        // Varsayılan: açık
-        return true;
+        return (bool) ($catalog['email_default'] ?? true);
     }
 
     /**
+     * @return array{
+     *   in_app: array{approvals: bool, requests: bool, tasks: bool, documents: bool},
+     *   email: array{approvals: bool, requests: bool, tasks: bool, documents: bool, reminders: bool}
+     * }
+     */
+    public static function defaultChannelPreferences(): array
+    {
+        return [
+            'in_app' => [
+                'approvals' => true,
+                'requests' => true,
+                'tasks' => true,
+                'documents' => true,
+            ],
+            'email' => [
+                'approvals' => true,
+                'requests' => true,
+                'tasks' => true,
+                'documents' => true,
+                'reminders' => false,
+            ],
+        ];
+    }
+
+    /**
+     * @deprecated 4C-2 — defaultChannelPreferences kullanın
+     *
      * @return array{approvals: bool, requests: bool, tasks: bool}
      */
     public static function defaultEmailPreferences(): array
@@ -241,6 +355,8 @@ class NotificationService
             'task' => (string) ($payload['task_title'] ?? $payload['entity'] ?? ''),
             'process' => (string) ($payload['process_title'] ?? ''),
             'days' => (string) ($payload['days'] ?? $payload['threshold_days'] ?? ''),
+            'asset' => (string) ($payload['asset'] ?? $payload['entity'] ?? ''),
+            'title' => (string) ($payload['title'] ?? $payload['entity'] ?? ''),
         ];
     }
 
@@ -270,8 +386,7 @@ class NotificationService
      */
     private function approvalPayload(ApprovalRecord $record, Model $approvable, ApprovalStep $step): array
     {
-        $basename = class_basename($approvable);
-        $path = $this->pathForApprovable($approvable);
+        [$panel, $path] = $this->panelPathForApprovable($approvable);
 
         return [
             'company_id' => (int) $record->company_id,
@@ -282,17 +397,21 @@ class NotificationService
             'approvable_type' => $record->approvable_type,
             'approvable_id' => $record->approvable_id,
             'path' => $path,
-            'panel' => 'company',
+            'panel' => $panel === 'portal' ? 'company' : $panel,
             'link_params' => ['id' => $approvable->getKey()],
         ];
     }
 
-    private function pathForApprovable(Model $approvable): string
+    /**
+     * @return array{0: string, 1: string} panel, path
+     */
+    private function panelPathForApprovable(Model $approvable): array
     {
         return match (true) {
-            $approvable instanceof LeaveRequest => '/leaves',
-            $approvable instanceof ExpenseClaim => '/expenses',
-            default => '/leaves',
+            $approvable instanceof LeaveRequest => ['portal', '/leaves'],
+            $approvable instanceof ExpenseClaim => ['portal', '/expenses'],
+            $approvable instanceof SalaryReviewPeriod => ['company', '/employees/salary-reviews/'.$approvable->getKey()],
+            default => ['portal', '/leaves'],
         };
     }
 
@@ -323,11 +442,24 @@ class NotificationService
             return __('messages.notifications.entity_expense');
         }
 
+        if ($approvable instanceof SalaryReviewPeriod) {
+            return __('messages.notifications.entity_salary_review');
+        }
+
         return class_basename($approvable);
     }
 
     private function resolveRequester(Model $approvable): ?User
     {
+        if ($approvable instanceof SalaryReviewPeriod) {
+            $userId = $approvable->submitted_by ?? $approvable->created_by;
+            if ($userId) {
+                return User::query()->find($userId);
+            }
+
+            return null;
+        }
+
         if (method_exists($approvable, 'user')) {
             $user = $approvable->user;
             if ($user instanceof User) {

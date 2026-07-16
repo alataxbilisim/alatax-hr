@@ -4,6 +4,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from '@shared/i18n';
 import { AppDispatch, RootState } from '../store';
 import { portalApi } from '@shared/services/api';
+import {
+  NotificationPreferencesForm,
+  defaultNotificationPrefs,
+  type NotificationPrefsValue,
+} from '@shared/components';
 import { setTheme } from '@shared/store/slices/themeSlice';
 import toast from 'react-hot-toast';
 import { BsEnvelope, BsPhone, BsGeoAlt, BsCalendar, BsBuilding, BsCheck, BsMoon, BsSun } from 'react-icons/bs';
@@ -17,11 +22,8 @@ interface ProfileData {
     phone: string | null;
     preferences?: {
       notifications?: {
-        email?: {
-          approvals?: boolean;
-          requests?: boolean;
-          tasks?: boolean;
-        };
+        in_app?: Partial<NotificationPrefsValue['in_app']>;
+        email?: Partial<NotificationPrefsValue['email']>;
       };
     };
   };
@@ -38,6 +40,16 @@ interface ProfileData {
     emergency_contact_name: string | null;
     emergency_contact_phone: string | null;
     emergency_contact_relation: string | null;
+  };
+}
+
+function prefsFromProfile(
+  raw: ProfileData['user']['preferences'] | undefined
+): NotificationPrefsValue {
+  const base = defaultNotificationPrefs();
+  return {
+    in_app: { ...base.in_app, ...(raw?.notifications?.in_app ?? {}) },
+    email: { ...base.email, ...(raw?.notifications?.email ?? {}) },
   };
 }
 
@@ -70,9 +82,7 @@ const ProfilePage: React.FC = () => {
     password_confirmation: '',
   });
 
-  const [emailApprovals, setEmailApprovals] = useState(true);
-  const [emailRequests, setEmailRequests] = useState(true);
-  const [emailTasks, setEmailTasks] = useState(true);
+  const [notifPrefs, setNotifPrefs] = useState<NotificationPrefsValue>(defaultNotificationPrefs);
   useEffect(() => {
     loadProfile();
   }, []);
@@ -91,10 +101,7 @@ const ProfilePage: React.FC = () => {
         emergency_contact_phone: data.employee?.emergency_contact_phone || '',
         emergency_contact_relation: data.employee?.emergency_contact_relation || '',
       });
-      const emailPrefs = data.user?.preferences?.notifications?.email;
-      setEmailApprovals(emailPrefs?.approvals !== false);
-      setEmailRequests(emailPrefs?.requests !== false);
-      setEmailTasks(emailPrefs?.tasks !== false);
+      setNotifPrefs(prefsFromProfile(data.user?.preferences));
     } catch {
       toast.error('Profil yüklenemedi');
     } finally {
@@ -379,39 +386,18 @@ const ProfilePage: React.FC = () => {
         <div className="col-lg-6 mb-4">
           <div className="card">
             <div className="card-header">
-              <h3 className="card-title">{t('account.notifEmailTitle')}</h3>
+              <h3 className="card-title">{t('account.notifMatrixTitle')}</h3>
             </div>
             <div className="card-body">
-              <p style={{ fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)', marginBottom: 'var(--space-3)' }}>
-                {t('account.notifEmailHint')}
-              </p>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', marginBottom: 'var(--sp-2)' }}>
-                <input
-                  type="checkbox"
-                  checked={emailApprovals}
-                  onChange={(e) => setEmailApprovals(e.target.checked)}
-                />
-                {t('account.notifEmailApprovals')}
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', marginBottom: 'var(--sp-2)' }}>
-                <input
-                  type="checkbox"
-                  checked={emailRequests}
-                  onChange={(e) => setEmailRequests(e.target.checked)}
-                />
-                {t('account.notifEmailRequests')}
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', marginBottom: 'var(--space-3)' }}>
-                <input
-                  type="checkbox"
-                  checked={emailTasks}
-                  onChange={(e) => setEmailTasks(e.target.checked)}
-                />
-                {t('account.notifEmailTasks')}
-              </label>
+              <NotificationPreferencesForm
+                value={notifPrefs}
+                onChange={setNotifPrefs}
+                disabled={savingNotif}
+              />
               <button
                 type="button"
                 className="btn btn-primary"
+                style={{ marginTop: 'var(--space-3)' }}
                 disabled={savingNotif}
                 onClick={() => {
                   void (async () => {
@@ -420,11 +406,8 @@ const ProfilePage: React.FC = () => {
                       await portalApi.profile.update({
                         preferences: {
                           notifications: {
-                            email: {
-                              approvals: emailApprovals,
-                              requests: emailRequests,
-                              tasks: emailTasks,
-                            },
+                            in_app: notifPrefs.in_app,
+                            email: notifPrefs.email,
                           },
                         },
                       });
