@@ -237,7 +237,7 @@ const MainLayout: React.FC = () => {
     if (user) {
       void dispatch(fetchBranchContext());
     }
-  }, [dispatch, user?.id]);
+  }, [dispatch, user]);
 
   const handleModuleClick = (moduleId: string) => {
     if (moduleId === activeModule) {

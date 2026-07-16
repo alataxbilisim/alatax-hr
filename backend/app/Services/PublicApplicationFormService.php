@@ -5,10 +5,12 @@ namespace App\Services;
 use App\Enums\JobPositionStatus;
 use App\Models\Company;
 use App\Models\CustomFieldDefinition;
+use App\Models\FormDefinition;
 use App\Models\JobPosition;
+use Illuminate\Validation\ValidationException;
 
 /**
- * Public kariyer formu — application_forms.fields + sistem alanları (auth’suz, sızdırma yok).
+ * Public kariyer formu — form_definition_id (Form Engine) veya legacy application_forms (Z2).
  */
 class PublicApplicationFormService
 {
@@ -37,6 +39,7 @@ class PublicApplicationFormService
     public function __construct(
         protected FormFieldCatalogService $catalog,
         protected RequestTypeFormFieldsAdapter $fieldsAdapter,
+        protected FormDefinitionService $formDefinitions,
     ) {}
 
     /**
@@ -50,7 +53,7 @@ class PublicApplicationFormService
         }
 
         return JobPosition::query()
-            ->with(['form'])
+            ->with(['form', 'formDefinition'])
             ->where('slug', $positionSlug)
             ->where('company_id', $company->id)
             ->where('status', JobPositionStatus::Active)
@@ -67,6 +70,65 @@ class PublicApplicationFormService
      * @return array<string, mixed>
      */
     public function buildPublicFormPayload(JobPosition $position, Company $company): array
+    {
+        if ($position->form_definition_id) {
+            return $this->buildFromFormDefinition($position, $company);
+        }
+
+        return $this->buildFromLegacyApplicationForm($position, $company);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildFromFormDefinition(JobPosition $position, Company $company): array
+    {
+        $definition = $this->formDefinitions->getForEntity(
+            CustomFieldDefinition::ENTITY_JOB_APPLICATION,
+            (int) $company->id
+        );
+
+        // Pozisyonda saklanan id ile çözülen tanım uyumluysa onu kullan; layout şirket tanımından gelir
+        if ($position->formDefinition && (int) $definition['id'] !== (int) $position->form_definition_id) {
+            $bound = FormDefinition::withoutGlobalScopes()->find($position->form_definition_id);
+            if ($bound && is_array($bound->layout)) {
+                $definition['id'] = $bound->id;
+                $definition['name'] = $bound->name;
+                $definition['layout'] = $bound->layout;
+                $definition['company_id'] = $bound->company_id;
+                $definition['is_system_default'] = $bound->company_id === null;
+            }
+        }
+
+        $hasCustom = collect($definition['fields'] ?? [])
+            ->contains(fn ($f) => empty($f['is_system']));
+
+        return [
+            'has_custom_form' => true,
+            'form_source' => 'form_definition',
+            'company' => [
+                'slug' => $company->slug,
+                'name' => $company->name,
+            ],
+            'position' => [
+                'slug' => $position->slug,
+                'title' => $position->title,
+                'description' => $position->description,
+                'location' => $position->location,
+                'department' => $position->department,
+            ],
+            'application_form' => null,
+            'definition' => $definition,
+            'meta' => [
+                'has_company_custom_fields' => $hasCustom,
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildFromLegacyApplicationForm(JobPosition $position, Company $company): array
     {
         $form = $position->form;
         $rawFields = is_array($form?->fields) ? $form->fields : [];
@@ -134,6 +196,7 @@ class PublicApplicationFormService
 
         return [
             'has_custom_form' => $hasCustomForm,
+            'form_source' => 'application_form',
             'company' => [
                 'slug' => $company->slug,
                 'name' => $company->name,
@@ -163,12 +226,16 @@ class PublicApplicationFormService
     }
 
     /**
-     * form_data doğrulama — yalnızca application_forms custom alanları.
+     * form_data doğrulama — Form Engine custom alanları veya legacy application_forms.
      *
      * @return array<string, mixed>
      */
     public function validateCustomFormData(JobPosition $position, mixed $formData): array
     {
+        if ($position->form_definition_id) {
+            return $this->validateAgainstFormDefinition($position, $formData);
+        }
+
         $rawFields = is_array($position->form?->fields) ? $position->form->fields : [];
         if ($rawFields === []) {
             return is_array($formData) ? $formData : [];
@@ -189,5 +256,39 @@ class PublicApplicationFormService
         }
 
         return $this->fieldsAdapter->validateFormData($filtered, $formData);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function validateAgainstFormDefinition(JobPosition $position, mixed $formData): array
+    {
+        $data = is_array($formData) ? $formData : [];
+        $definition = $this->formDefinitions->getForEntity(
+            CustomFieldDefinition::ENTITY_JOB_APPLICATION,
+            (int) $position->company_id
+        );
+
+        $errors = [];
+        foreach ($definition['fields'] ?? [] as $field) {
+            if (! empty($field['is_system'])) {
+                continue;
+            }
+            $key = (string) ($field['field_key'] ?? '');
+            if ($key === '' || in_array($key, self::RESERVED_FIELD_KEYS, true)) {
+                continue;
+            }
+            $required = (bool) ($field['effective_required'] ?? $field['is_required'] ?? false);
+            if ($required && (! array_key_exists($key, $data) || $data[$key] === null || $data[$key] === '')) {
+                $label = (string) ($field['effective_label'] ?? $field['field_label'] ?? $key);
+                $errors[$key] = ["{$label} alanı zorunludur."];
+            }
+        }
+
+        if ($errors !== []) {
+            throw ValidationException::withMessages($errors);
+        }
+
+        return $data;
     }
 }

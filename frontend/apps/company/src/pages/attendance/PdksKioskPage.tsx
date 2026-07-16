@@ -79,7 +79,10 @@ const PdksKioskPage: React.FC = () => {
   }, [t]);
 
   useEffect(() => {
-    void refreshToken();
+    // İlk yenilemeyi mikro görevde başlat (set-state-in-effect)
+    const boot = window.setTimeout(() => {
+      void refreshToken();
+    }, 0);
     timerRef.current = setInterval(() => {
       void refreshToken();
     }, REFRESH_MS);
@@ -97,6 +100,7 @@ const PdksKioskPage: React.FC = () => {
     window.addEventListener('offline', onOffline);
 
     return () => {
+      window.clearTimeout(boot);
       if (timerRef.current) clearInterval(timerRef.current);
       if (countdownRef.current) clearInterval(countdownRef.current);
       window.removeEventListener('online', onOnline);

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { portalApi, lookupsApi, type LookupItem } from '@shared/services/api';
 import {
   Select,
@@ -65,11 +65,7 @@ const RequestsPage: React.FC = () => {
     return buildRequestTypeFormDefinition(selectedType.form_fields, selectedType.name);
   }, [selectedType]);
 
-  useEffect(() => {
-    void loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const [requestsRes, typesRes, statusRes, priorityRes] = await Promise.all([
         portalApi.requests.list(),
@@ -86,7 +82,11 @@ const RequestsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
+
+  useEffect(() => {
+    void loadData();
+  }, [loadData]);
 
   const getStatusBadge = (status: string) => {
     const label = statusLookups.find((o) => o.value === status)?.label || status;

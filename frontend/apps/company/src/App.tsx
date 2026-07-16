@@ -666,13 +666,7 @@ const App: React.FC = () => {
           />
           <Route
             path="/onboarding/templates"
-            element={
-              <ProtectedRoute>
-                <ModuleProtectedRoute moduleKey={MODULE_KEYS.ONBOARDING}>
-                  <OnboardingPage />
-                </ModuleProtectedRoute>
-              </ProtectedRoute>
-            }
+            element={withPermission(<OnboardingPage />, 'onboarding', 'templates')}
           />
           <Route
             path="/onboarding/processes/:id"
@@ -698,23 +692,11 @@ const App: React.FC = () => {
           />
           <Route
             path="/performance/periods"
-            element={
-              <ProtectedRoute>
-                <ModuleProtectedRoute moduleKey={MODULE_KEYS.PERFORMANCE}>
-                  <PerformancePage />
-                </ModuleProtectedRoute>
-              </ProtectedRoute>
-            }
+            element={withPermission(<PerformancePage />, 'performance', 'periods')}
           />
           <Route
             path="/performance/criteria"
-            element={
-              <ProtectedRoute>
-                <ModuleProtectedRoute moduleKey={MODULE_KEYS.PERFORMANCE}>
-                  <PerformancePage />
-                </ModuleProtectedRoute>
-              </ProtectedRoute>
-            }
+            element={withPermission(<PerformancePage />, 'performance', 'criteria')}
           />
           <Route
             path="/performance/reviews/:id"
@@ -750,13 +732,7 @@ const App: React.FC = () => {
           />
           <Route
             path="/training/sessions"
-            element={
-              <ProtectedRoute>
-                <ModuleProtectedRoute moduleKey={MODULE_KEYS.TRAINING}>
-                  <TrainingPage />
-                </ModuleProtectedRoute>
-              </ProtectedRoute>
-            }
+            element={withPermission(<TrainingPage />, 'training', 'sessions')}
           />
           <Route
             path="/training/custom-fields"
@@ -792,13 +768,7 @@ const App: React.FC = () => {
           />
           <Route
             path="/assets/categories"
-            element={
-              <ProtectedRoute>
-                <ModuleProtectedRoute moduleKey={MODULE_KEYS.ASSET_MANAGEMENT}>
-                  <AssetsPage />
-                </ModuleProtectedRoute>
-              </ProtectedRoute>
-            }
+            element={withPermission(<AssetsPage />, 'assets', 'categories')}
           />
           <Route
             path="/assets/custom-fields"

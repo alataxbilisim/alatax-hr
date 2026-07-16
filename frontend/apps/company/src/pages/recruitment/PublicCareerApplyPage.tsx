@@ -5,7 +5,6 @@ import {
   FormEngine,
   type FormDefinitionPayload,
   type FormEngineSubmitPayload,
-  type FormEngineValues,
 } from '@shared/components';
 import { publicApi } from '@shared/services/api';
 import { getErrorMessage } from '@shared/services/apiHelpers';
@@ -121,10 +120,7 @@ const PublicCareerApplyPage: React.FC = () => {
     }
   };
 
-  const handleEngineSubmit = async (
-    payload: FormEngineSubmitPayload,
-    _values: FormEngineValues
-  ) => {
+  const handleEngineSubmit = async (payload: FormEngineSubmitPayload) => {
     const merged: Record<string, unknown> = {
       ...payload.custom_fields,
       ...payload.system,

@@ -30,6 +30,7 @@ class JobPosition extends Model
         'salary_max',
         'salary_visible',
         'form_id',
+        'form_definition_id',
         'status',
         'positions_count',
         'application_deadline',
@@ -65,6 +66,11 @@ class JobPosition extends Model
     public function form()
     {
         return $this->belongsTo(ApplicationForm::class);
+    }
+
+    public function formDefinition()
+    {
+        return $this->belongsTo(FormDefinition::class);
     }
 
     public function applications()

@@ -281,9 +281,14 @@ const SurveysPage: React.FC = () => {
         .map((s) => Number(s.trim()))
         .filter((n) => Number.isFinite(n) && n > 0);
 
-      const { audience_department_ids: _ids, ...rest } = formData;
       const data = {
-        ...rest,
+        title: formData.title,
+        description: formData.description,
+        type: formData.type,
+        is_anonymous: formData.is_anonymous,
+        is_active: formData.is_active,
+        start_date: formData.start_date || null,
+        end_date: formData.end_date || null,
         audience: formData.audience,
         audience_filter:
           formData.audience === 'department'

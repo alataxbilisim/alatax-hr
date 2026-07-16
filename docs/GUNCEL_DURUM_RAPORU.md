@@ -172,12 +172,15 @@ Son migration’lar: leave_types system flags, must_change_password, branch_id, 
 
 ### 5.8 Bilinen backend boşluklar
 
-- İzin talebi update/delete/cancel route eksik (controller kısmi)
-- Leave balance update/bulkUpdate **route yok** (AKIS 🔴)
-- ~~Bordro upload/HR API yok; duyuru admin yok; vardiya CRUD yok~~ → **C5** (duyuru CRUD + bordro upload; vardiya PDKS’te zaten vardı)
-- ApprovalRequestedNotification = stub (C4’te no-op; gerçek yol NotificationService)
-- Custom field validation TODO
-- Masraf kategori company panel route zayıf
+- ~~İzin bakiyesi / iptal route~~ → **C1** kapandı
+- ~~Bordro upload / duyuru admin / vardiya~~ → **C5**
+- ~~6 kayıp sidebar route~~ → **B-4 / C6** (assignments link kaldırıldı)
+- `approval.returned` / workflow iade aksiyonu → **Faz 6** (C6 teşhis)
+- condition-meta + custom_fields motor → **Faz 6** (C6 DUR; motor dokunulmaz)
+- legacy `application_forms` / `form_id` okuma yolu → **Faz 6’da kaldırılacak** (C6 köprü: `form_definition_id`)
+- Capacitor push → açık
+- B5+PORTAL-1 görsel kontroller → açık
+- Custom field validation TODO (kısmi)
 
 ---
 
@@ -189,22 +192,21 @@ React 19, TS ~5.9, Vite 7, RRD 7, Redux Toolkit (auth/theme/ui), TanStack Query 
 
 ### 6.2 Company rotaları (özet)
 
-Dashboard · Personel (+departments, **positions**, **organization**, custom-fields, reports) · Recruitment · Leaves · Documents · Onboarding · Performance · Training · Assets · Surveys · Analytics · Settings/users/roles/**branches**/lookups/webhooks/audit · Account
+Dashboard · Personel (+departments, **positions**, **organization**, custom-fields, reports) · Recruitment · Leaves · Documents · Onboarding (+templates) · Performance (+periods/criteria) · Training (+sessions) · Assets (+categories) · Surveys · Analytics · Announcements · Payslips · Settings/users/roles/**branches**/lookups/webhooks/audit/forms · Account
 
-**Sidebar’da var, App.tsx’te yok (Faz 0 borcu):**  
-`/onboarding/templates`, `/performance/periods`, `/performance/criteria`, `/training/sessions`, `/assets/categories`, `/assets/assignments`
+**Sidebar ↔ App drift (Faz 0):** ~~6 path~~ → **B-4/C6 kapandı** (`/assets/assignments` link kaldırıldı; zimmet detayda).
 
 ### 6.3 Shared — kritik gerçekler
 
 | Bileşen | Durum |
 |---------|--------|
-| **FormEngine** | ❌ **YOK** (0 dosya) — entity formları elle (`EmployeeForm` vb.) |
+| **FormEngine** | ✅ (4A) — entity formları + public kariyer |
 | CustomFieldRenderer | ✅ |
 | Select + useLookupOptions | ✅ |
 | DataTable | ⚠️ Company-local (`apps/company/.../DataTable.tsx`), shared değil |
 | InviteAccept / ForcedPasswordChange / 2FA | ✅ shared |
 | theme.css / density | ✅ Faz 3 |
-| `_archive_old_app/` | Hâlâ repoda (Faz 0 borç) |
+| `_archive_old_app/` | ❌ **C6’da silindi** |
 
 ### 6.4 Portal / SuperAdmin
 

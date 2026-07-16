@@ -44,7 +44,7 @@ class ApplicationController extends Controller
         }
 
         $position = JobPosition::query()
-            ->with(['form'])
+            ->with(['form', 'formDefinition'])
             ->where('slug', $positionSlug)
             ->where('company_id', $company->id)
             ->where('status', JobPositionStatus::Active)

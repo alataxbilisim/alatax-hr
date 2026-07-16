@@ -404,3 +404,49 @@ Commit’ler: `8e343d5` feat(B-3); `1c6b5b4` policy ad fix.
 | DB wipe | **yok** |
 | Portal UI redesign | **yok** |
 
+---
+
+## C6 — Borç temizliği (route + arşiv + lint + form_id köprüsü)
+
+**Tarih:** 2026-07-17  
+**Branch:** `faz4-form-engine`  
+**Commit:** `chore(faz4): C6 borç temizliği — route bağlama + arşiv + lint 0 + form_id köprüsü`
+
+### Madde 1 — 6 sidebar route
+
+| Path | Karar | Not |
+|------|--------|-----|
+| `/onboarding/templates` | **a** (B-4) | `withPermission` sıkılaştırıldı |
+| `/performance/periods` | **a** | aynı |
+| `/performance/criteria` | **a** | aynı |
+| `/training/sessions` | **a** | aynı |
+| `/assets/categories` | **a** | aynı |
+| `/assets/assignments` | **c** (B-4) | zaten sidebar’dan kaldırılmış; Faz 6 ayrı liste |
+
+### Madde 2 — Arşiv
+
+- `_archive_old_app/` → **silindi** (kod import yoktu; yalnız docs/README)
+- Başka %100 ölü SPA kalıntısı bulunamadı
+
+### Madde 3 — Lint
+
+- Company 4 error + warnings düzeltildi → **3 SPA lint 0**
+
+### Madde 4 — Açık kararlar
+
+| Madde | Sonuç |
+|-------|--------|
+| **4a form_id köprü** | `job_positions.form_definition_id` eklendi; FE birleşik seçim; runtime: definition önce, legacy `form_id` Z2. `application_forms` drop **yok**. Legacy okuma Faz 6’da kalkacak. |
+| **4b condition-meta** | **DUR Faz 6** — motor `custom_fields` okumuyor; motor dokunulmaz |
+| **4c approval.returned** | Teşhis: approve/reject/skip var; iade için `WorkflowService::returnToRequester` + status + portal resubmit + notify gerekir (Faz 6) |
+
+### Doğrulama
+
+| Metrik | Sonuç |
+|--------|--------|
+| `DebtCleanupC6Test` | **4 passed** |
+| Tam suite | **488 passed / 0 fail** |
+| 3 SPA `tsc` + lint | **0** |
+| Select sentinel | **PASSED** |
+| DB wipe | **yok** |
+

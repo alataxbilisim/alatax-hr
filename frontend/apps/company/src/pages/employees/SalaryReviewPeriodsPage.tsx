@@ -84,17 +84,17 @@ const SalaryReviewPeriodsPage: React.FC = () => {
     }
   };
 
-  const scopeLabel = (scope: string) => {
+  const scopeLabel = useCallback((scope: string) => {
     if (scope === 'department') return t('salaryReviews.scopeDepartment');
     if (scope === 'branch') return t('salaryReviews.scopeBranch');
     return t('salaryReviews.scopeCompany');
-  };
+  }, [t]);
 
-  const statusLabel = (status: string) => {
+  const statusLabel = useCallback((status: string) => {
     const key = `salaryReviews.status.${status}`;
     const translated = t(key);
     return translated === key ? status : translated;
-  };
+  }, [t]);
 
   const columns: Column<PeriodRow>[] = useMemo(
     () => [
@@ -141,7 +141,7 @@ const SalaryReviewPeriodsPage: React.FC = () => {
         ),
       },
     ],
-    [navigate, t]
+    [navigate, t, scopeLabel, statusLabel]
   );
 
   return (

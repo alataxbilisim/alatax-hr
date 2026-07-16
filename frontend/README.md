@@ -12,8 +12,9 @@ frontend/
 │   └── portal/       # Personel Portal (Port 3003)
 ├── packages/
 │   └── shared/       # Ortak kod, componentler, servisler
-└── _archive_old_app/ # Eski tek uygulama (arşiv)
 ```
+
+> `_archive_old_app/` C6’da silindi (Faz 0 borcu).
 
 ## 🚀 Hızlı Başlangıç
 
@@ -72,7 +73,7 @@ pnpm build:portal
 
 ## 📝 Notlar
 
-- Eski tek uygulama yapısı `_archive_old_app/` klasöründe arşivlenmiştir
+- `_archive_old_app/` C6’da kaldırıldı
 - Her uygulama bağımsız olarak çalışır ve deploy edilebilir
 - Ortak kod `packages/shared/` içinde tutulur
 - Her uygulama kendi `vite.config.ts` ve `package.json` dosyasına sahiptir

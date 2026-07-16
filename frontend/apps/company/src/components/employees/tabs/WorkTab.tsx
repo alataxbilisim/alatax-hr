@@ -41,37 +41,39 @@ const WorkTab: React.FC<WorkTabProps> = ({ employee }) => {
 
   useEffect(() => {
     if (!userId) {
-      setOnboarding(null);
       return;
     }
 
     let cancelled = false;
-    setOnboardingLoading(true);
 
-    void onboardingApi.processes
-      .list({ user_id: userId, per_page: 5 })
-      .then((response) => {
+    // setState'i effect gövdesinde senkron çağırma (react-hooks/set-state-in-effect)
+    void Promise.resolve().then(async () => {
+      if (cancelled) return;
+      setOnboardingLoading(true);
+      try {
+        const response = await onboardingApi.processes.list({ user_id: userId, per_page: 5 });
         if (cancelled) return;
         const page = response.data.data;
         const rows: Array<{ id: number; title: string; status: string }> = page?.data ?? [];
         const active = rows.find((p) => p.status === 'pending' || p.status === 'in_progress') ?? null;
         setOnboarding(active);
-      })
-      .catch(() => {
+      } catch {
         if (!cancelled) {
           setOnboarding(null);
         }
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) {
           setOnboardingLoading(false);
         }
-      });
+      }
+    });
 
     return () => {
       cancelled = true;
     };
   }, [userId]);
+
+  const displayOnboarding = userId ? onboarding : null;
 
   const formatDate = (date?: string) => {
     if (!date) return '-';
@@ -202,15 +204,15 @@ const WorkTab: React.FC<WorkTabProps> = ({ employee }) => {
         <div className="card-body">
           {onboardingLoading ? (
             <span style={{ color: 'var(--text-tertiary)', fontSize: 'var(--fs-body)' }}>…</span>
-          ) : onboarding ? (
+          ) : displayOnboarding ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', fontSize: 'var(--fs-body)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-2)' }}>
                 <span style={{ color: 'var(--text-tertiary)' }}>{t('recruitment.onboardingActive')}</span>
-                <span className="badge badge-info">{onboarding.status}</span>
+                <span className="badge badge-info">{displayOnboarding.status}</span>
               </div>
-              <div style={{ fontWeight: 500 }}>{onboarding.title}</div>
+              <div style={{ fontWeight: 500 }}>{displayOnboarding.title}</div>
               <Link
-                to={`/onboarding/processes/${onboarding.id}`}
+                to={`/onboarding/processes/${displayOnboarding.id}`}
                 className="btn btn-sm btn-outline-primary"
                 style={{ alignSelf: 'flex-start' }}
               >

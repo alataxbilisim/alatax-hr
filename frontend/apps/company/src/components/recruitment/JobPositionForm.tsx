@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../ui';
-import { recruitmentApi, lookupsApi, type LookupItem } from '@shared/services/api';
+import { recruitmentApi, lookupsApi, formDefinitionsApi, type LookupItem } from '@shared/services/api';
 import { Select } from '@shared/components';
 import { useTranslation } from '@shared/i18n';
 import toast from 'react-hot-toast';
@@ -17,13 +17,13 @@ interface JobPositionFormValues {
   salary_min?: number;
   salary_max?: number;
   status: string;
-  form_id: string;
+  /** unified: "" | "legacy:{id}" | "definition:{id}" */
+  form_binding: string;
 }
 
-interface ApplicationFormOption {
-  id: number;
-  name: string;
-  is_active?: boolean;
+interface FormBindingOption {
+  value: string;
+  label: string;
 }
 
 interface JobPositionFormProps {
@@ -43,7 +43,18 @@ interface JobPositionFormProps {
     salary_max?: number;
     status?: string;
     form_id?: number | null;
+    form_definition_id?: number | null;
   };
+}
+
+function bindingFromPosition(position?: JobPositionFormProps['position']): string {
+  if (position?.form_definition_id) {
+    return `definition:${position.form_definition_id}`;
+  }
+  if (position?.form_id) {
+    return `legacy:${position.form_id}`;
+  }
+  return '';
 }
 
 const JobPositionForm: React.FC<JobPositionFormProps> = ({
@@ -58,7 +69,7 @@ const JobPositionForm: React.FC<JobPositionFormProps> = ({
   const [workTypeOptions, setWorkTypeOptions] = useState<LookupItem[]>([]);
   const [experienceOptions, setExperienceOptions] = useState<LookupItem[]>([]);
   const [statusOptions, setStatusOptions] = useState<LookupItem[]>([]);
-  const [applicationForms, setApplicationForms] = useState<ApplicationFormOption[]>([]);
+  const [formBindingOptions, setFormBindingOptions] = useState<FormBindingOption[]>([]);
   const [formData, setFormData] = useState<JobPositionFormValues>({
     title: '',
     department: '',
@@ -70,7 +81,7 @@ const JobPositionForm: React.FC<JobPositionFormProps> = ({
     salary_min: undefined,
     salary_max: undefined,
     status: 'draft',
-    form_id: '',
+    form_binding: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -82,18 +93,29 @@ const JobPositionForm: React.FC<JobPositionFormProps> = ({
       lookupsApi.forType('experience_level'),
       lookupsApi.forType('job_position_status'),
       recruitmentApi.forms.list({ per_page: 100 }),
+      formDefinitionsApi.get('job_application'),
     ])
-      .then(([workRes, expRes, statusRes, formsRes]) => {
+      .then(([workRes, expRes, statusRes, formsRes, defRes]) => {
         setWorkTypeOptions(workRes.data.data ?? []);
         setExperienceOptions(expRes.data.data ?? []);
         setStatusOptions(statusRes.data.data ?? []);
+
+        const options: FormBindingOption[] = [];
+        const def = defRes.data.data;
+        if (def && typeof def === 'object' && typeof def.id === 'number') {
+          const name = typeof def.name === 'string' ? def.name : t('recruitment.formEngineDefinition');
+          options.push({
+            value: `definition:${def.id}`,
+            label: `${t('recruitment.formEnginePrefix')} ${name}`,
+          });
+        }
+
         const formsPayload = formsRes.data.data;
         const rows: unknown[] = Array.isArray(formsPayload)
           ? formsPayload
           : formsPayload && typeof formsPayload === 'object' && Array.isArray(formsPayload.data)
             ? formsPayload.data
             : [];
-        const options: ApplicationFormOption[] = [];
         for (const row of rows) {
           if (!row || typeof row !== 'object') continue;
           const id = 'id' in row ? row.id : undefined;
@@ -101,9 +123,12 @@ const JobPositionForm: React.FC<JobPositionFormProps> = ({
           const isActive = 'is_active' in row ? row.is_active : undefined;
           if (typeof id !== 'number' || typeof name !== 'string') continue;
           if (isActive === false) continue;
-          options.push({ id, name });
+          options.push({
+            value: `legacy:${id}`,
+            label: `${t('recruitment.legacyFormPrefix')} ${name}`,
+          });
         }
-        setApplicationForms(options);
+        setFormBindingOptions(options);
       })
       .catch(() => toast.error(t('recruitment.lookupsLoadFailed')));
 
@@ -119,7 +144,7 @@ const JobPositionForm: React.FC<JobPositionFormProps> = ({
         salary_min: position.salary_min,
         salary_max: position.salary_max,
         status: position.status || 'draft',
-        form_id: position.form_id ? String(position.form_id) : '',
+        form_binding: bindingFromPosition(position),
       });
     } else {
       setFormData({
@@ -133,7 +158,7 @@ const JobPositionForm: React.FC<JobPositionFormProps> = ({
         salary_min: undefined,
         salary_max: undefined,
         status: 'draft',
-        form_id: '',
+        form_binding: '',
       });
     }
     setErrors({});
@@ -186,6 +211,15 @@ const JobPositionForm: React.FC<JobPositionFormProps> = ({
 
     setLoading(true);
     try {
+      const binding = formData.form_binding;
+      let form_id: number | null = null;
+      let form_definition_id: number | null = null;
+      if (binding.startsWith('definition:')) {
+        form_definition_id = Number(binding.slice('definition:'.length));
+      } else if (binding.startsWith('legacy:')) {
+        form_id = Number(binding.slice('legacy:'.length));
+      }
+
       const payload = {
         title: formData.title,
         department: formData.department,
@@ -197,7 +231,8 @@ const JobPositionForm: React.FC<JobPositionFormProps> = ({
         salary_min: formData.salary_min,
         salary_max: formData.salary_max,
         status: formData.status,
-        form_id: formData.form_id ? Number(formData.form_id) : null,
+        form_id,
+        form_definition_id,
       };
       if (isEditing && position?.id) {
         await recruitmentApi.positions.update(position.id, payload);
@@ -392,12 +427,9 @@ const JobPositionForm: React.FC<JobPositionFormProps> = ({
         <div className="form-group">
           <label className="form-label">{t('recruitment.applicationForm')}</label>
           <Select
-            value={formData.form_id}
-            onChange={(v) => setFormData((prev) => ({ ...prev, form_id: v }))}
-            options={applicationForms.map((f) => ({
-              value: String(f.id),
-              label: f.name,
-            }))}
+            value={formData.form_binding}
+            onChange={(v) => setFormData((prev) => ({ ...prev, form_binding: v }))}
+            options={formBindingOptions}
             allowEmpty
             emptyLabel={t('recruitment.noApplicationForm')}
             clearable
