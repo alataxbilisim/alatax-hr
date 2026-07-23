@@ -174,6 +174,27 @@ pnpm --filter @alatax/portal     dev -- --host   # :3003
 
 Aynı makinede tarayıcı yeterliyse `--host` olmadan da çalışır; uzak tarayıcı için her zaman `--host` kullanın.
 
+### 5a) SSH / PC kapanınca paneller ölmesin (kalıcı Vite)
+
+**Sorun:** `pnpm ... dev` doğrudan SSH terminalinde çalıştırılırsa, Windows PC kapanınca veya SSH kopunca Vite süreçleri ölür. Docker (API `:8000`) genelde ayakta kalır; `:3001/:3002/:3003` kapanır.
+
+**Çözüm — nohup script (önerilen deneme ortamı):**
+
+```bash
+cd ~/alatax-hr
+git pull
+# Docker ayakta mı?
+docker compose up -d
+# Frontend SSH bağımsız:
+chmod +x scripts/ubuntu-frontend-start.sh scripts/ubuntu-frontend-stop.sh
+bash scripts/ubuntu-frontend-start.sh
+```
+
+Loglar: `~/alatax-hr/logs/frontend/*.log`  
+Durdur: `bash scripts/ubuntu-frontend-stop.sh`
+
+> Not: Bu hâlâ **Vite dev** modudur. Sunucu reboot sonrası script’i yeniden çalıştırmanız gerekir (systemd unit Faz 7 / production). Reboot sonrası Docker `restart: unless-stopped` ile API’yi kendi açar; frontend script’ini bir kez daha çalıştırın.
+
 ### 5b) LAN erişimi (Windows tarayıcı → Ubuntu Docker) — kritik
 
 `SUNUCU_IP` = Ubuntu’nun LAN IP’si (ör. `192.168.10.156`).
@@ -277,6 +298,7 @@ docker compose logs -f nginx app
 3. **`VITE_API_URL=localhost`** + uzak tarayıcı → yanlış makinenin API’si → 401.
 4. **CORS satırı nano’da kırılır** → origin listesi eksik kalır.
 5. **Vite `--host` yok** → LAN’dan `:300x` erişilemez.
+5b. **Vite SSH terminalinde** → PC/SSH kapanınca paneller ölür; `scripts/ubuntu-frontend-start.sh` kullanın.
 6. **Seed ≠ hazır firma/portal** — register + personel + portal-access şart.
 7. **Windows XAMPP** ile aynı portlar açıksa localhost karışıklığı artar; LAN testinde her zaman SUNUCU_IP kullanın.
 8. **Otomatik deploy yok** — `git push` sunucuyu güncellemez (aşağıya bakın).

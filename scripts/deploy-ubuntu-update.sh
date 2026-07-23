@@ -38,10 +38,9 @@ if [[ -n "${SUNUCU_IP:-}" ]]; then
 fi
 
 echo ""
-echo "Tamam. Vite süreçlerini DURDURUP yeniden başlatın (--host ile):"
-echo "  pnpm --filter @alatax/superadmin dev -- --host"
-echo "  pnpm --filter @alatax/company    dev -- --host"
-echo "  pnpm --filter @alatax/portal     dev -- --host"
+echo "Tamam. Frontend'i SSH bağımsız başlatın (PC kapanınca ölmesin):"
+echo "  bash scripts/ubuntu-frontend-start.sh"
+echo "  # durdur: bash scripts/ubuntu-frontend-stop.sh"
 echo ""
 echo "Doğrulama: curl -s -o /dev/null -w '%{http_code}\\n' http://localhost:8000/up"
 echo "Company login: http://${SUNUCU_IP:-SUNUCU_IP}:3002/login  (hard refresh)"
