@@ -14,6 +14,10 @@ PIDDIR="$ROOT/logs/pids"
 mkdir -p "$LOG" "$PIDDIR"
 cd "$FE"
 
+# Bağımlılıklar (git pull sonrası jsqr/qrcode vb. eksik kalmasın)
+echo "==> pnpm install"
+pnpm install
+
 # Eski Vite süreçlerini temizle (aynı portlar)
 stop_one() {
   local name="$1"
