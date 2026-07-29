@@ -61,8 +61,13 @@ class PermissionSeeder extends Seeder
 
         $this->upsertPermissions($allPermissions);
 
+        // upsert Eloquent created/saved event tetiklemez — cache'i upsert sonrası da temizle
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
         // Varsayılan rolleri oluştur
         $this->createRoles($allPermissions);
+
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
     }
 
     /**

@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use RuntimeException;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\PermissionRegistrar;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -24,6 +25,33 @@ abstract class TestCase extends BaseTestCase
         // Feature suite tek process'te auth throttle (10/dk) birikmesin.
         // AuthThrottleTest kendi içinde yeniden clear edip 429 davranışını doğrular.
         $this->clearAuthRateLimiters();
+
+        // Spatie + RefreshDatabase: rollback sonrası stale permission cache
+        // PermissionDoesNotExist flaky'lerinin kök nedeni — her testte izole et.
+        $this->isolatePermissionCache();
+    }
+
+    protected function tearDown(): void
+    {
+        if (app()->bound(PermissionRegistrar::class)) {
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
+        }
+
+        parent::tearDown();
+    }
+
+    /**
+     * Test ortamında cache store + Spatie registrar'ı sıfırla.
+     * Paylaşılan Redis/database cache testler arası sızıntı yapmasın.
+     */
+    protected function isolatePermissionCache(): void
+    {
+        config([
+            'cache.default' => 'array',
+            'permission.cache.store' => 'array',
+        ]);
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
 
     /**
@@ -72,6 +100,8 @@ abstract class TestCase extends BaseTestCase
      */
     protected function assignSpatieAdminRole(User $user): User
     {
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
         $role = Role::findOrCreate('admin', 'sanctum');
 
         if ($role->data_scope === null) {
@@ -83,6 +113,8 @@ abstract class TestCase extends BaseTestCase
         if ($perms->isNotEmpty()) {
             $role->syncPermissions($perms);
         }
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         if (! $user->hasRole($role)) {
             $user->assignRole($role);

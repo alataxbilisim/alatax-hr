@@ -26,6 +26,11 @@ putenv('DB_DATABASE=alatax_hr_testing');
 $_ENV['DB_DATABASE'] = 'alatax_hr_testing';
 $_SERVER['DB_DATABASE'] = 'alatax_hr_testing';
 
+// Spatie permission cache paylaşılan Redis/DB store'a sızmasın
+putenv('CACHE_STORE=array');
+$_ENV['CACHE_STORE'] = 'array';
+$_SERVER['CACHE_STORE'] = 'array';
+
 if ((getenv('DB_DATABASE') ?: '') !== 'alatax_hr_testing') {
     fwrite(STDERR, "[BOOTSTRAP] FATAL: DB_DATABASE could not be forced to alatax_hr_testing\n");
     exit(1);
