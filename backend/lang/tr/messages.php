@@ -114,6 +114,15 @@ return [
 
         'payslip_published_title' => 'Bordronuz yayınlandı',
         'payslip_published_body' => ':title dönemine ait bordronuz yayınlandı (:date).',
+
+        'report_scheduled_ready_title' => 'Raporunuz hazır',
+        'report_scheduled_ready_body' => ':entity zamanlanmış raporu hazır. Görüntülemek için uygulamaya giriş yapın.',
+
+        'report_scheduled_disabled_title' => 'Zamanlanmış rapor pasifleştirildi',
+        'report_scheduled_disabled_body' => ':entity zamanlaması art arda hatalar nedeniyle pasifleştirildi.',
+
+        'report_export_ready_title' => 'Rapor dışa aktarımı hazır',
+        'report_export_ready_body' => ':entity dışa aktarımı tamamlandı. Uygulamadan indirebilirsiniz.',
     ],
 
 ];

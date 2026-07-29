@@ -17,6 +17,7 @@ class ReportMeasureService
         protected MeasureExpressionParser $parser,
         protected MeasureExpressionCompiler $compiler,
         protected ReportQueryBuilder $builder,
+        protected ReportResultCache $resultCache,
     ) {}
 
     public function listFor(int $companyId, ?string $datasetKey, int $perPage = 50): LengthAwarePaginator
@@ -37,7 +38,7 @@ class ReportMeasureService
         $this->assertDataset($data['dataset_key'] ?? null);
         $this->validateExpression($user, $companyId, (string) $data['dataset_key'], (string) $data['expression']);
 
-        return ReportMeasure::create([
+        $measure = ReportMeasure::create([
             'company_id' => $companyId,
             'dataset_key' => $data['dataset_key'],
             'key' => $data['key'],
@@ -46,6 +47,9 @@ class ReportMeasureService
             'format' => $data['format'] ?? 'number',
             'decimals' => (int) ($data['decimals'] ?? 2),
         ]);
+        $this->resultCache->bumpGlobal();
+
+        return $measure;
     }
 
     /**
@@ -68,6 +72,7 @@ class ReportMeasureService
             $measure->decimals = (int) $data['decimals'];
         }
         $measure->save();
+        $this->resultCache->bumpGlobal();
 
         return $measure->fresh();
     }
@@ -75,6 +80,7 @@ class ReportMeasureService
     public function delete(ReportMeasure $measure): void
     {
         $measure->delete();
+        $this->resultCache->bumpGlobal();
     }
 
     /**

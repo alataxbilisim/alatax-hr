@@ -227,6 +227,36 @@ return [
             'variables' => ['user', 'entity', 'date', 'title'],
         ],
 
+        'reports.scheduled.ready' => [
+            'group' => 'tasks',
+            'panel' => 'company',
+            'path' => '/reports/{id}',
+            'email_default' => true,
+            'title_key' => 'messages.notifications.report_scheduled_ready_title',
+            'body_key' => 'messages.notifications.report_scheduled_ready_body',
+            'variables' => ['user', 'entity', 'date', 'title'],
+        ],
+
+        'reports.scheduled.disabled' => [
+            'group' => 'tasks',
+            'panel' => 'company',
+            'path' => '/reports/schedules',
+            'email_default' => true,
+            'title_key' => 'messages.notifications.report_scheduled_disabled_title',
+            'body_key' => 'messages.notifications.report_scheduled_disabled_body',
+            'variables' => ['user', 'entity', 'title'],
+        ],
+
+        'reports.export.ready' => [
+            'group' => 'tasks',
+            'panel' => 'company',
+            'path' => '/reports/{id}',
+            'email_default' => true,
+            'title_key' => 'messages.notifications.report_export_ready_title',
+            'body_key' => 'messages.notifications.report_export_ready_body',
+            'variables' => ['user', 'entity', 'title'],
+        ],
+
     ],
 
 ];

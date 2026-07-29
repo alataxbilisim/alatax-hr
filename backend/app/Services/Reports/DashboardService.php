@@ -96,6 +96,8 @@ class DashboardService
             $this->syncShares($dashboard, $data['shares'] ?? []);
         }
 
+        app(ReportResultCache::class)->forgetDashboard((int) $dashboard->id);
+
         return $dashboard->fresh(['shares']);
     }
 
@@ -402,6 +404,7 @@ class DashboardService
             }
             if ($fieldKeys === [] || ! isset($fieldKeys[$key])) {
                 $skipped[] = $key;
+
                 continue;
             }
             if ($value === null || $value === '') {
@@ -438,7 +441,6 @@ class DashboardService
     }
 
     /**
-     * @param  mixed  $layout
      * @return array{widgets: list<array<string, mixed>>}
      */
     private function normalizeLayout(mixed $layout): array
@@ -488,9 +490,6 @@ class DashboardService
         return ['widgets' => $normalized];
     }
 
-    /**
-     * @param  mixed  $shares
-     */
     private function syncShares(Dashboard $dashboard, mixed $shares): void
     {
         DashboardShare::query()->where('dashboard_id', $dashboard->id)->delete();

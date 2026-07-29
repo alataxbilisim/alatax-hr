@@ -289,3 +289,66 @@ Hedef: kullanıcı / rol / departman. Klasör paylaşımı yok. Offboarding hook
 ### Not
 
 **KULLANICI GÖRSEL KONTROLÜ BEKLİYOR (borç)**
+
+---
+
+## D1f — Zamanlanmış rapor + abonelik + cache/performans
+
+**Tarih:** 2026-07-29  
+**Commit:** `feat(faz5): D1f zamanlanmış rapor + abonelik + cache/performans katmanı`
+
+### ADIM 0 — Teşhis
+
+| Alan | Bulgu |
+|------|--------|
+| Scheduler | compose `schedule:work`; `routes/console.php` (Kernel yok) |
+| Queue | compose `queue:listen` timeout 90s; Redis |
+| Redis | queue + session + cache store; app kodunda Cache:: yoktu → D1f ekledi |
+| Mail/C4 | `NotificationService` + queued `NotificationMail`; rapor olayı yoktu → eklendi |
+| Export | Senkron 50k; ağır export için `ProcessHeavyReportExportJob` + `async=1` |
+
+### Zamanlama şeması (`report_schedules`)
+
+company_id, report_id | dashboard_id, owner_id, cadence (daily|weekly|monthly|cron), hour/minute/day, timezone, format (link|excel|pdf), recipients jsonb, filters jsonb, only_if_data, active, last_run_at, last_status, failure_count, next_run_at.
+
+Permission: `reports.schedules.view|create|edit|delete`. Auditable. Komut: `reports:run-schedules` (her dakika).
+
+### Kapsam / teslim kararları
+
+- Her alıcı **kendi DataScope + alan izinleriyle** üretilir (sahip sonucu kopyalanmaz).
+- Max **50** alıcı → 422 + daraltın mesajı.
+- Yetkisi olmayan alıcı: `skipped_no_access` (gönderilmez).
+- Varsayılan teslim: **link** (e-postada veri/ek yok; uygulamaya giriş). Anonim erişim yok.
+- `special` / `anonymous_source` alan → ek (excel/pdf) **tamamen kapalı** (ayar açık olsa bile).
+- 3 ardışık hata → `active=false` + sahibe `reports.scheduled.disabled`.
+- Access log: `action=scheduled`.
+
+### Cache anahtar formülü
+
+`report_result:sha256({ report_id, dashboard_id, widget_id, config, scope_sig, global_ver })`
+
+`scope_sig = sha256({ company_id, user_id, data_scope, scope_values, field_perms[] })`
+
+TTL varsayılan **300 sn** (rapor `cache_ttl_seconds`; 0=kapalı). Tanım/ölçü değişince version bump. Kaynak tablo yazımında genel flush **YOK** (DUR — TTL yeter).
+
+UI: `meta.computed_at` + `bypass_cache` / Şimdi yenile.
+
+### Performans
+
+- `SET LOCAL statement_timeout` (30s) rapor çalıştırmalarında.
+- Yavaş sorgu logu: ≥5 sn → `report.slow_query`.
+- Ağır export: `POST .../export` body `{async:true}` → job + bildirim.
+- Ek indeksler: `employees(company_id, department_id, status)`, `leave_requests(company_id, status, start_date, end_date)`.
+
+### Test
+
+| Suite | Sonuç |
+|-------|--------|
+| `ReportScheduleAndCacheTest` | **6 passed** (cache izolasyon, zamanlama kapsam, 51 alıcı 422, 3 hata pasif, special ek engeli, bypass) |
+| Tam suite | **556 passed / 0 fail** |
+| 3 SPA tsc + lint + sentinel | **PASSED** |
+| DB wipe | **yok** |
+
+### Not
+
+**KULLANICI GÖRSEL KONTROLÜ BEKLİYOR (borç)**

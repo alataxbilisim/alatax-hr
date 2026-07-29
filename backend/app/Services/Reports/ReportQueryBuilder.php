@@ -93,6 +93,7 @@ class ReportQueryBuilder
                         'reason' => $reason,
                     ];
                 }
+
                 continue;
             }
             $selectFields[] = $fieldMap[$key];
@@ -397,8 +398,6 @@ class ReportQueryBuilder
     /**
      * @param  Builder<\Illuminate\Database\Eloquent\Model>  $query
      * @param  list<ReportField>  $selectFields
-     * @param  mixed  $groupBy
-     * @param  mixed  $aggregations
      * @param  array<string, ReportField>  $fieldMap
      */
     private function applyAggregateSelect(Builder $query, array $selectFields, mixed $groupBy, mixed $aggregations, array $fieldMap): void
@@ -432,6 +431,7 @@ class ReportQueryBuilder
                     $alias = is_string($agg['alias'] ?? null) ? $agg['alias'] : 'count_all';
                     $this->assertSafeAlias($alias);
                     $selects[] = DB::raw('COUNT(*) as '.$this->quoteAlias($alias));
+
                     continue;
                 }
                 if (! is_string($fieldKey) || ! isset($fieldMap[$fieldKey])) {
@@ -471,7 +471,6 @@ class ReportQueryBuilder
 
     /**
      * @param  Builder<\Illuminate\Database\Eloquent\Model>  $query
-     * @param  mixed  $sorts
      * @param  array<string, ReportField>  $fieldMap
      */
     private function applySorts(Builder $query, mixed $sorts, array $fieldMap, bool $isAggregate): void

@@ -1146,6 +1146,23 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:reports.definitions.delete')
                 ->whereNumber('id');
 
+            Route::get('/schedules', [\App\Http\Controllers\Api\V1\Reports\ReportScheduleController::class, 'index'])
+                ->middleware('permission:reports.schedules.view');
+            Route::post('/schedules', [\App\Http\Controllers\Api\V1\Reports\ReportScheduleController::class, 'store'])
+                ->middleware('permission:reports.schedules.create');
+            Route::get('/schedules/{id}', [\App\Http\Controllers\Api\V1\Reports\ReportScheduleController::class, 'show'])
+                ->middleware('permission:reports.schedules.view')
+                ->whereNumber('id');
+            Route::put('/schedules/{id}', [\App\Http\Controllers\Api\V1\Reports\ReportScheduleController::class, 'update'])
+                ->middleware('permission:reports.schedules.edit')
+                ->whereNumber('id');
+            Route::delete('/schedules/{id}', [\App\Http\Controllers\Api\V1\Reports\ReportScheduleController::class, 'destroy'])
+                ->middleware('permission:reports.schedules.delete')
+                ->whereNumber('id');
+            Route::post('/schedules/{id}/run', [\App\Http\Controllers\Api\V1\Reports\ReportScheduleController::class, 'runNow'])
+                ->middleware('permission:reports.schedules.edit')
+                ->whereNumber('id');
+
             Route::get('/', [\App\Http\Controllers\Api\V1\Reports\ReportController::class, 'index'])
                 ->middleware('permission:reports.definitions.view');
             Route::post('/', [\App\Http\Controllers\Api\V1\Reports\ReportController::class, 'store'])

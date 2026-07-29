@@ -207,6 +207,7 @@ import AnalyticsPage from './pages/analytics/AnalyticsPage';
 const ReportsListPage = React.lazy(() => import('./pages/reports/ReportsListPage'));
 const ReportBuilderPage = React.lazy(() => import('./pages/reports/ReportBuilderPage'));
 const MeasuresLibraryPage = React.lazy(() => import('./pages/reports/MeasuresLibraryPage'));
+const ReportSchedulesPage = React.lazy(() => import('./pages/reports/ReportSchedulesPage'));
 const DashboardsListPage = React.lazy(() => import('./pages/dashboards/DashboardsListPage'));
 const DashboardViewPage = React.lazy(() => import('./pages/dashboards/DashboardViewPage'));
 
@@ -857,6 +858,18 @@ const App: React.FC = () => {
           />
 
           {/* Rapor Motoru (D1b) — lazy + permission */}
+          <Route
+            path="/reports/schedules"
+            element={
+              <ProtectedRoute>
+                <PermissionProtectedRoute module="reports" page="schedules" action="view">
+                  <React.Suspense fallback={<div className="page-loading">…</div>}>
+                    <ReportSchedulesPage />
+                  </React.Suspense>
+                </PermissionProtectedRoute>
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/reports/measures"
             element={

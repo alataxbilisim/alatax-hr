@@ -1099,8 +1099,56 @@ export interface SavedReportPayload {
   share_role_ids: number[] | null;
   is_system: boolean;
   sort_order: number;
+  cache_ttl_seconds?: number | null;
   created_at?: string;
   updated_at?: string;
+}
+
+export interface ReportScheduleWritePayload {
+  name: string;
+  report_id?: number | null;
+  dashboard_id?: number | null;
+  cadence: 'daily' | 'weekly' | 'monthly' | 'cron';
+  hour?: number;
+  minute?: number;
+  day?: number | null;
+  cron_expression?: string | null;
+  timezone?: string;
+  format?: 'link' | 'excel' | 'pdf';
+  recipients: Array<{
+    user_id?: number;
+    role_id?: number;
+    department_id?: number;
+  }>;
+  filters?: Record<string, unknown>[] | null;
+  only_if_data?: boolean;
+  active?: boolean;
+}
+
+export interface ReportSchedulePayload {
+  id: number;
+  company_id: number;
+  owner_id: number;
+  name: string;
+  report_id?: number | null;
+  dashboard_id?: number | null;
+  cadence: 'daily' | 'weekly' | 'monthly' | 'cron';
+  hour?: number;
+  minute?: number;
+  day?: number | null;
+  timezone?: string;
+  format?: 'link' | 'excel' | 'pdf';
+  recipients?: Array<{
+    user_id?: number;
+    role_id?: number;
+    department_id?: number;
+  }>;
+  only_if_data?: boolean;
+  active?: boolean;
+  last_run_at?: string | null;
+  last_status?: string | null;
+  failure_count?: number;
+  next_run_at?: string | null;
 }
 
 export interface ReportHiddenField {
@@ -1122,6 +1170,9 @@ export interface ReportRunResult {
     export_max?: number;
     hidden_fields?: ReportHiddenField[];
     export_note?: string;
+    cache_hit?: boolean;
+    computed_at?: string;
+    cache_ttl_seconds?: number;
   };
 }
 
@@ -1140,6 +1191,7 @@ export interface SavedReportWritePayload {
   share_user_ids?: number[];
   share_role_ids?: number[];
   is_favorite?: boolean;
+  cache_ttl_seconds?: number | null;
 }
 
 export const reportsApi = {
@@ -1151,12 +1203,23 @@ export const reportsApi = {
   update: (id: number, data: Partial<SavedReportWritePayload>) => api.put(`/reports/${id}`, data),
   remove: (id: number) => api.delete(`/reports/${id}`),
   preview: (payload: ReportQueryPayload) => api.post('/reports/preview', payload),
-  run: (id: number, overrides?: { limit?: number; offset?: number }) =>
+  run: (id: number, overrides?: { limit?: number; offset?: number; bypass_cache?: boolean }) =>
     api.post(`/reports/${id}/run`, overrides ?? {}),
   export: (payload: ReportQueryPayload) => api.post('/reports/export', payload),
-  exportSaved: (id: number) => api.post(`/reports/${id}/export`),
+  exportSaved: (id: number, opts?: { async?: boolean }) =>
+    api.post(`/reports/${id}/export`, opts ?? {}),
   pivot: (payload: ReportPivotPayload) => api.post('/reports/pivot', payload),
   drill: (payload: ReportDrillPayload) => api.post('/reports/drill', payload),
+  schedules: {
+    list: (params?: { per_page?: number; page?: number }) =>
+      api.get('/reports/schedules', { params }),
+    get: (id: number) => api.get(`/reports/schedules/${id}`),
+    create: (data: ReportScheduleWritePayload) => api.post('/reports/schedules', data),
+    update: (id: number, data: Partial<ReportScheduleWritePayload>) =>
+      api.put(`/reports/schedules/${id}`, data),
+    remove: (id: number) => api.delete(`/reports/schedules/${id}`),
+    runNow: (id: number) => api.post(`/reports/schedules/${id}/run`),
+  },
   measures: {
     list: (params?: { dataset_key?: string; per_page?: number }) =>
       api.get('/reports/measures', { params }),

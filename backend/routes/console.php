@@ -49,3 +49,9 @@ Schedule::command('reports:purge-access-logs --months=12')
     ->withoutOverlapping(120)
     ->onOneServer()
     ->name('reports-purge-access-logs');
+
+Schedule::command('reports:run-schedules')
+    ->everyMinute()
+    ->withoutOverlapping(5)
+    ->onOneServer()
+    ->name('reports-run-schedules');

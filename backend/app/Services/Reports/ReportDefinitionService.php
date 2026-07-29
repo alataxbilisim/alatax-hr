@@ -17,6 +17,7 @@ class ReportDefinitionService
     public function __construct(
         protected DatasetRegistry $registry,
         protected ReportQueryBuilder $builder,
+        protected ReportResultCache $resultCache,
     ) {}
 
     public function listFor(User $user, int $companyId, int $perPage = 20): LengthAwarePaginator
@@ -52,6 +53,9 @@ class ReportDefinitionService
             'is_system' => false,
             'is_favorite' => (bool) ($data['is_favorite'] ?? false),
             'sort_order' => (int) ($data['sort_order'] ?? 0),
+            'cache_ttl_seconds' => array_key_exists('cache_ttl_seconds', $data)
+                ? ($data['cache_ttl_seconds'] === null ? null : max(0, (int) $data['cache_ttl_seconds']))
+                : null,
         ]);
 
         if (array_key_exists('shares', $data)) {
@@ -100,6 +104,11 @@ class ReportDefinitionService
                 $report->{$jsonKey} = $data[$jsonKey];
             }
         }
+        if (array_key_exists('cache_ttl_seconds', $data)) {
+            $report->cache_ttl_seconds = $data['cache_ttl_seconds'] === null
+                ? null
+                : max(0, (int) $data['cache_ttl_seconds']);
+        }
         $report->save();
 
         if (array_key_exists('shares', $data)) {
@@ -108,6 +117,8 @@ class ReportDefinitionService
             }
             $this->syncShares($report, $data['shares']);
         }
+
+        $this->resultCache->forgetReport((int) $report->id);
 
         return $report->fresh(['shares']);
     }
@@ -120,6 +131,7 @@ class ReportDefinitionService
         if (! $report->canDelete($user)) {
             abort(403, 'Bu raporu silme yetkiniz yok');
         }
+        $this->resultCache->forgetReport((int) $report->id);
         $report->delete();
     }
 
@@ -161,9 +173,44 @@ class ReportDefinitionService
         $config = array_merge($config, $overrides);
         $config['dataset'] = $report->dataset_key;
 
+        $bypass = (bool) ($overrides['__bypass_cache'] ?? false);
+        $ttl = $this->resultCache->resolveTtl($report->cache_ttl_seconds);
+        $cacheKey = $this->resultCache->key(
+            $viewer,
+            $companyId,
+            array_merge($config, ['_ver' => $this->resultCache->reportVersion((int) $report->id)]),
+            (int) $report->id,
+        );
+
+        if (! $bypass && $ttl > 0) {
+            $cached = $this->resultCache->get($cacheKey);
+            if ($cached !== null) {
+                $cached['meta']['cache_hit'] = true;
+                $cached['meta']['computed_at'] = $cached['meta']['computed_at'] ?? now()->toIso8601String();
+
+                return $cached;
+            }
+        }
+
         $started = microtime(true);
-        $result = $this->builder->run($viewer, $companyId, $config);
-        $this->logAccess($report, $viewer, $companyId, 'run', $result, $config, $started);
+        $result = $this->runWithGuards($viewer, $companyId, $config);
+        $duration = microtime(true) - $started;
+        $this->resultCache->logSlowQuery(
+            (string) $report->dataset_key,
+            $duration,
+            (int) ($result['meta']['count'] ?? count($result['rows']))
+        );
+        $result['meta']['cache_hit'] = false;
+        $result['meta']['computed_at'] = now()->toIso8601String();
+        $result['meta']['cache_ttl_seconds'] = $ttl;
+
+        if (! $bypass && $ttl > 0) {
+            $this->resultCache->put($cacheKey, $result, $ttl);
+        }
+
+        if (! isset($overrides['__schedule_id'])) {
+            $this->logAccess($report, $viewer, $companyId, 'run', $result, $config, $started);
+        }
 
         return $result;
     }
@@ -180,7 +227,7 @@ class ReportDefinitionService
         $this->assertDataset($config['dataset']);
 
         $started = microtime(true);
-        $result = $this->builder->run($user, $companyId, $config);
+        $result = $this->runWithGuards($user, $companyId, $config);
         ReportAccessLogger::record([
             'company_id' => $companyId,
             'user_id' => (int) $user->id,
@@ -215,7 +262,7 @@ class ReportDefinitionService
         }
 
         $started = microtime(true);
-        $result = $this->builder->run($user, $companyId, $config);
+        $result = $this->runWithGuards($user, $companyId, $config);
         ReportAccessLogger::record([
             'company_id' => $companyId,
             'user_id' => (int) $user->id,
@@ -252,15 +299,12 @@ class ReportDefinitionService
         $config['limit'] = ReportQueryBuilder::EXPORT_MAX_ROWS;
 
         $started = microtime(true);
-        $result = $this->builder->run($viewer, $companyId, $config);
+        $result = $this->runWithGuards($viewer, $companyId, $config);
         $this->logAccess($report, $viewer, $companyId, 'export', $result, $config, $started);
 
         return $result;
     }
 
-    /**
-     * @param  mixed  $shares
-     */
     public function syncShares(SavedReport $report, mixed $shares): void
     {
         ReportShare::query()->where('saved_report_id', $report->id)->delete();
@@ -360,6 +404,35 @@ class ReportDefinitionService
     {
         if (! is_string($key) || ! $this->registry->has($key)) {
             throw ValidationException::withMessages(['dataset_key' => ['Geçersiz dataset']]);
+        }
+    }
+
+    /**
+     * statement_timeout + motor çalıştırma (SQL motoruna dokunmadan sarmalayıcı).
+     *
+     * @param  array<string, mixed>  $config
+     * @return array{rows: list<array<string, mixed>>, meta: array<string, mixed>}
+     */
+    private function runWithGuards(User $user, int $companyId, array $config): array
+    {
+        try {
+            return \Illuminate\Support\Facades\DB::transaction(function () use ($user, $companyId, $config) {
+                if (\Illuminate\Support\Facades\DB::getDriverName() === 'pgsql') {
+                    \Illuminate\Support\Facades\DB::statement(
+                        'SET LOCAL statement_timeout = '.(int) ReportResultCache::STATEMENT_TIMEOUT_MS
+                    );
+                }
+
+                return $this->builder->run($user, $companyId, $config);
+            });
+        } catch (\Throwable $e) {
+            $msg = $e->getMessage();
+            if (str_contains($msg, 'statement timeout') || str_contains($msg, 'canceling statement')) {
+                throw ValidationException::withMessages([
+                    'query' => ['Rapor sorgusu zaman aşımına uğradı. Filtreleri daraltın veya aggregasyon kullanın.'],
+                ]);
+            }
+            throw $e;
         }
     }
 

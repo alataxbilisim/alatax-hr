@@ -27,6 +27,7 @@ class SavedReport extends Model
         'share_role_ids',
         'is_system',
         'sort_order',
+        'cache_ttl_seconds',
     ];
 
     protected $casts = [
@@ -37,6 +38,7 @@ class SavedReport extends Model
         'is_shared' => 'boolean',
         'is_system' => 'boolean',
         'sort_order' => 'integer',
+        'cache_ttl_seconds' => 'integer',
     ];
 
     public function user(): BelongsTo

@@ -87,6 +87,7 @@ final class MeasureExpressionParser
             $ch = $input[$i];
             if (ctype_space($ch)) {
                 $i++;
+
                 continue;
             }
             // multi-char ops
@@ -95,12 +96,14 @@ final class MeasureExpressionParser
                 if (in_array($two, ['!=', '>=', '<='], true)) {
                     $tokens[] = ['type' => 'op', 'value' => $two];
                     $i += 2;
+
                     continue;
                 }
             }
             if (in_array($ch, ['+', '-', '*', '/', '(', ')', ',', '=', '>', '<'], true)) {
                 $tokens[] = ['type' => 'op', 'value' => $ch];
                 $i++;
+
                 continue;
             }
             if (ctype_digit($ch) || ($ch === '.' && $i + 1 < $len && ctype_digit($input[$i + 1]))) {
@@ -113,6 +116,7 @@ final class MeasureExpressionParser
                     throw new InvalidArgumentException('Geçersiz sayı: '.$num);
                 }
                 $tokens[] = ['type' => 'number', 'value' => $num];
+
                 continue;
             }
             if (ctype_alpha($ch) || $ch === '_') {
@@ -127,6 +131,7 @@ final class MeasureExpressionParser
                 } else {
                     $tokens[] = ['type' => 'ident', 'value' => $ident];
                 }
+
                 continue;
             }
             throw new InvalidArgumentException('İzin verilmeyen karakter: '.$ch);

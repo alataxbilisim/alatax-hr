@@ -258,7 +258,6 @@ class ReportPivotService
     }
 
     /**
-     * @param  mixed  $dims
      * @param  array<string, ReportField>  $fieldMap
      * @return list<array{field: string, grain: ?string}>
      */
@@ -295,7 +294,6 @@ class ReportPivotService
     }
 
     /**
-     * @param  mixed  $measures
      * @param  array<string, ReportField>  $fieldMap
      * @return list<array{alias: string, format: string, decimals: int, sql: string, bindings: list<mixed>}>
      */
@@ -396,7 +394,6 @@ class ReportPivotService
 
     /**
      * @param  list<array{field: string, grain: ?string}>  $cols
-     * @param  mixed  $filters
      * @param  array<string, ReportField>  $fieldMap
      */
     private function assertColumnCardinality(
@@ -432,7 +429,6 @@ class ReportPivotService
     /**
      * @param  list<array{field: string, grain: ?string}>  $dims
      * @param  list<array{alias: string, format: string, decimals: int, sql: string, bindings: list<mixed>}>  $measures
-     * @param  mixed  $filters
      * @param  array<string, ReportField>  $fieldMap
      * @return list<array<string, mixed>>
      */
@@ -586,7 +582,6 @@ class ReportPivotService
 
     /**
      * @param  Builder<\Illuminate\Database\Eloquent\Model>  $query
-     * @param  mixed  $filters
      * @param  array<string, ReportField>  $fieldMap
      */
     private function applyScopeAndFilters(Builder $query, AbstractDataset $dataset, User $user, mixed $filters, array $fieldMap): void
@@ -808,7 +803,6 @@ class ReportPivotService
     }
 
     /**
-     * @param  mixed  $cellFilters
      * @param  array<string, ReportField>  $fieldMap
      * @return list<array{field: string, op: string, value?: mixed}>
      */

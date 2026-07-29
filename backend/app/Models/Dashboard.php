@@ -25,12 +25,14 @@ class Dashboard extends Model
         'global_filters',
         'is_system',
         'created_by',
+        'cache_ttl_seconds',
     ];
 
     protected $casts = [
         'layout' => 'array',
         'global_filters' => 'array',
         'is_system' => 'boolean',
+        'cache_ttl_seconds' => 'integer',
     ];
 
     public function owner(): BelongsTo

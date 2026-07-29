@@ -67,6 +67,7 @@ class ReportController extends BaseController
             'shares.*.role_id' => 'nullable|integer',
             'shares.*.department_id' => 'nullable|integer',
             'shares.*.level' => 'nullable|in:viewer,editor',
+            'cache_ttl_seconds' => 'nullable|integer|min:0|max:86400',
         ]);
 
         try {
@@ -113,6 +114,7 @@ class ReportController extends BaseController
             'shares.*.role_id' => 'nullable|integer',
             'shares.*.department_id' => 'nullable|integer',
             'shares.*.level' => 'nullable|in:viewer,editor',
+            'cache_ttl_seconds' => 'nullable|integer|min:0|max:86400',
         ]);
 
         try {
@@ -154,7 +156,12 @@ class ReportController extends BaseController
         $overrides = $request->validate([
             'limit' => 'sometimes|integer|min:1|max:1000',
             'offset' => 'sometimes|integer|min:0',
+            'bypass_cache' => 'sometimes|boolean',
         ]);
+        if (! empty($overrides['bypass_cache'])) {
+            $overrides['__bypass_cache'] = true;
+        }
+        unset($overrides['bypass_cache']);
 
         try {
             $result = $this->reports->run($report, $request->user(), (int) $this->getCompanyId(), $overrides);
@@ -220,6 +227,24 @@ class ReportController extends BaseController
     public function exportSaved(Request $request, int $id): JsonResponse
     {
         $report = $this->findAccessible($request, $id);
+        $validated = $request->validate([
+            'async' => 'sometimes|boolean',
+        ]);
+
+        // Ağır export → kuyruk + bildirim (30sn timeout riski)
+        if (! empty($validated['async'])) {
+            \App\Jobs\ProcessHeavyReportExportJob::dispatch(
+                (int) $report->id,
+                (int) $request->user()->id,
+                (int) $this->getCompanyId(),
+            );
+
+            return $this->success(
+                ['queued' => true, 'report_id' => $report->id],
+                'Export kuyruğa alındı; hazır olunca bildirim gönderilecek',
+                202
+            );
+        }
 
         try {
             $result = $this->reports->exportSaved($report, $request->user(), (int) $this->getCompanyId());

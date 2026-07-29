@@ -2,7 +2,6 @@
 
 namespace App\Services\Reports;
 
-use App\Models\User;
 use App\Jobs\LogReportAccessJob;
 
 /**

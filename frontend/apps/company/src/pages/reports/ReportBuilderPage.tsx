@@ -159,6 +159,9 @@ const ReportBuilderPage: React.FC = () => {
   const [previewHidden, setPreviewHidden] = useState<ReportHiddenField[]>([]);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [computedAt, setComputedAt] = useState<string | null>(null);
+  const [cacheHit, setCacheHit] = useState(false);
+  const [bypassNext, setBypassNext] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(!isEdit);
 
@@ -405,7 +408,16 @@ const ReportBuilderPage: React.FC = () => {
     setPreviewError(null);
     try {
       const payload = buildQueryFromConfig(datasetKey, configPayload, { limit, offset });
-      const res = await reportsApi.preview(payload);
+      const forceBypass = bypassNext;
+      if (forceBypass) setBypassNext(false);
+      const res =
+        isEdit && reportId
+          ? await reportsApi.run(reportId, {
+              limit,
+              offset,
+              bypass_cache: forceBypass || undefined,
+            })
+          : await reportsApi.preview(payload);
       const data: unknown = res.data.data;
       if (!isReportRunResult(data)) {
         setPreviewError(t('reportEngine.previewInvalid'));
@@ -415,6 +427,10 @@ const ReportBuilderPage: React.FC = () => {
       setPreviewFields(data.meta.fields);
       setPreviewCount(data.meta.count);
       setPreviewHidden(Array.isArray(data.meta.hidden_fields) ? data.meta.hidden_fields : []);
+      setCacheHit(Boolean(data.meta.cache_hit));
+      setComputedAt(
+        typeof data.meta.computed_at === 'string' ? data.meta.computed_at : null
+      );
     } catch (error: unknown) {
       const status =
         typeof error === 'object' &&
@@ -434,7 +450,18 @@ const ReportBuilderPage: React.FC = () => {
     } finally {
       setPreviewLoading(false);
     }
-  }, [canRun, datasetKey, selectedFields.length, configPayload, limit, offset, t]);
+  }, [
+    canRun,
+    datasetKey,
+    selectedFields.length,
+    configPayload,
+    limit,
+    offset,
+    bypassNext,
+    isEdit,
+    reportId,
+    t,
+  ]);
 
   useEffect(() => {
     if (!loaded || !canRun) return;
@@ -1327,6 +1354,39 @@ const ReportBuilderPage: React.FC = () => {
           <p style={{ margin: 0, fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)' }}>
             {t('reportEngine.previewMeta', { count: previewCount, limit, offset })}
           </p>
+          {isEdit && computedAt ? (
+            <div
+              style={{
+                display: 'flex',
+                gap: 'var(--sp-2)',
+                alignItems: 'center',
+                fontSize: 'var(--fs-caption)',
+                color: 'var(--text-secondary)',
+              }}
+            >
+              <span>
+                {t('reportEngine.cacheComputedAt', {
+                  time: new Date(computedAt).toLocaleTimeString('tr-TR', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  }),
+                })}
+                {cacheHit ? ` · ${t('reportEngine.cacheHit')}` : ''}
+              </span>
+              {canRun ? (
+                <button
+                  type="button"
+                  className="btn btn--sm"
+                  onClick={() => {
+                    setBypassNext(true);
+                    void runPreview();
+                  }}
+                >
+                  {t('reportEngine.cacheRefresh')}
+                </button>
+              ) : null}
+            </div>
+          ) : null}
           {previewHidden.length > 0 ? (
             <div
               role="status"
