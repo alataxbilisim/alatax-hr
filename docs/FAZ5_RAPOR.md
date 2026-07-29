@@ -355,8 +355,6 @@ UI: `meta.computed_at` + `bypass_cache` / Şimdi yenile.
 
 ---
 
----
-
 ## D1g + Faz 5 kapanış — Hazır rapor paketi + modül panoları + /analytics motora taşıma
 
 **Tarih:** 2026-07-29  
