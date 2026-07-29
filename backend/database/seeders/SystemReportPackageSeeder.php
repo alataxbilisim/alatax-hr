@@ -287,7 +287,8 @@ class SystemReportPackageSeeder extends Seeder
                 'documents.by_category', 'documents.expiring', 'documents.by_status',
                 'documents.expired', 'documents.by_visibility',
             ]),
-        ];    }
+        ];
+    }
 
     /**
      * @param  list<string>  $groupBy

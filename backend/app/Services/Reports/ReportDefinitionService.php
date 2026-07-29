@@ -511,4 +511,3 @@ class ReportDefinitionService
         return $config;
     }
 }
-
