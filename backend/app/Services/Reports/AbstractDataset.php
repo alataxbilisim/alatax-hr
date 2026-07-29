@@ -160,6 +160,16 @@ abstract class AbstractDataset
     }
 
     /**
+     * Drill-down hiyerarşileri (D1c).
+     *
+     * @return array<string, array{label: string, levels: list<string>}>
+     */
+    public function hierarchies(): array
+    {
+        return [];
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function catalog(User $user, int $companyId): array
@@ -175,6 +185,7 @@ abstract class AbstractDataset
                 'key' => $j['key'],
                 'table' => $j['table'],
             ], $this->allowedJoins()),
+            'hierarchies' => $this->hierarchies(),
             'fields' => array_map(fn (ReportField $f) => $f->toArray(), $fields),
             'field_count' => count($fields),
         ];

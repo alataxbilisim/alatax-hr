@@ -2,7 +2,7 @@
 
 export type ReportChartType = 'bar' | 'line' | 'pie' | 'area' | 'stacked_bar';
 
-export type ReportViewMode = 'table' | 'chart';
+export type ReportViewMode = 'table' | 'chart' | 'pivot';
 
 export interface ReportChartMapping {
   type: ReportChartType;

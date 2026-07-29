@@ -142,6 +142,7 @@
     "analytics": "Analitik",
     "analyticsReports": "Raporlar",
     "reportEngine": "Rapor Motoru",
+    "reportMeasures": "Ölçü Kütüphanesi",
     "logout": "Çıkış Yap",
     "menu": "Menü",
     "pinnedSection": "Ayarlar ve Yönetim",
@@ -1169,6 +1170,49 @@
     "exportPng": "Grafik PNG",
     "exportSuccess": "{{count}} satır dışa aktarıldı",
     "exportError": "Dışa aktarma başarısız",
-    "exportTruncated": "Üst sınır aşıldı (max {{max}}). {{count}} satır indirildi — sonuç eksik olabilir."
+    "exportTruncated": "Üst sınır aşıldı (max {{max}}). {{count}} satır indirildi — sonuç eksik olabilir.",
+    "pivot": {
+      "mode": "Pivot",
+      "rows": "Satır boyutları",
+      "columns": "Sütun boyutları",
+      "measures": "Ölçüler",
+      "subtotals": "Alt toplamlar",
+      "grandTotal": "Genel toplam",
+      "grain": "Tarih kırılımı",
+      "grainNone": "Yok",
+      "addRow": "Satır ekle",
+      "addCol": "Sütun ekle",
+      "addMeasure": "Ölçü ekle",
+      "run": "Pivot çalıştır",
+      "drillDetails": "Detay satırları",
+      "drillNext": "Bir seviye aşağı"
+    },
+    "dsl": {
+      "expression": "Formül",
+      "placeholder": "örn. sum(gross_salary) / count(*)",
+      "validate": "Doğrula",
+      "valid": "İfade geçerli",
+      "invalid": "İfade geçersiz",
+      "examples": "Örnekler: count(*), avg(gross_salary), if(sum(net_salary) > 0, sum(gross_salary) / sum(net_salary), 0)",
+      "exampleList": "sum / count / avg / min / max / count_distinct · + - * / · if(koşul, a, b)",
+      "formatNumber": "Sayı",
+      "formatMoney": "Para",
+      "formatPercent": "Yüzde"
+    },
+    "measures": {
+      "title": "Ölçü Kütüphanesi",
+      "subtitle": "Dataset seviyesinde yeniden kullanılabilir KPI formülleri",
+      "create": "Yeni ölçü",
+      "edit": "Ölçüyü düzenle",
+      "key": "Anahtar",
+      "label": "Etiket",
+      "empty": "Ölçü yok",
+      "loadError": "Ölçüler yüklenemedi",
+      "saveSuccess": "Ölçü kaydedildi",
+      "saveError": "Kayıt başarısız",
+      "deleteConfirm": "Bu ölçüyü silmek istediğinize emin misiniz?",
+      "deleteSuccess": "Ölçü silindi",
+      "deleteError": "Silme başarısız"
+    }
   }
 }

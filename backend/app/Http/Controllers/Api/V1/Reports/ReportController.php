@@ -6,19 +6,21 @@ use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\SavedReport;
 use App\Services\Reports\DatasetRegistry;
 use App\Services\Reports\ReportDefinitionService;
+use App\Services\Reports\ReportPivotService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 
 /**
- * D1a — Rapor motoru API (UI D1b'de).
+ * D1a/D1b/D1c — Rapor motoru API.
  */
 class ReportController extends BaseController
 {
     public function __construct(
         protected DatasetRegistry $registry,
         protected ReportDefinitionService $reports,
+        protected ReportPivotService $pivotService,
     ) {}
 
     public function datasets(Request $request): JsonResponse
@@ -204,6 +206,52 @@ class ReportController extends BaseController
         }
 
         return $this->success($result, 'Export verisi');
+    }
+
+    public function pivot(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'dataset' => 'required|string|max:64',
+            'rows' => 'required|array|min:1|max:3',
+            'columns' => 'nullable|array|max:2',
+            'measures' => 'required|array|min:1|max:10',
+            'filters' => 'nullable|array',
+            'subtotals' => 'sometimes|boolean',
+            'grand_total' => 'sometimes|boolean',
+            'limit' => 'sometimes|integer|min:1|max:1000',
+        ]);
+
+        try {
+            $result = $this->pivotService->pivot($request->user(), (int) $this->getCompanyId(), $validated);
+        } catch (InvalidArgumentException $e) {
+            return $this->error($e->getMessage(), 422);
+        }
+
+        return $this->success($result, 'Pivot');
+    }
+
+    public function drill(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'dataset' => 'required|string|max:64',
+            'mode' => 'required|in:next,details',
+            'filters' => 'nullable|array',
+            'cell_filters' => 'nullable|array',
+            'hierarchy_key' => 'nullable|string|max:64',
+            'level' => 'sometimes|integer|min:0|max:10',
+            'fields' => 'nullable|array',
+            'measure' => 'nullable|array',
+            'limit' => 'sometimes|integer|min:1|max:200',
+            'offset' => 'sometimes|integer|min:0',
+        ]);
+
+        try {
+            $result = $this->pivotService->drill($request->user(), (int) $this->getCompanyId(), $validated);
+        } catch (InvalidArgumentException $e) {
+            return $this->error($e->getMessage(), 422);
+        }
+
+        return $this->success($result, 'Drill');
     }
 
     private function findAccessible(Request $request, int $id): SavedReport

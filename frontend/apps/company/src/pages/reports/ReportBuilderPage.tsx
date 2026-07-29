@@ -35,12 +35,56 @@ import {
   operatorsForFieldType,
 } from './reportHelpers';
 import { exportReportExcel, exportReportPdf } from './exportReport';
+import PivotMatrixTable from './PivotMatrixTable';
 import './reports.css';
 
 function isDatasetCatalog(value: unknown): value is ReportDatasetCatalog {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return false;
+  if (!('key' in value) || !('fields' in value)) return false;
+  return typeof value.key === 'string' && Array.isArray(value.fields);
+}
+
+type DateGrain = 'year' | 'quarter' | 'month' | 'week' | 'day';
+
+interface PivotDimState {
+  field: string;
+  grain: DateGrain | '';
+}
+
+interface PivotMeasureState {
+  alias: string;
+  fn: string;
+  field: string;
+  expression: string;
+  useExpression: boolean;
+}
+
+interface PivotResultState {
+  row_headers: { field: string; label: string; grain?: string | null }[];
+  column_headers: { field: string; label: string; grain?: string | null }[];
+  row_keys: string[][];
+  column_keys: string[][];
+  measures: { alias: string; format: string; decimals: number }[];
+  cells: { row: number; col: number; measure: string; value: string | number | null }[];
+}
+
+function isPivotResult(value: unknown): value is PivotResultState {
   if (typeof value !== 'object' || value === null) return false;
-  const v = value as Record<string, unknown>;
-  return typeof v.key === 'string' && Array.isArray(v.fields);
+  if (!('row_keys' in value) || !('column_keys' in value) || !('cells' in value)) return false;
+  return Array.isArray(value.row_keys) && Array.isArray(value.column_keys) && Array.isArray(value.cells);
+}
+
+function parseGrain(value: string): DateGrain | '' {
+  if (
+    value === 'year' ||
+    value === 'quarter' ||
+    value === 'month' ||
+    value === 'week' ||
+    value === 'day'
+  ) {
+    return value;
+  }
+  return '';
 }
 
 const AGG_FNS = ['count', 'sum', 'avg', 'min', 'max'] as const;
@@ -87,6 +131,18 @@ const ReportBuilderPage: React.FC = () => {
   const [chartCategory, setChartCategory] = useState('');
   const [chartValue, setChartValue] = useState('');
   const [chartSeries, setChartSeries] = useState('');
+
+  const [pivotRows, setPivotRows] = useState<PivotDimState[]>([{ field: '', grain: '' }]);
+  const [pivotCols, setPivotCols] = useState<PivotDimState[]>([]);
+  const [pivotMeasures, setPivotMeasures] = useState<PivotMeasureState[]>([
+    { alias: 'adet', fn: 'count', field: '*', expression: '', useExpression: false },
+  ]);
+  const [pivotSubtotals, setPivotSubtotals] = useState(false);
+  const [pivotGrand, setPivotGrand] = useState(false);
+  const [pivotResult, setPivotResult] = useState<PivotResultState | null>(null);
+  const [pivotLoading, setPivotLoading] = useState(false);
+  const [formulaDraft, setFormulaDraft] = useState('');
+  const [detailRows, setDetailRows] = useState<ReportRow[]>([]);
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -157,6 +213,23 @@ const ReportBuilderPage: React.FC = () => {
       sorts,
       view_mode: viewMode,
       chart,
+      pivot: {
+        rows: pivotRows.filter((r) => r.field).map((r) => ({
+          field: r.field,
+          ...(r.grain ? { grain: r.grain } : {}),
+        })),
+        columns: pivotCols.filter((r) => r.field).map((r) => ({
+          field: r.field,
+          ...(r.grain ? { grain: r.grain } : {}),
+        })),
+        measures: pivotMeasures.map((m) =>
+          m.useExpression
+            ? { alias: m.alias, expression: m.expression, format: 'number' }
+            : { alias: m.alias, fn: m.fn, field: m.field, format: 'number' }
+        ),
+        subtotals: pivotSubtotals,
+        grand_total: pivotGrand,
+      },
     };
   }, [
     datasetKey,
@@ -170,6 +243,11 @@ const ReportBuilderPage: React.FC = () => {
     chartCategory,
     chartValue,
     chartSeries,
+    pivotRows,
+    pivotCols,
+    pivotMeasures,
+    pivotSubtotals,
+    pivotGrand,
   ]);
 
   const applyReport = useCallback((report: SavedReportPayload) => {
@@ -185,12 +263,39 @@ const ReportBuilderPage: React.FC = () => {
     setGroupBy(cfg.group_by ?? []);
     setAggregations(cfg.aggregations ?? []);
     setSorts(cfg.sorts ?? []);
-    setViewMode(cfg.view_mode === 'chart' ? 'chart' : 'table');
+    setViewMode(
+      cfg.view_mode === 'chart' ? 'chart' : cfg.view_mode === 'pivot' ? 'pivot' : 'table'
+    );
     if (cfg.chart) {
       setChartType(cfg.chart.type);
       setChartCategory(cfg.chart.category_field);
       setChartValue(cfg.chart.value_field);
       setChartSeries(cfg.chart.series_field ?? '');
+    }
+    if (cfg.pivot) {
+      setPivotRows(
+        (cfg.pivot.rows ?? []).map((r) => ({
+          field: r.field,
+          grain: parseGrain(r.grain ?? ''),
+        }))
+      );
+      setPivotCols(
+        (cfg.pivot.columns ?? []).map((r) => ({
+          field: r.field,
+          grain: parseGrain(r.grain ?? ''),
+        }))
+      );
+      setPivotMeasures(
+        (cfg.pivot.measures ?? []).map((m, i) => ({
+          alias: m.alias ?? `m${i}`,
+          fn: m.fn ?? 'count',
+          field: m.field ?? '*',
+          expression: m.expression ?? '',
+          useExpression: Boolean(m.expression),
+        }))
+      );
+      setPivotSubtotals(Boolean(cfg.pivot.subtotals));
+      setPivotGrand(Boolean(cfg.pivot.grand_total));
     }
   }, []);
 
@@ -435,6 +540,103 @@ const ReportBuilderPage: React.FC = () => {
     a.href = url;
     a.download = `${name || 'rapor'}-chart.png`;
     a.click();
+  };
+
+  const runPivot = async () => {
+    if (!canRun || !datasetKey) return;
+    const rows = pivotRows.filter((r) => r.field);
+    if (rows.length === 0) {
+      toast.error(t('reportEngine.saveValidation'));
+      return;
+    }
+    setPivotLoading(true);
+    try {
+      const res = await reportsApi.pivot({
+        dataset: datasetKey,
+        rows: rows.map((r) => ({
+          field: r.field,
+          ...(r.grain ? { grain: r.grain } : {}),
+        })),
+        columns: pivotCols
+          .filter((c) => c.field)
+          .map((c) => ({
+            field: c.field,
+            ...(c.grain ? { grain: c.grain } : {}),
+          })),
+        measures: pivotMeasures.map((m): {
+          alias: string;
+          expression?: string;
+          fn?: string;
+          field?: string;
+          format: 'number';
+        } =>
+          m.useExpression
+            ? { alias: m.alias, expression: m.expression || formulaDraft, format: 'number' }
+            : {
+                alias: m.alias,
+                fn: m.fn,
+                field: m.field,
+                format: 'number',
+              }
+        ),
+        filters,
+        subtotals: pivotSubtotals,
+        grand_total: pivotGrand,
+      });
+      const data: unknown = res.data.data;
+      if (isPivotResult(data)) {
+        setPivotResult(data);
+        setDetailRows([]);
+      }
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, t('reportEngine.errorQuery')));
+    } finally {
+      setPivotLoading(false);
+    }
+  };
+
+  const handlePivotCellClick = async (rowIndex: number, colIndex: number) => {
+    if (!pivotResult || !datasetKey) return;
+    const rowKey = pivotResult.row_keys[rowIndex] ?? [];
+    const colKey = pivotResult.column_keys[colIndex] ?? [];
+    const cellFilters: ReportFilterPayload[] = [];
+    pivotResult.row_headers.forEach((h, i) => {
+      cellFilters.push({ field: h.field, op: 'eq', value: rowKey[i] ?? null });
+    });
+    pivotResult.column_headers.forEach((h, i) => {
+      cellFilters.push({ field: h.field, op: 'eq', value: colKey[i] ?? null });
+    });
+    try {
+      const res = await reportsApi.drill({
+        dataset: datasetKey,
+        mode: 'details',
+        filters,
+        cell_filters: cellFilters.map((f) => ({
+          field: f.field,
+          op: f.op,
+          value: f.value === '(boş)' ? null : f.value,
+        })),
+        fields: selectedFields.length > 0 ? selectedFields : catalogFields.map((f) => f.key).slice(0, 8),
+        limit: 50,
+      });
+      const data: unknown = res.data.data;
+      if (isReportRunResult(data)) {
+        setDetailRows(data.rows);
+        toast.success(t('reportEngine.pivot.drillDetails'));
+      }
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, t('reportEngine.errorQuery')));
+    }
+  };
+
+  const validateFormula = async () => {
+    if (!datasetKey || !formulaDraft.trim()) return;
+    try {
+      await reportsApi.measures.validate({ dataset: datasetKey, expression: formulaDraft });
+      toast.success(t('reportEngine.dsl.valid'));
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, t('reportEngine.dsl.invalid')));
+    }
   };
 
   const tableColumns: ReportTableColumn[] = previewFields.map((key) => ({
@@ -823,7 +1025,7 @@ const ReportBuilderPage: React.FC = () => {
           </div>
 
           <h2 className="report-builder__panel-title">{t('reportEngine.viewMode')}</h2>
-          <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-2)', flexWrap: 'wrap' }}>
             <button
               type="button"
               className={`btn btn-sm ${viewMode === 'table' ? 'btn-primary' : 'btn-ghost'}`}
@@ -838,7 +1040,245 @@ const ReportBuilderPage: React.FC = () => {
             >
               {t('reportEngine.viewChart')}
             </button>
+            <button
+              type="button"
+              className={`btn btn-sm ${viewMode === 'pivot' ? 'btn-primary' : 'btn-ghost'}`}
+              onClick={() => setViewMode('pivot')}
+            >
+              {t('reportEngine.pivot.mode')}
+            </button>
           </div>
+          {viewMode === 'pivot' ? (
+            <div style={{ display: 'grid', gap: 'var(--sp-2)' }}>
+              <h3 className="report-builder__panel-title">{t('reportEngine.pivot.rows')}</h3>
+              {pivotRows.map((row, idx) => (
+                <div key={`pr-${idx}`} className="report-filter-row">
+                  <Select
+                    options={catalogFields.map((f) => ({ value: f.key, label: f.label }))}
+                    value={row.field}
+                    onChange={(v) =>
+                      setPivotRows((prev) =>
+                        prev.map((r, i) => (i === idx ? { ...r, field: v } : r))
+                      )
+                    }
+                    allowEmpty
+                  />
+                  <Select
+                    options={[
+                      { value: '', label: t('reportEngine.pivot.grainNone') },
+                      { value: 'year', label: 'year' },
+                      { value: 'quarter', label: 'quarter' },
+                      { value: 'month', label: 'month' },
+                      { value: 'week', label: 'week' },
+                      { value: 'day', label: 'day' },
+                    ]}
+                    value={row.grain}
+                    onChange={(v) =>
+                      setPivotRows((prev) =>
+                        prev.map((r, i) => (i === idx ? { ...r, grain: parseGrain(v) } : r))
+                      )
+                    }
+                    allowEmpty
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-ghost"
+                    onClick={() => setPivotRows((prev) => prev.filter((_, i) => i !== idx))}
+                  >
+                    ×
+                  </button>
+                  <div />
+                </div>
+              ))}
+              {pivotRows.length < 3 ? (
+                <button
+                  type="button"
+                  className="btn btn-sm btn-ghost"
+                  onClick={() => setPivotRows((prev) => [...prev, { field: '', grain: '' }])}
+                >
+                  + {t('reportEngine.pivot.addRow')}
+                </button>
+              ) : null}
+
+              <h3 className="report-builder__panel-title">{t('reportEngine.pivot.columns')}</h3>
+              {pivotCols.map((col, idx) => (
+                <div key={`pc-${idx}`} className="report-filter-row">
+                  <Select
+                    options={catalogFields.map((f) => ({ value: f.key, label: f.label }))}
+                    value={col.field}
+                    onChange={(v) =>
+                      setPivotCols((prev) =>
+                        prev.map((r, i) => (i === idx ? { ...r, field: v } : r))
+                      )
+                    }
+                    allowEmpty
+                  />
+                  <Select
+                    options={[
+                      { value: '', label: t('reportEngine.pivot.grainNone') },
+                      { value: 'year', label: 'year' },
+                      { value: 'month', label: 'month' },
+                      { value: 'day', label: 'day' },
+                    ]}
+                    value={col.grain}
+                    onChange={(v) =>
+                      setPivotCols((prev) =>
+                        prev.map((r, i) => (i === idx ? { ...r, grain: parseGrain(v) } : r))
+                      )
+                    }
+                    allowEmpty
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-ghost"
+                    onClick={() => setPivotCols((prev) => prev.filter((_, i) => i !== idx))}
+                  >
+                    ×
+                  </button>
+                  <div />
+                </div>
+              ))}
+              {pivotCols.length < 2 ? (
+                <button
+                  type="button"
+                  className="btn btn-sm btn-ghost"
+                  onClick={() => setPivotCols((prev) => [...prev, { field: '', grain: '' }])}
+                >
+                  + {t('reportEngine.pivot.addCol')}
+                </button>
+              ) : null}
+
+              <h3 className="report-builder__panel-title">{t('reportEngine.pivot.measures')}</h3>
+              {pivotMeasures.map((m, idx) => (
+                <div key={`pm-${idx}`} style={{ display: 'grid', gap: 'var(--sp-1)' }}>
+                  <input
+                    className="form-control"
+                    value={m.alias}
+                    onChange={(e) =>
+                      setPivotMeasures((prev) =>
+                        prev.map((x, i) => (i === idx ? { ...x, alias: e.target.value } : x))
+                      )
+                    }
+                    placeholder="alias"
+                  />
+                  <label style={{ display: 'flex', gap: 'var(--sp-2)', fontSize: 'var(--fs-caption)' }}>
+                    <input
+                      type="checkbox"
+                      checked={m.useExpression}
+                      onChange={(e) =>
+                        setPivotMeasures((prev) =>
+                          prev.map((x, i) =>
+                            i === idx ? { ...x, useExpression: e.target.checked } : x
+                          )
+                        )
+                      }
+                    />
+                    {t('reportEngine.dsl.expression')}
+                  </label>
+                  {m.useExpression ? (
+                    <input
+                      className="form-control"
+                      value={m.expression}
+                      onChange={(e) =>
+                        setPivotMeasures((prev) =>
+                          prev.map((x, i) =>
+                            i === idx ? { ...x, expression: e.target.value } : x
+                          )
+                        )
+                      }
+                      placeholder={t('reportEngine.dsl.placeholder')}
+                    />
+                  ) : (
+                    <div className="report-filter-row">
+                      <Select
+                        options={AGG_FNS.map((fn) => ({ value: fn, label: fn }))}
+                        value={m.fn}
+                        onChange={(v) =>
+                          setPivotMeasures((prev) =>
+                            prev.map((x, i) => (i === idx ? { ...x, fn: v } : x))
+                          )
+                        }
+                      />
+                      <Select
+                        options={[
+                          { value: '*', label: '*' },
+                          ...catalogFields.map((f) => ({ value: f.key, label: f.label })),
+                        ]}
+                        value={m.field}
+                        onChange={(v) =>
+                          setPivotMeasures((prev) =>
+                            prev.map((x, i) => (i === idx ? { ...x, field: v } : x))
+                          )
+                        }
+                      />
+                      <div />
+                      <div />
+                    </div>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                className="btn btn-sm btn-ghost"
+                onClick={() =>
+                  setPivotMeasures((prev) => [
+                    ...prev,
+                    {
+                      alias: `m${prev.length}`,
+                      fn: 'count',
+                      field: '*',
+                      expression: '',
+                      useExpression: false,
+                    },
+                  ])
+                }
+              >
+                + {t('reportEngine.pivot.addMeasure')}
+              </button>
+              <label style={{ display: 'flex', gap: 'var(--sp-2)' }}>
+                <input
+                  type="checkbox"
+                  checked={pivotSubtotals}
+                  onChange={(e) => setPivotSubtotals(e.target.checked)}
+                />
+                {t('reportEngine.pivot.subtotals')}
+              </label>
+              <label style={{ display: 'flex', gap: 'var(--sp-2)' }}>
+                <input
+                  type="checkbox"
+                  checked={pivotGrand}
+                  onChange={(e) => setPivotGrand(e.target.checked)}
+                />
+                {t('reportEngine.pivot.grandTotal')}
+              </label>
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={pivotLoading}
+                onClick={() => void runPivot()}
+              >
+                {t('reportEngine.pivot.run')}
+              </button>
+
+              <h3 className="report-builder__panel-title">{t('reportEngine.dsl.expression')}</h3>
+              <textarea
+                className="form-control"
+                rows={2}
+                value={formulaDraft}
+                onChange={(e) => setFormulaDraft(e.target.value)}
+                placeholder={t('reportEngine.dsl.placeholder')}
+              />
+              <button type="button" className="btn btn-sm btn-ghost" onClick={() => void validateFormula()}>
+                {t('reportEngine.dsl.validate')}
+              </button>
+              <p style={{ margin: 0, fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)' }}>
+                {t('reportEngine.dsl.examples')}
+              </p>
+              <Link to="/reports/measures" style={{ fontSize: 'var(--fs-caption)' }}>
+                {t('reportEngine.measures.title')}
+              </Link>
+            </div>
+          ) : null}
           {viewMode === 'chart' ? (
             <div style={{ display: 'grid', gap: 'var(--sp-2)' }}>
               <Select
@@ -897,7 +1337,38 @@ const ReportBuilderPage: React.FC = () => {
               {previewError}
             </div>
           ) : null}
-          {viewMode === 'table' ? (
+          {viewMode === 'pivot' ? (
+            <>
+              {pivotLoading ? <p>{t('loading')}</p> : null}
+              {pivotResult ? (
+                <PivotMatrixTable
+                  rowHeaders={pivotResult.row_headers}
+                  columnHeaders={pivotResult.column_headers}
+                  rowKeys={pivotResult.row_keys}
+                  columnKeys={pivotResult.column_keys}
+                  measures={pivotResult.measures}
+                  cells={pivotResult.cells}
+                  onCellClick={(ri, ci) => void handlePivotCellClick(ri, ci)}
+                />
+              ) : (
+                <p style={{ color: 'var(--text-tertiary)' }}>{t('reportEngine.previewEmpty')}</p>
+              )}
+              {detailRows.length > 0 ? (
+                <ReportTable
+                  columns={
+                    Object.keys(detailRows[0] ?? {}).map((key) => ({
+                      id: key,
+                      accessorKey: key,
+                      header: fieldLabel(key),
+                    }))
+                  }
+                  rows={detailRows}
+                  emptyLabel={t('reportEngine.previewEmpty')}
+                  height={240}
+                />
+              ) : null}
+            </>
+          ) : viewMode === 'table' ? (
             <ReportTable
               columns={tableColumns}
               rows={previewRows}

@@ -244,6 +244,7 @@ export const operationalModuleGroups: ModuleGroup[] = [
     items: [
       { path: '/analytics', labelKey: 'nav.analyticsReports', permission: { module: 'analytics', page: 'reports' } },
       { path: '/reports', labelKey: 'nav.reportEngine', permission: { module: 'reports', page: 'definitions' } },
+      { path: '/reports/measures', labelKey: 'nav.reportMeasures', permission: { module: 'reports', page: 'measures' } },
     ],
   },
 ];

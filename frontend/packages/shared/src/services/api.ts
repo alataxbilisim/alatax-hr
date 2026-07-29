@@ -1051,12 +1051,26 @@ export interface ReportConfigPayload {
   aggregations?: ReportAggregationPayload[];
   sorts?: ReportSortPayload[];
   joins?: string[];
-  view_mode?: 'table' | 'chart';
+  view_mode?: 'table' | 'chart' | 'pivot';
   chart?: {
     type: 'bar' | 'line' | 'pie' | 'area' | 'stacked_bar';
     category_field: string;
     value_field: string;
     series_field?: string;
+  };
+  pivot?: {
+    rows: { field: string; grain?: string }[];
+    columns: { field: string; grain?: string }[];
+    measures: {
+      alias?: string;
+      fn?: string;
+      field?: string;
+      expression?: string;
+      format?: string;
+      decimals?: number;
+    }[];
+    subtotals?: boolean;
+    grand_total?: boolean;
   };
 }
 
@@ -1122,7 +1136,77 @@ export const reportsApi = {
     api.post(`/reports/${id}/run`, overrides ?? {}),
   export: (payload: ReportQueryPayload) => api.post('/reports/export', payload),
   exportSaved: (id: number) => api.post(`/reports/${id}/export`),
+  pivot: (payload: ReportPivotPayload) => api.post('/reports/pivot', payload),
+  drill: (payload: ReportDrillPayload) => api.post('/reports/drill', payload),
+  measures: {
+    list: (params?: { dataset_key?: string; per_page?: number }) =>
+      api.get('/reports/measures', { params }),
+    create: (data: ReportMeasureWritePayload) => api.post('/reports/measures', data),
+    update: (id: number, data: Partial<ReportMeasureWritePayload>) =>
+      api.put(`/reports/measures/${id}`, data),
+    remove: (id: number) => api.delete(`/reports/measures/${id}`),
+    validate: (data: { dataset: string; expression: string }) =>
+      api.post('/reports/measures/validate', data),
+  },
 };
+
+export interface ReportPivotDim {
+  field: string;
+  grain?: 'year' | 'quarter' | 'month' | 'week' | 'day';
+}
+
+export interface ReportPivotMeasure {
+  alias?: string;
+  fn?: string;
+  field?: string;
+  expression?: string;
+  format?: 'number' | 'money' | 'percent';
+  decimals?: number;
+}
+
+export interface ReportPivotPayload {
+  dataset: string;
+  rows: ReportPivotDim[];
+  columns?: ReportPivotDim[];
+  measures: ReportPivotMeasure[];
+  filters?: ReportFilterPayload[];
+  subtotals?: boolean;
+  grand_total?: boolean;
+  limit?: number;
+}
+
+export interface ReportDrillPayload {
+  dataset: string;
+  mode: 'next' | 'details';
+  filters?: ReportFilterPayload[];
+  cell_filters?: ReportFilterPayload[];
+  hierarchy_key?: string;
+  level?: number;
+  fields?: string[];
+  measure?: ReportPivotMeasure;
+  limit?: number;
+  offset?: number;
+}
+
+export interface ReportMeasureWritePayload {
+  dataset_key: string;
+  key: string;
+  label: string;
+  expression: string;
+  format?: 'number' | 'money' | 'percent';
+  decimals?: number;
+}
+
+export interface ReportMeasurePayload {
+  id: number;
+  company_id: number;
+  dataset_key: string;
+  key: string;
+  label: string;
+  expression: string;
+  format: string;
+  decimals: number;
+}
 
 // Public API (Başvuru formları)
 export const publicApi = {

@@ -128,3 +128,59 @@ Ana `index-*.js` (~3.6 MB) Nivo/mevcut app; rapor paketleri lazy ayrıldı.
 ### DUR / sonraki
 
 - Daha fazla dataset; `/analytics` motora taşıma; zamanlanmış rapor
+
+---
+
+## D1c — Pivot + drill-down + hesaplanan ölçü DSL
+
+**Tarih:** 2026-07-29  
+**Commit:** `feat(faz5): D1c pivot + drill-down + hesaplanan ölçü DSL'i`
+
+### ADIM 0 — Teşhis
+
+| Bulgu | Karar |
+|-------|--------|
+| GROUP BY çok boyutlu zaten var; alt toplam yok | Pivot = GROUP BY + PHP matris |
+| Hiyerarşi yoktu | `AbstractDataset::hierarchies()` eklendi |
+| Postgres `crosstab` | **Kullanılmadı** — taşınabilirlik + whitelist builder ile aynı yol |
+
+### Pivot
+
+- Satır 1–3, sütun 0–2, ölçü 1–n; `(boş)` etiketi; `date_trunc`/`EXTRACT` grain whitelist
+- Kardinalite guard: sütun distinct **>100 → 422**
+- Alt / genel toplam opsiyonel (uygulama katmanı)
+
+### Drill
+
+- `org`: şube → departman → pozisyon → sicil; tarih grain hiyerarşisi
+- `POST /reports/drill` mode `next` \| `details` — details de query builder (izin + DataScope)
+
+### DSL
+
+- Recursive-descent parser (symfony EL yok — kapalı dil + sıfır bağımlılık)
+- Agg: sum/count/count_distinct/avg/min/max · aritmetik · if · karşılaştırma · and/or
+- AST → parametreli SQL; `/` → `NULLIF`; izinsiz alan → 422 (çalıştırma anı)
+- `report_measures` + `reports.measures.view\|edit` + Auditable
+
+### UI
+
+- Builder: Pivot görünümü + formül doğrulama; `/reports/measures` kütüphane
+- PivotMatrix: birleşik başlık, yapışkan satır, hücre → detay
+
+### Güvenlik testleri (örnek)
+
+`;DROP`, union/select, alt sorgu, abs/length, quote/escape, null byte, izinsiz `sum(gross_salary)`
+
+### Test
+
+| Suite | Sonuç |
+|-------|--------|
+| `MeasureExpressionSecurityTest` | **24 passed** |
+| `ReportPivotAndMeasureTest` | **8 passed** |
+| Tam suite | **535 passed / 0 fail** |
+| 3 SPA tsc + lint + sentinel | **PASSED** |
+| DB wipe | **yok** |
+
+### Not
+
+**KULLANICI GÖRSEL KONTROLÜ BEKLİYOR (borç)**

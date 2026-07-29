@@ -204,6 +204,7 @@ import AnalyticsPage from './pages/analytics/AnalyticsPage';
 /** D1b — rapor motoru sayfaları lazy (echarts/tanstack bundle ayrımı) */
 const ReportsListPage = React.lazy(() => import('./pages/reports/ReportsListPage'));
 const ReportBuilderPage = React.lazy(() => import('./pages/reports/ReportBuilderPage'));
+const MeasuresLibraryPage = React.lazy(() => import('./pages/reports/MeasuresLibraryPage'));
 
 const App: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -842,6 +843,18 @@ const App: React.FC = () => {
           />
 
           {/* Rapor Motoru (D1b) — lazy + permission */}
+          <Route
+            path="/reports/measures"
+            element={
+              <ProtectedRoute>
+                <PermissionProtectedRoute module="reports" page="measures" action="view">
+                  <React.Suspense fallback={<div className="page-loading">…</div>}>
+                    <MeasuresLibraryPage />
+                  </React.Suspense>
+                </PermissionProtectedRoute>
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/reports"
             element={

@@ -246,9 +246,10 @@ class PermissionSeeder extends Seeder
                 'reports' => ['view', 'export'],
             ],
 
-            // Rapor Motoru (D1a — Faz 5)
+            // Rapor Motoru (D1a/D1c — Faz 5)
             'reports' => [
                 'definitions' => ['view', 'create', 'edit', 'delete', 'run'],
+                'measures' => ['view', 'edit'],
             ],
 
             // Puantaj Modülü

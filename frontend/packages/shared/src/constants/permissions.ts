@@ -163,6 +163,7 @@ export const PAGES = {
 
   [MODULES.REPORTS]: {
     DEFINITIONS: 'definitions',
+    MEASURES: 'measures',
   },
 } as const;
 
@@ -256,6 +257,7 @@ export const PAGE_ACTIONS: Record<string, Record<string, ActionType[]>> = {
   },
   [MODULES.REPORTS]: {
     definitions: ['view', 'create', 'edit', 'delete', 'export'],
+    measures: ['view', 'edit'],
   },
 };
 
@@ -370,6 +372,7 @@ export const PAGE_LABELS: Record<string, Record<string, string>> = {
   },
   [MODULES.REPORTS]: {
     definitions: 'Rapor Tanımları',
+    measures: 'Ölçü Kütüphanesi',
   },
 };
 
@@ -530,6 +533,7 @@ export function getPermissionFromPath(path: string): { module: string; page: str
     '/surveys': { module: 'surveys', page: 'list' },
     '/analytics': { module: 'analytics', page: 'reports' },
     '/reports': { module: 'reports', page: 'definitions' },
+    '/reports/measures': { module: 'reports', page: 'measures' },
   };
   
   // Tam eşleşme

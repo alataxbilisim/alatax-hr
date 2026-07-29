@@ -1107,7 +1107,7 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:analytics.reports.view');
         });
 
-        // Rapor Motoru (D1a/D1b) — semantic layer + güvenli query builder + export
+        // Rapor Motoru (D1a/D1b/D1c) — semantic layer + pivot + DSL
         Route::prefix('reports')->group(function () {
             Route::get('/datasets', [\App\Http\Controllers\Api\V1\Reports\ReportController::class, 'datasets'])
                 ->middleware('permission:reports.definitions.view');
@@ -1115,6 +1115,24 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:reports.definitions.run');
             Route::post('/export', [\App\Http\Controllers\Api\V1\Reports\ReportController::class, 'export'])
                 ->middleware(['permission:reports.definitions.run', 'throttle:exports']);
+            Route::post('/pivot', [\App\Http\Controllers\Api\V1\Reports\ReportController::class, 'pivot'])
+                ->middleware('permission:reports.definitions.run');
+            Route::post('/drill', [\App\Http\Controllers\Api\V1\Reports\ReportController::class, 'drill'])
+                ->middleware('permission:reports.definitions.run');
+
+            Route::get('/measures', [\App\Http\Controllers\Api\V1\Reports\ReportMeasureController::class, 'index'])
+                ->middleware('permission:reports.measures.view');
+            Route::post('/measures', [\App\Http\Controllers\Api\V1\Reports\ReportMeasureController::class, 'store'])
+                ->middleware('permission:reports.measures.edit');
+            Route::post('/measures/validate', [\App\Http\Controllers\Api\V1\Reports\ReportMeasureController::class, 'validateExpression'])
+                ->middleware('permission:reports.definitions.run');
+            Route::put('/measures/{id}', [\App\Http\Controllers\Api\V1\Reports\ReportMeasureController::class, 'update'])
+                ->middleware('permission:reports.measures.edit')
+                ->whereNumber('id');
+            Route::delete('/measures/{id}', [\App\Http\Controllers\Api\V1\Reports\ReportMeasureController::class, 'destroy'])
+                ->middleware('permission:reports.measures.edit')
+                ->whereNumber('id');
+
             Route::get('/', [\App\Http\Controllers\Api\V1\Reports\ReportController::class, 'index'])
                 ->middleware('permission:reports.definitions.view');
             Route::post('/', [\App\Http\Controllers\Api\V1\Reports\ReportController::class, 'store'])

@@ -432,4 +432,29 @@ class ReportQueryBuilder
             throw new InvalidArgumentException('Geçersiz alias');
         }
     }
+
+    /**
+     * D1c pivot — DataScope'u dışarıdan uygula.
+     *
+     * @param  Builder<\Illuminate\Database\Eloquent\Model>  $query
+     */
+    public function applyExternalScope(Builder $query, AbstractDataset $dataset, User $user): void
+    {
+        $this->applyDataScope($query, $dataset, $user);
+    }
+
+    /**
+     * @param  Builder<\Illuminate\Database\Eloquent\Model>  $query
+     * @param  array{field?: mixed, op?: mixed, value?: mixed}  $filter
+     * @param  array<string, ReportField>  $fieldMap
+     */
+    public function applyExternalFilter(Builder $query, array $filter, array $fieldMap): void
+    {
+        $this->applyFilter($query, $filter, $fieldMap);
+    }
+
+    public function externalSqlExpression(ReportField $field): string
+    {
+        return $this->sqlExpression($field);
+    }
 }

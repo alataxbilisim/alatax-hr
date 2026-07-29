@@ -66,6 +66,22 @@ final class EmployeesDataset extends AbstractDataset
         return ['employee_code'];
     }
 
+    public function hierarchies(): array
+    {
+        return [
+            'org' => [
+                'label' => 'Organizasyon',
+                'levels' => ['branch_name', 'department_name', 'position', 'employee_code'],
+            ],
+            'hire_date' => [
+                'label' => 'İşe giriş tarihi',
+                'levels' => ['hire_date'], // grain drill FE/BE date_trunc ile
+                'date_field' => 'hire_date',
+                'date_grains' => ['year', 'quarter', 'month', 'day'],
+            ],
+        ];
+    }
+
     /**
      * @return list<ReportField>
      */
