@@ -990,6 +990,140 @@ export const analyticsApi = {
   training: (params?: Record<string, unknown>) => api.get('/analytics/training', { params }),
 };
 
+/** D1a/D1b — Rapor motoru (semantic layer) */
+export type ReportFieldRole = 'dimension' | 'measure';
+
+export interface ReportCatalogField {
+  key: string;
+  type: string;
+  label: string;
+  label_key: string;
+  role: ReportFieldRole | string;
+  permission: string | null;
+  sensitive: boolean;
+  is_custom: boolean;
+}
+
+export interface ReportDatasetCatalog {
+  key: string;
+  label: string;
+  label_key: string;
+  default_sort: string[];
+  joins: unknown[];
+  fields: ReportCatalogField[];
+  field_count: number;
+}
+
+export interface ReportFilterPayload {
+  field: string;
+  op: string;
+  value?: unknown;
+}
+
+export interface ReportAggregationPayload {
+  field: string;
+  fn: string;
+  alias?: string;
+}
+
+export interface ReportSortPayload {
+  field: string;
+  dir?: 'asc' | 'desc' | string;
+}
+
+export interface ReportQueryPayload {
+  dataset: string;
+  fields?: string[];
+  filters?: ReportFilterPayload[];
+  group_by?: string[];
+  aggregations?: ReportAggregationPayload[];
+  sorts?: ReportSortPayload[];
+  joins?: string[];
+  limit?: number;
+  offset?: number;
+}
+
+export interface ReportConfigPayload {
+  dataset?: string;
+  fields?: string[];
+  filters?: ReportFilterPayload[];
+  group_by?: string[];
+  aggregations?: ReportAggregationPayload[];
+  sorts?: ReportSortPayload[];
+  joins?: string[];
+  view_mode?: 'table' | 'chart';
+  chart?: {
+    type: 'bar' | 'line' | 'pie' | 'area' | 'stacked_bar';
+    category_field: string;
+    value_field: string;
+    series_field?: string;
+  };
+}
+
+export interface SavedReportPayload {
+  id: number;
+  company_id: number;
+  user_id: number;
+  name: string;
+  description: string | null;
+  dataset_key: string | null;
+  config: ReportConfigPayload | null;
+  is_favorite: boolean;
+  is_shared: boolean;
+  share_user_ids: number[] | null;
+  share_role_ids: number[] | null;
+  is_system: boolean;
+  sort_order: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface ReportRunResult {
+  rows: Record<string, string | number | boolean | null>[];
+  meta: {
+    dataset: string;
+    limit: number;
+    offset: number;
+    count: number;
+    fields: string[];
+    data_scope: string;
+    truncated?: boolean;
+    export_max?: number;
+  };
+}
+
+export interface SavedReportWritePayload {
+  name: string;
+  description?: string | null;
+  dataset_key: string;
+  config?: ReportConfigPayload;
+  fields?: string[];
+  filters?: ReportFilterPayload[];
+  group_by?: string[];
+  aggregations?: ReportAggregationPayload[];
+  sorts?: ReportSortPayload[];
+  joins?: string[];
+  is_shared?: boolean;
+  share_user_ids?: number[];
+  share_role_ids?: number[];
+  is_favorite?: boolean;
+}
+
+export const reportsApi = {
+  datasets: () => api.get<unknown, { data: { data: ReportDatasetCatalog[] } }>('/reports/datasets'),
+  list: (params?: { per_page?: number; page?: number }) =>
+    api.get('/reports', { params }),
+  get: (id: number) => api.get(`/reports/${id}`),
+  create: (data: SavedReportWritePayload) => api.post('/reports', data),
+  update: (id: number, data: Partial<SavedReportWritePayload>) => api.put(`/reports/${id}`, data),
+  remove: (id: number) => api.delete(`/reports/${id}`),
+  preview: (payload: ReportQueryPayload) => api.post('/reports/preview', payload),
+  run: (id: number, overrides?: { limit?: number; offset?: number }) =>
+    api.post(`/reports/${id}/run`, overrides ?? {}),
+  export: (payload: ReportQueryPayload) => api.post('/reports/export', payload),
+  exportSaved: (id: number) => api.post(`/reports/${id}/export`),
+};
+
 // Public API (Başvuru formları)
 export const publicApi = {
   // Jobs

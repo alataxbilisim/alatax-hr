@@ -140,6 +140,45 @@ class ReportDefinitionService
         return $this->builder->run($user, $companyId, $config);
     }
 
+    /**
+     * Export: query builder üzerinden (istemci sayfası değil), üst sınır 50k.
+     *
+     * @param  array<string, mixed>  $config
+     * @return array{rows: list<array<string, mixed>>, meta: array<string, mixed>}
+     */
+    public function export(User $user, int $companyId, array $config): array
+    {
+        if (empty($config['dataset'])) {
+            throw new InvalidArgumentException('dataset zorunlu');
+        }
+        $this->assertDataset($config['dataset']);
+        $config['__export'] = true;
+        $config['offset'] = 0;
+        if (! isset($config['limit'])) {
+            $config['limit'] = ReportQueryBuilder::EXPORT_MAX_ROWS;
+        }
+
+        return $this->builder->run($user, $companyId, $config);
+    }
+
+    /**
+     * @return array{rows: list<array<string, mixed>>, meta: array<string, mixed>}
+     */
+    public function exportSaved(SavedReport $report, User $viewer, int $companyId): array
+    {
+        if (! $report->isAccessibleBy($viewer)) {
+            throw ValidationException::withMessages(['id' => ['Bu rapora erişim yok']]);
+        }
+        if ((int) $report->company_id !== $companyId) {
+            throw ValidationException::withMessages(['id' => ['Rapor bulunamadı']]);
+        }
+
+        $config = is_array($report->config) ? $report->config : [];
+        $config['dataset'] = $report->dataset_key;
+
+        return $this->export($viewer, $companyId, $config);
+    }
+
     private function assertDataset(mixed $key): void
     {
         if (! is_string($key) || ! $this->registry->has($key)) {

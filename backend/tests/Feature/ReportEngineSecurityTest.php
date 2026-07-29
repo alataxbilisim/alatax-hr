@@ -313,4 +313,88 @@ class ReportEngineSecurityTest extends TestCase
         $after = DB::selectOne('select count(*)::int as c from employees')->c;
         $this->assertSame($before, $after);
     }
+
+    /** D1b — export da maaş alanını düşürmeli */
+    public function test_export_drops_salary_without_permission(): void
+    {
+        Employee::create([
+            'company_id' => $this->company->id,
+            'employee_code' => 'EX1',
+            'status' => 'active',
+            'department_id' => $this->deptA->id,
+            'gross_salary' => 99000,
+            'net_salary' => 70000,
+        ]);
+
+        $viewer = User::factory()->create([
+            'company_id' => $this->company->id,
+            'type' => UserType::User,
+        ]);
+        $role = Role::findOrCreate('report_export_viewer', 'sanctum');
+        $role->forceFill(['data_scope' => 'company'])->save();
+        $role->givePermissionTo([
+            'reports.definitions.view',
+            'reports.definitions.run',
+            'employees.list.view',
+        ]);
+        $viewer->assignRole($role);
+
+        Sanctum::actingAs($viewer->fresh());
+        $export = $this->postJson('/api/v1/reports/export', [
+            'dataset' => 'employees',
+            'fields' => ['employee_code', 'gross_salary', 'net_salary', 'status'],
+        ])->assertOk()->json('data');
+
+        $this->assertNotContains('gross_salary', $export['meta']['fields']);
+        $this->assertNotContains('net_salary', $export['meta']['fields']);
+        if (($export['rows'][0] ?? null) !== null) {
+            $this->assertArrayNotHasKey('gross_salary', $export['rows'][0]);
+            $this->assertArrayNotHasKey('net_salary', $export['rows'][0]);
+        }
+    }
+
+    /** D1b — export DataScope: başka departman satırı gelmez */
+    public function test_export_respects_department_scope(): void
+    {
+        $mgrUser = User::factory()->create([
+            'company_id' => $this->company->id,
+            'type' => UserType::User,
+        ]);
+        Employee::create([
+            'company_id' => $this->company->id,
+            'user_id' => $mgrUser->id,
+            'employee_code' => 'EX-MGR',
+            'status' => 'active',
+            'department_id' => $this->deptA->id,
+        ]);
+        Employee::create([
+            'company_id' => $this->company->id,
+            'employee_code' => 'EX-A',
+            'status' => 'active',
+            'department_id' => $this->deptA->id,
+        ]);
+        Employee::create([
+            'company_id' => $this->company->id,
+            'employee_code' => 'EX-B',
+            'status' => 'active',
+            'department_id' => $this->deptB->id,
+        ]);
+
+        $role = Role::findOrCreate('dept_exporter', 'sanctum');
+        $role->forceFill(['data_scope' => 'department'])->save();
+        $role->givePermissionTo(['reports.definitions.run', 'employees.list.view']);
+        $mgrUser->assignRole($role);
+
+        Sanctum::actingAs($mgrUser->fresh());
+        $result = $this->postJson('/api/v1/reports/export', [
+            'dataset' => 'employees',
+            'fields' => ['employee_code', 'department_id'],
+        ])->assertOk()->json('data');
+
+        $codes = collect($result['rows'])->pluck('employee_code');
+        $this->assertTrue($codes->contains('EX-A'));
+        $this->assertTrue($codes->contains('EX-MGR'));
+        $this->assertFalse($codes->contains('EX-B'));
+        $this->assertArrayHasKey('truncated', $result['meta']);
+    }
 }

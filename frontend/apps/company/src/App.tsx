@@ -201,6 +201,10 @@ import PayslipsAdminPage from './pages/payroll/PayslipsAdminPage';
 // Analytics Module
 import AnalyticsPage from './pages/analytics/AnalyticsPage';
 
+/** D1b — rapor motoru sayfaları lazy (echarts/tanstack bundle ayrımı) */
+const ReportsListPage = React.lazy(() => import('./pages/reports/ReportsListPage'));
+const ReportBuilderPage = React.lazy(() => import('./pages/reports/ReportBuilderPage'));
+
 const App: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { mode, density } = useSelector((state: RootState) => state.theme);
@@ -833,6 +837,56 @@ const App: React.FC = () => {
                 <ModuleProtectedRoute moduleKey={MODULE_KEYS.HR_ANALYTICS}>
                   <AnalyticsPage />
                 </ModuleProtectedRoute>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Rapor Motoru (D1b) — lazy + permission */}
+          <Route
+            path="/reports"
+            element={
+              <ProtectedRoute>
+                <PermissionProtectedRoute module="reports" page="definitions" action="view">
+                  <React.Suspense fallback={<div className="page-loading">…</div>}>
+                    <ReportsListPage />
+                  </React.Suspense>
+                </PermissionProtectedRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reports/new"
+            element={
+              <ProtectedRoute>
+                <PermissionProtectedRoute module="reports" page="definitions" action="create">
+                  <React.Suspense fallback={<div className="page-loading">…</div>}>
+                    <ReportBuilderPage />
+                  </React.Suspense>
+                </PermissionProtectedRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reports/:id/edit"
+            element={
+              <ProtectedRoute>
+                <PermissionProtectedRoute module="reports" page="definitions" action="edit">
+                  <React.Suspense fallback={<div className="page-loading">…</div>}>
+                    <ReportBuilderPage />
+                  </React.Suspense>
+                </PermissionProtectedRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reports/:id"
+            element={
+              <ProtectedRoute>
+                <PermissionProtectedRoute module="reports" page="definitions" action="view">
+                  <React.Suspense fallback={<div className="page-loading">…</div>}>
+                    <ReportBuilderPage />
+                  </React.Suspense>
+                </PermissionProtectedRoute>
               </ProtectedRoute>
             }
           />

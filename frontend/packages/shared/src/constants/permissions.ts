@@ -38,6 +38,7 @@ export const MODULES = {
   EXPENSES: 'expenses',
   ANNOUNCEMENTS: 'announcements',
   PAYROLL: 'payroll',
+  REPORTS: 'reports',
 } as const;
 
 export type ModuleType = typeof MODULES[keyof typeof MODULES];
@@ -159,6 +160,10 @@ export const PAGES = {
   [MODULES.PAYROLL]: {
     PAYSLIPS: 'payslips',
   },
+
+  [MODULES.REPORTS]: {
+    DEFINITIONS: 'definitions',
+  },
 } as const;
 
 // Sayfa bazlı aksiyon tanımları (hangi sayfada hangi aksiyonlar mevcut)
@@ -249,6 +254,9 @@ export const PAGE_ACTIONS: Record<string, Record<string, ActionType[]>> = {
   [MODULES.PAYROLL]: {
     payslips: ['view', 'create', 'edit', 'delete'],
   },
+  [MODULES.REPORTS]: {
+    definitions: ['view', 'create', 'edit', 'delete', 'export'],
+  },
 };
 
 // Modül etiketleri (UI için)
@@ -269,6 +277,7 @@ export const MODULE_LABELS: Record<ModuleType, string> = {
   [MODULES.EXPENSES]: 'Masraf Yönetimi',
   [MODULES.ANNOUNCEMENTS]: 'Duyurular',
   [MODULES.PAYROLL]: 'Bordro',
+  [MODULES.REPORTS]: 'Rapor Motoru',
 };
 
 // Sayfa etiketleri (UI için)
@@ -358,6 +367,9 @@ export const PAGE_LABELS: Record<string, Record<string, string>> = {
   },
   [MODULES.PAYROLL]: {
     payslips: 'Bordrolar',
+  },
+  [MODULES.REPORTS]: {
+    definitions: 'Rapor Tanımları',
   },
 };
 
@@ -517,6 +529,7 @@ export function getPermissionFromPath(path: string): { module: string; page: str
     '/assets/custom-fields': { module: 'assets', page: 'custom_fields' },
     '/surveys': { module: 'surveys', page: 'list' },
     '/analytics': { module: 'analytics', page: 'reports' },
+    '/reports': { module: 'reports', page: 'definitions' },
   };
   
   // Tam eşleşme

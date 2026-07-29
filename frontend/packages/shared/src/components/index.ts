@@ -38,3 +38,17 @@ export type {
   FormFieldPermission,
   RequestTypeFormFieldRaw,
 } from '../form-engine';
+export {
+  ReportChart,
+  ReportTable,
+} from './reports';
+export type {
+  ReportChartProps,
+  ReportChartHandle,
+  ReportTableProps,
+  ReportChartType,
+  ReportViewMode,
+  ReportChartMapping,
+  ReportTableColumn,
+  ReportRow,
+} from './reports';

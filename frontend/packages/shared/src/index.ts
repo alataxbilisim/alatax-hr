@@ -4,6 +4,8 @@ export {
   TwoFactorChallenge,
   NotificationPreferencesForm,
   defaultNotificationPrefs,
+  ReportChart,
+  ReportTable,
 } from './components';
 export type {
   SelectOption,
@@ -11,6 +13,14 @@ export type {
   TwoFactorChallengeProps,
   NotificationPrefsValue,
   NotificationChannelGroup,
+  ReportChartProps,
+  ReportChartHandle,
+  ReportTableProps,
+  ReportChartType,
+  ReportViewMode,
+  ReportChartMapping,
+  ReportTableColumn,
+  ReportRow,
 } from './components';
 export * from './hooks';
 export * from './services';

@@ -1107,12 +1107,14 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:analytics.reports.view');
         });
 
-        // Rapor Motoru (D1a) — semantic layer + güvenli query builder
+        // Rapor Motoru (D1a/D1b) — semantic layer + güvenli query builder + export
         Route::prefix('reports')->group(function () {
             Route::get('/datasets', [\App\Http\Controllers\Api\V1\Reports\ReportController::class, 'datasets'])
                 ->middleware('permission:reports.definitions.view');
             Route::post('/preview', [\App\Http\Controllers\Api\V1\Reports\ReportController::class, 'preview'])
                 ->middleware('permission:reports.definitions.run');
+            Route::post('/export', [\App\Http\Controllers\Api\V1\Reports\ReportController::class, 'export'])
+                ->middleware(['permission:reports.definitions.run', 'throttle:exports']);
             Route::get('/', [\App\Http\Controllers\Api\V1\Reports\ReportController::class, 'index'])
                 ->middleware('permission:reports.definitions.view');
             Route::post('/', [\App\Http\Controllers\Api\V1\Reports\ReportController::class, 'store'])
@@ -1128,6 +1130,9 @@ Route::prefix('v1')->group(function () {
                 ->whereNumber('id');
             Route::post('/{id}/run', [\App\Http\Controllers\Api\V1\Reports\ReportController::class, 'run'])
                 ->middleware('permission:reports.definitions.run')
+                ->whereNumber('id');
+            Route::post('/{id}/export', [\App\Http\Controllers\Api\V1\Reports\ReportController::class, 'exportSaved'])
+                ->middleware(['permission:reports.definitions.run', 'throttle:exports'])
                 ->whereNumber('id');
         });
 

@@ -22,6 +22,12 @@ class ReportQueryBuilder
 
     public const AGGREGATIONS = ['count', 'sum', 'avg', 'min', 'max'];
 
+    /** Önizleme / run üst sınırı (D1a). */
+    public const PREVIEW_MAX_ROWS = 1000;
+
+    /** Export üst sınırı (D1b) — yalnızca __export=true ile. */
+    public const EXPORT_MAX_ROWS = 50000;
+
     public function __construct(
         protected DatasetRegistry $registry,
         protected DataScopeService $dataScope,
@@ -113,22 +119,39 @@ class ReportQueryBuilder
         }
         $this->applySorts($query, $sorts, $fieldMap, $isAggregate);
 
-        $limit = min(max((int) ($config['limit'] ?? 100), 1), 1000);
-        $offset = max((int) ($config['offset'] ?? 0), 0);
-        $query->limit($limit)->offset($offset);
+        // __export yalnızca servis katmanından set edilir; client doğrulamasında yok.
+        $forExport = ($config['__export'] ?? false) === true;
+        $maxCap = $forExport ? self::EXPORT_MAX_ROWS : self::PREVIEW_MAX_ROWS;
+        $defaultLimit = $forExport ? self::EXPORT_MAX_ROWS : 100;
+        $limit = min(max((int) ($config['limit'] ?? $defaultLimit), 1), $maxCap);
+        $offset = $forExport ? 0 : max((int) ($config['offset'] ?? 0), 0);
+
+        $fetchLimit = $forExport ? $limit + 1 : $limit;
+        $query->limit($fetchLimit)->offset($offset);
 
         $rows = $query->toBase()->get()->map(fn ($row) => (array) $row)->all();
+        $truncated = false;
+        if ($forExport && count($rows) > $limit) {
+            $truncated = true;
+            array_pop($rows);
+        }
+
+        $meta = [
+            'dataset' => $datasetKey,
+            'limit' => $limit,
+            'offset' => $offset,
+            'count' => count($rows),
+            'fields' => array_map(fn (ReportField $f) => $f->key, $selectFields),
+            'data_scope' => $this->dataScope->resolve($user)->value,
+        ];
+        if ($forExport) {
+            $meta['truncated'] = $truncated;
+            $meta['export_max'] = self::EXPORT_MAX_ROWS;
+        }
 
         return [
             'rows' => $rows,
-            'meta' => [
-                'dataset' => $datasetKey,
-                'limit' => $limit,
-                'offset' => $offset,
-                'count' => count($rows),
-                'fields' => array_map(fn (ReportField $f) => $f->key, $selectFields),
-                'data_scope' => $this->dataScope->resolve($user)->value,
-            ],
+            'meta' => $meta,
         ];
     }
 

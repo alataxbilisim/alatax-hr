@@ -63,3 +63,68 @@ Branch: `faz4-form-engine`
 - D1b: Company UI (dataset seçici + pivot/chart)
 - Kalan dataset’ler (puantaj, eğitim, zimmet, anket)
 - `/analytics` sabit sorgularını motor üzerine taşıma
+
+---
+
+## D1b — Rapor Builder UI + ECharts / TanStack Table + export
+
+**Tarih:** 2026-07-29  
+**Commit:** `feat(faz5): D1b rapor builder UI + echarts/tanstack-table + export`
+
+### Paketler
+
+| Paket | Nerede | Not |
+|-------|--------|-----|
+| `echarts` + `echarts-for-react` | shared + company | Tree-shake: yalnız Bar/Line/Pie + Grid/Tooltip/Legend |
+| `@tanstack/react-table` + `@tanstack/react-virtual` | shared + company | Sanallaştırılmış tablo |
+| Nivo / recharts | **dokunulmadı** | `/analytics` + personel BI aynen |
+
+### Sarmalayıcılar (`@shared`)
+
+- `<ReportChart type=… />` — tema token’ları (`--primary`, `--success`, …)
+- `<ReportTable … />` — sunucu sıralama/sayfalama + sütun genişliği
+
+### Ekranlar
+
+| Route | İçerik |
+|-------|--------|
+| `/reports` | Benim / paylaşılan / sistem + ara + çalıştır/düzenle/kopyala/sil |
+| `/reports/new`, `/:id/edit` | 3 panel builder + debounce preview (~500ms) |
+| `/reports/:id` | Çalıştır / görüntüle |
+
+ModuleRail: Analitik → **Rapor Motoru** (`reports.definitions.view`).
+
+### Export
+
+- `POST /reports/export` + `POST /reports/{id}/export` — query builder, max **50k**, `truncated` meta
+- FE: ExcelJS + jsPDF (sunucu satırları); grafik PNG (ECharts `getDataURL`)
+- İzin: maaş alanı düşer; department scope satırları sınırlar (testli)
+
+### Bundle
+
+Rapor sayfaları `React.lazy` — echarts/tanstack yalnız `/reports*` chunk’ında.
+
+| Chunk | Boyut (min) | gzip |
+|-------|-------------|------|
+| `ReportBuilderPage-*.js` | **1031 kB** | **297 kB** |
+| `ReportsListPage-*.js` | 4.2 kB | 1.6 kB |
+| `reports-*.css` | 2.4 kB | 0.7 kB |
+
+Ana `index-*.js` (~3.6 MB) Nivo/mevcut app; rapor paketleri lazy ayrıldı.
+
+### Test
+
+| Suite | Sonuç |
+|-------|--------|
+| Export güvenlik (+2) | salary drop + dept scope |
+| Tam suite | **503 passed / 0 fail** |
+| 3 SPA `tsc` + lint + sentinel | **0 / PASSED** |
+| DB wipe | **yok** |
+
+### Not
+
+**KULLANICI GÖRSEL KONTROLÜ BEKLİYOR (borç)**
+
+### DUR / sonraki
+
+- Daha fazla dataset; `/analytics` motora taşıma; zamanlanmış rapor

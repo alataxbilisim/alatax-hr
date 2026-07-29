@@ -165,6 +165,47 @@ class ReportController extends BaseController
         return $this->success($result, 'Önizleme');
     }
 
+    /**
+     * Export satırları — query builder (FE sayfa verisi değil). Üst sınır 50k.
+     */
+    public function export(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'dataset' => 'required|string|max:64',
+            'fields' => 'nullable|array',
+            'fields.*' => 'string',
+            'filters' => 'nullable|array',
+            'group_by' => 'nullable|array',
+            'aggregations' => 'nullable|array',
+            'sorts' => 'nullable|array',
+            'joins' => 'nullable|array',
+            'limit' => 'sometimes|integer|min:1|max:50000',
+        ]);
+
+        try {
+            $result = $this->reports->export($request->user(), (int) $this->getCompanyId(), $validated);
+        } catch (InvalidArgumentException $e) {
+            return $this->error($e->getMessage(), 422);
+        }
+
+        return $this->success($result, 'Export verisi');
+    }
+
+    public function exportSaved(Request $request, int $id): JsonResponse
+    {
+        $report = $this->findAccessible($request, $id);
+
+        try {
+            $result = $this->reports->exportSaved($report, $request->user(), (int) $this->getCompanyId());
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (InvalidArgumentException $e) {
+            return $this->error($e->getMessage(), 422);
+        }
+
+        return $this->success($result, 'Export verisi');
+    }
+
     private function findAccessible(Request $request, int $id): SavedReport
     {
         $report = SavedReport::query()
