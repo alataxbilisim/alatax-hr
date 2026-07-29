@@ -161,6 +161,9 @@ class CompanySettingsController extends BaseController
         $oldValues = $company->toArray();
         $company->update(['settings' => $settings]);
 
+        // D4a: legacy settings → registry cache
+        app(\App\Services\Settings\SettingsResolver::class)->invalidateCompany((int) $company->id);
+
         return $this->success($settings, 'Ayarlar güncellendi');
     }
 

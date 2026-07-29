@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from '@shared/i18n';
+import { PageSettingsButton } from '@shared/components';
 import { companyApi } from '@shared/services/api';
 import { getErrorMessage } from '@shared/services/apiHelpers';
 import toast from 'react-hot-toast';
@@ -62,8 +63,13 @@ const ReportPrivacySettingsPage: React.FC = () => {
   return (
     <div className="page-container animate-fade-in">
       <div className="page-header">
-        <h1 className="page-title">{t('reportPrivacy.title')}</h1>
-        <p className="page-subtitle">{t('reportPrivacy.subtitle')}</p>
+        <div className="page-header-content">
+          <h1 className="page-title">{t('reportPrivacy.title')}</h1>
+          <p className="page-subtitle">{t('reportPrivacy.subtitle')}</p>
+        </div>
+        <div className="page-header-actions">
+          <PageSettingsButton pageKey="settings-report-privacy" />
+        </div>
       </div>
       <div className="card">
         <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>

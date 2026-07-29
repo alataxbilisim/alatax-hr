@@ -3,9 +3,11 @@
 namespace App\Services\Reports;
 
 use App\Models\Company;
+use App\Services\Settings\Settings;
 
 /**
- * Firma bazlı rapor gizlilik ayarları (company.settings.report_privacy).
+ * Firma bazlı rapor gizlilik ayarları.
+ * D4a: Settings Registry birincil; company.settings.report_privacy legacy köprü.
  */
 final class ReportPrivacySettings
 {
@@ -31,8 +33,9 @@ final class ReportPrivacySettings
         $enabled = true;
         $threshold = self::DEFAULT_THRESHOLD;
         if ($company) {
-            $enabled = (bool) $company->getSetting('report_privacy.min_cell_enabled', true);
-            $threshold = (int) $company->getSetting('report_privacy.min_cell_threshold', self::DEFAULT_THRESHOLD);
+            $scope = ['company_id' => (int) $company->id];
+            $enabled = (bool) Settings::get('reports.privacy.min_cell_enabled', $scope);
+            $threshold = (int) Settings::get('reports.privacy.min_cell_threshold', $scope);
         }
         if ($threshold < 1) {
             $threshold = 1;

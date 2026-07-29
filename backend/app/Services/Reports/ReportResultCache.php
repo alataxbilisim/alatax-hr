@@ -106,9 +106,16 @@ final class ReportResultCache
         return (string) Cache::get($this->dashboardVersionKey($dashboardId), '0');
     }
 
-    public function resolveTtl(?int $reportTtl): int
+    public function resolveTtl(?int $reportTtl, ?int $companyId = null): int
     {
         if ($reportTtl === null) {
+            if ($companyId) {
+                return max(0, (int) \App\Services\Settings\Settings::get(
+                    'reports.cache.default_ttl_seconds',
+                    ['company_id' => $companyId]
+                ));
+            }
+
             return self::DEFAULT_TTL_SECONDS;
         }
 

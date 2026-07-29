@@ -1948,3 +1948,57 @@ export const lookupsApi = {
     api.post('/lookups-manage/reorder', { lookup_type: lookupType, items }),
 };
 
+/** D4a — Settings Registry */
+export interface SettingCatalogItem {
+  key: string;
+  module_key: string;
+  page_keys: string[];
+  label_key: string;
+  description_key: string;
+  type: string;
+  default: unknown;
+  value: unknown;
+  resolved_from: string;
+  is_default: boolean;
+  scope_levels: string[];
+  permission: string;
+  tier: string;
+  affects_key: string | null;
+  options: Array<{ value: string | number | boolean; label: string }> | null;
+  validation: { min?: number; max?: number; regex?: string; required?: boolean } | null;
+  legal_min_key: string | null;
+  legal_max_key: string | null;
+  can_edit: boolean;
+  legal_min: number | null;
+  legal_max: number | null;
+}
+
+export const settingsRegistryApi = {
+  registry: (params?: {
+    page_key?: string;
+    include_advanced?: boolean;
+    company_id?: number;
+    user_id?: number;
+    department_id?: number;
+    branch_id?: number;
+  }) => api.get('/settings/registry', { params }),
+  values: (keys: string[], params?: Record<string, unknown>) =>
+    api.get('/settings/values', { params: { keys: keys.join(','), ...params } }),
+  updateValues: (data: {
+    scope_type: string;
+    scope_id?: number | null;
+    company_id?: number;
+    values: Array<{ key: string; value: unknown }>;
+  }) => api.put('/settings/values', data),
+  reset: (data: {
+    key: string;
+    scope_type: string;
+    scope_id?: number | null;
+    company_id?: number;
+  }) => api.post('/settings/values/reset', data),
+  exportProfile: (companyId?: number) =>
+    api.get('/settings/profile', { params: companyId ? { company_id: companyId } : undefined }),
+  importProfile: (data: { company_id?: number; values: Array<{ key: string; value: unknown }> }) =>
+    api.post('/settings/profile', data),
+};
+

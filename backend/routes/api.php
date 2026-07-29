@@ -409,6 +409,22 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:management.lookups.delete');
         });
 
+        // D4a — Settings Registry (mevcut /company/settings bozulmaz)
+        Route::middleware('company_admin')->prefix('settings')->group(function () {
+            Route::get('/registry', [\App\Http\Controllers\Api\V1\Settings\SettingsRegistryController::class, 'registry'])
+                ->middleware('permission:settings.values.view');
+            Route::get('/values', [\App\Http\Controllers\Api\V1\Settings\SettingsRegistryController::class, 'values'])
+                ->middleware('permission:settings.values.view');
+            Route::put('/values', [\App\Http\Controllers\Api\V1\Settings\SettingsRegistryController::class, 'updateValues'])
+                ->middleware('permission:settings.values.edit');
+            Route::post('/values/reset', [\App\Http\Controllers\Api\V1\Settings\SettingsRegistryController::class, 'reset'])
+                ->middleware('permission:settings.values.edit');
+            Route::get('/profile', [\App\Http\Controllers\Api\V1\Settings\SettingsRegistryController::class, 'exportProfile'])
+                ->middleware('permission:settings.values.view');
+            Route::post('/profile', [\App\Http\Controllers\Api\V1\Settings\SettingsRegistryController::class, 'importProfile'])
+                ->middleware('permission:settings.values.edit');
+        });
+
         // D2a — KVKK (envanter + aydınlatma + rıza)
         Route::middleware('company_admin')->prefix('kvkk')->group(function () {
             Route::get('/categories', [\App\Http\Controllers\Api\V1\Kvkk\DataProcessingActivityController::class, 'categories'])

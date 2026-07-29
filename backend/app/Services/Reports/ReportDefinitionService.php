@@ -180,7 +180,7 @@ class ReportDefinitionService
         $config['dataset'] = $report->dataset_key;
 
         $bypass = (bool) ($overrides['__bypass_cache'] ?? false);
-        $ttl = $this->resultCache->resolveTtl($report->cache_ttl_seconds);
+        $ttl = $this->resultCache->resolveTtl($report->cache_ttl_seconds, $companyId);
         $cacheKey = $this->resultCache->key(
             $viewer,
             $companyId,

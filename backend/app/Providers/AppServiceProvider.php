@@ -5,6 +5,8 @@ namespace App\Providers;
 use App\Enums\UserType;
 use App\Models\User;
 use App\Notifications\Channels\TenantDatabaseChannel;
+use App\Services\Settings\SettingsRegistry;
+use App\Services\Settings\SettingsResolver;
 use App\Support\HierarchicalPermission;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -21,6 +23,9 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(DatabaseChannel::class, TenantDatabaseChannel::class);
+        // D4a — istek başına çözümleme cache'i için singleton
+        $this->app->singleton(SettingsRegistry::class);
+        $this->app->singleton(SettingsResolver::class);
     }
 
     /**

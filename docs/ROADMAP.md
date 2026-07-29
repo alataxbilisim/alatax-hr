@@ -255,8 +255,11 @@ Fark yaratacak 4 şey:
 **4D. Ayarlar Stüdyosu (tek yönetim merkezi)**
 - [ ] `/settings` tek çatı altında yeniden örgütlenir: Firma & Şubeler / Modüller / **Formlar & Alanlar** (Form Engine UI) / Liste Görünümleri / **İş Akışları** / **Bildirim Şablonları** / Roller & İzinler / İzin-Tatil Politikaları / Görünüm (tema-density-logo) / API & Webhook / Veri (import-export-KVKK)
 - [ ] Her modülün ayarı kendi sayfasına gömülü değil, stüdyoda modül sekmesi olarak yaşar (Zoho deseni)
+- [x] **D4a Settings Registry** — davranış parametreleri motoru (`setting_values`, kapsamlı çözümleme, merkezi + bağlamsal ⚙ UI). Pilot: İzin + Rapor. Lookup ile birleştirilmez. Detay: `docs/AYAR_MOTORU.md`.
 
 **DoD:** Bir firma admin'i kod olmadan: personel formuna alan ekler/kaldırır/yeniden adlandırır, alanı role kapatır, "5 günden uzun izinler GM onayına gitsin + e-posta atsın" akışını kurar, bildirim şablonunu düzenler — hepsi Ayarlar Stüdyosu'ndan.
+
+**DoD (Settings Registry):** Her modül dalgası, modülün ayarlarını Settings Registry'ye kaydetmeden ve bağlamsal ⚙ panelinde göstermeden **BİTMİŞ SAYILMAZ**.
 
 ---
 

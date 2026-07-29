@@ -2,6 +2,8 @@
   "appName": "DOBEDAN HOTELS HR SİSTEMİ",
   "loading": "Yükleniyor...",
   "save": "Kaydet",
+  "saving": "Kaydediliyor…",
+  "close": "Kapat",
   "cancel": "İptal",
   "back": "Geri",
   "error": "Bir hata oluştu",
@@ -244,6 +246,7 @@
       "modules": "Modül Ayarları"
     },
     "companySettings": "Firma ayarları",
+    "settingsRegistry": "Davranış ayarları",
     "webhooks": "Webhook'lar",
     "users": "Kullanıcılar",
     "roles": "Roller",
@@ -1391,6 +1394,66 @@
     "loadError": "Ayarlar yüklenemedi",
     "saveSuccess": "Gizlilik ayarları kaydedildi",
     "saveError": "Kayıt başarısız"
+  },
+  "settingsRegistry": {
+    "title": "Davranış ayarları",
+    "subtitle": "Modül davranış parametreleri — liste değerleri için Listeler (Lookup) kullanın",
+    "pageButton": "Sayfa ayarları",
+    "contextualTitle": "Bu sayfanın ayarları",
+    "emptyForPage": "Bu sayfaya bağlı ayar yok",
+    "search": "Ayar ara…",
+    "showAdvanced": "Gelişmiş ayarları göster",
+    "notDefault": "Varsayılandan farklı",
+    "modules": "Modüller",
+    "loadError": "Ayar kataloğu yüklenemedi",
+    "saveSuccess": "Ayarlar kaydedildi",
+    "saveError": "Ayarlar kaydedilemedi",
+    "noChanges": "Değişiklik yok",
+    "reset": "Varsayılana sıfırla",
+    "export": "Profil dışa aktar",
+    "import": "Profil içe aktar",
+    "resolved": {
+      "user": "kullanıcı özel",
+      "department": "bu departman için özel",
+      "branch": "bu şube için özel",
+      "company": "firma varsayılanı",
+      "companyLegacy": "firma (eski yol)",
+      "system": "sistem",
+      "default": "kod varsayılanı"
+    },
+    "legal": {
+      "leavesRetentionMin": "İzin saklama yasal asgari (ay)",
+      "leavesRetentionMinHelp": "Mevzuat tabanı — firmalar altına inemez",
+      "minDaysNoticeMin": "İzin talep önceliği yasal asgari (gün)",
+      "minDaysNoticeMinHelp": "Mevzuat tabanı — firmalar altına inemez"
+    },
+    "leaves": {
+      "allowCarryover": "Bakiye devri",
+      "allowCarryoverHelp": "Yıl sonu kullanılmayan bakiyenin devrine izin ver",
+      "allowNegative": "Negatif bakiye izni",
+      "allowNegativeHelp": "Açıksa bakiye yetersiz olsa da talep kabul edilebilir",
+      "minDaysNotice": "Minimum talep gün önceliği",
+      "minDaysNoticeHelp": "İzin başlangıcından en az kaç gün önce talep edilmeli",
+      "retentionMonths": "İzin kayıt saklama süresi (ay)",
+      "retentionMonthsHelp": "İzin talebi/bakiye kayıtlarının saklanma süresi"
+    },
+    "reports": {
+      "minCellEnabled": "Minimum hücre kuralı",
+      "minCellEnabledHelp": "Küçük gruplarda satır maskeleme",
+      "minCellThreshold": "Minimum hücre eşiği",
+      "minCellThresholdHelp": "DISTINCT kişi eşiği",
+      "cacheTtl": "Rapor cache TTL (sn)",
+      "cacheTtlHelp": "Rapor sonucu önbellek süresi; 0 = kapalı"
+    },
+    "affects": {
+      "legalFloor": "Yasal taban — firma sınırlarını belirler",
+      "leaveCarryover": "Yıl sonu bakiye devri iş kuralı",
+      "leaveNegative": "İzin talep bakiye kontrolü",
+      "leaveNotice": "İzin talep tarih doğrulaması",
+      "leaveRetention": "İzin veri saklama politikası",
+      "reportPrivacy": "Rapor min-hücre gizliliği",
+      "reportCache": "Rapor sonuç önbelleği"
+    }
   },
   "reportAccessLogs": {
     "title": "Rapor Erişimleri",

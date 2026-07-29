@@ -164,6 +164,13 @@ class PermissionSeeder extends Seeder
                 'kvkk' => ['view', 'edit'],
             ],
 
+            // D4a — Settings Registry (davranış parametreleri; Lookup değil)
+            'settings' => [
+                'values' => ['view', 'edit'],
+                'leaves' => ['view', 'edit'],
+                'reports' => ['view', 'edit'],
+            ],
+
             // Personel Modülü
             'employees' => [
                 'list' => ['view', 'create', 'edit', 'delete', 'export', 'import'],
@@ -467,6 +474,10 @@ class PermissionSeeder extends Seeder
                     'management.forms.view', 'management.forms.edit',
                     'management.notifications.view', 'management.notifications.edit',
                     'management.kvkk.view', 'management.kvkk.edit',
+                    // D4a Settings Registry
+                    'settings.values.view', 'settings.values.edit',
+                    'settings.leaves.view', 'settings.leaves.edit',
+                    'settings.reports.view', 'settings.reports.edit',
                     // api_keys / webhooks / workflows → yalnızca admin (company_admin / admin rolü)
 
                     // Personel - Tam yetki

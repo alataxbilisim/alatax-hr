@@ -292,6 +292,11 @@ class Company extends Model
         data_set($settings, $key, $value);
         $this->settings = $settings;
         $this->save();
+
+        // D4a: legacy company.settings değişince registry cache invalid
+        if ($this->id) {
+            app(\App\Services\Settings\SettingsResolver::class)->invalidateCompany((int) $this->id);
+        }
     }
 
     /**

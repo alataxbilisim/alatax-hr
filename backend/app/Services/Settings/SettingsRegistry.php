@@ -1,0 +1,246 @@
+<?php
+
+namespace App\Services\Settings;
+
+use App\Enums\SettingScopeType;
+use App\Enums\SettingTier;
+use App\Enums\SettingValueType;
+use App\Models\User;
+use InvalidArgumentException;
+
+/**
+ * Ayar tanımları kataloğu — D1a DatasetRegistry deseni.
+ */
+class SettingsRegistry
+{
+    /** @var array<string, SettingDefinition>|null */
+    private ?array $definitions = null;
+
+    /**
+     * @return array<string, SettingDefinition>
+     */
+    public function all(): array
+    {
+        if ($this->definitions === null) {
+            $list = $this->buildPilotDefinitions();
+            $this->definitions = [];
+            foreach ($list as $def) {
+                $this->definitions[$def->key] = $def;
+            }
+        }
+
+        return $this->definitions;
+    }
+
+    public function get(string $key): SettingDefinition
+    {
+        $all = $this->all();
+        if (! isset($all[$key])) {
+            throw new InvalidArgumentException('Bilinmeyen ayar: '.$key);
+        }
+
+        return $all[$key];
+    }
+
+    public function has(string $key): bool
+    {
+        return isset($this->all()[$key]);
+    }
+
+    /**
+     * Kullanıcının görebileceği tanımlar (settings.values.view + ayar permission).
+     *
+     * @return list<SettingDefinition>
+     */
+    public function visibleFor(User $user, ?string $pageKey = null, bool $includeAdvanced = true): array
+    {
+        $out = [];
+        foreach ($this->all() as $def) {
+            if ($pageKey !== null && ! in_array($pageKey, $def->pageKeys, true)) {
+                continue;
+            }
+            if (! $includeAdvanced && $def->tier === SettingTier::Advanced) {
+                continue;
+            }
+            if ($def->tier === SettingTier::System && ! $user->isSuperAdmin()) {
+                continue;
+            }
+            if (! $this->userCanView($user, $def)) {
+                continue;
+            }
+            $out[] = $def;
+        }
+
+        return $out;
+    }
+
+    public function userCanView(User $user, SettingDefinition $def): bool
+    {
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
+        return $user->can('settings.values.view') && $user->can($def->permission);
+    }
+
+    public function userCanEdit(User $user, SettingDefinition $def): bool
+    {
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
+        $editPerm = preg_replace('/\.view$/', '.edit', $def->permission) ?? $def->permission;
+
+        return $user->can('settings.values.edit') && $user->can($editPerm);
+    }
+
+    /**
+     * Pilot: İzin + Rapor. Diğer modüller Faz 6.
+     *
+     * @return list<SettingDefinition>
+     */
+    private function buildPilotDefinitions(): array
+    {
+        $companyScopes = [
+            SettingScopeType::Company,
+            SettingScopeType::Branch,
+            SettingScopeType::Department,
+            SettingScopeType::User,
+        ];
+
+        return [
+            // —— Yasal taban (sistem; SuperAdmin) ——
+            new SettingDefinition(
+                key: 'legal.leaves.retention.months.min',
+                moduleKey: 'settings',
+                pageKeys: ['settings-registry'],
+                labelKey: 'settingsRegistry.legal.leavesRetentionMin',
+                descriptionKey: 'settingsRegistry.legal.leavesRetentionMinHelp',
+                type: SettingValueType::Int,
+                default: 12,
+                scopeLevels: [SettingScopeType::System],
+                permission: 'settings.reports.view',
+                tier: SettingTier::System,
+                affectsKey: 'settingsRegistry.affects.legalFloor',
+                validation: ['min' => 1, 'max' => 1200, 'required' => true],
+            ),
+            new SettingDefinition(
+                key: 'legal.leaves.min_days_notice.min',
+                moduleKey: 'settings',
+                pageKeys: ['settings-registry'],
+                labelKey: 'settingsRegistry.legal.minDaysNoticeMin',
+                descriptionKey: 'settingsRegistry.legal.minDaysNoticeMinHelp',
+                type: SettingValueType::Int,
+                default: 0,
+                scopeLevels: [SettingScopeType::System],
+                permission: 'settings.leaves.view',
+                tier: SettingTier::System,
+                affectsKey: 'settingsRegistry.affects.legalFloor',
+                validation: ['min' => 0, 'max' => 365, 'required' => true],
+            ),
+
+            // —— İzin (pilot) ——
+            new SettingDefinition(
+                key: 'leaves.balance.allow_carryover',
+                moduleKey: 'leaves',
+                pageKeys: ['leaves-balances', 'leaves-requests', 'settings-registry'],
+                labelKey: 'settingsRegistry.leaves.allowCarryover',
+                descriptionKey: 'settingsRegistry.leaves.allowCarryoverHelp',
+                type: SettingValueType::Bool,
+                default: true,
+                scopeLevels: $companyScopes,
+                permission: 'settings.leaves.view',
+                tier: SettingTier::Basic,
+                affectsKey: 'settingsRegistry.affects.leaveCarryover',
+            ),
+            new SettingDefinition(
+                key: 'leaves.balance.allow_negative',
+                moduleKey: 'leaves',
+                pageKeys: ['leaves-balances', 'leaves-requests', 'settings-registry'],
+                labelKey: 'settingsRegistry.leaves.allowNegative',
+                descriptionKey: 'settingsRegistry.leaves.allowNegativeHelp',
+                type: SettingValueType::Bool,
+                default: false,
+                scopeLevels: $companyScopes,
+                permission: 'settings.leaves.view',
+                tier: SettingTier::Basic,
+                affectsKey: 'settingsRegistry.affects.leaveNegative',
+            ),
+            new SettingDefinition(
+                key: 'leaves.request.min_days_notice',
+                moduleKey: 'leaves',
+                pageKeys: ['leaves-requests', 'settings-registry'],
+                labelKey: 'settingsRegistry.leaves.minDaysNotice',
+                descriptionKey: 'settingsRegistry.leaves.minDaysNoticeHelp',
+                type: SettingValueType::Int,
+                default: 0,
+                scopeLevels: $companyScopes,
+                permission: 'settings.leaves.view',
+                tier: SettingTier::Basic,
+                affectsKey: 'settingsRegistry.affects.leaveNotice',
+                validation: ['min' => 0, 'max' => 365, 'required' => true],
+                legalMinKey: 'legal.leaves.min_days_notice.min',
+            ),
+            new SettingDefinition(
+                key: 'leaves.retention.months',
+                moduleKey: 'leaves',
+                pageKeys: ['leaves-requests', 'settings-registry'],
+                labelKey: 'settingsRegistry.leaves.retentionMonths',
+                descriptionKey: 'settingsRegistry.leaves.retentionMonthsHelp',
+                type: SettingValueType::Int,
+                default: 24,
+                scopeLevels: [SettingScopeType::Company],
+                permission: 'settings.leaves.view',
+                tier: SettingTier::Advanced,
+                affectsKey: 'settingsRegistry.affects.leaveRetention',
+                validation: ['min' => 1, 'max' => 1200, 'required' => true],
+                legalMinKey: 'legal.leaves.retention.months.min',
+            ),
+
+            // —— Rapor (pilot; legacy company.settings.report_privacy) ——
+            new SettingDefinition(
+                key: 'reports.privacy.min_cell_enabled',
+                moduleKey: 'reports',
+                pageKeys: ['reports-builder', 'settings-report-privacy', 'settings-registry'],
+                labelKey: 'settingsRegistry.reports.minCellEnabled',
+                descriptionKey: 'settingsRegistry.reports.minCellEnabledHelp',
+                type: SettingValueType::Bool,
+                default: true,
+                scopeLevels: [SettingScopeType::Company],
+                permission: 'settings.reports.view',
+                tier: SettingTier::Basic,
+                affectsKey: 'settingsRegistry.affects.reportPrivacy',
+                legacyCompanyPath: 'report_privacy.min_cell_enabled',
+            ),
+            new SettingDefinition(
+                key: 'reports.privacy.min_cell_threshold',
+                moduleKey: 'reports',
+                pageKeys: ['reports-builder', 'settings-report-privacy', 'settings-registry'],
+                labelKey: 'settingsRegistry.reports.minCellThreshold',
+                descriptionKey: 'settingsRegistry.reports.minCellThresholdHelp',
+                type: SettingValueType::Int,
+                default: 5,
+                scopeLevels: [SettingScopeType::Company],
+                permission: 'settings.reports.view',
+                tier: SettingTier::Basic,
+                affectsKey: 'settingsRegistry.affects.reportPrivacy',
+                validation: ['min' => 1, 'max' => 1000, 'required' => true],
+                legacyCompanyPath: 'report_privacy.min_cell_threshold',
+            ),
+            new SettingDefinition(
+                key: 'reports.cache.default_ttl_seconds',
+                moduleKey: 'reports',
+                pageKeys: ['reports-builder', 'settings-registry'],
+                labelKey: 'settingsRegistry.reports.cacheTtl',
+                descriptionKey: 'settingsRegistry.reports.cacheTtlHelp',
+                type: SettingValueType::Int,
+                default: 300,
+                scopeLevels: [SettingScopeType::Company],
+                permission: 'settings.reports.view',
+                tier: SettingTier::Advanced,
+                affectsKey: 'settingsRegistry.affects.reportCache',
+                validation: ['min' => 0, 'max' => 86400, 'required' => true],
+            ),
+        ];
+    }
+}

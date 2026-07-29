@@ -117,6 +117,7 @@ import ReportAccessLogsPage from './pages/audit/ReportAccessLogsPage';
 import WebhooksPage from './pages/settings/WebhooksPage';
 import CustomFieldsIndexPage from './pages/settings/CustomFieldsIndexPage';
 import LookupsPage from './pages/lookups/LookupsPage';
+import SettingsRegistryPage from './pages/settings/SettingsRegistryPage';
 import KvkkPage from './pages/kvkk/KvkkPage';
 import AccountProfilePage from './pages/account/AccountProfilePage';
 import AccountSecurityPage from './pages/account/AccountSecurityPage';
@@ -962,6 +963,16 @@ const App: React.FC = () => {
           <Route
             path="/settings"
             element={<ProtectedRoute><SettingsPage /></ProtectedRoute>}
+          />
+          <Route
+            path="/settings/registry"
+            element={
+              <ProtectedRoute>
+                <PermissionProtectedRoute module="settings" page="values" action="view">
+                  <SettingsRegistryPage />
+                </PermissionProtectedRoute>
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/settings/report-privacy"

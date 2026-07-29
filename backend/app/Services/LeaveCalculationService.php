@@ -139,7 +139,20 @@ class LeaveCalculationService
         $available = $balance->available_days;
         $leaveType = LeaveType::find($leaveTypeId);
 
-        // Negatif bakiye izni kontrolü
+        // D4a: firma ayarı negatif bakiyeye izin veriyorsa yeterli say
+        $companyId = (int) ($balance->company_id ?? $leaveType?->company_id ?? 0);
+        if ($companyId > 0 && \App\Services\Settings\Settings::get('leaves.balance.allow_negative', ['company_id' => $companyId])) {
+            return [
+                'sufficient' => true,
+                'available' => $available,
+                'requested' => $requestedDays,
+                'remaining_after' => $available - $requestedDays,
+                'min_balance' => null,
+                'message' => 'Negatif bakiye izni açık',
+            ];
+        }
+
+        // Negatif bakiye izni kontrolü (accrual policy min_balance)
         $accrualPolicy = $leaveType?->accrualPolicy;
         $minBalance = $accrualPolicy?->min_balance ?? 0;
 

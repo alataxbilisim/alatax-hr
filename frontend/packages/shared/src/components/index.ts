@@ -52,3 +52,5 @@ export type {
   ReportTableColumn,
   ReportRow,
 } from './reports';
+export { PageSettingsButton } from './PageSettingsButton';
+export type { PageSettingsButtonProps } from './PageSettingsButton';

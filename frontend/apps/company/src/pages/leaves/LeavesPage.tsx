@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from '@shared/i18n';
 import { leavesApi, lookupsApi, type LookupItem } from '@shared/services/api';
-import { Select } from '@shared/components';
+import { PageSettingsButton, Select } from '@shared/components';
 import { usePermission } from '@shared/hooks/usePermission';
 import { getErrorMessage } from '@shared/services/apiHelpers';
 import toast from 'react-hot-toast';
@@ -595,6 +595,9 @@ const LeavesPage: React.FC = () => {
           <h1 className="page-title">İzinler</h1>
         </div>
         <div className="page-header-actions">
+          <PageSettingsButton
+            pageKey={activeTab === 'balances' ? 'leaves-balances' : 'leaves-requests'}
+          />
           {getHeaderAction()}
         </div>
       </div>
