@@ -1107,6 +1107,30 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:analytics.reports.view');
         });
 
+        // Rapor Motoru (D1a) — semantic layer + güvenli query builder
+        Route::prefix('reports')->group(function () {
+            Route::get('/datasets', [\App\Http\Controllers\Api\V1\Reports\ReportController::class, 'datasets'])
+                ->middleware('permission:reports.definitions.view');
+            Route::post('/preview', [\App\Http\Controllers\Api\V1\Reports\ReportController::class, 'preview'])
+                ->middleware('permission:reports.definitions.run');
+            Route::get('/', [\App\Http\Controllers\Api\V1\Reports\ReportController::class, 'index'])
+                ->middleware('permission:reports.definitions.view');
+            Route::post('/', [\App\Http\Controllers\Api\V1\Reports\ReportController::class, 'store'])
+                ->middleware('permission:reports.definitions.create');
+            Route::get('/{id}', [\App\Http\Controllers\Api\V1\Reports\ReportController::class, 'show'])
+                ->middleware('permission:reports.definitions.view')
+                ->whereNumber('id');
+            Route::put('/{id}', [\App\Http\Controllers\Api\V1\Reports\ReportController::class, 'update'])
+                ->middleware('permission:reports.definitions.edit')
+                ->whereNumber('id');
+            Route::delete('/{id}', [\App\Http\Controllers\Api\V1\Reports\ReportController::class, 'destroy'])
+                ->middleware('permission:reports.definitions.delete')
+                ->whereNumber('id');
+            Route::post('/{id}/run', [\App\Http\Controllers\Api\V1\Reports\ReportController::class, 'run'])
+                ->middleware('permission:reports.definitions.run')
+                ->whereNumber('id');
+        });
+
         // Timesheet / Attendance (HR) — timesheet.attendance.*
         // Statik path'ler {id}'den önce
         Route::prefix('attendance')->group(function () {

@@ -246,6 +246,11 @@ class PermissionSeeder extends Seeder
                 'reports' => ['view', 'export'],
             ],
 
+            // Rapor Motoru (D1a — Faz 5)
+            'reports' => [
+                'definitions' => ['view', 'create', 'edit', 'delete', 'run'],
+            ],
+
             // Puantaj Modülü
             'timesheet' => [
                 'attendance' => ['view', 'create', 'edit', 'approve'],
@@ -494,6 +499,9 @@ class PermissionSeeder extends Seeder
 
                     // Analitik
                     'analytics.*',
+
+                    // Rapor motoru
+                    'reports.*',
 
                     // Geriye uyumluluk
                     'users.view', 'users.create', 'users.edit',
