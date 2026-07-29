@@ -9,6 +9,7 @@ import { AppDispatch, RootState } from '../store';
 import { BottomNav, BottomSheet } from '../components/ui';
 import DesktopRail from '../components/shell/DesktopRail';
 import { PORTAL_MORE_LINKS } from '../nav/portalMoreLinks';
+import PortalPrivacyModal from '../components/PortalPrivacyModal';
 
 /**
  * PORTAL-1 AppShell — mobil alt nav + masaüstü rail.
@@ -51,6 +52,8 @@ const PortalLayout: React.FC = () => {
           <Outlet />
         </div>
       </div>
+
+      <PortalPrivacyModal />
 
       <BottomNav />
 

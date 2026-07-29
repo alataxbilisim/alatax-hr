@@ -25,6 +25,16 @@ class StorePublicApplicationRequest extends FormRequest
                 $this->merge(['form_data' => $decoded]);
             }
         }
+
+        // Eski tek kutu: her iki zorunlu onayı doldur (yeni UI ayrı tutar)
+        if ($this->boolean('consent_kvkk')
+            && ! $this->has('consent_notice_read')
+            && ! $this->has('consent_explicit_special')) {
+            $this->merge([
+                'consent_notice_read' => '1',
+                'consent_explicit_special' => '1',
+            ]);
+        }
     }
 
     /**
@@ -38,7 +48,12 @@ class StorePublicApplicationRequest extends FormRequest
             'last_name' => ['required', 'string', 'max:100'],
             'email' => ['required', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:30'],
-            'consent_kvkk' => ['required', 'accepted'],
+            // D2a: aydınlatma ≠ açık rıza — ayrı onaylar (tek checkbox yasak)
+            'consent_notice_read' => ['required', 'accepted'],
+            'consent_explicit_special' => ['required', 'accepted'],
+            'privacy_notice_id' => ['nullable', 'integer'],
+            // Geriye uyumluluk: eski istemciler consent_kvkk gönderirse kabul (her iki kutu ile)
+            'consent_kvkk' => ['sometimes', 'accepted'],
             'cv' => ['nullable', 'file', 'mimes:pdf,doc,docx', 'max:10240'],
             'form_data' => ['nullable', 'array'],
         ];
@@ -51,7 +66,10 @@ class StorePublicApplicationRequest extends FormRequest
     {
         return [
             'company_slug.required' => 'Firma kimliği (slug) zorunludur.',
-            'consent_kvkk.required' => 'KVKK aday rızası zorunludur.',
+            'consent_notice_read.required' => 'Aydınlatma metninin okunduğu onaylanmalıdır.',
+            'consent_notice_read.accepted' => 'Aydınlatma metninin okunduğu onaylanmalıdır.',
+            'consent_explicit_special.required' => 'Açık rıza onayı zorunludur.',
+            'consent_explicit_special.accepted' => 'Açık rıza onayı zorunludur.',
             'consent_kvkk.accepted' => 'KVKK aday rızası kabul edilmelidir.',
         ];
     }

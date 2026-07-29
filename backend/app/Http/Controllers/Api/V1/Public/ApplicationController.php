@@ -4,12 +4,15 @@ namespace App\Http\Controllers\Api\V1\Public;
 
 use App\Enums\JobApplicationStatus;
 use App\Enums\JobPositionStatus;
+use App\Enums\KvkkConsentType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Public\StorePublicApplicationRequest;
 use App\Models\ActivityLog;
 use App\Models\Company;
 use App\Models\JobApplication;
 use App\Models\JobPosition;
+use App\Services\Kvkk\ConsentRecordService;
+use App\Services\Kvkk\PrivacyNoticeService;
 use App\Services\PublicApplicationFormService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
@@ -19,6 +22,8 @@ class ApplicationController extends Controller
 {
     public function __construct(
         protected PublicApplicationFormService $publicFormService,
+        protected ConsentRecordService $consents,
+        protected PrivacyNoticeService $notices,
     ) {}
 
     /**
@@ -82,6 +87,11 @@ class ApplicationController extends Controller
             $cvOriginal = $file->getClientOriginalName();
         }
 
+        $activeNotice = $this->notices->activeFor((int) $company->id, 'candidate');
+        $noticeId = isset($validated['privacy_notice_id'])
+            ? (int) $validated['privacy_notice_id']
+            : ($activeNotice?->id);
+
         try {
             $application = JobApplication::create([
                 'company_id' => $company->id,
@@ -100,6 +110,26 @@ class ApplicationController extends Controller
                 'ip_address' => $request->ip(),
                 'user_agent' => substr((string) $request->userAgent(), 0, 255),
             ]);
+
+            // Aydınlatma ve açık rıza ayrı kanıt kayıtları
+            $this->consents->record((int) $company->id, [
+                'subject_type' => 'candidate',
+                'subject_id' => $application->id,
+                'notice_id' => $noticeId,
+                'consent_type' => KvkkConsentType::NoticeRead->value,
+                'granted' => true,
+                'source' => 'public_form',
+                'evidence' => ['application_id' => $application->id],
+            ], $request);
+            $this->consents->record((int) $company->id, [
+                'subject_type' => 'candidate',
+                'subject_id' => $application->id,
+                'notice_id' => $noticeId,
+                'consent_type' => KvkkConsentType::ExplicitSpecial->value,
+                'granted' => true,
+                'source' => 'public_form',
+                'evidence' => ['application_id' => $application->id],
+            ], $request);
 
             ActivityLog::log(
                 'create',

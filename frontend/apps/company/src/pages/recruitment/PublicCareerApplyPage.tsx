@@ -59,9 +59,12 @@ const PublicCareerApplyPage: React.FC = () => {
     last_name: '',
     email: '',
     phone: '',
-    consent_kvkk: false,
+    consent_notice_read: false,
+    consent_explicit_special: false,
   });
   const [cvFile, setCvFile] = useState<File | null>(null);
+  const [privacyNoticeId, setPrivacyNoticeId] = useState<number | null>(null);
+  const [privacyTitle, setPrivacyTitle] = useState<string | null>(null);
 
   const messages = useMemo(
     () => ({
@@ -79,12 +82,22 @@ const PublicCareerApplyPage: React.FC = () => {
     try {
       setLoading(true);
       setLoadError(null);
-      const res = await publicApi.jobs.form(companySlug, positionSlug);
+      const [res, noticeRes] = await Promise.all([
+        publicApi.jobs.form(companySlug, positionSlug),
+        publicApi.privacyNotice(companySlug).catch(() => null),
+      ]);
       const dataUnknown: unknown = res.data.data;
       if (!isPublicFormPayload(dataUnknown)) {
         throw new Error(t('recruitment.careerLoadError'));
       }
       setPayload(dataUnknown);
+      if (noticeRes) {
+        const n: unknown = noticeRes.data.data;
+        if (typeof n === 'object' && n !== null && 'id' in n && typeof n.id === 'number') {
+          setPrivacyNoticeId(n.id);
+          if ('title' in n && typeof n.title === 'string') setPrivacyTitle(n.title);
+        }
+      }
     } catch (error: unknown) {
       setPayload(null);
       setLoadError(getErrorMessage(error, t('recruitment.careerLoadError')));
@@ -102,7 +115,15 @@ const PublicCareerApplyPage: React.FC = () => {
     fd.append('last_name', String(values.last_name ?? ''));
     fd.append('email', String(values.email ?? ''));
     if (values.phone) fd.append('phone', String(values.phone));
-    fd.append('consent_kvkk', values.consent_kvkk ? '1' : '0');
+    const noticeRead = Boolean(values.consent_notice_read ?? values.consent_kvkk);
+    const explicit = Boolean(values.consent_explicit_special ?? values.consent_kvkk);
+    fd.append('consent_notice_read', noticeRead ? '1' : '0');
+    fd.append('consent_explicit_special', explicit ? '1' : '0');
+    // Geriye uyumluluk
+    fd.append('consent_kvkk', noticeRead && explicit ? '1' : '0');
+    if (privacyNoticeId) {
+      fd.append('privacy_notice_id', String(privacyNoticeId));
+    }
     if (values.cv instanceof File) {
       fd.append('cv', values.cv);
     }
@@ -125,7 +146,7 @@ const PublicCareerApplyPage: React.FC = () => {
       ...payload.custom_fields,
       ...payload.system,
     };
-    if (!merged.consent_kvkk) {
+    if (!merged.consent_kvkk && !(merged.consent_notice_read && merged.consent_explicit_special)) {
       toast.error(t('recruitment.consentRequired'));
       return;
     }
@@ -145,7 +166,7 @@ const PublicCareerApplyPage: React.FC = () => {
 
   const handleClassicSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!classic.consent_kvkk) {
+    if (!classic.consent_notice_read || !classic.consent_explicit_special) {
       toast.error(t('recruitment.consentRequired'));
       return;
     }
@@ -255,14 +276,30 @@ const PublicCareerApplyPage: React.FC = () => {
               onChange={(e) => setCvFile(e.target.files?.[0] ?? null)}
             />
           </div>
+          {privacyTitle ? (
+            <p className="text-muted" style={{ fontSize: 'var(--fs-sm)' }}>
+              {privacyTitle}
+            </p>
+          ) : null}
           <label style={{ display: 'flex', gap: 'var(--sp-2)', alignItems: 'flex-start' }}>
             <input
               type="checkbox"
-              checked={classic.consent_kvkk}
-              onChange={(e) => setClassic({ ...classic, consent_kvkk: e.target.checked })}
+              checked={classic.consent_notice_read}
+              onChange={(e) => setClassic({ ...classic, consent_notice_read: e.target.checked })}
               required
             />
-            <span>{t('recruitment.kvkkConsent')}</span>
+            <span>{t('kvkk.noticeRead')}</span>
+          </label>
+          <label style={{ display: 'flex', gap: 'var(--sp-2)', alignItems: 'flex-start' }}>
+            <input
+              type="checkbox"
+              checked={classic.consent_explicit_special}
+              onChange={(e) =>
+                setClassic({ ...classic, consent_explicit_special: e.target.checked })
+              }
+              required
+            />
+            <span>{t('kvkk.explicitSpecial')}</span>
           </label>
           <button type="submit" className="btn btn-primary" disabled={saving}>
             {saving ? t('formEngine.saving') : t('recruitment.careerSubmit')}

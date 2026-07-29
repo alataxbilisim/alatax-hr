@@ -1405,6 +1405,36 @@ export const publicApi = {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
+
+  privacyNotice: (companySlug: string) =>
+    api.get(`/public/companies/${companySlug}/privacy-notice`),
+};
+
+/** D2a — KVKK yönetim API */
+export const kvkkApi = {
+  categories: () => api.get('/kvkk/categories'),
+  activities: {
+    list: (params?: { per_page?: number }) => api.get('/kvkk/activities', { params }),
+    create: (data: Record<string, unknown>) => api.post('/kvkk/activities', data),
+    update: (id: number, data: Record<string, unknown>) => api.put(`/kvkk/activities/${id}`, data),
+    remove: (id: number) => api.delete(`/kvkk/activities/${id}`),
+    export: () => api.get('/kvkk/activities/export', { responseType: 'blob' }),
+  },
+  notices: {
+    list: (params?: { audience?: string; per_page?: number }) =>
+      api.get('/kvkk/notices', { params }),
+    active: (audience: string) => api.get('/kvkk/notices/active', { params: { audience } }),
+    create: (data: Record<string, unknown>) => api.post('/kvkk/notices', data),
+    update: (id: number, data: Record<string, unknown>) => api.put(`/kvkk/notices/${id}`, data),
+    publish: (id: number) => api.post(`/kvkk/notices/${id}/publish`),
+    remove: (id: number) => api.delete(`/kvkk/notices/${id}`),
+  },
+  consents: {
+    list: (params?: Record<string, unknown>) => api.get('/kvkk/consents', { params }),
+    missing: () => api.get('/kvkk/consents/missing'),
+    create: (data: Record<string, unknown>) => api.post('/kvkk/consents', data),
+    withdraw: (id: number) => api.post(`/kvkk/consents/${id}/withdraw`),
+  },
 };
 
 // Portal API (Personel Self-Servis)
@@ -1425,6 +1455,13 @@ export const portalApi = {
       api.put('/portal/profile/password', data),
     updateAvatar: (data: FormData) => 
       api.post('/portal/profile/avatar', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  },
+
+  privacy: {
+    status: () => api.get('/portal/privacy/status'),
+    acknowledge: (data: { notice_id: number; granted: boolean }) =>
+      api.post('/portal/privacy/acknowledge', data),
+    withdraw: (id: number) => api.post(`/portal/privacy/consents/${id}/withdraw`),
   },
   
   // Leaves (İzinler)

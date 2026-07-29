@@ -274,6 +274,7 @@ export const pinnedModuleGroups: ModuleGroup[] = [
     items: [
       { path: '/settings', labelKey: 'studio.companySettings', permission: { module: 'management', page: 'settings' }, group: 'company' },
       { path: '/settings/report-privacy', labelKey: 'reportPrivacy.title', permission: { module: 'management', page: 'settings' }, group: 'company' },
+      { path: '/kvkk', labelKey: 'kvkk.title', permission: { module: 'management', page: 'kvkk' }, group: 'company' },
       { path: '/webhooks', labelKey: 'studio.webhooks', permission: { module: 'management', page: 'webhooks' }, group: 'company' },
       { path: '/users', labelKey: 'studio.users', permission: { module: 'management', page: 'users' }, group: 'users' },
       { path: '/roles', labelKey: 'studio.roles', permission: { module: 'management', page: 'roles' }, group: 'users' },

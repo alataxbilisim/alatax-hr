@@ -409,6 +409,50 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:management.lookups.delete');
         });
 
+        // D2a — KVKK (envanter + aydınlatma + rıza)
+        Route::middleware('company_admin')->prefix('kvkk')->group(function () {
+            Route::get('/categories', [\App\Http\Controllers\Api\V1\Kvkk\DataProcessingActivityController::class, 'categories'])
+                ->middleware('permission:management.kvkk.view');
+            Route::get('/activities/export', [\App\Http\Controllers\Api\V1\Kvkk\DataProcessingActivityController::class, 'export'])
+                ->middleware(['permission:management.kvkk.view', 'throttle:exports']);
+            Route::get('/activities', [\App\Http\Controllers\Api\V1\Kvkk\DataProcessingActivityController::class, 'index'])
+                ->middleware('permission:management.kvkk.view');
+            Route::post('/activities', [\App\Http\Controllers\Api\V1\Kvkk\DataProcessingActivityController::class, 'store'])
+                ->middleware('permission:management.kvkk.edit');
+            Route::put('/activities/{id}', [\App\Http\Controllers\Api\V1\Kvkk\DataProcessingActivityController::class, 'update'])
+                ->middleware('permission:management.kvkk.edit')
+                ->whereNumber('id');
+            Route::delete('/activities/{id}', [\App\Http\Controllers\Api\V1\Kvkk\DataProcessingActivityController::class, 'destroy'])
+                ->middleware('permission:management.kvkk.edit')
+                ->whereNumber('id');
+
+            Route::get('/notices', [\App\Http\Controllers\Api\V1\Kvkk\PrivacyNoticeController::class, 'index'])
+                ->middleware('permission:management.kvkk.view');
+            Route::get('/notices/active', [\App\Http\Controllers\Api\V1\Kvkk\PrivacyNoticeController::class, 'active'])
+                ->middleware('permission:management.kvkk.view');
+            Route::post('/notices', [\App\Http\Controllers\Api\V1\Kvkk\PrivacyNoticeController::class, 'store'])
+                ->middleware('permission:management.kvkk.edit');
+            Route::put('/notices/{id}', [\App\Http\Controllers\Api\V1\Kvkk\PrivacyNoticeController::class, 'update'])
+                ->middleware('permission:management.kvkk.edit')
+                ->whereNumber('id');
+            Route::post('/notices/{id}/publish', [\App\Http\Controllers\Api\V1\Kvkk\PrivacyNoticeController::class, 'publish'])
+                ->middleware('permission:management.kvkk.edit')
+                ->whereNumber('id');
+            Route::delete('/notices/{id}', [\App\Http\Controllers\Api\V1\Kvkk\PrivacyNoticeController::class, 'destroy'])
+                ->middleware('permission:management.kvkk.edit')
+                ->whereNumber('id');
+
+            Route::get('/consents', [\App\Http\Controllers\Api\V1\Kvkk\ConsentRecordController::class, 'index'])
+                ->middleware('permission:management.kvkk.view');
+            Route::get('/consents/missing', [\App\Http\Controllers\Api\V1\Kvkk\ConsentRecordController::class, 'missing'])
+                ->middleware('permission:management.kvkk.view');
+            Route::post('/consents', [\App\Http\Controllers\Api\V1\Kvkk\ConsentRecordController::class, 'store'])
+                ->middleware('permission:management.kvkk.edit');
+            Route::post('/consents/{id}/withdraw', [\App\Http\Controllers\Api\V1\Kvkk\ConsentRecordController::class, 'withdraw'])
+                ->middleware('permission:management.kvkk.edit')
+                ->whereNumber('id');
+        });
+
         // Custom Fields (global admin UI)
         Route::middleware('company_admin')->prefix('custom-fields')->group(function () {
             Route::get('/', [\App\Http\Controllers\Api\V1\CustomFieldController::class, 'index'])
@@ -1323,6 +1367,12 @@ Route::prefix('v1')->group(function () {
         Route::put('/profile/password', [\App\Http\Controllers\Api\V1\Portal\PortalProfileController::class, 'updatePassword']);
         Route::post('/profile/avatar', [\App\Http\Controllers\Api\V1\Portal\PortalProfileController::class, 'updateAvatar']);
 
+        // D2a — KVKK aydınlatma / rıza (portal)
+        Route::get('/privacy/status', [\App\Http\Controllers\Api\V1\Portal\PortalPrivacyController::class, 'status']);
+        Route::post('/privacy/acknowledge', [\App\Http\Controllers\Api\V1\Portal\PortalPrivacyController::class, 'acknowledge']);
+        Route::post('/privacy/consents/{id}/withdraw', [\App\Http\Controllers\Api\V1\Portal\PortalPrivacyController::class, 'withdraw'])
+            ->whereNumber('id');
+
         // Ücretim (yalnız kendi)
         Route::get('/salary', [\App\Http\Controllers\Api\V1\Portal\PortalSalaryController::class, 'me']);
         Route::get('/salary/{id}', [\App\Http\Controllers\Api\V1\Portal\PortalSalaryController::class, 'show']);
@@ -1442,6 +1492,9 @@ Route::prefix('v1')->group(function () {
 
         // Başvuru formu tanımı (FormEngine — yalnız aktif ilan, tenant slug zorunlu)
         Route::get('/companies/{companySlug}/jobs/{positionSlug}/form', [\App\Http\Controllers\Api\V1\Public\JobController::class, 'form']);
+
+        // D2a — aday aydınlatma (aktif versiyon, hukuki metin firmadan)
+        Route::get('/companies/{companySlug}/privacy-notice', [\App\Http\Controllers\Api\V1\Public\PublicPrivacyNoticeController::class, 'show']);
 
         // Başvuru gönder (company_slug body veya route param — tenant)
         Route::post('/jobs/{positionSlug}/apply', [\App\Http\Controllers\Api\V1\Public\ApplicationController::class, 'store']);

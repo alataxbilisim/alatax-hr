@@ -117,6 +117,7 @@ import ReportAccessLogsPage from './pages/audit/ReportAccessLogsPage';
 import WebhooksPage from './pages/settings/WebhooksPage';
 import CustomFieldsIndexPage from './pages/settings/CustomFieldsIndexPage';
 import LookupsPage from './pages/lookups/LookupsPage';
+import KvkkPage from './pages/kvkk/KvkkPage';
 import AccountProfilePage from './pages/account/AccountProfilePage';
 import AccountSecurityPage from './pages/account/AccountSecurityPage';
 import AccountPreferencesPage from './pages/account/AccountPreferencesPage';
@@ -978,6 +979,16 @@ const App: React.FC = () => {
               <ProtectedRoute>
                 <PermissionProtectedRoute module="management" page="lookups" action="view">
                   <LookupsPage />
+                </PermissionProtectedRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/kvkk"
+            element={
+              <ProtectedRoute>
+                <PermissionProtectedRoute module="management" page="kvkk" action="view">
+                  <KvkkPage />
                 </PermissionProtectedRoute>
               </ProtectedRoute>
             }

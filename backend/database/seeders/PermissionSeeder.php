@@ -155,6 +155,8 @@ class PermissionSeeder extends Seeder
                 'forms' => ['view', 'edit'],
                 'workflows' => ['view', 'create', 'edit', 'delete'],
                 'notifications' => ['view', 'edit'],
+                // D2a KVKK
+                'kvkk' => ['view', 'edit'],
             ],
 
             // Personel Modülü
@@ -459,6 +461,7 @@ class PermissionSeeder extends Seeder
                     'management.lookups.view', 'management.lookups.create', 'management.lookups.edit', 'management.lookups.delete',
                     'management.forms.view', 'management.forms.edit',
                     'management.notifications.view', 'management.notifications.edit',
+                    'management.kvkk.view', 'management.kvkk.edit',
                     // api_keys / webhooks / workflows → yalnızca admin (company_admin / admin rolü)
 
                     // Personel - Tam yetki
