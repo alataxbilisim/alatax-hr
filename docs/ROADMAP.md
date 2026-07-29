@@ -262,57 +262,81 @@ Fark yaratacak 4 şey:
 
 ### FAZ 5 — Rapor & Analitik Motoru (5–7 hafta)
 
-**Amaç:** "PowerBI mantığı" — self-servis rapor + dashboard. Faz 2 (izinler) ve Faz 4 (custom fields) üstüne kurulur.
+**Amaç:** "PowerBI mantığı" — self-servis rapor + dashboard. Faz 2 (izinler) ve Faz 4 (custom fields) üstüne kurulur. Detay: `docs/FAZ5_RAPOR.md`. Şartname: `MODUL_SPEC` B14 Analitik.
 
-- [ ] **Semantic layer (dataset registry):** her modül veri setlerini kodda tanımlar (Personel, İzin Kayıtları, İzin Bakiyeleri, Başvurular, Puantaj, Masraflar, Eğitim Katılımları, Zimmetler, Anket Sonuçları...). Her dataset: alanlar (tip + Türkçe etiket), izinli join'ler, boyutlar/ölçüler, izin gereksinimleri. **Custom field'lar otomatik dahil olur**
-- [ ] **Güvenli query builder servisi:** yalnızca whitelisted alan/join/aggregation; her sorguya otomatik company scope + veri kapsamı + alan izinleri uygulanır (maaşı göremeyen, maaş raporu da çekemez). Ham SQL asla kullanıcıdan alınmaz
-- [ ] Rapor tanımı JSONB: dataset, kolonlar, filtreler (custom field dahil), gruplama, sıralama, özet satırları, grafik konfigürasyonu → mevcut `saved_reports` tablosu genişletilir
-- [ ] **Rapor Builder UI:** 3 panel (alan listesi / kanvas / canlı önizleme); tablo + pivot + Nivo grafikleri (bar, line, pie, heatmap, treemap zaten bağımlılıkta); rapor kaydetme, rol/kişi bazlı paylaşım
-- [ ] Export: mevcut ExcelJS/jsPDF hattı rapor motoruna bağlanır; **zamanlanmış raporlar** (scheduler + queue + e-posta ekli)
-- [ ] **Dashboard v2:** `employee_dashboards` + react-grid-layout altyapısı genelleştirilir → her kayıtlı rapor bir widget olarak dashboard'a eklenebilir; rol bazlı varsayılan dashboard'lar
-- [ ] **Rol bazlı kişiselleştirilebilir Dashboard (vizyon — Faz 3 sonrası netleşti):** Her kullanıcı kendi dashboard'unu düzenleyebilir (widget ekle/çıkar/sürükle). Rol bazlı varsayılan dashboard'lar: işe alım uzmanı → başvuru/onay KPI'ları; İK müdürü → tüm metrikler; departman müdürü → kendi departmanı (personel sayısı, izindeki personel). Widget'lar Faz 5 semantic layer + rapor motorundan beslenir (DataScope ile rol/kapsam filtreli). Dashboard v2 açılıp kapanabilen, tamamen özelleştirilebilir.
-- [ ] Varsayılan rapor paketi: her modülle gelen 5–10 hazır rapor (turnover, izin kullanım, time-to-hire, eğitim tamamlama, demografi...) — hepsi motorda tanımlı, yani firma kopyalayıp özelleştirebilir
-- [ ] `/analytics` (hr-analytics) sayfaları motorun üstüne taşınır (çift altyapı kalmaz)
+#### Alt dalgalar (D1a–D1g)
 
-**DoD:** Admin, "departman bazında son 12 ay izin günleri + custom 'sendika üyesi' alanına göre kırılım" raporunu sürükle-bırak ile kurar, kaydeder, dashboard'a ekler, her pazartesi 09:00'da e-posta ile alır. Yetkisiz kullanıcı aynı raporu açtığında yetkisiz alanlar/satırlar gelmez.
+| Dalga | Kapsam | Durum |
+|-------|--------|--------|
+| **D1a** | Semantic layer (dataset registry) + güvenli query builder + rapor tanımı API | ✅ (2026-07-29) |
+| **D1b** | Rapor Builder UI (3 panel) + ECharts/TanStack Table + export (Excel/PDF) | ✅ (2026-07-29) |
+| **D1c** | Pivot + drill-down + hesaplanan ölçü DSL + ölçü kütüphanesi | ✅ (2026-07-29) |
+| **D1d** | Dashboard v2 (`dashboards` + paylaşım + çapraz/global filtre + widget guard) | ✅ (2026-07-29) — görsel kullanıcı kontrolü borç |
+| **D1e** | Dataset yayılımı (puantaj/eğitim/zimmet/anket…) + modül başına hazır rapor paketi | ⬜ sırada |
+| **D1f** | Zamanlanmış raporlar (scheduler + queue + e-posta ekli) | ⬜ |
+| **D1g** | `/analytics` → motor taşıma; rol varsayılan panolar (`module_key`); Faz 5 DoD kapanışı | ⬜ |
+
+**Korunan vizyon maddeleri (D1e–g içinde eritilir):**
+- [x] Semantic layer + whitelist query builder + company/DataScope/alan izni
+- [x] Rapor tanımı JSONB + Builder UI + export hattı
+- [x] Pivot / drill / ölçü DSL
+- [x] Dashboard v2 (employee_dashboards dokunulmaz; ayrı tablolar)
+- [ ] Kalan dataset’ler + varsayılan 5–10 hazır rapor / modül
+- [ ] Zamanlanmış raporlar
+- [ ] `/analytics` çift altyapı kalkar; rol bazlı varsayılan + `dashboards.module_key` panolar
+
+**DoD:** Admin, "departman bazında son 12 ay izin günleri + custom alan kırılımı" raporunu sürükle-bırak ile kurar, kaydeder, panoya ekler, her pazartesi 09:00'da e-posta ile alır. Yetkisiz kullanıcıda yetkisiz alan/satır gelmez.
 
 ---
 
 ### FAZ 6 — Modül Derinleştirme + Türkiye Uyumu (8–12 hafta)
 
-**Amaç:** Modülleri "satılabilir" kaliteye çekmek. Her modül için standart geçiş paketi: **Form Engine'e bağlan + izin matrisi + dataset kaydı + varsayılan raporlar + bildirim olayları + eksikler**.
+**Amaç:** 14’lü ana modül haritasını (`MODUL_SPEC` B1–B14) “satılabilir” kaliteye çekmek. Her modül geçiş paketi: **Form Engine + izin matrisi + dataset + modül panosu (`module_key`) + bildirim olayları + KVKK sınıfı + eksikler**.
 
-**Departman erişimi (Faz 4B vizyonunun bağlanması):** Departman yöneticisi/yetkilisi talep halinde yönetim ekranlarına DataScope `department` + rol ile erişir (CV havuzu, ilan, personel, puantaj/shift — kendi dept). Zincir motoru 4B’de; **modül ekranlarına bağlama bu fazda**.
+**Departman erişimi (Faz 4B bağlama):** DataScope `department` + rol ile dept yöneticisi kendi kapsamında CV/ilan/personel/PDKS görür. Zincir motoru 4B; ekran bağlama bu fazda.
 
-**6A. Pilot çekirdeği (öncelik sırasıyla — pilot kapısı bu blokta):**
-- [ ] **Personel/Özlük:** Türkiye alan seti (TCKN doğrulama, SGK sicil, İŞKUR meslek kodu, eğitim durumu, engel oranı, yabancı çalışma izni, BES katılım); işten çıkış (offboarding) akışı: çıkış nedeni (SGK kodları), çıkış checklist'i, zimmet iadesi entegrasyonu, ibraname şablonu
-- [ ] **İzin:** İş Kanunu hakediş kuralları hazır politika olarak (kıdem 1–5 yıl: 14, 5–15: 20, 15+: 26 iş günü; 18 yaş altı / 50 yaş üstü min. 20); yasal izin türleri seed (evlilik 3, babalık 5, vefat 3, doğum 16 hafta, süt izni saat bazlı); resmi tatil takvimi (yıllık seed + yarım gün arefe); accrual scheduler'a bağlanır
-  - [ ] **A1 BORÇ:** Hakediş kuralları (14/20/26 + yaş) düzenleme ARAYÜZÜ eksik — seed var, yönetim UI yok. İzin modülü (Zincir 2) tamamlanırken yapılacak. İlke: %100 yönetilebilir.
-  - [ ] **A1 BORÇ:** Dini bayram tarihleri (Ramazan/Kurban) şu an kodda sabit (2026-28). API'den çekilecek (Google Calendar API / TR resmi tatil API). Sürekli manuel güncelleme yerine otomatik. Tatil yönetim ekranıyla birlikte (Zincir 2/3).
-- [ ] **A3 NOT (holding ertelendi):** Gerçek holding (çok hukuki şirket) talebi gelince SEÇENEK 1 (`organizations` / `companies.organization_id` + group DataScope) ile yapılacak. Şimdilik tek-şirket-çok-şube (branch DataScope) yeterli — `companies` = tenant varsayımı korunur.
-- [ ] **Puantaj & Vardiya:** Company panelinde eksik yönetim ekranları; PDKS import arayüzü (CSV/Excel şablonu — cihaz entegrasyonu backlog); fazla mesai hesap kuralları; bordro-hazır aylık puantaj raporu
-- [ ] **Masraf:** Company panelinde yönetim/onay sayfaları (şu an sadece Portal'da); kategori limitleri; workflow entegrasyonu
-- [ ] **Doküman + Özlük Evrakı:** zorunlu evrak setleri (işe girişte istenenler), süre takibi/uyarıları (sertifika, sağlık raporu), versiyonlama polish
+#### Faz 6 önerilen sıra (bağımlılık)
 
-**6B. İkinci halka:**
-- [ ] **Performans:** eksik frontend route'ları (periods, criteria); OKR/360 UI'larının tamamlanması; dönem sihirbazı
-- [ ] **İşe Alım:** public kariyer sayfası polish (firma slug'lı tema); Kanban aday panosu; teklif (job_offers) UI'ı
-- [ ] **Kanban kişiselleştirme (vizyon — Faz 3 sonrası netleşti):** Kanban aday panosu: (a) HTML5 sürükle-bırak (kolon arası kart taşıma — şu an hover butonuyla), (b) kullanıcı bazlı kolon/görünüm özelleştirme (kim hangi aşamaları/filtreleri görsün). Rol bazlı varsayılan görünümler.
-- [ ] **Onboarding:** templates sayfası; preboarding token akışının UI'ı; buddy sistemi
-- [ ] **Eğitim:** sessions yönetim sayfaları; zorunlu eğitim atama + hatırlatma (workflow ile)
-- [ ] **Varlık:** categories/assignments sayfaları; zimmet formu çıktısı (PDF, imza alanlı)
-- [ ] **Anket & eNPS:** anonim yanıt garantisi netleştirme; eNPS trend raporu
-- [ ] **YENİ — Ücret Yönetimi (bordro değil):** ücret bantları, ücret geçmişi (zam kayıtları), dönemsel zam planlama, toplam gelir görünümü. Bordronun ileride oturacağı veri modelini şimdiden hazırlar
-- [ ] **YENİ — Talep/Vaka Yönetimi genişletme:** mevcut employee_requests → SLA, kategori bazlı atama, İK helpdesk görünümü
+| # | Odak | Gerekçe |
+|---|------|---------|
+| 1 | **Navigasyon + B1 Organizasyon** | Menü/rail 14’lü yapıya hizalanır; şube/dept/pozisyon/norm kadro diğer her şeyin omurgası |
+| 2 | **B4 PDKS** | Günlük operasyon + puantaj kartı + vardiya/mesai; bordro aktarım paketinin üreticisi |
+| 3 | **B3 İzin derinleştirme** | Onaylı izin → puantaja otomatik akış; TR hakediş UI + tatil API borçları |
+| 4 | **B5 Ücret & Ödemeler** | Masraf birleşimi, avans-borç, harcırah; aktarım paketi tüketicisi |
+| 5 | **B9 Eğitim (LMS)** | İçerik/atama/portal öğrenme; İSG eğitim köprüsünün önkoşulu |
+| 6 | **B10 İSG** | Mevzuat parametreleri lookup’ta; LMS + personel + org sonrası |
+| 7 | **Kalanlar** | B2 (disiplin/vekalet), B6 İşe Alım, B7 Oryantasyon & Çıkış, B8 Performans (+kariyer/yedekleme/kalibrasyon), B11–B14, A4 SLA, A7 KVKK — pilot geri bildirimine göre |
 
-**6C. KVKK Modülü (çekirdek — lisansla satılmaz, yasal zorunluluk):**
-- [ ] Aydınlatma metni versiyonlama + çalışan onay (rıza) kayıtları (portal ilk girişte)
-- [ ] Veri ihracı: çalışanın kendi verilerini JSON/PDF alma (portability)
-- [ ] Silme/anonimleştirme talebi akışı (workflow motoru kullanır; işten çıkış sonrası saklama süresi dolunca anonimleştirme job'ı)
-- [ ] Saklama süresi politikaları (evrak/log/aday verisi bazında firma ayarı — aday verisi için ayrı süre)
-- [ ] Kişisel veri envanteri raporu (VERBİS hazırlığına yardımcı)
+#### 6A. Pilot çekirdeği (sıra 1–4 ile hizalı)
+- [ ] **B1 Organizasyon:** şube/dept/pozisyon + şema + norm kadro + kadro talebi (workflow); Ayarlar kısayolları buraya
+- [ ] **B2 Personel (pilot dilim):** TR alan seti; çıkış sihirbazi; 🆕 disiplin & ödül + vekalet (tamamı 6B’de tamamlanabilir)
+- [ ] **B4 PDKS:** günlük takip, puantaj kartı (dönem×dept/şube), onay zinciri (puantör→gözetmen→İK), kilit, vardiya/rotasyon/yasal kontrol, mesai, kurallar, QR/cihaz kaydı, manuel audit düzeltme, ziyaretçi, aktarım paketi (generic); canlı cihaz → Faz 8
+- [ ] **B3 İzin:** İş Kanunu hakediş (14/20/26 + yaş); yasal tür seed; tatil; accrual; **onaylı izin → puantaj yansıması**
+  - [ ] **A1 BORÇ:** Hakediş kuralları yönetim UI (seed var, UI yok)
+  - [ ] **A1 BORÇ:** Dini bayram tarihleri API’den (kod sabiti kalkar)
+- [ ] **B5 Ücret & Ödemeler:** ücret bantları/geçmiş/zam + masraf company UI/limit + 🆕 avans-borç (taksit/faiz/icra/öncelik) + harcırah
+- [ ] **B13 Doküman+:** zorunlu set + süre takibi + versiyonlama polish
+- [ ] **A3 NOT (holding ertelendi):** çok hukuki şirket → `organizations` seçeneği; şimdilik tek şirket + şube DataScope
 
-**DoD (modül başına):** Formları Form Engine'de, izinleri matriste, dataset'i rapor motorunda, kritik olayları bildirimde; feature testleri yeşil; modül lisans sisteminden aç/kapa edilebilir.
+#### 6B. İkinci halka (sıra 5–7)
+- [ ] **B9 Eğitim (LMS):** katalog/kurs/video (yükleme+YouTube/Vimeo, indirme yok)/soru bankası/sertifika; öğrenme yolu; portal oynatıcı; ölçme; eğitmen & maliyet. SCORM → Faz 8
+- [ ] **B10 İSG:** yapılandırma (NACE/tehlike/ekip/takvim), risk, olay/DÖF, sağlık gözetimi (özel nitelikli), LMS köprüsü, KKD/denetim, kurul, taşeron, İBYS hazırlık. **Mevzuat parametreleri kodda değil — ayar/lookup**
+- [ ] **B8 Performans:** periods/criteria route; OKR/360; 🆕 kariyer yolları + yedekleme + kalibrasyon
+- [ ] **B6 İşe Alım:** kariyer polish; Kanban DnD + kişiselleştirme; teklif UI
+- [ ] **B7 Oryantasyon & Çıkış:** şablonlar; preboarding; buddy; çıkış checklist ortak motor
+- [ ] **B11 Varlık:** categories/assignments; zimmet PDF. Araç & filo → Faz 8
+- [ ] **B12 Anket & eNPS:** anonimlik garantisi; eNPS trend
+- [ ] **B14 Analitik:** Faz 5 motorunu modül panoları + lisansla paketleme
+- [ ] **A4 Talep/Vaka:** SLA + kategori atama + helpdesk görünümü
+
+#### 6C. KVKK (çekirdek — satılmaz)
+- [ ] Aydınlatma versiyonlama + portal rıza
+- [ ] Veri ihracı (JSON/PDF)
+- [ ] Silme/anonimleştirme (workflow + saklama sonrası job)
+- [ ] Saklama politikaları + veri envanteri (VERBİS yardımcısı)
+- [ ] Modül bazlı KVKK sınıfı (normal/kişisel/özel nitelikli) enforcement turu — özellikle İSG sağlık, PDKS biyometri/konum
+
+**DoD (modül başına):** Form Engine + izin matrisi + dataset + `module_key` pano + bildirim olayları + KVKK sınıfı; feature testleri yeşil; lisans aç/kapa.
 
 ---
 
@@ -334,24 +358,78 @@ Fark yaratacak 4 şey:
 
 ### FAZ 8 — Sonraki Ufuk (GA sonrası, sıralaması pazara göre)
 
-- [ ] **Mobil uygulama:** Portal Capacitor altyapısı üzerinden iOS/Android yayını; push notification (bildirim merkezine 4. kanal); Bootstrap → shared design system geçişi bu fazda
-- [ ] **AI katmanı:** doğal dille rapor ("geçen ay departman bazında devamsızlık" → rapor motoru sorgusu), CV ayrıştırma (işe alım), anket yorum özetleme, İK asistanı (politika soru-cevap)
-- [ ] **Bordro modülü:** Ücret Yönetimi (6B) veri modeli üzerine; SGK/e-Bildirge entegrasyonları — ayrı ve büyük bir proje olarak planlanır
-- [ ] Entegrasyon pazarı: muhasebe (Logo/Mikro/Netsis), takvim (Google/Outlook), SSO (Azure AD/Google — kurumsal on-prem talebi), PDKS cihaz entegrasyonları
-- [ ] Toplu i18n string migrasyonu + İngilizce → global açılım
-- [ ] PostgreSQL RLS (defense-in-depth), aylık audit partisyonlama, read replica — ölçek geldikçe
+- [ ] **Mobil uygulama:** Portal Capacitor; push (bildirim 4. kanal); Bootstrap → shared design system
+- [ ] **AI katmanı:** doğal dille rapor, CV ayrıştırma, anket özet, İK asistanı
+- [ ] **Bordro modülü:** B5 Ücret & Ödemeler + aktarım paketi üzerine; SGK/e-Bildirge — ayrı büyük proje
+- [ ] **Entegrasyon pazarı:** Logo/Mikro/Netsis **adaptörleri** (standart paket v1’de tasarlanır — `MODUL_SPEC` §F); takvim; SSO; canlı PDKS cihaz; İBYS
+- [ ] **Backlog modüller (şartnamede bölüm yok):** Yemekhane/Kantin · Bütçe Simülasyonu · Sendika · Araç & Filo (Varlık altında) · SCORM import
+- [ ] Toplu i18n + EN → global açılım
+- [ ] PostgreSQL RLS, audit partisyon, read replica
 
 ---
 
 ## 6. Modül Envanteri ve Satış Paketleri
 
-**Çekirdek (her lisansta, ayrıca satılmaz):** Kullanıcı & Rol Yönetimi, Firma/Şube/Departman, Özlük (temel), Self-Servis Portal, Duyurular, Talepler, Audit Log, Bildirim Merkezi, KVKK araçları, temel raporlar.
+> Kaynak şartname: `docs/MODUL_SPEC.md` (2026-07-29 — 14’lü yapı). `modules` + `company_modules` + `license_packages` altyapısı korunur; seeder paket içerikleri bu tabloya göre revize edilir (Faz 6/7’de kod).
 
-**Satılabilir modüller (tekil aç/kapa — mevcut `modules` + `company_modules` altyapısı):** İzin Yönetimi · Puantaj & Vardiya · İşe Alım · Onboarding/Offboarding · Performans · Eğitim · Varlık/Zimmet · Masraf · Anket & eNPS · Doküman+ (gelişmiş evrak) · Ücret Yönetimi.
+### 6.1 Çekirdek platform (her lisansta, ayrıca satılmaz)
 
-**Premium katman:** Rapor Builder (self-servis BI) · Gelişmiş Workflow Otomasyonu · API & Webhook erişimi. *(Temel hazır raporlar ve temel onay akışları çekirdekte kalır; "kendin kur" seviyesi premium'dur.)*
+| Bileşen | Not |
+|---------|-----|
+| Kullanıcı & Rol (RBAC v2) | Spatie; data scope; alan izni |
+| Self-Servis Portal | Personel yüzü |
+| Duyurular | İç iletişim |
+| Talep & Vaka (temel) | SLA polish satılabilir genişleme olabilir |
+| Bildirim Merkezi | Şablon + kanal |
+| Audit & Log | Yazma izlenebilirliği |
+| KVKK araçları | Yasal zorunluluk — kapatılamaz |
+| Temel hazır raporlar | İlgili açık modülün dataset’inden; builder ayrı |
+| Form / Workflow / Liste motorları | Platform; “gelişmiş tasarımcı” premium’da |
 
-**Paket önerisi:** Starter (çekirdek + 2 modül) / Professional (çekirdek + 6 modül + Workflow) / Enterprise (hepsi + BI + API + on-prem seçeneği). Mevcut license_packages tablosu bunu zaten taşıyabiliyor.
+**Not:** Organizasyon ve Personel/Özlük artık **ana operasyonel modül** (B1/B2) olarak sayılır; Starter’da varsayılan açık gelir, kapatılmaları edge-case’tir.
+
+### 6.2 Ana operasyonel modüller (14 — tekil aç/kapa)
+
+| # | Modül | Eski karşılık / not |
+|---|--------|---------------------|
+| 1 | Organizasyon | Yönetim’den taşındı; norm kadro + kadro talebi |
+| 2 | Personel / Özlük | + Disiplin & Ödül, Vekalet |
+| 3 | İzin Yönetimi | PDKS’e onaylı izin akışı |
+| 4 | PDKS | Eski puantaj/vardiya + QR/ziyaretçi/aktarım |
+| 5 | Ücret & Ödemeler | Masraf + ücret + avans-borç + harcırah |
+| 6 | İşe Alım | — |
+| 7 | Oryantasyon & Çıkış | Eski onboarding/offboarding |
+| 8 | Performans | + Kariyer / yedekleme / kalibrasyon |
+| 9 | Eğitim (LMS) | Video gömme; SCORM → Faz 8 |
+| 10 | İSG | Yeni; mevzuat parametreleri lookup’ta |
+| 11 | Varlık / Zimmet | Filo → Faz 8 |
+| 12 | Anket & eNPS | — |
+| 13 | Doküman+ | Gelişmiş evrak |
+| 14 | Analitik | Panolar + rapor motoru + ölçü kütüphanesi |
+
+**Ertelenen (Faz 8 / backlog — ana modül değil):** Yemekhane/Kantin · Bütçe Simülasyonu · Sendika · Araç & Filo.
+
+### 6.3 Premium eklentiler
+
+| Eklenti | Açıklama |
+|---------|----------|
+| Gelişmiş Workflow Otomasyonu | Tetikleyici + aksiyon kataloğu + stüdyo tasarımcısı (temel onay zincirleri modülde kalır) |
+| API & Webhook | Anahtar kapsamı + dış olay |
+| On-prem seçeneği | İmzalı lisans dosyası (Faz 7) |
+
+Analitik (B14) Professional’da “hazır pano + sınırlı builder”, Enterprise’da tam self-servis BI olarak paketlenir (aşağıdaki tablo).
+
+### 6.4 Lisans paket önerisi
+
+| Paket | Dahil ana modüller | Premium | Tipik müşteri |
+|-------|-------------------|---------|---------------|
+| **Starter** | Çekirdek + **Organizasyon + Personel + İzin + Doküman+ (temel kullanım)** | — | Küçük ofis; özlük + izin |
+| **Professional** | Starter + **PDKS + Ücret & Ödemeler + İşe Alım + Oryantasyon & Çıkış + Performans + Eğitim (LMS)** + Analitik (hazır panolar + kopyalanabilir raporlar) | Temel workflow zincir editörü | KOBİ / ölçeklenen İK |
+| **Enterprise** | **14’ün tamamı** (+ İSG + Varlık + Anket + Analitik tam builder/ölçü/zamanlama) | Gelişmiş Workflow + API & Webhook + on-prem seçeneği + aktarım adaptörleri (Faz 8) | Kurumsal / fabrika / holding adayı |
+
+**Tekil modül satışı:** Professional üstü müşteri eksik modülü `company_modules` ile açabilir (ör. yalnız İSG ekleme). Starter’da PDKS/İSG/LMS kapalı kalır.
+
+**Aktarım:** Standart bordro aktarım paketi Professional+ (PDKS/Ücret açıkken); Logo/Netsis/Mikro adaptörleri Enterprise / Faz 8.
 
 ---
 
@@ -361,7 +439,7 @@ Fark yaratacak 4 şey:
 |------|----------|-------------------|
 | **M1 — Güvenli Çekirdek** | ✅ Faz 2 sonu (11 Tem 2026) | İzin sistemi gerçek; demo verilebilir |
 | **M2 — Platform Tamam** | Faz 5 sonu | Özelleştirme + BI çalışıyor; dogfooding başlar |
-| **M3 — Pilot** | Faz 6A sonu | 1–2 dost firma canlı kullanımda (çekirdek + izin + puantaj + masraf) |
+| **M3 — Pilot** | Faz 6A sonu | 1–2 dost firma canlı (org + personel + izin + PDKS + ücret/ödemeler + doküman) |
 | **M4 — GA v1.0** | Faz 7 sonu | Cloud satış açık + on-prem teklif verilebilir |
 
 Toplam tahmin: **~29–42 hafta (7–10 ay)** tam zamanlı. Pilot geri bildirimi Faz 6B önceliklerini değiştirebilir — bu belge yaşayan bir belgedir, her faz sonunda revize edilir.
@@ -380,8 +458,8 @@ Toplam tahmin: **~29–42 hafta (7–10 ay)** tam zamanlı. Pilot geri bildirimi
 
 ## 9. Backlog (araya alınmaz, buraya yazılır)
 
-- PostgreSQL Row-Level Security · SSO/SAML · PDKS cihaz canlı entegrasyonu · e-imza entegrasyonu (evrak) · Vardiya optimizasyonu/AI planlama · Çalışan mobil push kampanyaları · Marketplace/eklenti mimarisi · Beyaz etiket (partner) modeli
+- PostgreSQL Row-Level Security · SSO/SAML · PDKS cihaz canlı entegrasyonu · e-imza · Vardiya AI planlama · Yemekhane/Kantin · Bütçe Simülasyonu · Sendika · Araç & Filo · SCORM · Mobil push kampanyaları · Marketplace · Beyaz etiket
 
 ---
 
-*Faz 0–3 kapandı (çekirdek). Aktif: Faz 4 + FAZ A/B (`faz4-form-engine`). Test ~338. Her fazın başında bu belge üzerinden Cursor promptları hazırlanır.*
+*Faz 0–3 kapandı. Aktif: Faz 4 motorları + Faz 5 D1e–g (`faz4-form-engine`). Modül şartnamesi: 14’lü yapı (`MODUL_SPEC`). Her fazın başında bu belge üzerinden Cursor promptları hazırlanır.*
