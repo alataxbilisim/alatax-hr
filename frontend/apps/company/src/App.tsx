@@ -205,6 +205,8 @@ import AnalyticsPage from './pages/analytics/AnalyticsPage';
 const ReportsListPage = React.lazy(() => import('./pages/reports/ReportsListPage'));
 const ReportBuilderPage = React.lazy(() => import('./pages/reports/ReportBuilderPage'));
 const MeasuresLibraryPage = React.lazy(() => import('./pages/reports/MeasuresLibraryPage'));
+const DashboardsListPage = React.lazy(() => import('./pages/dashboards/DashboardsListPage'));
+const DashboardViewPage = React.lazy(() => import('./pages/dashboards/DashboardViewPage'));
 
 const App: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -898,6 +900,32 @@ const App: React.FC = () => {
                 <PermissionProtectedRoute module="reports" page="definitions" action="view">
                   <React.Suspense fallback={<div className="page-loading">…</div>}>
                     <ReportBuilderPage />
+                  </React.Suspense>
+                </PermissionProtectedRoute>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Dashboard v2 (D1d) */}
+          <Route
+            path="/dashboards"
+            element={
+              <ProtectedRoute>
+                <PermissionProtectedRoute module="reports" page="dashboards" action="view">
+                  <React.Suspense fallback={<div className="page-loading">…</div>}>
+                    <DashboardsListPage />
+                  </React.Suspense>
+                </PermissionProtectedRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboards/:id"
+            element={
+              <ProtectedRoute>
+                <PermissionProtectedRoute module="reports" page="dashboards" action="view">
+                  <React.Suspense fallback={<div className="page-loading">…</div>}>
+                    <DashboardViewPage />
                   </React.Suspense>
                 </PermissionProtectedRoute>
               </ProtectedRoute>

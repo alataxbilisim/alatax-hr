@@ -1154,6 +1154,26 @@ Route::prefix('v1')->group(function () {
                 ->whereNumber('id');
         });
 
+        // Dashboard v2 (D1d) — rapor motoru tüketicisi
+        Route::prefix('dashboards')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\V1\Reports\DashboardController::class, 'index'])
+                ->middleware('permission:reports.dashboards.view');
+            Route::post('/', [\App\Http\Controllers\Api\V1\Reports\DashboardController::class, 'store'])
+                ->middleware('permission:reports.dashboards.create');
+            Route::get('/{id}', [\App\Http\Controllers\Api\V1\Reports\DashboardController::class, 'show'])
+                ->middleware('permission:reports.dashboards.view')
+                ->whereNumber('id');
+            Route::put('/{id}', [\App\Http\Controllers\Api\V1\Reports\DashboardController::class, 'update'])
+                ->middleware('permission:reports.dashboards.edit')
+                ->whereNumber('id');
+            Route::delete('/{id}', [\App\Http\Controllers\Api\V1\Reports\DashboardController::class, 'destroy'])
+                ->middleware('permission:reports.dashboards.delete')
+                ->whereNumber('id');
+            Route::post('/{id}/run', [\App\Http\Controllers\Api\V1\Reports\DashboardController::class, 'run'])
+                ->middleware('permission:reports.dashboards.view')
+                ->whereNumber('id');
+        });
+
         // Timesheet / Attendance (HR) — timesheet.attendance.*
         // Statik path'ler {id}'den önce
         Route::prefix('attendance')->group(function () {

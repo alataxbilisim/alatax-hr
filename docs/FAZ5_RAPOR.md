@@ -184,3 +184,66 @@ Ana `index-*.js` (~3.6 MB) Nivo/mevcut app; rapor paketleri lazy ayrıldı.
 ### Not
 
 **KULLANICI GÖRSEL KONTROLÜ BEKLİYOR (borç)**
+
+---
+
+## D1d — Dashboard v2 (widget + çapraz filtre + parametreli filtreler)
+
+**Tarih:** 2026-07-29  
+**Commit:** `feat(faz5): D1d dashboard v2 — widget + çapraz filtre + parametreli filtreler`
+
+### ADIM 0 — Teşhis / karar
+
+| Bulgu | Karar |
+|-------|--------|
+| `employee_dashboards` | Personel BI (`/employees/reports`, `employees.reports.*`); widget şeması farklı |
+| Yeni yapı | **Ayrı tablolar** `dashboards` + `dashboard_shares` — çakışma yok, personel BI kırılmaz |
+| `react-grid-layout` | company’de `^2.1.1` (personel BI grid) — Dashboard v2 aynı paket |
+| `/analytics`, ana `/dashboard` | **D1d’de değişmedi** (motora taşıma ayrı iş) |
+
+### Veri modeli
+
+- `dashboards`: company_id, owner_id, name, description, layout jsonb, global_filters jsonb, is_system, created_by
+- `dashboard_shares`: user/role + viewer\|editor
+- Widget: layout.widgets[] — id, tip, grid, title, report_id \| config, visual, refresh_interval
+- Permission: `reports.dashboards.view\|create\|edit\|delete` · Auditable
+
+### Widget tipleri
+
+KPI · Grafik (ReportChart) · Tablo (ReportTable) · Pivot (PivotMatrix) · Metin (XSS escape)  
+Kaynak varsayılan: kayıtlı rapor; inline config alternatif. **Motor tüketici** — ayrı sorgu yolu yok.
+
+### Guard / yenileme
+
+| Guard | Değer |
+|-------|--------|
+| Max widget | **20** |
+| Widget timeout | **8 sn** (soft flag) |
+| Batch timeout | **45 sn** → kısmi + uyarı |
+| Polling min | **30 sn**; sekme gizliyken DURUR |
+| WebSocket/Reverb | **Yok** (DUR) |
+
+### Filtreler
+
+- Global: tarih kısayolu / departman / şube (+ tanım alanları) → URL; dataset’te yoksa sessiz atla
+- Çapraz: seçim geçici, kaydedilmez; `ignore_cross_filter` widget ayarı
+- Paylaşım: **viewer DataScope** (sahip miras alınmaz) — testle kanıtlı
+
+### UI
+
+- `/dashboards`, `/dashboards/:id` · ModuleRail Analitik → **Panolar**
+- Düzenleme: react-grid-layout; yetkisiz → salt görüntüleme
+- Mobil: tek sütun
+
+### Test
+
+| Suite | Sonuç |
+|-------|--------|
+| `DashboardV2Test` | **8 passed** (batch izolasyon, kapsam, maaş gizleme, filtre skip, 21. widget 422, 401/403) |
+| Tam suite | **543 passed / 0 fail** |
+| 3 SPA tsc + lint + sentinel | **PASSED** |
+| DB wipe | **yok** |
+
+### Not
+
+**KULLANICI GÖRSEL KONTROLÜ BEKLİYOR (borç)**

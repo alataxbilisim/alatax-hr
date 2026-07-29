@@ -250,6 +250,7 @@ class PermissionSeeder extends Seeder
             'reports' => [
                 'definitions' => ['view', 'create', 'edit', 'delete', 'run'],
                 'measures' => ['view', 'edit'],
+                'dashboards' => ['view', 'create', 'edit', 'delete'],
             ],
 
             // Puantaj Modülü

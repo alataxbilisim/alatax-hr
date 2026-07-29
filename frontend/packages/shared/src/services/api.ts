@@ -1208,6 +1208,97 @@ export interface ReportMeasurePayload {
   decimals: number;
 }
 
+/** D1d — Dashboard v2 widget */
+export interface DashboardWidgetLayout {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+export type DashboardWidgetType = 'kpi' | 'chart' | 'table' | 'pivot' | 'text';
+
+export interface DashboardWidgetDef {
+  id: string;
+  type: DashboardWidgetType;
+  title: string;
+  report_id?: number | null;
+  config?: ReportConfigPayload | null;
+  visual?: { chart_type?: string; category?: string; value?: string; series?: string } | null;
+  layout?: DashboardWidgetLayout;
+  refresh_interval?: number;
+  ignore_cross_filter?: boolean;
+  row_limit?: number;
+  content?: string | null;
+  measure?: ReportAggregationPayload | null;
+}
+
+export interface DashboardSharePayload {
+  id?: number;
+  user_id?: number | null;
+  role_id?: number | null;
+  level: 'viewer' | 'editor';
+}
+
+export interface DashboardPayload {
+  id: number;
+  company_id: number;
+  owner_id: number;
+  name: string;
+  description?: string | null;
+  layout: { widgets: DashboardWidgetDef[] };
+  global_filters?: { fields?: string[] } | null;
+  is_system: boolean;
+  created_by?: number | null;
+  shares?: DashboardSharePayload[];
+  updated_at?: string;
+}
+
+export interface DashboardWidgetRunResult {
+  id: string;
+  type: string;
+  success: boolean;
+  data: unknown;
+  meta: {
+    ran_at?: string;
+    elapsed_ms?: number;
+    filter_applied?: boolean;
+    filter_skipped_keys?: string[];
+    slow?: boolean;
+  };
+  error: string | null;
+}
+
+export interface DashboardRunResult {
+  widgets: DashboardWidgetRunResult[];
+  meta: {
+    partial?: boolean;
+    warnings?: string[];
+    widget_count?: number;
+    data_scope?: string;
+    batch_elapsed_ms?: number;
+  };
+}
+
+export interface DashboardWritePayload {
+  name: string;
+  description?: string | null;
+  layout?: { widgets: DashboardWidgetDef[] };
+  global_filters?: { fields?: string[] };
+  shares?: Array<{ user_id?: number; role_id?: number; level?: 'viewer' | 'editor' }>;
+}
+
+export const dashboardsApi = {
+  list: (params?: { per_page?: number; page?: number }) =>
+    api.get('/dashboards', { params }),
+  get: (id: number) => api.get(`/dashboards/${id}`),
+  create: (data: DashboardWritePayload) => api.post('/dashboards', data),
+  update: (id: number, data: Partial<DashboardWritePayload>) => api.put(`/dashboards/${id}`, data),
+  remove: (id: number) => api.delete(`/dashboards/${id}`),
+  run: (id: number, payload?: { values?: Record<string, unknown>; cross?: Record<string, unknown> }) =>
+    api.post(`/dashboards/${id}/run`, payload ?? {}),
+};
+
 // Public API (Başvuru formları)
 export const publicApi = {
   // Jobs
