@@ -26,6 +26,8 @@ class Dashboard extends Model
         'is_system',
         'created_by',
         'cache_ttl_seconds',
+        'module_key',
+        'system_key',
     ];
 
     protected $casts = [
@@ -82,6 +84,9 @@ class Dashboard extends Model
 
     public function isAccessibleBy(User $user): bool
     {
+        if ($this->is_system && $this->company_id === null) {
+            return true;
+        }
         if ((int) $this->owner_id === (int) $user->id || $this->is_system) {
             return true;
         }
@@ -103,6 +108,9 @@ class Dashboard extends Model
 
     public function canEdit(User $user): bool
     {
+        if ($this->is_system && $this->company_id === null) {
+            return false;
+        }
         if ((int) $this->owner_id === (int) $user->id) {
             return true;
         }

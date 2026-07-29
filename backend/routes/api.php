@@ -1179,6 +1179,9 @@ Route::prefix('v1')->group(function () {
             Route::post('/{id}/transfer', [\App\Http\Controllers\Api\V1\Reports\ReportController::class, 'transfer'])
                 ->middleware('permission:reports.definitions.transfer')
                 ->whereNumber('id');
+            Route::post('/{id}/clone', [\App\Http\Controllers\Api\V1\Reports\ReportController::class, 'cloneReport'])
+                ->middleware('permission:reports.definitions.create')
+                ->whereNumber('id');
             Route::post('/{id}/run', [\App\Http\Controllers\Api\V1\Reports\ReportController::class, 'run'])
                 ->middleware('permission:reports.definitions.run')
                 ->whereNumber('id');
@@ -1187,12 +1190,15 @@ Route::prefix('v1')->group(function () {
                 ->whereNumber('id');
         });
 
-        // Dashboard v2 (D1d) — rapor motoru tüketicisi
+        // Dashboard v2 (D1d/D1g) — rapor motoru tüketicisi
         Route::prefix('dashboards')->group(function () {
             Route::get('/', [\App\Http\Controllers\Api\V1\Reports\DashboardController::class, 'index'])
                 ->middleware('permission:reports.dashboards.view');
             Route::post('/', [\App\Http\Controllers\Api\V1\Reports\DashboardController::class, 'store'])
                 ->middleware('permission:reports.dashboards.create');
+            Route::get('/by-key/{systemKey}', [\App\Http\Controllers\Api\V1\Reports\DashboardController::class, 'showBySystemKey'])
+                ->middleware('permission:reports.dashboards.view')
+                ->where('systemKey', '[A-Za-z0-9._-]+');
             Route::get('/{id}', [\App\Http\Controllers\Api\V1\Reports\DashboardController::class, 'show'])
                 ->middleware('permission:reports.dashboards.view')
                 ->whereNumber('id');
@@ -1204,6 +1210,9 @@ Route::prefix('v1')->group(function () {
                 ->whereNumber('id');
             Route::post('/{id}/run', [\App\Http\Controllers\Api\V1\Reports\DashboardController::class, 'run'])
                 ->middleware('permission:reports.dashboards.view')
+                ->whereNumber('id');
+            Route::post('/{id}/clone', [\App\Http\Controllers\Api\V1\Reports\DashboardController::class, 'cloneDashboard'])
+                ->middleware('permission:reports.dashboards.create')
                 ->whereNumber('id');
         });
 

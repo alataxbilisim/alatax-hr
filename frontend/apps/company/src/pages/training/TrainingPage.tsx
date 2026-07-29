@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { DataTable, ConfirmDialog, EmptyState, Modal } from '../../components/ui';
 import TrainingForm from '../../components/training/TrainingForm';
 import SessionForm from '../../components/training/SessionForm';
+import ModuleInsightsBar from '../../components/reports/ModuleInsightsBar';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   BsPlus,
@@ -453,6 +454,10 @@ const TrainingPage: React.FC = () => {
 
   return (
     <div className="animate-fade-in list-page">
+      <ModuleInsightsBar
+        moduleKey="training"
+        modulePermission={{ module: 'training', page: 'list' }}
+      />
       <div className="page-header">
         <div className="page-header-content">
           <h1 className="page-title">Eğitimler</h1>

@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { DataTable, ConfirmDialog, Modal } from '../../components/ui';
 import DocumentUpload from '../../components/documents/DocumentUpload';
 import CategoryForm from '../../components/documents/CategoryForm';
+import ModuleInsightsBar from '../../components/reports/ModuleInsightsBar';
 import {
   BsPlus,
   BsFileEarmarkText,
@@ -415,6 +416,10 @@ const DocumentsPage: React.FC = () => {
 
   return (
     <div className="animate-fade-in list-page">
+      <ModuleInsightsBar
+        moduleKey="document-management"
+        modulePermission={{ module: 'documents', page: 'list' }}
+      />
       <div className="page-header">
         <div className="page-header-content">
           <h1 className="page-title">Evraklar</h1>

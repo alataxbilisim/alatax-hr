@@ -1222,6 +1222,18 @@
     "cacheRefresh": "Şimdi yenile",
     "schedulesLink": "Zamanlanmış raporlar"
   },
+  "moduleInsights": {
+    "dashboards": "Pano",
+    "reports": "Raporlar",
+    "filterHint": "Modül filtreli görünüm"
+  },
+  "analyticsMotor": {
+    "title": "İK Analitik",
+    "subtitle": "Rapor motoru panosu (DataScope uygulanır)",
+    "loadError": "Analitik panosu yüklenemedi",
+    "openDashboard": "Panoyu aç",
+    "deprecatedNote": "Eski sabit sorgular yerine sistem panosu kullanılır"
+  },
   "reportSchedules": {
     "title": "Zamanlanmış raporlar",
     "subtitle": "Abonelik ve periyodik teslim — varsayılan: uygulama linki (ek yok)",

@@ -3,6 +3,7 @@ import { attendanceApi, employeesApi } from '@shared/services/api';
 import { useTranslation } from '@shared/i18n';
 import toast from 'react-hot-toast';
 import { DataTable } from '../../components/ui';
+import ModuleInsightsBar from '../../components/reports/ModuleInsightsBar';
 import { BsCheck2All, BsCheck, BsPencil, BsPlus } from 'react-icons/bs';
 
 interface AttendanceRow {
@@ -323,6 +324,10 @@ const AttendancePage: React.FC = () => {
 
   return (
     <div className="page-container">
+      <ModuleInsightsBar
+        moduleKey="timesheet"
+        modulePermission={{ module: 'timesheet', page: 'attendance' }}
+      />
       <div
         className="page-header"
         style={{

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useTranslation } from '@shared/i18n';
 import { usePermission } from '@shared/hooks';
@@ -26,6 +26,8 @@ interface AuthState {
 const ReportsListPage: React.FC = () => {
   const { t } = useTranslation('common');
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const moduleKey = searchParams.get('module_key') ?? undefined;
   const { canCreate, canEdit, canDelete, hasPermission } = usePermission();
   const userId = useSelector((s: AuthState) => s.auth.user?.id ?? 0);
 
@@ -42,7 +44,7 @@ const ReportsListPage: React.FC = () => {
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await reportsApi.list({ per_page: 100 });
+      const res = await reportsApi.list({ per_page: 100, module_key: moduleKey });
       const raw: unknown = res.data.data;
       const list = Array.isArray(raw)
         ? raw.filter(isSavedReportPayload)
@@ -55,7 +57,7 @@ const ReportsListPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [t]);
+  }, [t, moduleKey]);
 
   useEffect(() => {
     void load();

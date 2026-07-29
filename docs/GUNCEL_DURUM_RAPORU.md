@@ -1,10 +1,9 @@
 # ALATAX HR — Güncel Durum Raporu (AI Handoff)
 
-**Üretim tarihi:** 14 Temmuz 2026  
+**Üretim tarihi:** 29 Temmuz 2026 (D1g / Faz 5 kapanış güncellemesi)  
 **Amaç:** Claude Opus 4.8 (veya başka bir agent) için tek kaynaklı, kod + `docs/` karşılaştırmalı durum.  
-**Yöntem:** Tüm `docs/*.md` okundu; backend/frontend envanteri koddan doğrulandı; doküman–kod sapmaları ayrı bölümde listelendi.  
-**Aktif branch:** `faz4-form-engine`  
-**Remote durumu:** `origin/faz4-form-engine`’den **5 commit önde** — **PUSH YAPILMADI** (kullanıcı onayı bekleniyor).
+**Yöntem:** Kod + `docs/FAZ5_RAPOR.md` / `ROADMAP.md` ile doğrulandı.  
+**Aktif branch:** `faz4-form-engine`
 
 ---
 
@@ -14,18 +13,19 @@ ALATAX HR, Türkiye odaklı multi-tenant B2B HR SaaS’tır. Backend Laravel 12 
 
 | Katman | Durum |
 |--------|--------|
-| Faz 0–2 | ✅ Kapandı (stabilizasyon, pgsql, RBAC+Audit+2FA) |
-| Faz 3 | 🔶 Kodda büyük ölçüde yapıldı (`faz3-tasarim`); ROADMAP checkbox’ları **güncellenmemiş** |
-| Faz 4 | 🔶 **AKTİF** — Lookup+Select ✅ · Workflow B0–B3 ✅ · **Form Engine 4A ❌** · B4/B5 ❌ · 4C ❌ |
-| FAZ A (TR/org) | ✅ A1–A5 lokal tamam (A3 branch, A4 org, A5 pozisyon); holding ertelendi |
-| Faz 5–8 | ☐ Açık |
-| Ürün olgunluğu | ~%55–65 (CRUD güçlü; dikey akış kopuklukları + platform motorları eksik) |
-| Test | **294 passed**, 1 risky (lokal, gece A3–A5 sonrası) |
-| Push | A3–A5 + gece özeti **5 commit local-only** |
+| Faz 0–2 | ✅ Kapandı |
+| Faz 3 | ✅ Tasarım sistemi |
+| Faz 4 | 🔶 Form Engine / workflow — devam (branch üzerinde) |
+| FAZ A (TR/org) | ✅ A1–A5 |
+| **Faz 5** | ✅ **KAPANDI (D1a–D1g)** — rapor motoru **platform yeteneği** (semantic layer, builder, pivot, panolar, paylaşım, schedule/cache, hazır paket, `/analytics` motor) |
+| Faz 6–8 | ☐ Açık |
+| Test | **561 passed** (D1g sonrası) |
 
-**Bir sonraki mantıklı iş (ROADMAP sırası):** Faz 4A Form Engine — veya kullanıcı önceliğine göre AKIS kopuklukları (izin bakiyesi route, işe alım public apply) / push+CI.
+**Rapor motoru:** Artık modül-içi sabit sorgulara bağlı değil; dataset registry + whitelist builder + DataScope/alan izni + sistem rapor/pano paketi (`module_key` / `system_key`). Detay: `docs/FAZ5_RAPOR.md` § D1g.
 
-**Kritik kural:** Yalnızca `faz4-form-engine` üzerinde çalış. `main` / `faz3-tasarim` dokunma. Push yalnız kullanıcı “push” deyince.
+**Bir sonraki mantıklı iş:** Faz 6 modül derinleştirme / Faz 4 kalanları; görsel kontrol borcu (rapor/pano UI).
+
+**Kritik kural:** Yalnızca `faz4-form-engine` üzerinde çalış. `main` / `faz3-tasarim` dokunma. DB asla silinmez.
 
 ---
 

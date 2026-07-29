@@ -28,6 +28,8 @@ class SavedReport extends Model
         'is_system',
         'sort_order',
         'cache_ttl_seconds',
+        'module_key',
+        'system_key',
     ];
 
     protected $casts = [
@@ -119,6 +121,10 @@ class SavedReport extends Model
 
     public function isAccessibleBy(User $user): bool
     {
+        // Global sistem şablonu (company_id null)
+        if ($this->is_system && $this->company_id === null) {
+            return true;
+        }
         if ((int) $this->user_id === (int) $user->id) {
             return true;
         }
@@ -180,6 +186,10 @@ class SavedReport extends Model
 
     public function canEdit(User $user): bool
     {
+        // Global sistem şablonu salt okunur — kopyala ve özelleştir
+        if ($this->is_system && $this->company_id === null) {
+            return false;
+        }
         if ($this->isOwner($user)) {
             return true;
         }
@@ -187,12 +197,15 @@ class SavedReport extends Model
             return true;
         }
 
-        // Legacy: genel edit yetkisi yalnız sahip/editor share ile — viewer yetkisini aşmasın
         return false;
     }
 
     public function canDelete(User $user): bool
     {
+        if ($this->is_system && $this->company_id === null) {
+            return false;
+        }
+
         return $this->isOwner($user);
     }
 

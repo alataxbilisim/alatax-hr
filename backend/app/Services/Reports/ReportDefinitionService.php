@@ -20,11 +20,17 @@ class ReportDefinitionService
         protected ReportResultCache $resultCache,
     ) {}
 
-    public function listFor(User $user, int $companyId, int $perPage = 20): LengthAwarePaginator
+    public function listFor(User $user, int $companyId, int $perPage = 20, ?string $moduleKey = null): LengthAwarePaginator
     {
-        return SavedReport::query()
-            ->where('company_id', $companyId)
+        return SavedReport::withoutGlobalScope('company')
+            ->where(function ($q) use ($companyId) {
+                $q->where('company_id', $companyId)
+                    ->orWhere(function ($q2) {
+                        $q2->whereNull('company_id')->where('is_system', true);
+                    });
+            })
             ->whereNotNull('dataset_key')
+            ->when($moduleKey !== null && $moduleKey !== '', fn ($q) => $q->where('module_key', $moduleKey))
             ->accessibleBy($user)
             ->with('shares')
             ->orderByDesc('updated_at')
@@ -164,7 +170,7 @@ class ReportDefinitionService
         if (! $report->isAccessibleBy($viewer)) {
             throw ValidationException::withMessages(['id' => ['Bu rapora erişim yok']]);
         }
-        if ((int) $report->company_id !== $companyId) {
+        if (! $this->belongsToCompanyOrSystem($report, $companyId)) {
             throw ValidationException::withMessages(['id' => ['Rapor bulunamadı']]);
         }
 
@@ -288,7 +294,7 @@ class ReportDefinitionService
         if (! $report->isAccessibleBy($viewer)) {
             throw ValidationException::withMessages(['id' => ['Bu rapora erişim yok']]);
         }
-        if ((int) $report->company_id !== $companyId) {
+        if (! $this->belongsToCompanyOrSystem($report, $companyId)) {
             throw ValidationException::withMessages(['id' => ['Rapor bulunamadı']]);
         }
 
@@ -437,6 +443,45 @@ class ReportDefinitionService
     }
 
     /**
+     * Sistem raporunu firmaya kopyala (özelleştirilebilir).
+     */
+    public function cloneForCompany(SavedReport $source, User $user, int $companyId, ?string $name = null): SavedReport
+    {
+        if (! $source->isAccessibleBy($user)) {
+            abort(403, 'Bu rapora erişim yok');
+        }
+        if (! $this->belongsToCompanyOrSystem($source, $companyId)) {
+            abort(404, 'Rapor bulunamadı');
+        }
+
+        $copy = SavedReport::create([
+            'company_id' => $companyId,
+            'user_id' => $user->id,
+            'name' => $name ?? ($source->name.' (kopya)'),
+            'description' => $source->description,
+            'dataset_key' => $source->dataset_key,
+            'module_key' => $source->module_key,
+            'system_key' => null,
+            'config' => $source->config,
+            'is_system' => false,
+            'is_shared' => false,
+            'is_favorite' => false,
+            'cache_ttl_seconds' => $source->cache_ttl_seconds,
+        ]);
+
+        return $copy->fresh(['shares']);
+    }
+
+    private function belongsToCompanyOrSystem(SavedReport $report, int $companyId): bool
+    {
+        if ($report->is_system && $report->company_id === null) {
+            return true;
+        }
+
+        return (int) $report->company_id === $companyId;
+    }
+
+    /**
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
@@ -466,3 +511,4 @@ class ReportDefinitionService
         return $config;
     }
 }
+

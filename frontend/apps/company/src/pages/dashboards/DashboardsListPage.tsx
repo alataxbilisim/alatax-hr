@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useTranslation } from '@shared/i18n';
 import { usePermission } from '@shared/hooks';
@@ -23,6 +23,8 @@ interface AuthState {
 const DashboardsListPage: React.FC = () => {
   const { t } = useTranslation('common');
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const moduleKey = searchParams.get('module_key') ?? undefined;
   const { canCreate, canDelete } = usePermission();
   const userId = useSelector((s: AuthState) => s.auth.user?.id ?? 0);
 
@@ -37,7 +39,7 @@ const DashboardsListPage: React.FC = () => {
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await dashboardsApi.list({ per_page: 100 });
+      const res = await dashboardsApi.list({ per_page: 100, module_key: moduleKey });
       const raw: unknown = res.data.data;
       let list: DashboardPayload[] = [];
       if (Array.isArray(raw)) {
@@ -52,7 +54,7 @@ const DashboardsListPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [t]);
+  }, [t, moduleKey]);
 
   useEffect(() => {
     void load();

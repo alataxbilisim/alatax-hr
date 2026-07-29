@@ -260,32 +260,38 @@ Fark yaratacak 4 şey:
 
 ---
 
-### FAZ 5 — Rapor & Analitik Motoru (5–7 hafta)
+### FAZ 5 — Rapor & Analitik Motoru ✅ KAPANDI (2026-07-29)
 
 **Amaç:** "PowerBI mantığı" — self-servis rapor + dashboard. Faz 2 (izinler) ve Faz 4 (custom fields) üstüne kurulur. Detay: `docs/FAZ5_RAPOR.md`. Şartname: `MODUL_SPEC` B14 Analitik.
+
+#### Kapanış özeti
+
+D1a–D1g tamam. **11 dataset**, whitelist query builder, builder UI, pivot/DSL, dashboard v2, paylaşım/gizlilik (min hücre), zamanlama+cache, hazır sistem rapor/pano paketi (`module_key` + `system_key`), `/analytics` → motor panosu. Suite: **561 passed**. Ek tablolar (özet): `saved_reports`/`dashboards` genişletme, `report_shares`, `report_access_logs`, `report_schedules`, `report_measures`, `role_default_dashboards`, vb. — bkz. `FAZ5_RAPOR.md`.
 
 #### Alt dalgalar (D1a–D1g)
 
 | Dalga | Kapsam | Durum |
 |-------|--------|--------|
-| **D1a** | Semantic layer (dataset registry) + güvenli query builder + rapor tanımı API | ✅ (2026-07-29) |
-| **D1b** | Rapor Builder UI (3 panel) + ECharts/TanStack Table + export (Excel/PDF) | ✅ (2026-07-29) |
-| **D1c** | Pivot + drill-down + hesaplanan ölçü DSL + ölçü kütüphanesi | ✅ (2026-07-29) |
-| **D1d** | Dashboard v2 (`dashboards` + paylaşım + çapraz/global filtre + widget guard) | ✅ (2026-07-29) — görsel kullanıcı kontrolü borç |
-| **D1e** | Dataset yayılımı (puantaj/eğitim/zimmet/anket…) + modül başına hazır rapor paketi | ⬜ sırada |
-| **D1f** | Zamanlanmış raporlar (scheduler + queue + e-posta ekli) | ⬜ |
-| **D1g** | `/analytics` → motor taşıma; rol varsayılan panolar (`module_key`); Faz 5 DoD kapanışı | ⬜ |
+| **D1a** | Semantic layer (dataset registry) + güvenli query builder + rapor tanımı API | ✅ |
+| **D1b** | Rapor Builder UI (3 panel) + grafik/tablo + export | ✅ |
+| **D1c** | Pivot + drill-down + hesaplanan ölçü DSL + ölçü kütüphanesi | ✅ |
+| **D1d** | Dashboard v2 (`dashboards` + paylaşım + çapraz/global filtre + widget guard) | ✅ — görsel kontrol borç |
+| **D1e** | Paylaşım v2 + şeffaf alan gizleme + erişim logu + hassasiyet/min hücre | ✅ |
+| **D1f** | Zamanlanmış rapor + abonelik + sonuç cache + performans | ✅ |
+| **D1g** | Dataset yayılımı + hazır paket + modül panoları + `/analytics` motora taşıma | ✅ |
 
-**Korunan vizyon maddeleri (D1e–g içinde eritilir):**
+**Korunan vizyon maddeleri:**
 - [x] Semantic layer + whitelist query builder + company/DataScope/alan izni
 - [x] Rapor tanımı JSONB + Builder UI + export hattı
 - [x] Pivot / drill / ölçü DSL
 - [x] Dashboard v2 (employee_dashboards dokunulmaz; ayrı tablolar)
-- [ ] Kalan dataset’ler + varsayılan 5–10 hazır rapor / modül
-- [ ] Zamanlanmış raporlar
-- [ ] `/analytics` çift altyapı kalkar; rol bazlı varsayılan + `dashboards.module_key` panolar
+- [x] Dataset yayılımı + modül başına hazır rapor/pano (`module_key`)
+- [x] Zamanlanmış raporlar (link varsayılan; special ek kapalı)
+- [x] `/analytics` motor panosu; rol varsayılan `role_default_dashboards`
 
-**DoD:** Admin, "departman bazında son 12 ay izin günleri + custom alan kırılımı" raporunu sürükle-bırak ile kurar, kaydeder, panoya ekler, her pazartesi 09:00'da e-posta ile alır. Yetkisiz kullanıcıda yetkisiz alan/satır gelmez.
+**DoD:** Admin, "departman bazında son 12 ay izin günleri + custom alan kırılımı" raporunu sürükle-bırak ile kurar, kaydeder, panoya ekler, zamanlanmış teslim alır. Yetkisiz kullanıcıda yetkisiz alan/satır gelmez. ✅ (görsel kullanıcı kontrolü borç)
+
+**Açık borç (Faz 6+):** görsel kontroller · `HrAnalyticsController` kaldırma · `employee_dashboards` birleştirme · WebSocket · SCORM / performans / duyuru dataset.
 
 ---
 
@@ -438,7 +444,7 @@ Analitik (B14) Professional’da “hazır pano + sınırlı builder”, Enterpr
 | Kapı | Ne zaman | Ne anlama geliyor |
 |------|----------|-------------------|
 | **M1 — Güvenli Çekirdek** | ✅ Faz 2 sonu (11 Tem 2026) | İzin sistemi gerçek; demo verilebilir |
-| **M2 — Platform Tamam** | Faz 5 sonu | Özelleştirme + BI çalışıyor; dogfooding başlar |
+| **M2 — Platform Tamam** | ✅ Faz 5 sonu (2026-07-29) | Özelleştirme + BI çalışıyor; dogfooding başlar |
 | **M3 — Pilot** | Faz 6A sonu | 1–2 dost firma canlı (org + personel + izin + PDKS + ücret/ödemeler + doküman) |
 | **M4 — GA v1.0** | Faz 7 sonu | Cloud satış açık + on-prem teklif verilebilir |
 
@@ -462,4 +468,4 @@ Toplam tahmin: **~29–42 hafta (7–10 ay)** tam zamanlı. Pilot geri bildirimi
 
 ---
 
-*Faz 0–3 kapandı. Aktif: Faz 4 motorları + Faz 5 D1e–g (`faz4-form-engine`). Modül şartnamesi: 14’lü yapı (`MODUL_SPEC`). Her fazın başında bu belge üzerinden Cursor promptları hazırlanır.*
+*Faz 0–3 ve Faz 5 kapandı. Aktif: Faz 4 kalanları + Faz 6 (`faz4-form-engine`). Modül şartnamesi: 14’lü yapı (`MODUL_SPEC`). Her fazın başında bu belge üzerinden Cursor promptları hazırlanır.*

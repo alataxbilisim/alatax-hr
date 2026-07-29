@@ -33,10 +33,12 @@ class ReportController extends BaseController
 
     public function index(Request $request): JsonResponse
     {
+        $moduleKey = $request->query('module_key');
         $page = $this->reports->listFor(
             $request->user(),
             (int) $this->getCompanyId(),
-            $request->integer('per_page', 20)
+            $request->integer('per_page', 20),
+            is_string($moduleKey) ? $moduleKey : null
         );
 
         return $this->paginated($page, 'Rapor tanımları');
@@ -303,11 +305,33 @@ class ReportController extends BaseController
         return $this->success($result, 'Drill');
     }
 
+    public function cloneReport(Request $request, int $id): JsonResponse
+    {
+        $report = $this->findAccessible($request, $id);
+        $validated = $request->validate([
+            'name' => 'nullable|string|max:255',
+        ]);
+        $copy = $this->reports->cloneForCompany(
+            $report,
+            $request->user(),
+            (int) $this->getCompanyId(),
+            $validated['name'] ?? null
+        );
+
+        return $this->success($copy, 'Rapor kopyalandı', 201);
+    }
+
     private function findAccessible(Request $request, int $id): SavedReport
     {
-        $report = SavedReport::query()
-            ->where('company_id', $this->getCompanyId())
+        $companyId = (int) $this->getCompanyId();
+        $report = SavedReport::withoutGlobalScope('company')
             ->whereKey($id)
+            ->where(function ($q) use ($companyId) {
+                $q->where('company_id', $companyId)
+                    ->orWhere(function ($q2) {
+                        $q2->whereNull('company_id')->where('is_system', true);
+                    });
+            })
             ->first();
 
         if (! $report || ! $report->isAccessibleBy($request->user())) {

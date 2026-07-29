@@ -5,6 +5,7 @@ import { recruitmentApi, lookupsApi, type LookupItem } from '@shared/services/ap
 import toast from 'react-hot-toast';
 import ApplicationDetailModal from './ApplicationDetailModal';
 import AddCandidateForm from '../../components/recruitment/AddCandidateForm';
+import ModuleInsightsBar from '../../components/reports/ModuleInsightsBar';
 import {
   BsArrowLeft,
   BsStarFill,
@@ -159,6 +160,10 @@ const ApplicationsPage: React.FC = () => {
 
   return (
     <div className="animate-fade-in page-fill">
+      <ModuleInsightsBar
+        moduleKey="job-applications"
+        modulePermission={{ module: 'recruitment', page: 'applications' }}
+      />
       <div className="page-header" style={{ flexShrink: 0 }}>
         <div className="page-header-content">
           <button

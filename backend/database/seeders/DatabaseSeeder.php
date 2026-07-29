@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             ModuleSeeder::class,
             LicensePackageSeeder::class,
             PermissionSeeder::class,
+            SystemReportPackageSeeder::class,
             SuperAdminSeeder::class,
             LeaveTypeSeeder::class,
             LookupSeeder::class,

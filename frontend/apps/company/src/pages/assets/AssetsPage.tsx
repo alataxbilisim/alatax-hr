@@ -5,6 +5,7 @@ import { DataTable, ConfirmDialog, EmptyState } from '../../components/ui';
 import AssetForm from '../../components/assets/AssetForm';
 import CategoryForm from '../../components/assets/CategoryForm';
 import AssignmentForm from '../../components/assets/AssignmentForm';
+import ModuleInsightsBar from '../../components/reports/ModuleInsightsBar';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from '@shared/i18n';
 import {
@@ -370,6 +371,10 @@ const AssetsPage: React.FC = () => {
 
   return (
     <div className="animate-fade-in list-page">
+      <ModuleInsightsBar
+        moduleKey="asset-management"
+        modulePermission={{ module: 'assets', page: 'list' }}
+      />
       <div className="page-header">
         <div className="page-header-content">
           <h1 className="page-title">Varlıklar</h1>

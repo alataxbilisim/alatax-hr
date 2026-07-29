@@ -352,3 +352,81 @@ UI: `meta.computed_at` + `bypass_cache` / Şimdi yenile.
 ### Not
 
 **KULLANICI GÖRSEL KONTROLÜ BEKLİYOR (borç)**
+
+---
+
+---
+
+## D1g + Faz 5 kapanış — Hazır rapor paketi + modül panoları + /analytics motora taşıma
+
+**Tarih:** 2026-07-29  
+**Commit:** feat(faz5): D1g hazır rapor paketi + modül panoları + analytics motora taşıma
+
+### ADIM 0 — Teşhis (özet)
+
+| Modül / veri | Dataset | DUR? |
+|--------------|---------|------|
+| Personel / izin / masraf / işe alım / anket | Mevcut (D1a+) | — |
+| Puantaj (attendance_records) | **Yeni** | hazır |
+| Varlık (assets) | **Yeni** | hazır |
+| Eğitim katılım (training_participants) | **Yeni** | hazır |
+| Belge (employee_documents) | **Yeni** | hazır |
+| Bordro (payslips) | **Yeni** | hazır (alan izni) |
+| Duyuru / performans / talepler | — | **DUR** (iskelet / yetersiz model) |
+
+HrAnalyticsController: 6 sabit uç; DataScope **yoktu** → güvenlik borcu. FE /analytics artık hr-analytics.overview panosuna yönlendirir. Controller deprecate (Faz 6 silme).
+
+### Saklama kararı
+
+**company_id NULL + is_system + unique system_key** global şablon. Firma kopyası: company_id dolu, system_key=null, is_system=false. Seed yalnız şablonları upsert eder; özelleştirilmiş kopyalar **ezilmez**.
+
+Gerekçe: tek kaynak şablon, tenant izolasyonu bozulmaz, BelongsToCompany scope withoutGlobalScope + OR sistem ile okunur.
+
+Rol varsayılan: role_default_dashboards (role_key → dashboard_system_key) — roles tablosuna FK yok (Spatie rolleri şirket-özel; sistem anahtarı daha taşınabilir).
+
+### Dataset envanteri (11)
+
+employees, leave_requests, leave_balances, expense_claims, job_applications, survey_responses, attendance_records, assets, training_participants, employee_documents, payslips.
+
+### Paket sayıları (yaklaşık)
+
+| Modül (module_key) | Sistem rapor | Sistem pano |
+|----------------------|--------------|-------------|
+| leave-management | ~10 | 1 |
+| timesheet | 6 | 1 |
+| job-applications | 5 | 1 |
+| expense-management | 5 | 1 |
+| training | 5 | 1 |
+| asset-management | 5 | 1 |
+| surveys | 3 | 1 |
+| document-management | 5 | 1 |
+| hr-analytics | ~6 (+ bordro) | 1 (hr-analytics.overview) |
+
+Modül UI: ortak ModuleInsightsBar ([Pano] / [Raporlar]) — kopya sayfa yok; modül view + reports.* birlikte.
+
+### /analytics taşıma
+
+- FE: sistem panosu getByKey → /dashboards/{id}
+- Sayılar: yetkili company scope'ta motor = eski company filtresiyle uyumlu; **department kullanıcısında artık DataScope uygulanır** → eskiden fazla (şirket geneli) veri gösteriliyordu. Bu bilinçli düzeltme.
+
+### Test
+
+| Suite | Sonuç |
+|-------|--------|
+| ReportPackageD1gTest | **5 passed** |
+| Tam suite | **561 passed / 0 fail** |
+| 3 SPA tsc + lint + sentinel | **PASSED** |
+| DB wipe | **yok** |
+
+### Faz 5 kapanış özeti
+
+D1a semantic/query → D1b builder UI → D1c pivot/DSL → D1d dashboard v2 → D1e paylaşım/gizlilik → D1f schedule/cache → **D1g paket+modül+analytics**. Rapor motoru platform yeteneği.
+
+### Açık borçlar
+
+- KULLANICI GÖRSEL KONTROLÜ BEKLİYOR (borç)
+- HrAnalyticsController kaldırma (Faz 6)
+- employee_dashboards (personel BI) birleştirme
+- WebSocket / canlı widget
+- SCORM / performans dataset
+- Duyuru / talep dataset (model olgunlaşınca)

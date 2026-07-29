@@ -21,7 +21,8 @@ class DashboardController extends BaseController
         $page = $this->dashboards->listFor(
             $request->user(),
             (int) $this->getCompanyId(),
-            $request->integer('per_page', 20)
+            $request->integer('per_page', 20),
+            is_string($request->query('module_key')) ? $request->query('module_key') : null
         );
 
         return $this->paginated($page, 'Panolar');
@@ -109,11 +110,50 @@ class DashboardController extends BaseController
         return $this->success($result, 'Pano çalıştırıldı');
     }
 
+    public function cloneDashboard(Request $request, int $id): JsonResponse
+    {
+        $dashboard = $this->findAccessible($request, $id);
+        $validated = $request->validate([
+            'name' => 'nullable|string|max:255',
+        ]);
+        $copy = $this->dashboards->cloneForCompany(
+            $dashboard,
+            $request->user(),
+            (int) $this->getCompanyId(),
+            $validated['name'] ?? null
+        );
+
+        return $this->success($copy, 'Pano kopyalandı', 201);
+    }
+
+    /**
+     * Sistem panosu — system_key ile (analytics / varsayılan rol).
+     */
+    public function showBySystemKey(Request $request, string $systemKey): JsonResponse
+    {
+        $dashboard = Dashboard::withoutGlobalScope('company')
+            ->whereNull('company_id')
+            ->where('is_system', true)
+            ->where('system_key', $systemKey)
+            ->first();
+        if (! $dashboard || ! $dashboard->isAccessibleBy($request->user())) {
+            abort(404, 'Pano bulunamadı');
+        }
+
+        return $this->success($dashboard->load('shares'));
+    }
+
     private function findAccessible(Request $request, int $id): Dashboard
     {
-        $dashboard = Dashboard::query()
-            ->where('company_id', $this->getCompanyId())
+        $companyId = (int) $this->getCompanyId();
+        $dashboard = Dashboard::withoutGlobalScope('company')
             ->whereKey($id)
+            ->where(function ($q) use ($companyId) {
+                $q->where('company_id', $companyId)
+                    ->orWhere(function ($q2) {
+                        $q2->whereNull('company_id')->where('is_system', true);
+                    });
+            })
             ->first();
 
         if (! $dashboard || ! $dashboard->isAccessibleBy($request->user())) {

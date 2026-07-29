@@ -14,6 +14,7 @@ import LeaveCalendarTab from '../../components/leaves/LeaveCalendarTab';
 import HolidaysTab from '../../components/leaves/HolidaysTab';
 import AccrualPoliciesTab from '../../components/leaves/AccrualPoliciesTab';
 import LeaveReportsTab from '../../components/leaves/LeaveReportsTab';
+import ModuleInsightsBar from '../../components/reports/ModuleInsightsBar';
 import {
   BsPlus,
   BsCheck,
@@ -585,6 +586,10 @@ const LeavesPage: React.FC = () => {
 
   return (
     <div className="animate-fade-in list-page">
+      <ModuleInsightsBar
+        moduleKey="leave-management"
+        modulePermission={{ module: 'leaves', page: 'requests' }}
+      />
       <div className="page-header">
         <div className="page-header-content">
           <h1 className="page-title">İzinler</h1>

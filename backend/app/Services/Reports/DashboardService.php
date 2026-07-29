@@ -34,10 +34,16 @@ class DashboardService
         protected DatasetRegistry $registry,
     ) {}
 
-    public function listFor(User $user, int $companyId, int $perPage = 20): LengthAwarePaginator
+    public function listFor(User $user, int $companyId, int $perPage = 20, ?string $moduleKey = null): LengthAwarePaginator
     {
-        return Dashboard::query()
-            ->where('company_id', $companyId)
+        return Dashboard::withoutGlobalScope('company')
+            ->where(function ($q) use ($companyId) {
+                $q->where('company_id', $companyId)
+                    ->orWhere(function ($q2) {
+                        $q2->whereNull('company_id')->where('is_system', true);
+                    });
+            })
+            ->when($moduleKey !== null && $moduleKey !== '', fn ($q) => $q->where('module_key', $moduleKey))
             ->accessibleBy($user)
             ->with('shares')
             ->orderByDesc('updated_at')
@@ -113,6 +119,30 @@ class DashboardService
     }
 
     /**
+     * Sistem panosunu firmaya kopyala.
+     */
+    public function cloneForCompany(Dashboard $source, User $user, int $companyId, ?string $name = null): Dashboard
+    {
+        if (! $source->isAccessibleBy($user)) {
+            abort(403, 'Bu panoya erişim yok');
+        }
+
+        return Dashboard::create([
+            'company_id' => $companyId,
+            'owner_id' => $user->id,
+            'created_by' => $user->id,
+            'name' => $name ?? ($source->name.' (kopya)'),
+            'description' => $source->description,
+            'module_key' => $source->module_key,
+            'system_key' => null,
+            'layout' => $source->layout,
+            'global_filters' => $source->global_filters,
+            'is_system' => false,
+            'cache_ttl_seconds' => $source->cache_ttl_seconds,
+        ])->fresh(['shares']);
+    }
+
+    /**
      * Tek istekte tüm widget'lar — viewer kapsamı (sahip miras alınmaz).
      *
      * @param  array<string, mixed>  $runtimeFilters  global + cross
@@ -123,7 +153,8 @@ class DashboardService
         if (! $dashboard->isAccessibleBy($viewer)) {
             throw ValidationException::withMessages(['id' => ['Bu panoya erişim yok']]);
         }
-        if ((int) $dashboard->company_id !== $companyId) {
+        if (! ($dashboard->is_system && $dashboard->company_id === null)
+            && (int) $dashboard->company_id !== $companyId) {
             throw ValidationException::withMessages(['id' => ['Pano bulunamadı']]);
         }
 

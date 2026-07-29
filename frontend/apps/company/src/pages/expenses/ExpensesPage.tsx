@@ -5,6 +5,7 @@ import { Select } from '@shared/components';
 import { useTranslation } from '@shared/i18n';
 import toast from 'react-hot-toast';
 import { DataTable, ConfirmDialog, Modal } from '../../components/ui';
+import ModuleInsightsBar from '../../components/reports/ModuleInsightsBar';
 import { BsCheck, BsX, BsCashCoin, BsPlus, BsPencil, BsTrash } from 'react-icons/bs';
 
 interface ExpenseClaimRow {
@@ -368,6 +369,10 @@ const ExpensesPage: React.FC = () => {
 
   return (
     <div className="page-container">
+      <ModuleInsightsBar
+        moduleKey="expense-management"
+        modulePermission={{ module: 'expenses', page: 'claims' }}
+      />
       <div className="page-header" style={{ marginBottom: '1rem' }}>
         <h1 style={{ margin: 0 }}>{t('expenses.title')}</h1>
       </div>

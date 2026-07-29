@@ -1196,12 +1196,13 @@ export interface SavedReportWritePayload {
 
 export const reportsApi = {
   datasets: () => api.get<unknown, { data: { data: ReportDatasetCatalog[] } }>('/reports/datasets'),
-  list: (params?: { per_page?: number; page?: number }) =>
+  list: (params?: { per_page?: number; page?: number; module_key?: string }) =>
     api.get('/reports', { params }),
   get: (id: number) => api.get(`/reports/${id}`),
   create: (data: SavedReportWritePayload) => api.post('/reports', data),
   update: (id: number, data: Partial<SavedReportWritePayload>) => api.put(`/reports/${id}`, data),
   remove: (id: number) => api.delete(`/reports/${id}`),
+  clone: (id: number, data?: { name?: string }) => api.post(`/reports/${id}/clone`, data ?? {}),
   preview: (payload: ReportQueryPayload) => api.post('/reports/preview', payload),
   run: (id: number, overrides?: { limit?: number; offset?: number; bypass_cache?: boolean }) =>
     api.post(`/reports/${id}/run`, overrides ?? {}),
@@ -1371,14 +1372,16 @@ export interface DashboardWritePayload {
 }
 
 export const dashboardsApi = {
-  list: (params?: { per_page?: number; page?: number }) =>
+  list: (params?: { per_page?: number; page?: number; module_key?: string }) =>
     api.get('/dashboards', { params }),
   get: (id: number) => api.get(`/dashboards/${id}`),
+  getByKey: (systemKey: string) => api.get(`/dashboards/by-key/${encodeURIComponent(systemKey)}`),
   create: (data: DashboardWritePayload) => api.post('/dashboards', data),
   update: (id: number, data: Partial<DashboardWritePayload>) => api.put(`/dashboards/${id}`, data),
   remove: (id: number) => api.delete(`/dashboards/${id}`),
   run: (id: number, payload?: { values?: Record<string, unknown>; cross?: Record<string, unknown> }) =>
     api.post(`/dashboards/${id}/run`, payload ?? {}),
+  clone: (id: number, data?: { name?: string }) => api.post(`/dashboards/${id}/clone`, data ?? {}),
 };
 
 // Public API (Başvuru formları)

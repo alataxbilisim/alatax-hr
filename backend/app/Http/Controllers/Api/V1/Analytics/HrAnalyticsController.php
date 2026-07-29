@@ -15,10 +15,17 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * @deprecated D1g — /analytics artık sistem panosu (hr-analytics.overview) üzerinden motor kullanır.
+ * Bu controller uçları geriye uyumluluk için duruyor; DataScope YOK (kapsam açığı).
+ * Faz 6 temizlik: kullanılmıyorsa kaldırılacak (DUR).
+ */
 class HrAnalyticsController extends BaseController
 {
     /**
      * Workforce Analytics - İş gücü istatistikleri
+     *
+     * @deprecated Motor panosu tercih edin
      */
     public function workforce(): JsonResponse
     {
