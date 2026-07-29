@@ -71,7 +71,7 @@ class MeasureExpressionSecurityTest extends TestCase
         return [
             ['1;DROP TABLE employees'],
             ['sum(gross_salary); delete from employees'],
-            ["sum(gross_salary) --"],
+            ['sum(gross_salary) --'],
             ['sum(gross_salary) /* comment */'],
             ['sum(employees.gross_salary)'],
             ['sum("gross_salary")'],

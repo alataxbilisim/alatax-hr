@@ -8,12 +8,10 @@ use App\Models\ApprovalInstance;
 use App\Models\ApprovalRecord;
 use App\Models\ApprovalStep;
 use App\Models\ApprovalWorkflow;
-use App\Models\User;
 use App\Services\ApprovalStepConditionEvaluator;
 use App\Services\Notification\NotificationService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Paralel grup + sıralı adım ilerletme (B4).

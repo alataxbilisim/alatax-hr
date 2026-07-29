@@ -16,11 +16,11 @@ use App\Models\Module;
 use App\Models\User;
 use App\Services\ApprovalStepConditionEvaluator;
 use App\Services\WorkflowService;
-use Tests\Concerns\RefreshDatabase;
 use InvalidArgumentException;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
 /**

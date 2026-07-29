@@ -5,7 +5,6 @@
  * Docker compose DB_DATABASE=alatax_hr ortam değişkenini ezer.
  * Yıkıcı migrate komutu yok.
  */
-
 $autoload = dirname(__DIR__).'/vendor/autoload.php';
 require $autoload;
 

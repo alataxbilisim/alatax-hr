@@ -12,9 +12,9 @@ use App\Services\DefaultCompanyHrSeedService;
 use Database\Seeders\LookupSeeder;
 use Database\Seeders\ModuleSeeder;
 use Database\Seeders\PermissionSeeder;
-use Tests\Concerns\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Laravel\Sanctum\Sanctum;
+use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
 /**

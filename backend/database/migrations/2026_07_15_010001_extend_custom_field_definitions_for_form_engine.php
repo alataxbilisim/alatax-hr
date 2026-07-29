@@ -147,7 +147,7 @@ return new class extends Migration
 
         // Fallback: Laravel varsayılan adı
         try {
-            Schema::table($table, function (Blueprint $blueprint) use ($table, $column) {
+            Schema::table($table, function (Blueprint $blueprint) use ($column) {
                 $blueprint->dropForeign([$column]);
             });
         } catch (\Throwable) {

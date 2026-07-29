@@ -2,9 +2,9 @@
 
 namespace App\Services\Timesheet;
 
+use App\Models\ActivityLog;
 use App\Models\AttendanceRecord;
 use App\Models\User;
-use App\Models\ActivityLog;
 use InvalidArgumentException;
 
 /**

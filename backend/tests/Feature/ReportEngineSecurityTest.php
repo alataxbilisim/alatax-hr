@@ -306,7 +306,7 @@ class ReportEngineSecurityTest extends TestCase
         $before = DB::selectOne('select count(*)::int as c from employees')->c;
 
         $this->postJson('/api/v1/reports/preview', [
-            'dataset' => "employees; delete from employees;--",
+            'dataset' => 'employees; delete from employees;--',
             'fields' => ['employee_code'],
         ])->assertStatus(422);
 

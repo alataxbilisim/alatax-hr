@@ -7,7 +7,6 @@ use App\Enums\UserType;
 use App\Models\Company;
 use App\Models\Employee;
 use App\Models\Position;
-use App\Models\SalaryBand;
 use App\Models\User;
 use Database\Seeders\LookupSeeder;
 use Database\Seeders\PermissionSeeder;

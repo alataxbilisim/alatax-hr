@@ -23,7 +23,6 @@ use Illuminate\Validation\ValidationException;
 class RequestTypeFormFieldsAdapter
 {
     /**
-     * @param  mixed  $formFields
      * @return list<array<string, mixed>>
      */
     public function normalizeFields(mixed $formFields): array
@@ -80,9 +79,6 @@ class RequestTypeFormFieldsAdapter
     }
 
     /**
-     * @param  mixed  $formFields
-     * @param  mixed  $formData
-     *
      * @throws ValidationException
      */
     public function validateFormData(mixed $formFields, mixed $formData): array

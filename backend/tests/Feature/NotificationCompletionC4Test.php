@@ -23,7 +23,6 @@ use App\Services\WorkflowService;
 use Database\Seeders\PermissionSeeder;
 use Illuminate\Support\Facades\Mail;
 use Laravel\Sanctum\Sanctum;
-use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;

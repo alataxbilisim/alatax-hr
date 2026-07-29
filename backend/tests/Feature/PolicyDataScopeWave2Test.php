@@ -11,10 +11,10 @@ use App\Models\Module;
 use App\Models\PerformancePeriod;
 use App\Models\PerformanceReview;
 use App\Models\User;
-use Tests\Concerns\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
 /**

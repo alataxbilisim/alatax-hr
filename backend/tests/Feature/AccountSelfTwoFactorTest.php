@@ -6,12 +6,12 @@ use App\Enums\CompanyStatus;
 use App\Enums\UserType;
 use App\Models\Company;
 use App\Models\User;
-use Tests\Concerns\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Laravel\Sanctum\Sanctum;
 use PragmaRX\Google2FA\Google2FA;
 use Spatie\Permission\Models\Permission;
+use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
 /**

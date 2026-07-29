@@ -4,12 +4,9 @@ namespace Tests\Feature;
 
 use App\Enums\CompanyStatus;
 use App\Enums\UserType;
-use App\Models\Announcement;
 use App\Models\Company;
 use App\Models\Department;
 use App\Models\Employee;
-use App\Models\EmployeeShift;
-use App\Models\Payslip;
 use App\Models\Shift;
 use App\Models\User;
 use Database\Seeders\PermissionSeeder;

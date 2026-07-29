@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use Tests\Concerns\RefreshDatabase;
 use Illuminate\Support\Facades\RateLimiter;
+use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
 /**

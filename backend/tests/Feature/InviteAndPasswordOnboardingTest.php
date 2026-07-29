@@ -14,12 +14,12 @@ use App\Services\InvitationService;
 use Database\Seeders\LookupSeeder;
 use Database\Seeders\ModuleSeeder;
 use Database\Seeders\PermissionSeeder;
-use Tests\Concerns\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Role;
+use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
 /**

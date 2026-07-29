@@ -138,7 +138,7 @@ class ApprovalRecord extends Model
             ActivityLog::log(
                 'approve',
                 $this->approvable,
-                'Onay adımı tamamlandı: '.($this->step?->name ?? '#' . $this->step_order),
+                'Onay adımı tamamlandı: '.($this->step?->name ?? '#'.$this->step_order),
                 null,
                 ['step' => $this->step_order, 'comment' => $comment]
             );

@@ -13,7 +13,7 @@ class SimpleTextPdf
      */
     public function render(string $title, array $lines): string
     {
-        $content = "BT\n/F1 14 Tf\n50 780 Td\n(". $this->escape($this->ascii($title)) .") Tj\n";
+        $content = "BT\n/F1 14 Tf\n50 780 Td\n(".$this->escape($this->ascii($title)).") Tj\n";
         $content .= "/F1 10 Tf\n0 -24 Td\n";
 
         foreach ($lines as $line) {
@@ -21,7 +21,7 @@ class SimpleTextPdf
             $content .= "0 -14 Td\n({$safe}) Tj\n";
         }
 
-        $content .= "ET";
+        $content .= 'ET';
 
         $objects = [];
         $objects[] = '1 0 obj<< /Type /Catalog /Pages 2 0 R >>endobj';

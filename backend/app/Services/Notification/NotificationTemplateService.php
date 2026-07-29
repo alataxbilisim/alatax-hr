@@ -3,7 +3,6 @@
 namespace App\Services\Notification;
 
 use App\Models\NotificationTemplate;
-use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 

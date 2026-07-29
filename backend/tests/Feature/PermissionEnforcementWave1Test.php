@@ -8,9 +8,9 @@ use App\Models\ActivityLog;
 use App\Models\AttendanceRecord;
 use App\Models\Company;
 use App\Models\User;
-use Tests\Concerns\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Permission;
+use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
 /**

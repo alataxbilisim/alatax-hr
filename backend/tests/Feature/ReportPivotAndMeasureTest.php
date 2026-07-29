@@ -7,7 +7,6 @@ use App\Enums\UserType;
 use App\Models\Company;
 use App\Models\Department;
 use App\Models\Employee;
-use App\Models\ReportMeasure;
 use App\Models\User;
 use Database\Seeders\PermissionSeeder;
 use Laravel\Sanctum\Sanctum;

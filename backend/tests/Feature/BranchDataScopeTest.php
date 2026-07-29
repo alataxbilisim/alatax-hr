@@ -10,9 +10,9 @@ use App\Models\Employee;
 use App\Models\User;
 use App\Services\DataScopeService;
 use Database\Seeders\PermissionSeeder;
-use Tests\Concerns\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Role;
+use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
 /**

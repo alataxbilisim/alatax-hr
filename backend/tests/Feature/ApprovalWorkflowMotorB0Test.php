@@ -18,11 +18,11 @@ use App\Models\Module;
 use App\Models\User;
 use App\Services\DefaultLeaveApprovalWorkflowService;
 use App\Services\WorkflowService;
-use Tests\Concerns\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
 /**

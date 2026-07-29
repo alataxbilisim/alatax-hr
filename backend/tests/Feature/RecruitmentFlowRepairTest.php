@@ -15,8 +15,8 @@ use App\Models\Module;
 use App\Models\User;
 use Database\Seeders\LookupSeeder;
 use Database\Seeders\PermissionSeeder;
-use Tests\Concerns\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
+use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
 /**

@@ -6,9 +6,9 @@ use App\Enums\UserType;
 use App\Models\User;
 use App\Support\HierarchicalPermission;
 use Database\Seeders\PermissionSeeder;
-use Tests\Concerns\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
 use Spatie\Permission\Models\Permission;
+use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
 class HierarchicalPermissionGateTest extends TestCase

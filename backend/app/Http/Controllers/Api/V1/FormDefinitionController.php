@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Models\ActivityLog;
 use App\Services\FormDefinitionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers\Api\V1\Portal;
 
-use App\Enums\LeaveRequestStatus;
 use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\ActivityLog;
+use App\Models\CustomFieldDefinition;
 use App\Models\LeaveBalance;
 use App\Models\LeaveRequest;
 use App\Models\LeaveType;
-use App\Models\CustomFieldDefinition;
 use App\Services\CustomFieldValidationService;
 use App\Services\Leaves\LeaveRequestCancelService;
 use Illuminate\Http\JsonResponse;

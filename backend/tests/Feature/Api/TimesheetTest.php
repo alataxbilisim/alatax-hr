@@ -8,8 +8,8 @@ use App\Models\AttendanceRecord;
 use App\Models\Company;
 use App\Models\Employee;
 use App\Models\User;
-use Tests\Concerns\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
+use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
 class TimesheetTest extends TestCase

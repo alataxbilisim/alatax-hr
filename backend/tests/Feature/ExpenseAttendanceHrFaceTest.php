@@ -17,8 +17,8 @@ use App\Models\ExpenseClaim;
 use App\Models\ExpenseItem;
 use App\Models\User;
 use Database\Seeders\PermissionSeeder;
-use Tests\Concerns\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
+use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
 /**

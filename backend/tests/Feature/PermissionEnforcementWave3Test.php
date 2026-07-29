@@ -12,9 +12,9 @@ use App\Models\PerformancePeriod;
 use App\Models\Survey;
 use App\Models\Training;
 use App\Models\User;
-use Tests\Concerns\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Permission;
+use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
 /**
