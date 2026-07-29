@@ -250,111 +250,42 @@ Kaynak varsayÄ±lan: kayÄ±tlÄ± rapor; inline config alternatif. **Motor tÃ¼ketici
 
 ---
 
-## D1e — Paylaþým v2 + þeffaf alan gizleme + eriþim denetimi + hassasiyet guard
+## D1e â€” PaylaÅŸÄ±m v2 + ÅŸeffaf alan gizleme + eriÅŸim denetimi + hassasiyet guard
 
 **Tarih:** 2026-07-29  
-**Commit:** feat(faz5): D1e paylaþým v2 + þeffaf alan gizleme + eriþim denetimi + hassasiyet guard
+**Commit:** `feat(faz5): D1e paylaÅŸÄ±m v2 + ÅŸeffaf alan gizleme + eriÅŸim denetimi + hassasiyet guard`
 
-### Paylaþým matrisi
+### PaylaÅŸÄ±m matrisi
 
-| Seviye | Çalýþtýr/filtre/export | Taným düzenle | Sil | Paylaþým | Sahiplik devri |
+| Seviye | Ã‡alÄ±ÅŸtÄ±r/filtre/export | TanÄ±m dÃ¼zenle | Sil | PaylaÅŸÄ±m | Sahiplik devri |
 |--------|------------------------|---------------|-----|----------|----------------|
-| viewer | evet | hayýr | hayýr | hayýr | hayýr |
-| editor | evet | evet | hayýr | hayýr | hayýr |
+| viewer | evet | hayÄ±r | hayÄ±r | hayÄ±r | hayÄ±r |
+| editor | evet | evet | hayÄ±r | hayÄ±r | hayÄ±r |
 | owner | evet | evet | evet | evet | evet (+ transfer yetkisi) |
 
-Hedef: kullanýcý / rol / departman. Klasör paylaþýmý yok. Offboarding hook yok (DUR). Anonim/public yok.
+Hedef: kullanÄ±cÄ± / rol / departman. KlasÃ¶r paylaÅŸÄ±mÄ± yok. Offboarding hook yok (DUR). Anonim/public yok.
 
 ### hidden_fields
 
-meta.hidden_fields: [{key,label,reason}] — field_permission | sensitivity | dataset_scope. UI þerit + export notu.
+`meta.hidden_fields`: `[{key,label,reason}]` â€” `field_permission` | `sensitivity` | `dataset_scope`. UI ÅŸerit + export notu.
 
 ### Access log
 
-report_access_logs; filtre deðeri ham yazýlmaz (hash); append-only; afterResponse; 12 ay + purge komutu.
+`report_access_logs`; filtre deÄŸeri ham yazÄ±lmaz (hash); append-only; `afterResponse`; 12 ay + purge komutu.
 
-### Hassasiyet + min hücre
+### Hassasiyet + min hÃ¼cre
 
-personal / special / anonymous_source / normal. Min hücre eþik 5. Alt/genel toplam: mask_when_any_leaf_masked.
-
-### Test
-
-ReportSharingPrivacyTest 7 passed. Tam suite: **550 passed / 0 fail**. 3 SPA tsc + lint + sentinel: PASSED.
-
-### Not
-
-**KULLANICI GÖRSEL KONTROLÜ BEKLÝYOR (borç)**
-
----
-
-## D1e — Paylaþým v2 + þeffaf alan gizleme + eriþim denetimi + hassasiyet guard
-
-**Tarih:** 2026-07-29  
-**Commit:** feat(faz5): D1e paylaþým v2 + þeffaf alan gizleme + eriþim denetimi + hassasiyet guard
-
-### Paylaþým matrisi
-
-| Seviye | Çalýþtýr/filtre/export | Taným düzenle | Sil | Paylaþým | Sahiplik devri |
-|--------|------------------------|---------------|-----|----------|----------------|
-| viewer | evet | hayýr | hayýr | hayýr | hayýr |
-| editor | evet | evet | hayýr | hayýr | hayýr |
-| owner | evet | evet | evet | evet | evet (+ transfer yetkisi) |
-
-Hedef: kullanýcý / rol / departman. Klasör paylaþýmý yok. Offboarding hook yok (DUR). Anonim/public yok.
-
-### hidden_fields
-
-meta.hidden_fields: [{key,label,reason}] — field_permission | sensitivity | dataset_scope. UI þerit + export notu.
-
-### Access log
-
-report_access_logs; filtre deðeri ham yazýlmaz (hash); append-only; afterResponse; 12 ay + purge komutu.
-
-### Hassasiyet + min hücre
-
-personal / special / anonymous_source / normal. Min hücre eþik 5. Alt/genel toplam: mask_when_any_leaf_masked.
+`personal` / `special` / `anonymous_source` / `normal`. Min hÃ¼cre eÅŸik 5. Alt/genel toplam: `mask_when_any_leaf_masked`.
 
 ### Test
 
-ReportSharingPrivacyTest 7 passed. Tam suite: **550 passed / 0 fail**. 3 SPA tsc + lint + sentinel: PASSED.
+| Suite | SonuÃ§ |
+|-------|--------|
+| `ReportSharingPrivacyTest` | **7 passed** |
+| Tam suite | **550 passed / 0 fail** |
+| 3 SPA tsc + lint + sentinel | **PASSED** |
+| DB wipe | **yok** |
 
 ### Not
 
-**KULLANICI GÖRSEL KONTROLÜ BEKLÝYOR (borç)**
-
----
-
-## D1e — Paylaþým v2 + þeffaf alan gizleme + eriþim denetimi + hassasiyet guard
-
-**Tarih:** 2026-07-29  
-**Commit:** feat(faz5): D1e paylaþým v2 + þeffaf alan gizleme + eriþim denetimi + hassasiyet guard
-
-### Paylaþým matrisi
-
-| Seviye | Çalýþtýr/filtre/export | Taným düzenle | Sil | Paylaþým | Sahiplik devri |
-|--------|------------------------|---------------|-----|----------|----------------|
-| viewer | evet | hayýr | hayýr | hayýr | hayýr |
-| editor | evet | evet | hayýr | hayýr | hayýr |
-| owner | evet | evet | evet | evet | evet (+ transfer yetkisi) |
-
-Hedef: kullanýcý / rol / departman. Klasör paylaþýmý yok. Offboarding hook yok (DUR). Anonim/public yok.
-
-### hidden_fields
-
-meta.hidden_fields: [{key,label,reason}] — field_permission | sensitivity | dataset_scope. UI þerit + export notu.
-
-### Access log
-
-report_access_logs; filtre deðeri ham yazýlmaz (hash); append-only; afterResponse; 12 ay + purge komutu.
-
-### Hassasiyet + min hücre
-
-personal / special / anonymous_source / normal. Min hücre eþik 5. Alt/genel toplam: mask_when_any_leaf_masked.
-
-### Test
-
-ReportSharingPrivacyTest 7 passed. Tam suite: **550 passed / 0 fail**. 3 SPA tsc + lint + sentinel: PASSED.
-
-### Not
-
-**KULLANICI GÖRSEL KONTROLÜ BEKLÝYOR (borç)**
+**KULLANICI GÃ–RSEL KONTROLÃœ BEKLÄ°YOR (borÃ§)**
