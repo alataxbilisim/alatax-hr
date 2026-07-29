@@ -7,6 +7,14 @@ namespace App\Services\Reports;
  */
 final class ReportField
 {
+    public const SENSITIVITY_NORMAL = 'normal';
+
+    public const SENSITIVITY_PERSONAL = 'personal';
+
+    public const SENSITIVITY_SPECIAL = 'special';
+
+    public const SENSITIVITY_ANONYMOUS = 'anonymous_source';
+
     public function __construct(
         public readonly string $key,
         public readonly string $column,
@@ -19,6 +27,7 @@ final class ReportField
         public readonly bool $isCustom = false,
         public readonly ?string $customJsonKey = null,
         public readonly ?string $customJsonColumn = null,
+        public readonly string $sensitivity = self::SENSITIVITY_NORMAL,
     ) {}
 
     public function isMeasure(): bool
@@ -29,6 +38,21 @@ final class ReportField
     public function isDimension(): bool
     {
         return $this->role === 'dimension';
+    }
+
+    public function requiresMinCellGuard(): bool
+    {
+        return in_array($this->sensitivity, [self::SENSITIVITY_SPECIAL, self::SENSITIVITY_ANONYMOUS], true);
+    }
+
+    public function isClassifiedSensitive(): bool
+    {
+        return $this->sensitive
+            || in_array($this->sensitivity, [
+                self::SENSITIVITY_PERSONAL,
+                self::SENSITIVITY_SPECIAL,
+                self::SENSITIVITY_ANONYMOUS,
+            ], true);
     }
 
     /**
@@ -43,7 +67,8 @@ final class ReportField
             'label_key' => $this->labelKey,
             'role' => $this->role,
             'permission' => $this->permission,
-            'sensitive' => $this->sensitive,
+            'sensitive' => $this->sensitive || $this->isClassifiedSensitive(),
+            'sensitivity' => $this->sensitivity,
             'is_custom' => $this->isCustom,
         ];
     }

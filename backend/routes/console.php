@@ -43,3 +43,9 @@ Schedule::command('timesheet:mark-incomplete')
     ->withoutOverlapping(120)
     ->onOneServer()
     ->name('timesheet-mark-incomplete');
+
+Schedule::command('reports:purge-access-logs --months=12')
+    ->dailyAt('03:40')
+    ->withoutOverlapping(120)
+    ->onOneServer()
+    ->name('reports-purge-access-logs');

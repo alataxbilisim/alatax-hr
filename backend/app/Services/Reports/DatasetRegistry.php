@@ -8,6 +8,7 @@ use App\Services\Reports\Datasets\ExpenseClaimsDataset;
 use App\Services\Reports\Datasets\JobApplicationsDataset;
 use App\Services\Reports\Datasets\LeaveBalancesDataset;
 use App\Services\Reports\Datasets\LeaveRequestsDataset;
+use App\Services\Reports\Datasets\SurveyResponsesDataset;
 use InvalidArgumentException;
 
 /**
@@ -30,6 +31,7 @@ class DatasetRegistry
                 new LeaveBalancesDataset,
                 new ExpenseClaimsDataset,
                 new JobApplicationsDataset,
+                new SurveyResponsesDataset,
             ];
             $this->datasets = [];
             foreach ($list as $ds) {

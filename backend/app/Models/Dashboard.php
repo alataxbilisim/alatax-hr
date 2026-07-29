@@ -91,6 +91,10 @@ class Dashboard extends Model
                 if ($roleIds !== []) {
                     $q->orWhereIn('role_id', $roleIds);
                 }
+                $deptId = $user->employee?->department_id;
+                if ($deptId) {
+                    $q->orWhere('department_id', (int) $deptId);
+                }
             })
             ->exists();
     }
@@ -108,6 +112,10 @@ class Dashboard extends Model
                 $roleIds = $user->roles->pluck('id')->all();
                 if ($roleIds !== []) {
                     $q->orWhereIn('role_id', $roleIds);
+                }
+                $deptId = $user->employee?->department_id;
+                if ($deptId) {
+                    $q->orWhere('department_id', (int) $deptId);
                 }
             })
             ->exists();

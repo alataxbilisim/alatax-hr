@@ -55,10 +55,12 @@ class ReportQueryBuilder
         }
 
         $dataset = $this->registry->get($datasetKey);
-        $allowedFields = $dataset->filterAllowedFields(
-            $dataset->fieldsForCompany($companyId),
-            $user
-        );
+        $allFields = $dataset->fieldsForCompany($companyId);
+        $allFieldMap = [];
+        foreach ($allFields as $f) {
+            $allFieldMap[$f->key] = $f;
+        }
+        $allowedFields = $dataset->filterAllowedFields($allFields, $user);
         $fieldMap = [];
         foreach ($allowedFields as $f) {
             $fieldMap[$f->key] = $f;
@@ -69,10 +71,28 @@ class ReportQueryBuilder
             throw new InvalidArgumentException('En az bir alan seçilmelidir');
         }
 
+        $hiddenFields = [];
         $selectFields = [];
         foreach ($requestedFields as $key) {
-            if (! is_string($key) || ! isset($fieldMap[$key])) {
-                // İzinsiz / bilinmeyen alan — sessizce düşür (403 değil)
+            if (! is_string($key)) {
+                continue;
+            }
+            if (! isset($fieldMap[$key])) {
+                // D1e: sessiz düşürme yerine şeffaf meta
+                if (isset($allFieldMap[$key])) {
+                    $hf = $allFieldMap[$key];
+                    $reason = $hf->permission !== null && ! $user->can($hf->permission)
+                        ? 'field_permission'
+                        : 'dataset_scope';
+                    if ($hf->isClassifiedSensitive() && $reason === 'field_permission') {
+                        $reason = 'field_permission';
+                    }
+                    $hiddenFields[] = [
+                        'key' => $hf->key,
+                        'label' => $hf->label,
+                        'reason' => $reason,
+                    ];
+                }
                 continue;
             }
             $selectFields[] = $fieldMap[$key];
@@ -105,6 +125,29 @@ class ReportQueryBuilder
 
         if ($isAggregate) {
             $this->applyAggregateSelect($query, $selectFields, $groupBy, $aggregations, $fieldMap);
+            $privacy = ReportPrivacySettings::forCompanyId($companyId);
+            $involved = [];
+            if (is_array($groupBy)) {
+                foreach ($groupBy as $gk) {
+                    if (is_string($gk) && isset($allFieldMap[$gk])) {
+                        $involved[] = $allFieldMap[$gk];
+                    }
+                }
+            }
+            if (is_array($aggregations)) {
+                foreach ($aggregations as $agg) {
+                    if (is_array($agg) && isset($agg['field']) && is_string($agg['field']) && isset($allFieldMap[$agg['field']])) {
+                        $involved[] = $allFieldMap[$agg['field']];
+                    }
+                }
+            }
+            $personCol = $dataset->personDistinctColumn();
+            if ($privacy['min_cell_enabled'] && $personCol && ReportSensitivityGuard::needsGuard($involved)) {
+                if (! preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*\.[a-zA-Z_][a-zA-Z0-9_]*$/', $personCol)) {
+                    throw new InvalidArgumentException('Geçersiz personDistinctColumn');
+                }
+                $query->addSelect(DB::raw("COUNT(DISTINCT {$personCol}) as \"_distinct_persons\""));
+            }
         } else {
             $this->applyPlainSelect($query, $selectFields);
         }
@@ -136,6 +179,44 @@ class ReportQueryBuilder
             array_pop($rows);
         }
 
+        if ($isAggregate) {
+            $privacy = ReportPrivacySettings::forCompanyId($companyId);
+            $measureAliases = [];
+            if (is_array($aggregations)) {
+                foreach ($aggregations as $agg) {
+                    if (! is_array($agg)) {
+                        continue;
+                    }
+                    $alias = is_string($agg['alias'] ?? null)
+                        ? $agg['alias']
+                        : ((string) ($agg['fn'] ?? 'agg')).'_'.((string) ($agg['field'] ?? 'x'));
+                    $measureAliases[] = $alias;
+                }
+            }
+            if ($measureAliases === []) {
+                $measureAliases = ['count_all'];
+            }
+            $involved = [];
+            if (is_array($groupBy)) {
+                foreach ($groupBy as $gk) {
+                    if (is_string($gk) && isset($allFieldMap[$gk])) {
+                        $involved[] = $allFieldMap[$gk];
+                    }
+                }
+            }
+            if (ReportSensitivityGuard::needsGuard($involved) || ReportSensitivityGuard::needsGuard(array_filter(array_map(
+                fn ($a) => is_array($a) && isset($a['field']) && is_string($a['field']) ? ($allFieldMap[$a['field']] ?? null) : null,
+                is_array($aggregations) ? $aggregations : []
+            )))) {
+                $rows = ReportSensitivityGuard::maskAggregateRows(
+                    $rows,
+                    $measureAliases,
+                    $privacy['min_cell_threshold'],
+                    $privacy['min_cell_enabled']
+                );
+            }
+        }
+
         $meta = [
             'dataset' => $datasetKey,
             'limit' => $limit,
@@ -143,10 +224,15 @@ class ReportQueryBuilder
             'count' => count($rows),
             'fields' => array_map(fn (ReportField $f) => $f->key, $selectFields),
             'data_scope' => $this->dataScope->resolve($user)->value,
+            'hidden_fields' => $hiddenFields,
         ];
         if ($forExport) {
             $meta['truncated'] = $truncated;
             $meta['export_max'] = self::EXPORT_MAX_ROWS;
+            if ($hiddenFields !== []) {
+                $meta['export_note'] = 'Bazı sütunlar yetki veya gizlilik nedeniyle gizlendi: '
+                    .implode(', ', array_map(fn ($h) => $h['label'], $hiddenFields));
+            }
         }
 
         return [
@@ -177,22 +263,29 @@ class ReportQueryBuilder
             }
         }
 
-        // Alan/sort/filter için join kolonları gerekliyse otomatik ekle
-        $allKeys = array_merge(
-            array_map(fn (ReportField $f) => $f->key, $selectFields),
-            is_array($config['group_by'] ?? null) ? $config['group_by'] : [],
-        );
+        // Alan kolon prefix'i → whitelist join (departments, leave_types, surveys, …)
         foreach ($selectFields as $field) {
-            if (str_starts_with($field->column, 'departments.') && isset($allowed['departments'])) {
-                $needed['departments'] = $allowed['departments'];
-            }
-            if (str_starts_with($field->column, 'branches.') && isset($allowed['branches'])) {
-                $needed['branches'] = $allowed['branches'];
+            foreach ($allowed as $jk => $join) {
+                $prefix = $join['table'].'.';
+                if (str_starts_with($field->column, $prefix)) {
+                    $needed[$jk] = $join;
+                    if ($jk === 'surveys' && isset($allowed['survey_submissions'])) {
+                        $needed['survey_submissions'] = $allowed['survey_submissions'];
+                    }
+                }
             }
         }
-        unset($allKeys);
 
-        foreach ($needed as $join) {
+        $ordered = [];
+        if (isset($needed['survey_submissions'])) {
+            $ordered['survey_submissions'] = $needed['survey_submissions'];
+            unset($needed['survey_submissions']);
+        }
+        foreach ($needed as $k => $j) {
+            $ordered[$k] = $j;
+        }
+
+        foreach ($ordered as $join) {
             $type = $join['type'] ?? 'left';
             if ($type === 'inner') {
                 $query->join($join['table'], $join['first'], $join['operator'], $join['second']);
@@ -218,6 +311,8 @@ class ReportQueryBuilder
                 : $this->dataScope->scopeForUser($query, $user, 'assigned_to'),
             default => $query,
         };
+
+        $dataset->constrainQuery($query, $user);
     }
 
     /**
@@ -340,11 +435,14 @@ class ReportQueryBuilder
                     continue;
                 }
                 if (! is_string($fieldKey) || ! isset($fieldMap[$fieldKey])) {
-                    throw new InvalidArgumentException('Aggregation alanı yetkisiz: '.(string) $fieldKey);
+                    throw new InvalidArgumentException(
+                        'Aggregation alanı yetkisiz veya gizli: '.(string) $fieldKey
+                        .' — bu ölçü için gerekli alan izniniz yok'
+                    );
                 }
                 $f = $fieldMap[$fieldKey];
                 if ($fn !== 'count' && ! $f->isMeasure()) {
-                    throw new InvalidArgumentException('Ölçü olmayan alana aggregation uygulanamaz: '.$fieldKey);
+                    throw new InvalidArgumentException('Ölçü olmayan alana aggregation uygulanamaz: '.$fieldKey.' ('.$f->label.')');
                 }
                 $alias = is_string($agg['alias'] ?? null) ? $agg['alias'] : $fn.'_'.$fieldKey;
                 $this->assertSafeAlias($alias);

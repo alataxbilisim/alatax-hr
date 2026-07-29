@@ -51,6 +51,10 @@ class CompanySettingsController extends BaseController
                 'push_reminders' => true,
             ],
             'integrations' => $settings['integrations'] ?? null,
+            'report_privacy' => $settings['report_privacy'] ?? [
+                'min_cell_enabled' => true,
+                'min_cell_threshold' => 5,
+            ],
         ]);
     }
 
@@ -111,7 +115,20 @@ class CompanySettingsController extends BaseController
             'integrations' => 'sometimes|array',
             'integrations.webhook_url' => 'nullable|url|max:500',
             'integrations.api_key' => 'nullable|string|max:255',
+
+            'report_privacy' => 'sometimes|array',
+            'report_privacy.min_cell_enabled' => 'sometimes|boolean',
+            'report_privacy.min_cell_threshold' => 'sometimes|integer|min:1|max:100',
         ]);
+
+        // Rapor gizlilik kapatma yalnız company admin + audit (Auditable company settings)
+        if (isset($validated['report_privacy']['min_cell_enabled'])
+            && $validated['report_privacy']['min_cell_enabled'] === false
+            && $request->user()->type !== \App\Enums\UserType::CompanyAdmin
+            && ! $request->user()->hasRole('admin')
+        ) {
+            return $this->error('Minimum hücre kuralını kapatma yetkisi yalnız firma yöneticisinde', 403);
+        }
 
         $settings = $company->settings ?? [];
         $oldSettings = $settings;

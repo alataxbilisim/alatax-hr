@@ -102,11 +102,20 @@ final class EmployeesDataset extends AbstractDataset
             $this->dim('work_type', "{$t}.work_type", 'string', 'Çalışma Türü'),
             $this->dim('gender', "{$t}.gender", 'string', 'Cinsiyet'),
             $this->dim('city', "{$t}.city", 'string', 'Şehir'),
-            $this->measure('gross_salary', "{$t}.gross_salary", 'number', 'Brüt Maaş', 'employees.salary.view', true),
-            $this->measure('net_salary', "{$t}.net_salary", 'number', 'Net Maaş', 'employees.salary.view', true),
-            $this->dim('currency', "{$t}.currency", 'string', 'Para Birimi', 'employees.salary.view', true),
+            $this->dim('national_id', "{$t}.national_id", 'string', 'TCKN', 'employees.list.view', true, ReportField::SENSITIVITY_PERSONAL),
+            $this->dim('birth_date', "{$t}.birth_date", 'date', 'Doğum Tarihi', null, true, ReportField::SENSITIVITY_PERSONAL),
+            $this->dim('personal_phone', "{$t}.personal_phone", 'string', 'Telefon', null, true, ReportField::SENSITIVITY_PERSONAL),
+            $this->dim('address', "{$t}.address", 'string', 'Adres', null, true, ReportField::SENSITIVITY_PERSONAL),
+            $this->measure('gross_salary', "{$t}.gross_salary", 'number', 'Brüt Maaş', 'employees.salary.view', true, ReportField::SENSITIVITY_PERSONAL),
+            $this->measure('net_salary', "{$t}.net_salary", 'number', 'Net Maaş', 'employees.salary.view', true, ReportField::SENSITIVITY_PERSONAL),
+            $this->dim('currency', "{$t}.currency", 'string', 'Para Birimi', 'employees.salary.view', true, ReportField::SENSITIVITY_PERSONAL),
             $this->dim('department_name', 'departments.name', 'string', 'Departman'),
             $this->dim('branch_name', 'branches.name', 'string', 'Şube'),
         ];
+    }
+
+    public function personDistinctColumn(): ?string
+    {
+        return 'employees.id';
     }
 }

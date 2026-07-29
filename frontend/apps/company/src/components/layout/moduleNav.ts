@@ -272,11 +272,13 @@ export const pinnedModuleGroups: ModuleGroup[] = [
     permissionModule: 'management',
     items: [
       { path: '/settings', labelKey: 'studio.companySettings', permission: { module: 'management', page: 'settings' }, group: 'company' },
+      { path: '/settings/report-privacy', labelKey: 'reportPrivacy.title', permission: { module: 'management', page: 'settings' }, group: 'company' },
       { path: '/webhooks', labelKey: 'studio.webhooks', permission: { module: 'management', page: 'webhooks' }, group: 'company' },
       { path: '/users', labelKey: 'studio.users', permission: { module: 'management', page: 'users' }, group: 'users' },
       { path: '/roles', labelKey: 'studio.roles', permission: { module: 'management', page: 'roles' }, group: 'users' },
       { path: '/branches', labelKey: 'studio.branches', permission: { module: 'management', page: 'branches' }, group: 'users' },
       { path: '/audit-logs', labelKey: 'studio.auditLogs', permission: { module: 'management', page: 'audit_logs' }, group: 'users' },
+      { path: '/audit-logs/report-access', labelKey: 'reportAccessLogs.title', permission: { module: 'management', page: 'audit_logs' }, group: 'users' },
       { path: '/lookups', labelKey: 'studio.lookups', permission: { module: 'management', page: 'lookups' }, group: 'customize' },
       { path: '/settings/custom-fields', labelKey: 'studio.customFields', permission: { module: 'management', page: 'custom_fields' }, group: 'customize' },
       { path: '/settings/forms', labelKey: 'studio.formLayouts', permission: { module: 'management', page: 'forms' }, group: 'customize' },

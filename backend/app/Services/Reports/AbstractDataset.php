@@ -119,6 +119,7 @@ abstract class AbstractDataset
                 isCustom: true,
                 customJsonKey: $key,
                 customJsonColumn: $jsonCol,
+                sensitivity: ReportField::SENSITIVITY_NORMAL,
             );
         }
 
@@ -201,8 +202,45 @@ abstract class AbstractDataset
         };
     }
 
-    protected function dim(string $key, string $column, string $type, string $label, ?string $permission = null, bool $sensitive = false): ReportField
+    /**
+     * Dataset'e özel ek kısıt (ör. join üzerinden company_id).
+     *
+     * @param  Builder<Model>  $query
+     */
+    public function constrainQuery(Builder $query, User $user): void
     {
+        // varsayılan: yok
+    }
+
+    /**
+     * DISTINCT kişi sayısı için kolon (min hücre guard). null = guard uygulanmaz.
+     */
+    public function personDistinctColumn(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * Detay drill (satır listesi) bu dataset'te kapalı mı? (anonymous_source)
+     */
+    public function allowsDetailDrill(): bool
+    {
+        return true;
+    }
+
+    protected function dim(
+        string $key,
+        string $column,
+        string $type,
+        string $label,
+        ?string $permission = null,
+        bool $sensitive = false,
+        string $sensitivity = ReportField::SENSITIVITY_NORMAL,
+    ): ReportField {
+        if ($sensitive && $sensitivity === ReportField::SENSITIVITY_NORMAL) {
+            $sensitivity = ReportField::SENSITIVITY_PERSONAL;
+        }
+
         return new ReportField(
             key: $key,
             column: $column,
@@ -211,12 +249,24 @@ abstract class AbstractDataset
             labelKey: 'reports.fields.'.$this->key().'.'.$key,
             role: 'dimension',
             permission: $permission,
-            sensitive: $sensitive,
+            sensitive: $sensitive || $sensitivity !== ReportField::SENSITIVITY_NORMAL,
+            sensitivity: $sensitivity,
         );
     }
 
-    protected function measure(string $key, string $column, string $type, string $label, ?string $permission = null, bool $sensitive = false): ReportField
-    {
+    protected function measure(
+        string $key,
+        string $column,
+        string $type,
+        string $label,
+        ?string $permission = null,
+        bool $sensitive = false,
+        string $sensitivity = ReportField::SENSITIVITY_NORMAL,
+    ): ReportField {
+        if ($sensitive && $sensitivity === ReportField::SENSITIVITY_NORMAL) {
+            $sensitivity = ReportField::SENSITIVITY_PERSONAL;
+        }
+
         return new ReportField(
             key: $key,
             column: $column,
@@ -225,7 +275,8 @@ abstract class AbstractDataset
             labelKey: 'reports.fields.'.$this->key().'.'.$key,
             role: 'measure',
             permission: $permission,
-            sensitive: $sensitive,
+            sensitive: $sensitive || $sensitivity !== ReportField::SENSITIVITY_NORMAL,
+            sensitivity: $sensitivity,
         );
     }
 }

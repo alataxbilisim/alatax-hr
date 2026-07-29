@@ -2,6 +2,7 @@
 
 namespace App\Services\Reports;
 
+use App\Models\ReportShare;
 use App\Models\SavedReport;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -24,6 +25,7 @@ class ReportDefinitionService
             ->where('company_id', $companyId)
             ->whereNotNull('dataset_key')
             ->accessibleBy($user)
+            ->with('shares')
             ->orderByDesc('updated_at')
             ->paginate($perPage);
     }
@@ -36,8 +38,9 @@ class ReportDefinitionService
         $this->assertDataset($data['dataset_key'] ?? null);
         $config = $this->normalizeConfig($data);
 
-        return SavedReport::create([
+        $report = SavedReport::create([
             'company_id' => $companyId,
+            'folder_id' => $data['folder_id'] ?? null,
             'user_id' => $user->id,
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
@@ -50,6 +53,12 @@ class ReportDefinitionService
             'is_favorite' => (bool) ($data['is_favorite'] ?? false),
             'sort_order' => (int) ($data['sort_order'] ?? 0),
         ]);
+
+        if (array_key_exists('shares', $data)) {
+            $this->syncShares($report, $data['shares']);
+        }
+
+        return $report->fresh(['shares']);
     }
 
     /**
@@ -57,8 +66,8 @@ class ReportDefinitionService
      */
     public function update(SavedReport $report, User $user, array $data): SavedReport
     {
-        if ((int) $report->user_id !== (int) $user->id && ! $user->can('reports.definitions.edit')) {
-            throw ValidationException::withMessages(['id' => ['Bu raporu düzenleme yetkiniz yok']]);
+        if (! $report->canEdit($user)) {
+            abort(403, 'Bu raporu düzenleme yetkiniz yok');
         }
         if ($report->is_system) {
             throw ValidationException::withMessages(['id' => ['Sistem raporu düzenlenemez']]);
@@ -73,6 +82,9 @@ class ReportDefinitionService
         }
         if (array_key_exists('description', $data)) {
             $report->description = $data['description'];
+        }
+        if (array_key_exists('folder_id', $data)) {
+            $report->folder_id = $data['folder_id'];
         }
         if (array_key_exists('config', $data) || array_key_exists('fields', $data)) {
             $merged = array_merge(['dataset_key' => $report->dataset_key], $data);
@@ -90,7 +102,14 @@ class ReportDefinitionService
         }
         $report->save();
 
-        return $report->fresh();
+        if (array_key_exists('shares', $data)) {
+            if (! $report->canManageShares($user)) {
+                abort(403, 'Paylaşım yalnız sahip tarafından yönetilir');
+            }
+            $this->syncShares($report, $data['shares']);
+        }
+
+        return $report->fresh(['shares']);
     }
 
     public function delete(SavedReport $report, User $user): void
@@ -98,15 +117,34 @@ class ReportDefinitionService
         if ($report->is_system) {
             throw ValidationException::withMessages(['id' => ['Sistem raporu silinemez']]);
         }
-        if ((int) $report->user_id !== (int) $user->id && ! $user->can('reports.definitions.delete')) {
-            throw ValidationException::withMessages(['id' => ['Bu raporu silme yetkiniz yok']]);
+        if (! $report->canDelete($user)) {
+            abort(403, 'Bu raporu silme yetkiniz yok');
         }
         $report->delete();
     }
 
     /**
-     * Kaydedilmiş raporu çalıştır — viewer kapsamı (sahip miras alınmaz).
-     *
+     * Sahiplik devri (offboarding'e bağlanmaz — DUR).
+     */
+    public function transfer(SavedReport $report, User $actor, int $newOwnerId): SavedReport
+    {
+        if (! $report->canTransfer($actor)) {
+            abort(403, 'Sahiplik devri yetkiniz yok');
+        }
+        $newOwner = User::query()
+            ->where('company_id', $report->company_id)
+            ->whereKey($newOwnerId)
+            ->first();
+        if (! $newOwner) {
+            throw ValidationException::withMessages(['user_id' => ['Yeni sahip bulunamadı']]);
+        }
+        $report->user_id = $newOwner->id;
+        $report->save();
+
+        return $report->fresh(['shares']);
+    }
+
+    /**
      * @return array{rows: list<array<string, mixed>>, meta: array<string, mixed>}
      */
     public function run(SavedReport $report, User $viewer, int $companyId, array $overrides = []): array
@@ -123,7 +161,11 @@ class ReportDefinitionService
         $config = array_merge($config, $overrides);
         $config['dataset'] = $report->dataset_key;
 
-        return $this->builder->run($viewer, $companyId, $config);
+        $started = microtime(true);
+        $result = $this->builder->run($viewer, $companyId, $config);
+        $this->logAccess($report, $viewer, $companyId, 'run', $result, $config, $started);
+
+        return $result;
     }
 
     /**
@@ -137,12 +179,26 @@ class ReportDefinitionService
         }
         $this->assertDataset($config['dataset']);
 
-        return $this->builder->run($user, $companyId, $config);
+        $started = microtime(true);
+        $result = $this->builder->run($user, $companyId, $config);
+        ReportAccessLogger::record([
+            'company_id' => $companyId,
+            'user_id' => (int) $user->id,
+            'action' => 'preview',
+            'dataset_key' => (string) $config['dataset'],
+            'row_count' => (int) ($result['meta']['count'] ?? count($result['rows'])),
+            'contains_sensitive' => $this->resultHasSensitive($result),
+            'sensitive_fields' => $this->resultSensitiveKeys($result),
+            'filters' => is_array($config['filters'] ?? null) ? $config['filters'] : [],
+            'duration_ms' => (int) round((microtime(true) - $started) * 1000),
+            'ip' => request()?->ip(),
+            'user_agent' => request()?->userAgent(),
+        ]);
+
+        return $result;
     }
 
     /**
-     * Export: query builder üzerinden (istemci sayfası değil), üst sınır 50k.
-     *
      * @param  array<string, mixed>  $config
      * @return array{rows: list<array<string, mixed>>, meta: array<string, mixed>}
      */
@@ -158,7 +214,23 @@ class ReportDefinitionService
             $config['limit'] = ReportQueryBuilder::EXPORT_MAX_ROWS;
         }
 
-        return $this->builder->run($user, $companyId, $config);
+        $started = microtime(true);
+        $result = $this->builder->run($user, $companyId, $config);
+        ReportAccessLogger::record([
+            'company_id' => $companyId,
+            'user_id' => (int) $user->id,
+            'action' => 'export',
+            'dataset_key' => (string) $config['dataset'],
+            'row_count' => (int) ($result['meta']['count'] ?? count($result['rows'])),
+            'contains_sensitive' => $this->resultHasSensitive($result),
+            'sensitive_fields' => $this->resultSensitiveKeys($result),
+            'filters' => is_array($config['filters'] ?? null) ? $config['filters'] : [],
+            'duration_ms' => (int) round((microtime(true) - $started) * 1000),
+            'ip' => request()?->ip(),
+            'user_agent' => request()?->userAgent(),
+        ]);
+
+        return $result;
     }
 
     /**
@@ -175,8 +247,113 @@ class ReportDefinitionService
 
         $config = is_array($report->config) ? $report->config : [];
         $config['dataset'] = $report->dataset_key;
+        $config['__export'] = true;
+        $config['offset'] = 0;
+        $config['limit'] = ReportQueryBuilder::EXPORT_MAX_ROWS;
 
-        return $this->export($viewer, $companyId, $config);
+        $started = microtime(true);
+        $result = $this->builder->run($viewer, $companyId, $config);
+        $this->logAccess($report, $viewer, $companyId, 'export', $result, $config, $started);
+
+        return $result;
+    }
+
+    /**
+     * @param  mixed  $shares
+     */
+    public function syncShares(SavedReport $report, mixed $shares): void
+    {
+        ReportShare::query()->where('saved_report_id', $report->id)->delete();
+        if (! is_array($shares)) {
+            return;
+        }
+        foreach ($shares as $s) {
+            if (! is_array($s)) {
+                continue;
+            }
+            $level = ($s['level'] ?? 'viewer') === 'editor' ? 'editor' : 'viewer';
+            $userId = isset($s['user_id']) ? (int) $s['user_id'] : null;
+            $roleId = isset($s['role_id']) ? (int) $s['role_id'] : null;
+            $deptId = isset($s['department_id']) ? (int) $s['department_id'] : null;
+            $targets = (int) (bool) $userId + (int) (bool) $roleId + (int) (bool) $deptId;
+            if ($targets !== 1) {
+                continue;
+            }
+            ReportShare::create([
+                'saved_report_id' => $report->id,
+                'company_id' => $report->company_id,
+                'user_id' => $userId,
+                'role_id' => $roleId,
+                'department_id' => $deptId,
+                'level' => $level,
+            ]);
+        }
+    }
+
+    /**
+     * @param  array{rows: list<array<string, mixed>>, meta: array<string, mixed>}  $result
+     * @param  array<string, mixed>  $config
+     */
+    private function logAccess(
+        SavedReport $report,
+        User $viewer,
+        int $companyId,
+        string $action,
+        array $result,
+        array $config,
+        float $started,
+    ): void {
+        ReportAccessLogger::record([
+            'company_id' => $companyId,
+            'user_id' => (int) $viewer->id,
+            'report_id' => (int) $report->id,
+            'action' => $action,
+            'dataset_key' => $report->dataset_key,
+            'row_count' => (int) ($result['meta']['count'] ?? count($result['rows'])),
+            'contains_sensitive' => $this->resultHasSensitive($result),
+            'sensitive_fields' => $this->resultSensitiveKeys($result),
+            'filters' => is_array($config['filters'] ?? null) ? $config['filters'] : [],
+            'duration_ms' => (int) round((microtime(true) - $started) * 1000),
+            'ip' => request()?->ip(),
+            'user_agent' => request()?->userAgent(),
+        ]);
+    }
+
+    /**
+     * @param  array{meta?: array<string, mixed>}  $result
+     */
+    private function resultHasSensitive(array $result): bool
+    {
+        return $this->resultSensitiveKeys($result) !== [];
+    }
+
+    /**
+     * @param  array{meta?: array<string, mixed>}  $result
+     * @return list<string>
+     */
+    private function resultSensitiveKeys(array $result): array
+    {
+        $keys = [];
+        $hidden = $result['meta']['hidden_fields'] ?? [];
+        if (is_array($hidden)) {
+            foreach ($hidden as $h) {
+                if (is_array($h) && isset($h['key']) && is_string($h['key'])) {
+                    $keys[] = $h['key'];
+                }
+            }
+        }
+        $datasetKey = $result['meta']['dataset'] ?? null;
+        $selected = $result['meta']['fields'] ?? [];
+        if (is_string($datasetKey) && $this->registry->has($datasetKey) && is_array($selected)) {
+            $companyId = (int) (request()?->user()?->company_id ?? 0);
+            foreach ($this->registry->get($datasetKey)->fieldsForCompany($companyId) as $f) {
+                if (in_array($f->key, $selected, true) && $f->isClassifiedSensitive()) {
+                    $keys[] = $f->key;
+                }
+            }
+        }
+
+        return array_values(array_unique($keys));
     }
 
     private function assertDataset(mixed $key): void

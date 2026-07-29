@@ -459,6 +459,8 @@ Route::prefix('v1')->group(function () {
             ->middleware(['permission:management.audit_logs.export', 'throttle:exports']);
         Route::get('/activity-logs/{id}', [\App\Http\Controllers\Api\V1\ActivityLogController::class, 'show'])
             ->middleware('permission:management.audit_logs.view');
+        Route::get('/report-access-logs', [\App\Http\Controllers\Api\V1\ReportAccessLogController::class, 'index'])
+            ->middleware('permission:management.audit_logs.view');
 
         // Notifications
         Route::prefix('notifications')->group(function () {
@@ -1133,6 +1135,17 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:reports.measures.edit')
                 ->whereNumber('id');
 
+            Route::get('/folders', [\App\Http\Controllers\Api\V1\Reports\ReportFolderController::class, 'index'])
+                ->middleware('permission:reports.definitions.view');
+            Route::post('/folders', [\App\Http\Controllers\Api\V1\Reports\ReportFolderController::class, 'store'])
+                ->middleware('permission:reports.definitions.create');
+            Route::put('/folders/{id}', [\App\Http\Controllers\Api\V1\Reports\ReportFolderController::class, 'update'])
+                ->middleware('permission:reports.definitions.edit')
+                ->whereNumber('id');
+            Route::delete('/folders/{id}', [\App\Http\Controllers\Api\V1\Reports\ReportFolderController::class, 'destroy'])
+                ->middleware('permission:reports.definitions.delete')
+                ->whereNumber('id');
+
             Route::get('/', [\App\Http\Controllers\Api\V1\Reports\ReportController::class, 'index'])
                 ->middleware('permission:reports.definitions.view');
             Route::post('/', [\App\Http\Controllers\Api\V1\Reports\ReportController::class, 'store'])
@@ -1145,6 +1158,9 @@ Route::prefix('v1')->group(function () {
                 ->whereNumber('id');
             Route::delete('/{id}', [\App\Http\Controllers\Api\V1\Reports\ReportController::class, 'destroy'])
                 ->middleware('permission:reports.definitions.delete')
+                ->whereNumber('id');
+            Route::post('/{id}/transfer', [\App\Http\Controllers\Api\V1\Reports\ReportController::class, 'transfer'])
+                ->middleware('permission:reports.definitions.transfer')
                 ->whereNumber('id');
             Route::post('/{id}/run', [\App\Http\Controllers\Api\V1\Reports\ReportController::class, 'run'])
                 ->middleware('permission:reports.definitions.run')

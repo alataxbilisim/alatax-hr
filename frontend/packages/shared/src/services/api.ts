@@ -273,6 +273,17 @@ export const rolesApi = {
 };
 
 // Company API
+export const reportAccessLogsApi = {
+  list: (params?: {
+    user_id?: number;
+    from?: string;
+    to?: string;
+    contains_sensitive?: boolean;
+    per_page?: number;
+    page?: number;
+  }) => api.get('/report-access-logs', { params }),
+};
+
 export const companyApi = {
   get: () => 
     api.get('/company'),
@@ -1092,6 +1103,12 @@ export interface SavedReportPayload {
   updated_at?: string;
 }
 
+export interface ReportHiddenField {
+  key: string;
+  label: string;
+  reason: string;
+}
+
 export interface ReportRunResult {
   rows: Record<string, string | number | boolean | null>[];
   meta: {
@@ -1103,6 +1120,8 @@ export interface ReportRunResult {
     data_scope: string;
     truncated?: boolean;
     export_max?: number;
+    hidden_fields?: ReportHiddenField[];
+    export_note?: string;
   };
 }
 

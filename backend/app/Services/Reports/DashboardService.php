@@ -504,7 +504,9 @@ class DashboardService
             $level = ($s['level'] ?? 'viewer') === 'editor' ? 'editor' : 'viewer';
             $userId = isset($s['user_id']) ? (int) $s['user_id'] : null;
             $roleId = isset($s['role_id']) ? (int) $s['role_id'] : null;
-            if (($userId && $roleId) || (! $userId && ! $roleId)) {
+            $deptId = isset($s['department_id']) ? (int) $s['department_id'] : null;
+            $targets = (int) (bool) $userId + (int) (bool) $roleId + (int) (bool) $deptId;
+            if ($targets !== 1) {
                 continue;
             }
             DashboardShare::create([
@@ -512,6 +514,7 @@ class DashboardService
                 'company_id' => $dashboard->company_id,
                 'user_id' => $userId,
                 'role_id' => $roleId,
+                'department_id' => $deptId,
                 'level' => $level,
             ]);
         }

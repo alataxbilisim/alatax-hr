@@ -61,6 +61,12 @@ class ReportController extends BaseController
             'share_role_ids' => 'nullable|array',
             'share_role_ids.*' => 'integer',
             'is_favorite' => 'sometimes|boolean',
+            'folder_id' => 'nullable|integer',
+            'shares' => 'nullable|array',
+            'shares.*.user_id' => 'nullable|integer',
+            'shares.*.role_id' => 'nullable|integer',
+            'shares.*.department_id' => 'nullable|integer',
+            'shares.*.level' => 'nullable|in:viewer,editor',
         ]);
 
         try {
@@ -101,6 +107,12 @@ class ReportController extends BaseController
             'share_role_ids' => 'nullable|array',
             'share_role_ids.*' => 'integer',
             'is_favorite' => 'sometimes|boolean',
+            'folder_id' => 'nullable|integer',
+            'shares' => 'nullable|array',
+            'shares.*.user_id' => 'nullable|integer',
+            'shares.*.role_id' => 'nullable|integer',
+            'shares.*.department_id' => 'nullable|integer',
+            'shares.*.level' => 'nullable|in:viewer,editor',
         ]);
 
         try {
@@ -122,6 +134,18 @@ class ReportController extends BaseController
         }
 
         return $this->success(null, 'Rapor silindi');
+    }
+
+    public function transfer(Request $request, int $id): JsonResponse
+    {
+        $report = $this->findAccessible($request, $id);
+        $validated = $request->validate([
+            'user_id' => 'required|integer',
+        ]);
+
+        $report = $this->reports->transfer($report, $request->user(), (int) $validated['user_id']);
+
+        return $this->success($report, 'Sahiplik devredildi');
     }
 
     public function run(Request $request, int $id): JsonResponse

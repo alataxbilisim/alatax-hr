@@ -23,6 +23,7 @@ import {
   type ReportFilterPayload,
   type ReportAggregationPayload,
   type ReportSortPayload,
+  type ReportHiddenField,
   type SavedReportPayload,
 } from '@shared/services/api';
 import { getErrorMessage } from '@shared/services/apiHelpers';
@@ -155,6 +156,7 @@ const ReportBuilderPage: React.FC = () => {
   const [previewRows, setPreviewRows] = useState<ReportRow[]>([]);
   const [previewFields, setPreviewFields] = useState<string[]>([]);
   const [previewCount, setPreviewCount] = useState(0);
+  const [previewHidden, setPreviewHidden] = useState<ReportHiddenField[]>([]);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -412,6 +414,7 @@ const ReportBuilderPage: React.FC = () => {
       setPreviewRows(data.rows);
       setPreviewFields(data.meta.fields);
       setPreviewCount(data.meta.count);
+      setPreviewHidden(Array.isArray(data.meta.hidden_fields) ? data.meta.hidden_fields : []);
     } catch (error: unknown) {
       const status =
         typeof error === 'object' &&
@@ -1324,6 +1327,23 @@ const ReportBuilderPage: React.FC = () => {
           <p style={{ margin: 0, fontSize: 'var(--fs-caption)', color: 'var(--text-tertiary)' }}>
             {t('reportEngine.previewMeta', { count: previewCount, limit, offset })}
           </p>
+          {previewHidden.length > 0 ? (
+            <div
+              role="status"
+              style={{
+                padding: 'var(--sp-2)',
+                background: 'var(--warning-soft, var(--bg-hover))',
+                color: 'var(--text-primary)',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: 'var(--fs-caption)',
+              }}
+            >
+              {t('reportEngine.hiddenFieldsBanner', {
+                count: previewHidden.length,
+                labels: previewHidden.map((h) => h.label).join(', '),
+              })}
+            </div>
+          ) : null}
           {previewError ? (
             <div
               style={{

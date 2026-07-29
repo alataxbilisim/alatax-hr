@@ -247,3 +247,114 @@ Kaynak varsayÄ±lan: kayÄ±tlÄ± rapor; inline config alternatif. **Motor tÃ¼ketici
 ### Not
 
 **KULLANICI GÃ–RSEL KONTROLÃœ BEKLÄ°YOR (borÃ§)**
+
+---
+
+## D1e — Paylaþým v2 + þeffaf alan gizleme + eriþim denetimi + hassasiyet guard
+
+**Tarih:** 2026-07-29  
+**Commit:** feat(faz5): D1e paylaþým v2 + þeffaf alan gizleme + eriþim denetimi + hassasiyet guard
+
+### Paylaþým matrisi
+
+| Seviye | Çalýþtýr/filtre/export | Taným düzenle | Sil | Paylaþým | Sahiplik devri |
+|--------|------------------------|---------------|-----|----------|----------------|
+| viewer | evet | hayýr | hayýr | hayýr | hayýr |
+| editor | evet | evet | hayýr | hayýr | hayýr |
+| owner | evet | evet | evet | evet | evet (+ transfer yetkisi) |
+
+Hedef: kullanýcý / rol / departman. Klasör paylaþýmý yok. Offboarding hook yok (DUR). Anonim/public yok.
+
+### hidden_fields
+
+meta.hidden_fields: [{key,label,reason}] — field_permission | sensitivity | dataset_scope. UI þerit + export notu.
+
+### Access log
+
+report_access_logs; filtre deðeri ham yazýlmaz (hash); append-only; afterResponse; 12 ay + purge komutu.
+
+### Hassasiyet + min hücre
+
+personal / special / anonymous_source / normal. Min hücre eþik 5. Alt/genel toplam: mask_when_any_leaf_masked.
+
+### Test
+
+ReportSharingPrivacyTest 7 passed. Tam suite: **550 passed / 0 fail**. 3 SPA tsc + lint + sentinel: PASSED.
+
+### Not
+
+**KULLANICI GÖRSEL KONTROLÜ BEKLÝYOR (borç)**
+
+---
+
+## D1e — Paylaþým v2 + þeffaf alan gizleme + eriþim denetimi + hassasiyet guard
+
+**Tarih:** 2026-07-29  
+**Commit:** feat(faz5): D1e paylaþým v2 + þeffaf alan gizleme + eriþim denetimi + hassasiyet guard
+
+### Paylaþým matrisi
+
+| Seviye | Çalýþtýr/filtre/export | Taným düzenle | Sil | Paylaþým | Sahiplik devri |
+|--------|------------------------|---------------|-----|----------|----------------|
+| viewer | evet | hayýr | hayýr | hayýr | hayýr |
+| editor | evet | evet | hayýr | hayýr | hayýr |
+| owner | evet | evet | evet | evet | evet (+ transfer yetkisi) |
+
+Hedef: kullanýcý / rol / departman. Klasör paylaþýmý yok. Offboarding hook yok (DUR). Anonim/public yok.
+
+### hidden_fields
+
+meta.hidden_fields: [{key,label,reason}] — field_permission | sensitivity | dataset_scope. UI þerit + export notu.
+
+### Access log
+
+report_access_logs; filtre deðeri ham yazýlmaz (hash); append-only; afterResponse; 12 ay + purge komutu.
+
+### Hassasiyet + min hücre
+
+personal / special / anonymous_source / normal. Min hücre eþik 5. Alt/genel toplam: mask_when_any_leaf_masked.
+
+### Test
+
+ReportSharingPrivacyTest 7 passed. Tam suite: **550 passed / 0 fail**. 3 SPA tsc + lint + sentinel: PASSED.
+
+### Not
+
+**KULLANICI GÖRSEL KONTROLÜ BEKLÝYOR (borç)**
+
+---
+
+## D1e — Paylaþým v2 + þeffaf alan gizleme + eriþim denetimi + hassasiyet guard
+
+**Tarih:** 2026-07-29  
+**Commit:** feat(faz5): D1e paylaþým v2 + þeffaf alan gizleme + eriþim denetimi + hassasiyet guard
+
+### Paylaþým matrisi
+
+| Seviye | Çalýþtýr/filtre/export | Taným düzenle | Sil | Paylaþým | Sahiplik devri |
+|--------|------------------------|---------------|-----|----------|----------------|
+| viewer | evet | hayýr | hayýr | hayýr | hayýr |
+| editor | evet | evet | hayýr | hayýr | hayýr |
+| owner | evet | evet | evet | evet | evet (+ transfer yetkisi) |
+
+Hedef: kullanýcý / rol / departman. Klasör paylaþýmý yok. Offboarding hook yok (DUR). Anonim/public yok.
+
+### hidden_fields
+
+meta.hidden_fields: [{key,label,reason}] — field_permission | sensitivity | dataset_scope. UI þerit + export notu.
+
+### Access log
+
+report_access_logs; filtre deðeri ham yazýlmaz (hash); append-only; afterResponse; 12 ay + purge komutu.
+
+### Hassasiyet + min hücre
+
+personal / special / anonymous_source / normal. Min hücre eþik 5. Alt/genel toplam: mask_when_any_leaf_masked.
+
+### Test
+
+ReportSharingPrivacyTest 7 passed. Tam suite: **550 passed / 0 fail**. 3 SPA tsc + lint + sentinel: PASSED.
+
+### Not
+
+**KULLANICI GÖRSEL KONTROLÜ BEKLÝYOR (borç)**

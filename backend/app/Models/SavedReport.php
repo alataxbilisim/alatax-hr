@@ -7,6 +7,7 @@ use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SavedReport extends Model
 {
@@ -14,6 +15,7 @@ class SavedReport extends Model
 
     protected $fillable = [
         'company_id',
+        'folder_id',
         'user_id',
         'name',
         'description',
@@ -47,6 +49,16 @@ class SavedReport extends Model
         return $this->belongsTo(Company::class);
     }
 
+    public function folder(): BelongsTo
+    {
+        return $this->belongsTo(ReportFolder::class, 'folder_id');
+    }
+
+    public function shares(): HasMany
+    {
+        return $this->hasMany(ReportShare::class, 'saved_report_id');
+    }
+
     public function scopeOwnedBy($query, int $userId)
     {
         return $query->where('user_id', $userId);
@@ -63,14 +75,15 @@ class SavedReport extends Model
     }
 
     /**
-     * Kullanıcının erişebileceği tanımlar: sahip + genel paylaşım + kişi/rol paylaşımı.
+     * Kullanıcının erişebileceği tanımlar: sahip + legacy JSON paylaşım + report_shares.
      */
     public function scopeAccessibleBy($query, User $user)
     {
         $userId = (int) $user->id;
         $roleIds = $user->roles->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $deptId = $user->employee?->department_id;
 
-        return $query->where(function ($q) use ($userId, $roleIds) {
+        return $query->where(function ($q) use ($userId, $roleIds, $deptId) {
             $q->where('user_id', $userId)
                 ->orWhere('is_shared', true)
                 ->orWhere('is_system', true);
@@ -87,6 +100,18 @@ class SavedReport extends Model
                     }
                 });
             }
+
+            $q->orWhereHas('shares', function ($sq) use ($userId, $roleIds, $deptId) {
+                $sq->where(function ($s) use ($userId, $roleIds, $deptId) {
+                    $s->where('user_id', $userId);
+                    if ($roleIds !== []) {
+                        $s->orWhereIn('role_id', $roleIds);
+                    }
+                    if ($deptId) {
+                        $s->orWhere('department_id', (int) $deptId);
+                    }
+                });
+            });
         });
     }
 
@@ -104,7 +129,78 @@ class SavedReport extends Model
         }
         $shareRoles = is_array($this->share_role_ids) ? $this->share_role_ids : [];
         $userRoleIds = $user->roles->pluck('id')->map(fn ($id) => (int) $id)->all();
+        if (count(array_intersect(array_map('intval', $shareRoles), $userRoleIds)) > 0) {
+            return true;
+        }
 
-        return count(array_intersect(array_map('intval', $shareRoles), $userRoleIds)) > 0;
+        return $this->shares()
+            ->where(function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+                $roleIds = $user->roles->pluck('id')->all();
+                if ($roleIds !== []) {
+                    $q->orWhereIn('role_id', $roleIds);
+                }
+                $deptId = $user->employee?->department_id;
+                if ($deptId) {
+                    $q->orWhere('department_id', (int) $deptId);
+                }
+            })
+            ->exists();
+    }
+
+    public function isOwner(User $user): bool
+    {
+        return (int) $this->user_id === (int) $user->id;
+    }
+
+    public function shareLevelFor(User $user): ?string
+    {
+        if ($this->isOwner($user)) {
+            return 'owner';
+        }
+        $share = $this->shares()
+            ->where(function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+                $roleIds = $user->roles->pluck('id')->all();
+                if ($roleIds !== []) {
+                    $q->orWhereIn('role_id', $roleIds);
+                }
+                $deptId = $user->employee?->department_id;
+                if ($deptId) {
+                    $q->orWhere('department_id', (int) $deptId);
+                }
+            })
+            ->orderByRaw("CASE level WHEN 'editor' THEN 0 ELSE 1 END")
+            ->first();
+
+        return $share?->level;
+    }
+
+    public function canEdit(User $user): bool
+    {
+        if ($this->isOwner($user)) {
+            return true;
+        }
+        if ($this->shareLevelFor($user) === 'editor') {
+            return true;
+        }
+
+        // Legacy: genel edit yetkisi yalnız sahip/editor share ile — viewer yetkisini aşmasın
+        return false;
+    }
+
+    public function canDelete(User $user): bool
+    {
+        return $this->isOwner($user);
+    }
+
+    public function canManageShares(User $user): bool
+    {
+        return $this->isOwner($user);
+    }
+
+    public function canTransfer(User $user): bool
+    {
+        return $this->isOwner($user) || $user->can('reports.definitions.transfer');
     }
 }

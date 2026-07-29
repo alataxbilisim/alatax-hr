@@ -1158,6 +1158,7 @@
     },
     "preview": "Canlı önizleme",
     "previewMeta": "{{count}} satır (limit {{limit}}, offset {{offset}})",
+    "hiddenFieldsBanner": "{{count}} sütun yetkiniz olmadığı için gizlendi: {{labels}}",
     "previewEmpty": "Önizleme için alan seçin",
     "previewInvalid": "Önizleme yanıtı geçersiz",
     "errorForbidden": "Bu sorgu için yetkiniz yok",
@@ -1282,5 +1283,31 @@
     "typePivot": "Pivot",
     "typeText": "Metin",
     "textPlaceholder": "Metin notu"
+  },
+  "reportPrivacy": {
+    "title": "Rapor Gizlilik Ayarları",
+    "subtitle": "Minimum hücre eşiği ve KVKK koruma kuralı",
+    "minCellEnabled": "Minimum hücre kuralı açık",
+    "minCellThreshold": "Eşik (DISTINCT kişi)",
+    "save": "Kaydet",
+    "loadError": "Ayarlar yüklenemedi",
+    "saveSuccess": "Gizlilik ayarları kaydedildi",
+    "saveError": "Kayıt başarısız"
+  },
+  "reportAccessLogs": {
+    "title": "Rapor Erişimleri",
+    "subtitle": "Rapor/pano çalıştırma ve export denetim kaydı (append-only)",
+    "back": "Aktivite logları",
+    "onlySensitive": "Yalnız hassas içerik",
+    "empty": "Kayıt yok",
+    "loadError": "Erişim logları yüklenemedi",
+    "colWhen": "Zaman",
+    "colUser": "Kullanıcı",
+    "colAction": "Aksiyon",
+    "colDataset": "Dataset",
+    "colRows": "Satır",
+    "colSensitive": "Hassas",
+    "yes": "Evet",
+    "no": "Hayır"
   }
 }

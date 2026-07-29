@@ -6,12 +6,12 @@ use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class DashboardShare extends Model
+class ReportShare extends Model
 {
     use BelongsToCompany;
 
     protected $fillable = [
-        'dashboard_id',
+        'saved_report_id',
         'company_id',
         'user_id',
         'role_id',
@@ -19,13 +19,18 @@ class DashboardShare extends Model
         'level',
     ];
 
-    public function dashboard(): BelongsTo
+    public function report(): BelongsTo
     {
-        return $this->belongsTo(Dashboard::class);
+        return $this->belongsTo(SavedReport::class, 'saved_report_id');
     }
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
     }
 }

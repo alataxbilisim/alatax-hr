@@ -39,6 +39,18 @@ export async function exportReportExcel(
   for (const row of data.rows) {
     sheet.addRow(fields.map((f) => cellToExportValue(row[f] ?? null)));
   }
+  const note = data.meta.export_note;
+  if (note) {
+    const noteSheet = workbook.addWorksheet('Notlar');
+    noteSheet.addRow(['Gizlilik notu']);
+    noteSheet.addRow([note]);
+    if (data.meta.hidden_fields && data.meta.hidden_fields.length > 0) {
+      noteSheet.addRow(['Gizlenen alanlar']);
+      for (const h of data.meta.hidden_fields) {
+        noteSheet.addRow([h.label, h.reason]);
+      }
+    }
+  }
   const buffer = await workbook.xlsx.writeBuffer();
   const bytes = new Uint8Array(buffer);
   const blob = new Blob([bytes], {
@@ -92,6 +104,12 @@ export async function exportReportPdf(
 
   if (data.rows.length > maxRows) {
     doc.text(`… +${data.rows.length - maxRows}`, 40, y + 8);
+  }
+
+  if (data.meta.export_note) {
+    const pageH = doc.internal.pageSize.getHeight();
+    doc.setFontSize(7);
+    doc.text(data.meta.export_note.slice(0, 120), 40, pageH - 24);
   }
 
   doc.save(`${fileName}.pdf`);

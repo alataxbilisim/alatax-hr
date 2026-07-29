@@ -112,6 +112,8 @@ import RoleDetailPage from './pages/users/RoleDetailPage';
 
 // Company Settings
 import SettingsPage from './pages/settings/SettingsPage';
+import ReportPrivacySettingsPage from './pages/settings/ReportPrivacySettingsPage';
+import ReportAccessLogsPage from './pages/audit/ReportAccessLogsPage';
 import WebhooksPage from './pages/settings/WebhooksPage';
 import CustomFieldsIndexPage from './pages/settings/CustomFieldsIndexPage';
 import LookupsPage from './pages/lookups/LookupsPage';
@@ -376,6 +378,16 @@ const App: React.FC = () => {
                 <ModuleProtectedRoute moduleKey={MODULE_KEYS.AUDIT_LOGS}>
                   <ActivityLogsPage />
                 </ModuleProtectedRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/audit-logs/report-access"
+            element={
+              <ProtectedRoute>
+                <PermissionProtectedRoute module="management" page="audit_logs" action="view">
+                  <ReportAccessLogsPage />
+                </PermissionProtectedRoute>
               </ProtectedRoute>
             }
           />
@@ -936,6 +948,16 @@ const App: React.FC = () => {
           <Route
             path="/settings"
             element={<ProtectedRoute><SettingsPage /></ProtectedRoute>}
+          />
+          <Route
+            path="/settings/report-privacy"
+            element={
+              <ProtectedRoute>
+                <PermissionProtectedRoute module="management" page="settings" action="edit">
+                  <ReportPrivacySettingsPage />
+                </PermissionProtectedRoute>
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/lookups"

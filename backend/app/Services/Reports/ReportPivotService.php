@@ -50,12 +50,34 @@ class ReportPivotService
         $wantSubtotals = (bool) ($config['subtotals'] ?? false);
         $wantGrand = (bool) ($config['grand_total'] ?? false);
 
+        $involvedFields = [];
+        foreach (array_merge($rows, $cols) as $d) {
+            $involvedFields[] = $fieldMap[$d['field']];
+        }
+        foreach ($config['measures'] ?? [] as $m) {
+            if (is_array($m) && isset($m['field']) && is_string($m['field']) && isset($fieldMap[$m['field']])) {
+                $involvedFields[] = $fieldMap[$m['field']];
+            }
+        }
+        $privacy = ReportPrivacySettings::forCompanyId($companyId);
+        $guardOn = $privacy['min_cell_enabled'] && ReportSensitivityGuard::needsGuard($involvedFields);
+        $personCol = $dataset->personDistinctColumn();
+
         if ($cols !== []) {
             $this->assertColumnCardinality($dataset, $user, $companyId, $cols, $config['filters'] ?? [], $fieldMap);
         }
 
         $groupDims = array_merge($rows, $cols);
-        $flat = $this->runGrouped($dataset, $user, $companyId, $groupDims, $measures, $config['filters'] ?? [], $fieldMap);
+        $flat = $this->runGrouped(
+            $dataset,
+            $user,
+            $companyId,
+            $groupDims,
+            $measures,
+            $config['filters'] ?? [],
+            $fieldMap,
+            $guardOn ? $personCol : null,
+        );
 
         $colKeys = $this->uniqueKeyCombos($flat, $cols);
         if (count($colKeys) > self::MAX_COLUMN_CARDINALITY) {
@@ -86,6 +108,20 @@ class ReportPivotService
             }
         }
 
+        $masked = ReportSensitivityGuard::maskPivotCells(
+            $cells,
+            $index,
+            $rowKeys,
+            $colKeys,
+            $rows,
+            $cols,
+            fn (array $combo) => $this->comboKey($combo),
+            $privacy['min_cell_threshold'],
+            $guardOn,
+        );
+        $cells = $masked['cells'];
+        $anyMasked = $masked['any_masked'];
+
         $result = [
             'row_headers' => array_map(fn ($d) => [
                 'field' => $d['field'],
@@ -110,14 +146,25 @@ class ReportPivotService
                 'row_count' => count($rowKeys),
                 'column_count' => count($colKeys),
                 'data_scope' => app(\App\Services\DataScopeService::class)->resolve($user)->value,
+                'min_cell_applied' => $anyMasked,
+                'min_cell_threshold' => $privacy['min_cell_threshold'],
+                'subtotal_mask_policy' => 'mask_when_any_leaf_masked',
             ],
         ];
 
         if ($wantSubtotals && $rows !== []) {
-            $result['subtotals'] = $this->computeSubtotals($index, $rowKeys, $colKeys, $rows, $cols, $measures);
+            $subs = $this->computeSubtotals($index, $rowKeys, $colKeys, $rows, $cols, $measures);
+            if ($anyMasked) {
+                $subs = $this->maskTotals($subs);
+            }
+            $result['subtotals'] = $subs;
         }
         if ($wantGrand) {
-            $result['grand_total'] = $this->computeGrand($index, $rowKeys, $colKeys, $measures);
+            $grand = $this->computeGrand($index, $rowKeys, $colKeys, $measures);
+            if ($anyMasked) {
+                $grand = $this->maskTotals($grand);
+            }
+            $result['grand_total'] = $grand;
         }
 
         return $result;
@@ -148,6 +195,9 @@ class ReportPivotService
         $mergedFilters = array_merge($baseFilters, $this->normalizeCellFilters($cellFilters, $fieldMap));
 
         if ($mode === 'details') {
+            if (! $dataset->allowsDetailDrill()) {
+                abort(403, 'Bu dataset için detay satır drill kapalıdır (anonim/hassas veri koruması)');
+            }
             $fields = $config['fields'] ?? array_keys($fieldMap);
             if (! is_array($fields)) {
                 throw new InvalidArgumentException('fields dizi olmalıdır');
@@ -394,12 +444,23 @@ class ReportPivotService
         array $measures,
         mixed $filters,
         array $fieldMap,
+        ?string $personDistinctColumn = null,
     ): array {
         $query = $dataset->newQuery();
         $query->from($dataset->table());
 
-        // Joins for dim columns
         $this->applyJoinsForDims($query, $dataset, $dims, $fieldMap);
+        // person join for survey_submissions.user_id
+        if ($personDistinctColumn && str_starts_with($personDistinctColumn, 'survey_submissions.')) {
+            $allowed = [];
+            foreach ($dataset->allowedJoins() as $j) {
+                $allowed[$j['key']] = $j;
+            }
+            if (isset($allowed['survey_submissions'])) {
+                $j = $allowed['survey_submissions'];
+                $query->leftJoin($j['table'], $j['first'], $j['operator'], $j['second']);
+            }
+        }
         $this->applyScopeAndFilters($query, $dataset, $user, $filters, $fieldMap);
 
         $selects = [];
@@ -423,21 +484,32 @@ class ReportPivotService
             }
         }
 
+        if ($personDistinctColumn !== null) {
+            if (! preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*\.[a-zA-Z_][a-zA-Z0-9_]*$/', $personDistinctColumn)) {
+                throw new InvalidArgumentException('Geçersiz personDistinctColumn');
+            }
+            $selects[] = DB::raw("COUNT(DISTINCT {$personDistinctColumn}) as \"_distinct_persons\"");
+        }
+
         $query->select($selects);
         if ($groupExprs !== []) {
             $query->groupByRaw(implode(', ', $groupExprs));
         }
 
-        // Apply measure bindings via whereRaw noop if needed — Laravel selectRaw with bindings:
-        // DB::raw doesn't bind; re-select with selectRaw for measures that have bindings.
         if ($bindings !== []) {
-            // Rebuild: Eloquent select with mixed bindings is tricky.
-            // Use fromSub approach: build SQL manually with bindings on the base query.
-            $base = $query->toBase();
-            // Re-run with selectRaw combining everything
             $q2 = $dataset->newQuery();
             $q2->from($dataset->table());
             $this->applyJoinsForDims($q2, $dataset, $dims, $fieldMap);
+            if ($personDistinctColumn && str_starts_with($personDistinctColumn, 'survey_submissions.')) {
+                $allowed = [];
+                foreach ($dataset->allowedJoins() as $j) {
+                    $allowed[$j['key']] = $j;
+                }
+                if (isset($allowed['survey_submissions'])) {
+                    $j = $allowed['survey_submissions'];
+                    $q2->leftJoin($j['table'], $j['first'], $j['operator'], $j['second']);
+                }
+            }
             $this->applyScopeAndFilters($q2, $dataset, $user, $filters, $fieldMap);
 
             $selectSqlParts = [];
@@ -453,6 +525,9 @@ class ReportPivotService
                     $allBindings[] = $b;
                 }
             }
+            if ($personDistinctColumn !== null) {
+                $selectSqlParts[] = "COUNT(DISTINCT {$personDistinctColumn}) as \"_distinct_persons\"";
+            }
             $q2->selectRaw(implode(', ', $selectSqlParts), $allBindings);
             if ($groupExprs !== []) {
                 $q2->groupByRaw(implode(', ', $groupExprs));
@@ -462,7 +537,6 @@ class ReportPivotService
             return $q2->toBase()->get()->map(fn ($r) => (array) $r)->all();
         }
 
-        unset($base);
         $query->limit(ReportQueryBuilder::PREVIEW_MAX_ROWS);
 
         return $query->toBase()->get()->map(fn ($r) => (array) $r)->all();
@@ -482,14 +556,25 @@ class ReportPivotService
         $needed = [];
         foreach ($dims as $d) {
             $col = $fieldMap[$d['field']]->column;
-            if (str_starts_with($col, 'departments.') && isset($allowed['departments'])) {
-                $needed['departments'] = $allowed['departments'];
-            }
-            if (str_starts_with($col, 'branches.') && isset($allowed['branches'])) {
-                $needed['branches'] = $allowed['branches'];
+            foreach ($allowed as $jk => $join) {
+                $prefix = $join['table'].'.';
+                if (str_starts_with($col, $prefix)) {
+                    $needed[$jk] = $join;
+                    if ($jk === 'surveys' && isset($allowed['survey_submissions'])) {
+                        $needed['survey_submissions'] = $allowed['survey_submissions'];
+                    }
+                }
             }
         }
-        foreach ($needed as $join) {
+        $ordered = [];
+        if (isset($needed['survey_submissions'])) {
+            $ordered['survey_submissions'] = $needed['survey_submissions'];
+            unset($needed['survey_submissions']);
+        }
+        foreach ($needed as $k => $j) {
+            $ordered[$k] = $j;
+        }
+        foreach ($ordered as $join) {
             $type = $join['type'] ?? 'left';
             if ($type === 'inner') {
                 $query->join($join['table'], $join['first'], $join['operator'], $join['second']);
@@ -612,6 +697,9 @@ class ReportPivotService
             foreach ($measures as $m) {
                 $vals[$m['alias']] = $row[$m['alias']] ?? null;
             }
+            if (isset($row['_distinct_persons'])) {
+                $vals['_distinct_persons'] = $row['_distinct_persons'];
+            }
             $index[$key] = $vals;
         }
 
@@ -679,6 +767,41 @@ class ReportPivotService
                     $totals[$a] = ($totals[$a] ?? 0) + (float) $v;
                 }
             }
+        }
+
+        return $totals;
+    }
+
+    /**
+     * Alt/genel toplam maskeleme — yaprak maskeliyse toplam da maskelenir (geri hesaplama engeli).
+     *
+     * @param  array<string, mixed>|list<array<string, mixed>>  $totals
+     * @return array<string, mixed>|list<array<string, mixed>>
+     */
+    private function maskTotals(array $totals): array
+    {
+        $mask = ReportPrivacySettings::MASKED_VALUE;
+        if ($totals !== [] && array_is_list($totals)) {
+            foreach ($totals as $i => $group) {
+                if (! is_array($group)) {
+                    continue;
+                }
+                if (isset($group['totals']) && is_array($group['totals'])) {
+                    foreach ($group['totals'] as $ck => $measures) {
+                        if (! is_array($measures)) {
+                            continue;
+                        }
+                        foreach ($measures as $alias => $_) {
+                            $totals[$i]['totals'][$ck][$alias] = $mask;
+                        }
+                    }
+                }
+            }
+
+            return $totals;
+        }
+        foreach ($totals as $k => $_) {
+            $totals[$k] = $mask;
         }
 
         return $totals;
