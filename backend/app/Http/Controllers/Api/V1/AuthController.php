@@ -794,7 +794,8 @@ class AuthController extends BaseController
             'must_change_password' => (bool) $user->must_change_password,
             'two_factor_enabled' => (bool) $user->two_factor_enabled,
             'preferences' => $user->preferences ?? ['theme' => 'dark', 'locale' => 'tr'],
-            'permissions' => $light ? [] : $user->getAllPermissions()->pluck('name'),
+            'permissions' => $light ? [] : $this->cachedPermissionNames($user),
+            'permissions_version' => $light ? null : $this->permissionsVersion($user),
             'roles' => $user->getRoleNames(),
         ];
 
@@ -812,7 +813,8 @@ class AuthController extends BaseController
                     'active_modules' => [],
                 ];
             } else {
-                $company = $user->company->fresh();
+                // company zaten load('company') ile gelir — fresh() ekstra SELECT yok
+                $company = $user->company;
                 $activeModules = $company->activeModules()->pluck('slug')->toArray();
                 $data['company'] = [
                     'id' => $company->id,
@@ -827,5 +829,28 @@ class AuthController extends BaseController
         }
 
         return $data;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function cachedPermissionNames(User $user): array
+    {
+        $key = 'auth.user.permissions.'.$user->id;
+
+        /** @var list<string> $names */
+        $names = \Illuminate\Support\Facades\Cache::remember($key, 60, function () use ($user) {
+            return $user->getAllPermissions()->pluck('name')->values()->all();
+        });
+
+        return $names;
+    }
+
+    private function permissionsVersion(User $user): string
+    {
+        $names = $this->cachedPermissionNames($user);
+        sort($names);
+
+        return hash('xxh128', implode('|', $names));
     }
 }

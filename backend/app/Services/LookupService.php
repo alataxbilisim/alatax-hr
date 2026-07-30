@@ -28,6 +28,9 @@ use Illuminate\Validation\ValidationException;
  */
 class LookupService
 {
+    /** @var array<string, Collection<int, Lookup>> İstek içi memo (EmployeeResource N+1) */
+    private array $forTypeMemo = [];
+
     public const TYPE_EMPLOYEE_STATUS = 'employee_status';
 
     public const TYPE_WORK_TYPE = 'work_type';
@@ -263,6 +266,11 @@ class LookupService
      */
     public function forType(string $type, ?int $companyId, bool $activeOnly = true): Collection
     {
+        $memoKey = $type.'|'.($companyId ?? 'null').'|'.($activeOnly ? '1' : '0');
+        if (isset($this->forTypeMemo[$memoKey])) {
+            return $this->forTypeMemo[$memoKey];
+        }
+
         $defaults = Lookup::query()
             ->whereNull('company_id')
             ->ofType($type)
@@ -292,7 +300,7 @@ class LookupService
             $merged = $merged->filter(fn (Lookup $row) => $row->is_active);
         }
 
-        return $merged
+        return $this->forTypeMemo[$memoKey] = $merged
             ->values()
             ->sortBy([
                 ['sort_order', 'asc'],
