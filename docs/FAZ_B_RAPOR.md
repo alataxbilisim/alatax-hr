@@ -501,5 +501,5 @@ Lookup `forType` memo + singleton; `/me` `fresh()` kaldırıldı; permissions 60
 
 Commits: `chore(db): migration baseline` · `perf(db): jsonb gin indeksleri` · `perf(fe): bundle code-splitting` · `perf(api): n+1 ve /me payload` · `chore: ölü kod temizliği`
 
-CI: push sonrası Actions run (aşağıda güncellenir).
+CI: https://github.com/alataxbilisim/alatax-hr/actions/runs/30533884565
 

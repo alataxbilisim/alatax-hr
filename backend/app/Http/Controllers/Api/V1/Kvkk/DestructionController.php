@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\V1\Kvkk;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\ExecuteDestructionApprovalJob;
-use App\Models\DestructionApproval;
 use App\Models\DestructionCandidate;
 use App\Models\DestructionLog;
 use App\Models\RetentionPolicy;

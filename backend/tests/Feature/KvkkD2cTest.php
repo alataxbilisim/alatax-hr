@@ -4,16 +4,15 @@ namespace Tests\Feature;
 
 use App\Enums\CompanyStatus;
 use App\Enums\DestructionCandidateStatus;
+use App\Enums\JobPositionStatus;
 use App\Enums\RetentionStrategy;
 use App\Enums\RetentionTriggerEvent;
 use App\Enums\UserType;
 use App\Jobs\ExecuteDestructionApprovalJob;
 use App\Models\Company;
-use App\Models\DestructionApproval;
 use App\Models\DestructionCandidate;
 use App\Models\DestructionLog;
 use App\Models\Employee;
-use App\Enums\JobPositionStatus;
 use App\Models\JobApplication;
 use App\Models\JobPosition;
 use App\Models\LegalHold;

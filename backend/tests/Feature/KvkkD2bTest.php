@@ -11,7 +11,6 @@ use App\Models\DataSubjectRequest;
 use App\Models\Employee;
 use App\Models\LeaveRequest;
 use App\Models\LeaveType;
-use App\Models\SettingValue;
 use App\Models\User;
 use App\Services\Kvkk\PersonalData\PersonalDataCollectorRegistry;
 use App\Services\Settings\Settings;
