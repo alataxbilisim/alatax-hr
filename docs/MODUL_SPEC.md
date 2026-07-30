@@ -60,8 +60,9 @@ Her ana / çekirdek / premium modül için zorunlu ortak katman:
 **KVKK:** kişisel + (maskelenmiş) özel nitelikli alanlar logda asla açık yazılmaz.
 
 ### A7. KVKK
-**Ekranlar:** Rıza Yönetimi (metin versiyonları + onay durumu), Veri Talepleri (ihraç/silme kuyruğu), Saklama Politikaları, Veri Envanteri Raporu
-**İşlemler:** Aydınlatma metni versiyonla + portal ilk girişte onay topla. Veri ihracı üret (JSON/PDF). Silme/anonimleştirme talebi → onay akışı → anonimleştirme job’ı. Saklama süresi CRUD (evrak/log/aday verisi bazında).
+**Ekranlar (9 sekme — D2c sonrası):** Veri Envanteri · Aydınlatma Metinleri · Rıza Durumu · Veri Sahibi Talepleri · Saklama Politikaları · İmha Kuyruğu · İmha Kayıtları · Hukuki Tutmalar · İhlal Defteri  
+**İşlemler:** Aydınlatma metni versiyonla + portal ilk girişte onay topla. Veri ihracı üret (JSON/PDF). Silme/anonimleştirme talebi → onay akışı → anonimleştirme job’ı. Saklama süresi CRUD + dry-run imha aday listesi (gerçek imha ayrı onay).  
+**Not (QA-2):** Spec’te eskiden 6 sekme yazıyordu; D2c imha/hold ekranları eklendiği için **9 sekme doğru** — gruplamaya gerek yok, operasyonel akış (politika → kuyruk → kayıt) ayrı sekmelerde net.
 **Not:** Lisansla satılmaz; yasal zorunluluk — her pakette açık.
 
 ---

@@ -697,8 +697,9 @@ class DemoDataSeeder extends Seeder
             [
                 'data_category' => 'identity', 'subject_type' => DataSubjectType::FormerEmployee->value,
                 'trigger_event' => RetentionTriggerEvent::IstenAyrilma, 'retention_months' => 120,
-                'strategy' => RetentionStrategy::Anonymize, 'legal_basis_note' => 'QA demo — pasif',
-                'active' => false, 'requires_approval' => true, 'is_system_draft' => false, 'created_by' => $publisher->id,
+                'strategy' => RetentionStrategy::Anonymize, 'legal_basis_note' => 'QA demo — dry-run için aktif',
+                // QA-2: aday listesi + dry-run görülebilsin; gerçek imha onaylanmaz
+                'active' => true, 'requires_approval' => true, 'is_system_draft' => false, 'created_by' => $publisher->id,
             ]
         );
     }

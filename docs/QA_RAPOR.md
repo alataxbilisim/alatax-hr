@@ -112,3 +112,50 @@ Firma: **Demo Firma AŞ** (`slug=demo-firma`) — ~40 personel, 32 izin, 300 pua
 2. Eksik modüller → `ModuleSeeder`  
 3. Sistem raporları → `SystemReportPackageSeeder`  
 4. Admin’in rapor panosu 403 → `PermissionSeeder` çağrısı (`admin` tüm izinler)
+
+---
+
+## QA-2 — Bulgu düzeltmeleri + bloklanan kontroller
+
+**Tarih:** 2026-07-30  
+**Branch:** `faz4-form-engine`  
+**Suite:** `609 passed` (tek + 3× ardışık + random seed `1785420488`) · sentinel_ok · tsc 0 · lint 0 · mojibake CI OK (probe kırmızı doğrulandı)
+
+### ADIM 1 — Onay motoru teşhisi (EN BAŞA)
+
+**Sonuç: (b) — Portal yolunda motor hiç çağrılmıyordu**
+
+`PortalLeaveController@store` yalnız `LeaveRequest::create(status=pending)` yapıyordu; `WorkflowService::startWorkflow` yoktu. Company `LeaveRequestController@store` zaten motora bağlıydı. Demo’da aktif koşullu workflow vardı → sorun seed eksikliği (a) veya sessiz catch (c) değildi.
+
+| entity | Motora bağlı? | Giriş |
+|--------|---------------|-------|
+| leave_request (portal) | **✅ artık evet** | `PortalLeaveController@store` → `WorkflowService::startWorkflow` |
+| leave_request (company) | Evet | `LeaveRequestController@store` |
+| expense_claims | Evet (submit) | `PortalExpenseController@submit` |
+| requests (EmployeeRequest) | **Hayır — DUR** | ayrı dalga |
+| job_application | **Hayır — DUR** | ayrı dalga |
+| onboarding | **Hayır — DUR** | ayrı dalga |
+
+Bu dalgada yalnız izin bağlandı. Kanıt: `PortalLeaveApprovalWorkflowQa2Test` (instance + kısa skip + uzun koşullu + liste sözleşmesi).
+
+### Bulgu durumu
+
+| # | QA-1 bulgu | Durum | Not |
+|---|------------|-------|-----|
+| 1 | Portal izin listesi boş | ✅ | `data.data.data` → `extractListData`; ortak portal listeler |
+| 2 | Onay instance yok | ✅ | portal → motor; feature test |
+| 3 | Bakiye sayı yok | ✅ | `remaining_days` + `leave_type.name` |
+| 4 | Form sonrası boş | ✅ | aynı kök (liste unwrap) |
+| 5 | Açık Pozisyon 0 | ✅ | KPI `published` → `JobPositionStatus::Active`; `open_positions=3` |
+| 6 | Mojibake `â€¦` | ✅ | App.tsx + collectors + `scripts/check-mojibake.mjs` CI |
+| 7–14 | Kozmetik/branding/redirect | ✅ | ALATAX HR, DEV-only demo hint, shortLabel, greeting, `/management/workflows` → `/settings/workflows` |
+| 15–16 | KVKK 9 sekme / saklama | ✅ karar | MODUL_SPEC 9 sekme; seeder politika `active=true` (aday 0 = süre penceresi) |
+| 17 | Bloklanan derin UI | ⏭ kısmi | Liste/motor/KPI/branding doğrulandı; pivot/export/çapraz filtre/KVKK paket derin UI QA-2b’ye |
+
+### Yeni ekranlar
+- `19-portal-leaves-fixed.png` — liste + bakiye 12
+- Redirect kanıtı: `/management/workflows` → `/settings/workflows`
+
+### Kalan açık
+- Talepler / başvuru / onboarding → motor (DUR)
+- Rapor builder derin (pivot, ECharts, Excel/PDF içerik), rapor@ gizlendi şeridi UI, pano çapraz filtre, KVKK paket JSON+PDF UI, yasal 422 UI, 1366 taşma tam tarama

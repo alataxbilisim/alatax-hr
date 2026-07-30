@@ -136,6 +136,10 @@ jobs:
           cache: pnpm
           cache-dependency-path: frontend/pnpm-lock.yaml
 
+      - name: Mojibake scan
+        working-directory: .
+        run: node scripts/check-mojibake.mjs
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
