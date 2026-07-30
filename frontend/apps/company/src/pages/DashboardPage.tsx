@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { RootState } from '../store';
 import { dashboardApi } from '@shared/services/api';
+import { useTranslation } from '@shared/i18n';
 import toast from 'react-hot-toast';
 import {
   BsPeople,
@@ -54,9 +55,19 @@ interface DashboardData {
 
 const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation('common');
   const { user } = useSelector((state: RootState) => state.auth);
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const firstName = useMemo(() => {
+    const name = (user?.name ?? '').trim();
+    return name.split(/\s+/)[0] || name;
+  }, [user?.name]);
+
+  const welcomeTitle = firstName
+    ? t('dashboard.welcomeNamed', { name: firstName })
+    : t('dashboard.welcome');
 
   useEffect(() => {
     loadDashboard();
@@ -96,7 +107,7 @@ const DashboardPage: React.FC = () => {
       <div className="animate-fade-in">
         <div className="page-header">
           <div className="page-header-content">
-            <h1>Hoş Geldiniz, {user?.name}!</h1>
+            <h1>{welcomeTitle}</h1>
             <p>Firma bilgileriniz yüklenemiyor. Lütfen yöneticinizle iletişime geçin.</p>
           </div>
         </div>
@@ -121,7 +132,7 @@ const DashboardPage: React.FC = () => {
       {/* Page Header */}
       <div className="page-header">
         <div className="page-header-content">
-          <h1 className="page-title">Hoş Geldiniz, {user?.name?.split(' ')[0]}!</h1>
+          <h1 className="page-title">{welcomeTitle}</h1>
           <span className="page-subtitle">{data.company.name}</span>
         </div>
         

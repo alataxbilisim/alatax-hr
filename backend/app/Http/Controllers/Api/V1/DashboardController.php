@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Enums\JobPositionStatus;
 use App\Models\Company;
 use App\Models\Document;
 use App\Models\JobPosition;
@@ -54,7 +55,7 @@ class DashboardController extends BaseController
 
         if (in_array('job-applications', $activeModules)) {
             $stats['open_positions'] = JobPosition::where('company_id', $company->id)
-                ->where('status', 'published')
+                ->where('status', JobPositionStatus::Active)
                 ->count();
         }
 

@@ -84,7 +84,8 @@ const ModuleRail: React.FC<ModuleRailProps> = ({
   const renderRailItem = (module: ModuleGroup) => {
     const isActive = activeModule === module.id || isModuleActive(module);
     const Icon = module.icon;
-    const label = t(module.labelKey);
+    const label = t(module.shortLabelKey ?? module.labelKey);
+    const fullLabel = t(module.labelKey);
 
     return (
       <button
@@ -92,7 +93,7 @@ const ModuleRail: React.FC<ModuleRailProps> = ({
         type="button"
         className={`rail-item ${isActive ? 'active' : ''}`}
         onClick={() => onModuleClick(module.id)}
-        title={label}
+        title={fullLabel}
         style={
           {
             '--module-color': module.color,

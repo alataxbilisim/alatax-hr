@@ -42,6 +42,8 @@ export interface ModuleGroup {
   id: string;
   icon: React.ElementType;
   labelKey: string;
+  /** Dar rail için kısa etiket (yoksa labelKey) */
+  shortLabelKey?: string;
   color?: string;
   basePath?: string;
   /** Çok köklü modüller (ör. varlık+doküman) için aktif eşleme */
@@ -115,6 +117,7 @@ export const operationalModuleGroups: ModuleGroup[] = [
     id: 'onboarding',
     icon: BsPersonCheck,
     labelKey: 'nav.onboardingExit',
+    shortLabelKey: 'nav.onboardingExitShort',
     color: '#84cc16',
     basePath: '/onboarding',
     moduleKey: 'onboarding',
@@ -163,6 +166,7 @@ export const operationalModuleGroups: ModuleGroup[] = [
     id: 'payroll',
     icon: BsReceipt,
     labelKey: 'nav.payroll',
+    shortLabelKey: 'nav.payrollShort',
     color: '#ef4444',
     basePath: '/payroll',
     matchPrefixes: ['/payroll'],
@@ -216,6 +220,7 @@ export const operationalModuleGroups: ModuleGroup[] = [
     id: 'assets-documents',
     icon: BsLaptop,
     labelKey: 'nav.assetsDocuments',
+    shortLabelKey: 'nav.assetsDocumentsShort',
     color: '#64748b',
     matchPrefixes: ['/assets', '/documents'],
     items: [

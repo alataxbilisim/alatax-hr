@@ -503,6 +503,15 @@
   font-weight: 500;
 }
 
+.portal-rail__item > span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  line-height: 1.1;
+  text-align: center;
+}
+
 .portal-rail__item--active {
   background: var(--portal-primary-soft);
   color: var(--portal-primary);

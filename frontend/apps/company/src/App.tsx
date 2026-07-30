@@ -24,13 +24,13 @@ const PORTAL_LOGIN_URL =
   (import.meta.env.VITE_PORTAL_URL as string | undefined)?.replace(/\/$/, '') ||
   'http://localhost:3003';
 
-/** Auth + panel eriÅŸimi (portal-only personel engeli) */
+/** Auth + panel erişimi (portal-only personel engeli) */
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, user, isLoading } = useSelector((state: RootState) => state.auth);
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch<AppDispatch>();
-  const { t } = useTranslation('auth');
+  const { t } = useTranslation(['auth', 'common']);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -58,7 +58,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     return (
       <div className="loading-screen">
         <div className="loading-spinner" style={{ width: 40, height: 40 }}></div>
-        <p style={{ marginTop: '1rem', color: 'var(--text-secondary)' }}>YÃ¼kleniyor...</p>
+        <p style={{ marginTop: '1rem', color: 'var(--text-secondary)' }}>{t('common:loading')}</p>
       </div>
     );
   }
@@ -90,7 +90,7 @@ const withPermission = (
 ) => (
   <ProtectedRoute>
     <PermissionProtectedRoute module={module} page={pageKey} action={action}>
-      <React.Suspense fallback={<div className="page-loading">â€¦</div>}>{page}</React.Suspense>
+      <React.Suspense fallback={<div className="page-loading"><div className="loading-spinner" /></div>}>{page}</React.Suspense>
     </PermissionProtectedRoute>
   </ProtectedRoute>
 );
@@ -204,7 +204,7 @@ import SurveysPage from './pages/surveys/SurveysPage';
 import AnnouncementsPage from './pages/announcements/AnnouncementsPage';
 import PayslipsAdminPage from './pages/payroll/PayslipsAdminPage';
 
-/** D1b/D3 â€” aÄŸÄ±r sayfalar lazy (Nivo/org/kanban/form builder/analytics/kvkk) */
+/** D1b/D3 — ağır sayfalar lazy (Nivo/org/kanban/form builder/analytics/kvkk) */
 const ReportsListPage = React.lazy(() => import('./pages/reports/ReportsListPage'));
 const ReportBuilderPage = React.lazy(() => import('./pages/reports/ReportBuilderPage'));
 const MeasuresLibraryPage = React.lazy(() => import('./pages/reports/MeasuresLibraryPage'));
@@ -221,7 +221,11 @@ const KvkkPage = React.lazy(() => import('./pages/kvkk/KvkkPage'));
 const FormLayoutEditorPage = React.lazy(() => import('./pages/settings/FormLayoutEditorPage'));
 const WorkflowEditorPage = React.lazy(() => import('./pages/settings/WorkflowEditorPage'));
 
-const PageFallback = () => <div className="page-loading">â€¦</div>;
+const PageFallback = () => (
+  <div className="page-loading">
+    <div className="loading-spinner" />
+  </div>
+);
 
 const withSuspense = (node: React.ReactNode): React.ReactElement => (
   <React.Suspense fallback={<PageFallback />}>{node}</React.Suspense>
@@ -232,7 +236,7 @@ const App: React.FC = () => {
   const { mode, density } = useSelector((state: RootState) => state.theme);
   const { isAuthenticated: authIsAuthenticated } = useSelector((state: RootState) => state.auth);
 
-  // Ä°lk yÃ¼klemede tam checkAuth (izin dump dahil)
+  // İlk yüklemede tam checkAuth (izin dump dahil)
   useEffect(() => {
     dispatch(checkAuth());
   }, [dispatch]);
@@ -249,7 +253,7 @@ const App: React.FC = () => {
     return () => window.removeEventListener('focus', handleFocus);
   }, [dispatch, authIsAuthenticated]);
 
-  // Periyodik sessiz yenileme â€” 5 dk (Ã¶nceki 30 sn agresifti + remount dÃ¶ngÃ¼sÃ¼)
+  // Periyodik sessiz yenileme — 5 dk (önceki 30 sn agresifti + remount döngüsü)
   useEffect(() => {
     if (!authIsAuthenticated) return;
 
@@ -288,10 +292,10 @@ const App: React.FC = () => {
           />
         </Route>
 
-        {/* Public kariyer baÅŸvurusu (auth yok) */}
+        {/* Public kariyer başvurusu (auth yok) */}
         <Route path="/careers/:companySlug/:positionSlug" element={<PublicCareerApplyPage />} />
 
-        {/* PDKS kiosk â€” tam ekran (MainLayout dÄ±ÅŸÄ±nda) */}
+        {/* PDKS kiosk — tam ekran (MainLayout dışında) */}
         <Route
           path="/pdks/kiosk"
           element={
@@ -810,7 +814,7 @@ const App: React.FC = () => {
             }
           />
           
-          {/* Assets Module â€” static paths before :id */}
+          {/* Assets Module — static paths before :id */}
           <Route
             path="/assets"
             element={
@@ -905,13 +909,13 @@ const App: React.FC = () => {
             }
           />
 
-          {/* Rapor Motoru (D1b) â€” lazy + permission */}
+          {/* Rapor Motoru (D1b) — lazy + permission */}
           <Route
             path="/reports/schedules"
             element={
               <ProtectedRoute>
                 <PermissionProtectedRoute module="reports" page="schedules" action="view">
-                  <React.Suspense fallback={<div className="page-loading">â€¦</div>}>
+                  <React.Suspense fallback={<PageFallback />}>
                     <ReportSchedulesPage />
                   </React.Suspense>
                 </PermissionProtectedRoute>
@@ -923,7 +927,7 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <PermissionProtectedRoute module="reports" page="measures" action="view">
-                  <React.Suspense fallback={<div className="page-loading">â€¦</div>}>
+                  <React.Suspense fallback={<PageFallback />}>
                     <MeasuresLibraryPage />
                   </React.Suspense>
                 </PermissionProtectedRoute>
@@ -935,7 +939,7 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <PermissionProtectedRoute module="reports" page="definitions" action="view">
-                  <React.Suspense fallback={<div className="page-loading">â€¦</div>}>
+                  <React.Suspense fallback={<PageFallback />}>
                     <ReportsListPage />
                   </React.Suspense>
                 </PermissionProtectedRoute>
@@ -947,7 +951,7 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <PermissionProtectedRoute module="reports" page="definitions" action="create">
-                  <React.Suspense fallback={<div className="page-loading">â€¦</div>}>
+                  <React.Suspense fallback={<PageFallback />}>
                     <ReportBuilderPage />
                   </React.Suspense>
                 </PermissionProtectedRoute>
@@ -959,7 +963,7 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <PermissionProtectedRoute module="reports" page="definitions" action="edit">
-                  <React.Suspense fallback={<div className="page-loading">â€¦</div>}>
+                  <React.Suspense fallback={<PageFallback />}>
                     <ReportBuilderPage />
                   </React.Suspense>
                 </PermissionProtectedRoute>
@@ -971,7 +975,7 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <PermissionProtectedRoute module="reports" page="definitions" action="view">
-                  <React.Suspense fallback={<div className="page-loading">â€¦</div>}>
+                  <React.Suspense fallback={<PageFallback />}>
                     <ReportBuilderPage />
                   </React.Suspense>
                 </PermissionProtectedRoute>
@@ -985,7 +989,7 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <PermissionProtectedRoute module="reports" page="dashboards" action="view">
-                  <React.Suspense fallback={<div className="page-loading">â€¦</div>}>
+                  <React.Suspense fallback={<PageFallback />}>
                     <DashboardsListPage />
                   </React.Suspense>
                 </PermissionProtectedRoute>
@@ -997,7 +1001,7 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <PermissionProtectedRoute module="reports" page="dashboards" action="view">
-                  <React.Suspense fallback={<div className="page-loading">â€¦</div>}>
+                  <React.Suspense fallback={<PageFallback />}>
                     <DashboardViewPage />
                   </React.Suspense>
                 </PermissionProtectedRoute>
@@ -1104,6 +1108,12 @@ const App: React.FC = () => {
               </ProtectedRoute>
             }
           />
+          {/* E0 legacy — management/workflows → settings/workflows */}
+          <Route path="/management/workflows" element={<Navigate to="/settings/workflows" replace />} />
+          <Route
+            path="/management/workflows/:id"
+            element={<LegacyParamRedirect to="/settings/workflows/:id" />}
+          />
           <Route
             path="/settings/notification-templates"
             element={
@@ -1120,7 +1130,7 @@ const App: React.FC = () => {
             element={<LegacyParamRedirect to="/organization/branches/:id" />}
           />
 
-          {/* KiÅŸisel hesap â€” permission gerekmez */}
+          {/* Kişisel hesap — permission gerekmez */}
           <Route path="/account" element={<ProtectedRoute><Navigate to="/account/profile" replace /></ProtectedRoute>} />
           <Route
             path="/account/profile"

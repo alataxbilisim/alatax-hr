@@ -28,9 +28,10 @@ const DesktopRail: React.FC<DesktopRailProps> = ({ onMoreClick }) => {
       <NavLink
         to="/dashboard"
         className={`portal-rail__item ${isActive('/dashboard') ? 'portal-rail__item--active' : ''}`}
+        title={t('portalShell.nav.home')}
       >
         <BsHouseDoor size={22} />
-        <span>{t('portalShell.nav.home')}</span>
+        <span>{t('portalShell.nav.homeShort')}</span>
       </NavLink>
 
       <NavLink
