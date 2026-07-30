@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from './store';
 import { checkAuth, logout } from '@shared/store/slices/authSlice';
@@ -18,6 +18,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 // Routing
 import ModuleProtectedRoute from './components/routing/ModuleProtectedRoute';
 import PermissionProtectedRoute from './components/routing/PermissionProtectedRoute';
+import NotFoundPage from './pages/NotFoundPage';
 
 const PORTAL_LOGIN_URL =
   (import.meta.env.VITE_PORTAL_URL as string | undefined)?.replace(/\/$/, '') ||
@@ -93,6 +94,16 @@ const withPermission = (
     </PermissionProtectedRoute>
   </ProtectedRoute>
 );
+
+/** E0 — parametreli legacy path → kanonik path */
+const LegacyParamRedirect: React.FC<{ to: string }> = ({ to }) => {
+  const params = useParams();
+  let target = to;
+  Object.entries(params).forEach(([k, v]) => {
+    target = target.replace(`:${k}`, v ?? '');
+  });
+  return <Navigate to={target} replace />;
+};
 
 // Auth Pages
 import LoginPage from './pages/auth/LoginPage';
@@ -282,7 +293,7 @@ const App: React.FC = () => {
 
         {/* PDKS kiosk â€” tam ekran (MainLayout dÄ±ÅŸÄ±nda) */}
         <Route
-          path="/attendance/kiosk"
+          path="/pdks/kiosk"
           element={
             <ProtectedRoute>
               <ModuleProtectedRoute moduleKey={MODULE_KEYS.TIMESHEET}>
@@ -293,6 +304,7 @@ const App: React.FC = () => {
             </ProtectedRoute>
           }
         />
+        <Route path="/attendance/kiosk" element={<Navigate to="/pdks/kiosk" replace />} />
 
         {/* Protected Routes */}
         <Route element={<MainLayout />}>
@@ -340,30 +352,50 @@ const App: React.FC = () => {
             path="/employees/custom-fields"
             element={withPermission(<EmployeeCustomFieldsPage />, 'employees', 'custom_fields', 'view')}
           />
+          {/* Organization (E0 canonical) */}
           <Route
-            path="/employees/departments"
+            path="/organization/branches"
+            element={<ProtectedRoute><BranchesPage /></ProtectedRoute>}
+          />
+          <Route
+            path="/organization/branches/:id"
+            element={<ProtectedRoute><BranchDetailPage /></ProtectedRoute>}
+          />
+          <Route
+            path="/organization/departments"
             element={withPermission(<DepartmentsPage />, 'employees', 'departments', 'view')}
           />
           <Route
-            path="/employees/positions"
+            path="/organization/positions"
             element={withPermission(<PositionsPage />, 'employees', 'positions', 'view')}
           />
           <Route
-            path="/employees/salary-bands"
+            path="/organization/chart"
+            element={withPermission(<OrganizationChartPage />, 'employees', 'organization', 'view')}
+          />
+          {/* Payroll (E0 canonical) — salary */}
+          <Route
+            path="/payroll/salary-bands"
             element={withPermission(<SalaryBandsPage />, 'employees', 'salary', 'view')}
           />
           <Route
-            path="/employees/salary-reviews"
+            path="/payroll/salary-reviews"
             element={withPermission(<SalaryReviewPeriodsPage />, 'employees', 'salary', 'view')}
           />
           <Route
-            path="/employees/salary-reviews/:id"
+            path="/payroll/salary-reviews/:id"
             element={withPermission(<SalaryReviewDetailPage />, 'employees', 'salary', 'view')}
           />
+          {/* Legacy redirects — organization / payroll salary */}
+          <Route path="/employees/departments" element={<Navigate to="/organization/departments" replace />} />
+          <Route path="/employees/positions" element={<Navigate to="/organization/positions" replace />} />
+          <Route path="/employees/salary-bands" element={<Navigate to="/payroll/salary-bands" replace />} />
+          <Route path="/employees/salary-reviews" element={<Navigate to="/payroll/salary-reviews" replace />} />
           <Route
-            path="/employees/organization"
-            element={withPermission(<OrganizationChartPage />, 'employees', 'organization', 'view')}
+            path="/employees/salary-reviews/:id"
+            element={<LegacyParamRedirect to="/payroll/salary-reviews/:id" />}
           />
+          <Route path="/employees/organization" element={<Navigate to="/organization/chart" replace />} />
           <Route
             path="/employees/reports"
             element={withPermission(<EmployeeReportsPage />, 'employees', 'reports', 'view')}
@@ -598,9 +630,9 @@ const App: React.FC = () => {
             }
           />
 
-          {/* Expenses Module */}
+          {/* Expenses / Payroll expenses (E0) */}
           <Route
-            path="/expenses"
+            path="/payroll/expenses"
             element={
               <ProtectedRoute>
                 <ModuleProtectedRoute moduleKey={MODULE_KEYS.EXPENSE_MANAGEMENT}>
@@ -610,7 +642,7 @@ const App: React.FC = () => {
             }
           />
           <Route
-            path="/expenses/all"
+            path="/payroll/expenses/all"
             element={
               <ProtectedRoute>
                 <ModuleProtectedRoute moduleKey={MODULE_KEYS.EXPENSE_MANAGEMENT}>
@@ -620,7 +652,7 @@ const App: React.FC = () => {
             }
           />
           <Route
-            path="/expenses/categories"
+            path="/payroll/expenses/categories"
             element={
               <ProtectedRoute>
                 <ModuleProtectedRoute moduleKey={MODULE_KEYS.EXPENSE_MANAGEMENT}>
@@ -629,10 +661,13 @@ const App: React.FC = () => {
               </ProtectedRoute>
             }
           />
+          <Route path="/expenses" element={<Navigate to="/payroll/expenses" replace />} />
+          <Route path="/expenses/all" element={<Navigate to="/payroll/expenses/all" replace />} />
+          <Route path="/expenses/categories" element={<Navigate to="/payroll/expenses/categories" replace />} />
 
-          {/* Timesheet / Attendance */}
+          {/* PDKS (E0 canonical) */}
           <Route
-            path="/attendance"
+            path="/pdks"
             element={
               <ProtectedRoute>
                 <ModuleProtectedRoute moduleKey={MODULE_KEYS.TIMESHEET}>
@@ -642,7 +677,7 @@ const App: React.FC = () => {
             }
           />
           <Route
-            path="/attendance/shifts"
+            path="/pdks/shifts"
             element={
               <ProtectedRoute>
                 <ModuleProtectedRoute moduleKey={MODULE_KEYS.TIMESHEET}>
@@ -654,7 +689,7 @@ const App: React.FC = () => {
             }
           />
           <Route
-            path="/attendance/shift-assignments"
+            path="/pdks/shift-assignments"
             element={
               <ProtectedRoute>
                 <ModuleProtectedRoute moduleKey={MODULE_KEYS.TIMESHEET}>
@@ -666,7 +701,7 @@ const App: React.FC = () => {
             }
           />
           <Route
-            path="/attendance/reports"
+            path="/pdks/reports"
             element={
               <ProtectedRoute>
                 <ModuleProtectedRoute moduleKey={MODULE_KEYS.TIMESHEET}>
@@ -677,6 +712,11 @@ const App: React.FC = () => {
               </ProtectedRoute>
             }
           />
+          {/* Legacy redirects — attendance → pdks */}
+          <Route path="/attendance" element={<Navigate to="/pdks" replace />} />
+          <Route path="/attendance/shifts" element={<Navigate to="/pdks/shifts" replace />} />
+          <Route path="/attendance/shift-assignments" element={<Navigate to="/pdks/shift-assignments" replace />} />
+          <Route path="/attendance/reports" element={<Navigate to="/pdks/reports" replace />} />
           
           {/* Onboarding Module */}
           <Route
@@ -816,9 +856,9 @@ const App: React.FC = () => {
             }
           />
           
-          {/* Surveys Module */}
+          {/* Communication (E0 canonical) */}
           <Route
-            path="/surveys"
+            path="/communication/surveys"
             element={
               <ProtectedRoute>
                 <ModuleProtectedRoute moduleKey={MODULE_KEYS.SURVEYS}>
@@ -827,9 +867,8 @@ const App: React.FC = () => {
               </ProtectedRoute>
             }
           />
-
           <Route
-            path="/announcements"
+            path="/communication/announcements"
             element={
               <ProtectedRoute>
                 <PermissionProtectedRoute module="announcements" page="list" action="view">
@@ -838,9 +877,9 @@ const App: React.FC = () => {
               </ProtectedRoute>
             }
           />
-
+          {/* Payroll payslips (E0 canonical) */}
           <Route
-            path="/payslips"
+            path="/payroll/payslips"
             element={
               <ProtectedRoute>
                 <PermissionProtectedRoute module="payroll" page="payslips" action="view">
@@ -849,6 +888,10 @@ const App: React.FC = () => {
               </ProtectedRoute>
             }
           />
+          {/* Legacy redirects — surveys / announcements / payslips */}
+          <Route path="/surveys" element={<Navigate to="/communication/surveys" replace />} />
+          <Route path="/announcements" element={<Navigate to="/communication/announcements" replace />} />
+          <Route path="/payslips" element={<Navigate to="/payroll/payslips" replace />} />
           
           {/* Analytics Module */}
           <Route
@@ -1071,13 +1114,10 @@ const App: React.FC = () => {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/branches"
-            element={<ProtectedRoute><BranchesPage /></ProtectedRoute>}
-          />
+          <Route path="/branches" element={<Navigate to="/organization/branches" replace />} />
           <Route
             path="/branches/:id"
-            element={<ProtectedRoute><BranchDetailPage /></ProtectedRoute>}
+            element={<LegacyParamRedirect to="/organization/branches/:id" />}
           />
 
           {/* KiÅŸisel hesap â€” permission gerekmez */}
@@ -1094,11 +1134,20 @@ const App: React.FC = () => {
             path="/account/preferences"
             element={<ProtectedRoute><AccountPreferencesPage /></ProtectedRoute>}
           />
+
+          {/* E0 — bilinmeyen rota */}
+          <Route
+            path="*"
+            element={
+              <ProtectedRoute>
+                <NotFoundPage />
+              </ProtectedRoute>
+            }
+          />
         </Route>
 
         {/* Redirects */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
       </div>
     </ErrorBoundary>

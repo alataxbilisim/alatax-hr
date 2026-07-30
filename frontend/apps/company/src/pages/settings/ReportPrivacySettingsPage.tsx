@@ -68,7 +68,7 @@ const ReportPrivacySettingsPage: React.FC = () => {
           <p className="page-subtitle">{t('reportPrivacy.subtitle')}</p>
         </div>
         <div className="page-header-actions">
-          <PageSettingsButton pageKey="settings-report-privacy" />
+          <PageSettingsButton pageKey="settings.report_privacy" />
         </div>
       </div>
       <div className="card">

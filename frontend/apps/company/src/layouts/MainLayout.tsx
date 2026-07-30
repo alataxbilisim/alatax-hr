@@ -22,6 +22,7 @@ import {
   operationalModuleGroups,
   pinnedModuleGroups,
   getFilteredMenuItems,
+  findModuleIdByPath,
   type ModuleGroup,
 } from '../components/layout/moduleNav';
 import ContextSidebar from '../components/layout/ContextSidebar';
@@ -31,44 +32,6 @@ import {
   resetBranchContext,
   setSelectedBranchId,
 } from '../store/branchContextSlice';
-
-function findModuleIdByPath(pathname: string): string {
-  // /account → account (kişisel)
-  if (pathname.startsWith('/account')) {
-    return 'account';
-  }
-
-  // Yönetim yolları (operasyonel basePath'ten önce)
-  const management = pinnedModuleGroups.find((m) => m.id === 'management');
-  if (management) {
-    const mgmtPaths = [
-      '/settings',
-      '/webhooks',
-      '/users',
-      '/roles',
-      '/branches',
-      '/audit-logs',
-      '/lookups',
-    ];
-    if (mgmtPaths.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
-      return 'management';
-    }
-  }
-
-  const byBasePath = moduleGroups
-    .filter((module) => module.basePath && pathname.startsWith(module.basePath))
-    .sort((a, b) => (b.basePath?.length ?? 0) - (a.basePath?.length ?? 0));
-  if (byBasePath[0]) {
-    return byBasePath[0].id;
-  }
-
-  const byItem = moduleGroups.find((module) =>
-    module.items.some(
-      (item) => pathname === item.path || pathname.startsWith(`${item.path}/`)
-    )
-  );
-  return byItem?.id ?? 'dashboard';
-}
 
 /** Mobil drawer — key={pathname} ile remount edilince kapalı initial state'e döner. */
 const CompanyMobileDrawer: React.FC<{
@@ -93,6 +56,7 @@ const CompanyMobileDrawer: React.FC<{
 
   const allModules = [
     ...operationalModuleGroups.filter((m) => {
+      if (m.hidden) return false;
       if (m.moduleKey && !activeModules.includes(m.moduleKey)) return false;
       if (!hasModuleAccess(m)) return false;
       return (
@@ -106,6 +70,7 @@ const CompanyMobileDrawer: React.FC<{
       );
     }),
     ...pinnedModuleGroups.filter((m) => {
+      if (m.hidden) return false;
       if (m.id === 'account') return !!user;
       if (!hasModuleAccess(m)) return false;
       return (
@@ -264,46 +229,25 @@ const MainLayout: React.FC = () => {
     dispatch(toggleSidebar());
   };
 
-  const getBreadcrumb = () => {
-    const pathSegments = location.pathname.split('/').filter(Boolean);
-    const labels: Record<string, string> = {
-      dashboard: t('nav.dashboard'),
-      account: t('nav.account'),
-      profile: t('account.profile'),
-      security: t('account.security'),
-      preferences: t('account.preferences'),
-      users: t('studio.users'),
-      roles: t('studio.roles'),
-      leaves: t('nav.leaves'),
-      types: t('studio.leaveTypes'),
-      balances: t('nav.leavesBalances'),
-      documents: t('nav.documents'),
-      categories: t('nav.documentsCategories'),
-      recruitment: t('nav.recruitment'),
-      positions: t('nav.recruitmentPositions'),
-      applications: t('nav.recruitmentApplications'),
-      interviews: t('nav.recruitmentInterviews'),
-      'cv-pool': t('nav.recruitmentCvPool'),
-      reports: t('nav.analyticsReports'),
-      'custom-fields': t('studio.customFields'),
-      onboarding: t('nav.onboarding'),
-      templates: t('nav.onboardingTemplates'),
-      performance: t('nav.performance'),
-      periods: t('nav.performancePeriods'),
-      criteria: t('nav.performanceCriteria'),
-      training: t('nav.training'),
-      sessions: t('nav.trainingSessions'),
-      assets: t('nav.assets'),
-      surveys: t('nav.surveys'),
-      analytics: t('nav.analytics'),
-      settings: t('studio.companySettings'),
-      lookups: t('studio.lookups'),
-      'audit-logs': t('studio.auditLogs'),
-      webhooks: t('studio.webhooks'),
-      branches: t('studio.branches'),
-    };
+  const getBreadcrumb = (): string[] => {
+    if (!currentModule) {
+      return [t('nav.dashboard')];
+    }
 
-    return pathSegments.map((segment) => labels[segment] || segment);
+    const crumbs = [t(currentModule.labelKey)];
+    const activeItem = [...currentModule.items]
+      .sort((a, b) => b.path.length - a.path.length)
+      .find(
+        (item) =>
+          location.pathname === item.path ||
+          location.pathname.startsWith(`${item.path}/`)
+      );
+
+    if (activeItem && activeItem.labelKey !== currentModule.labelKey) {
+      crumbs.push(t(activeItem.labelKey));
+    }
+
+    return crumbs;
   };
 
   const handleLogout = async () => {

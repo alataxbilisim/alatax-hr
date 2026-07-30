@@ -596,7 +596,7 @@ const LeavesPage: React.FC = () => {
         </div>
         <div className="page-header-actions">
           <PageSettingsButton
-            pageKey={activeTab === 'balances' ? 'leaves-balances' : 'leaves-requests'}
+            pageKey={activeTab === 'balances' ? 'leaves.balances.list' : 'leaves.requests.list'}
           />
           {getHeaderAction()}
         </div>

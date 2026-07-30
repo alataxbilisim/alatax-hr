@@ -57,11 +57,6 @@ class PermissionEnforcementWave3Test extends TestCase
             'uri' => '/api/v1/surveys',
             'permission' => 'surveys.list.view',
         ],
-        'analytics' => [
-            'slug' => 'hr-analytics',
-            'uri' => '/api/v1/analytics/summary',
-            'permission' => 'analytics.reports.view',
-        ],
     ];
 
     protected function setUp(): void
@@ -81,8 +76,6 @@ class PermissionEnforcementWave3Test extends TestCase
             'assets.*',
             'surveys.list.view',
             'surveys.*',
-            'analytics.reports.view',
-            'analytics.*',
             'performance.feedback.edit',
         ] as $name) {
             Permission::findOrCreate($name, 'sanctum');
@@ -325,25 +318,10 @@ class PermissionEnforcementWave3Test extends TestCase
         $this->assertCount(1, $ids);
     }
 
-    public function test_analytics_tenant_scope(): void
+    public function test_legacy_hr_analytics_routes_removed(): void
     {
-        $this->makeUser(UserType::User, $this->company);
-        $this->makeUser(UserType::User, $this->otherCompany);
-        $this->makeUser(UserType::User, $this->otherCompany);
-
-        $viewer = $this->makeUser(UserType::User, $this->company);
-        $viewer->givePermissionTo('analytics.reports.view');
-        Sanctum::actingAs($viewer);
-
-        $response = $this->getJson('/api/v1/analytics/summary')->assertStatus(200);
-        // Kendi firmadaki aktif user sayısı (viewer dahil) — diğer firma karışmamalı
-        $total = $response->json('data.total_employees')
-            ?? $response->json('data.totalEmployees')
-            ?? $response->json('data.employees_count');
-
-        $ownActive = User::where('company_id', $this->company->id)->where('is_active', true)->count();
-        $this->assertNotNull($total, 'analytics summary employee count alanı bulunamadı: '.$response->getContent());
-        $this->assertEquals($ownActive, $total);
+        Sanctum::actingAs($this->makeUser(UserType::CompanyAdmin));
+        $this->getJson('/api/v1/analytics/summary')->assertNotFound();
     }
 
     public function test_portal_surveys_still_without_permission_middleware(): void

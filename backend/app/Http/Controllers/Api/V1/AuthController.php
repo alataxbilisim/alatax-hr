@@ -836,7 +836,7 @@ class AuthController extends BaseController
      */
     private function cachedPermissionNames(User $user): array
     {
-        $key = 'auth.user.permissions.'.$user->id;
+        $key = \App\Services\Auth\UserPermissionCache::key((int) $user->id);
 
         /** @var list<string> $names */
         $names = \Illuminate\Support\Facades\Cache::remember($key, 60, function () use ($user) {

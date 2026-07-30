@@ -1228,23 +1228,8 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:payroll.payslips.delete');
         });
 
-        // HR Analytics Modülü
-        Route::middleware('module.access:hr-analytics')->prefix('analytics')->group(function () {
-            Route::get('/summary', [\App\Http\Controllers\Api\V1\Analytics\HrAnalyticsController::class, 'summary'])
-                ->middleware('permission:analytics.reports.view');
-            Route::get('/workforce', [\App\Http\Controllers\Api\V1\Analytics\HrAnalyticsController::class, 'workforce'])
-                ->middleware('permission:analytics.reports.view');
-            Route::get('/turnover', [\App\Http\Controllers\Api\V1\Analytics\HrAnalyticsController::class, 'turnover'])
-                ->middleware('permission:analytics.reports.view');
-            Route::get('/recruitment', [\App\Http\Controllers\Api\V1\Analytics\HrAnalyticsController::class, 'recruitment'])
-                ->middleware('permission:analytics.reports.view');
-            Route::get('/leaves', [\App\Http\Controllers\Api\V1\Analytics\HrAnalyticsController::class, 'leaves'])
-                ->middleware('permission:analytics.reports.view');
-            Route::get('/training', [\App\Http\Controllers\Api\V1\Analytics\HrAnalyticsController::class, 'training'])
-                ->middleware('permission:analytics.reports.view');
-        });
-
         // Rapor Motoru (D1a/D1b/D1c) — semantic layer + pivot + DSL
+        // E0: HrAnalyticsController kaldırıldı (FE caller yok; /analytics → sistem panosu)
         Route::prefix('reports')->group(function () {
             Route::get('/datasets', [\App\Http\Controllers\Api\V1\Reports\ReportController::class, 'datasets'])
                 ->middleware('permission:reports.definitions.view');

@@ -113,7 +113,7 @@ class SettingsRegistry
             new SettingDefinition(
                 key: 'legal.leaves.retention.months.min',
                 moduleKey: 'settings',
-                pageKeys: ['settings-registry'],
+                pageKeys: ['settings.registry'],
                 labelKey: 'settingsRegistry.legal.leavesRetentionMin',
                 descriptionKey: 'settingsRegistry.legal.leavesRetentionMinHelp',
                 type: SettingValueType::Int,
@@ -127,7 +127,7 @@ class SettingsRegistry
             new SettingDefinition(
                 key: 'legal.leaves.min_days_notice.min',
                 moduleKey: 'settings',
-                pageKeys: ['settings-registry'],
+                pageKeys: ['settings.registry'],
                 labelKey: 'settingsRegistry.legal.minDaysNoticeMin',
                 descriptionKey: 'settingsRegistry.legal.minDaysNoticeMinHelp',
                 type: SettingValueType::Int,
@@ -143,7 +143,7 @@ class SettingsRegistry
             new SettingDefinition(
                 key: 'leaves.balance.allow_carryover',
                 moduleKey: 'leaves',
-                pageKeys: ['leaves-balances', 'leaves-requests', 'settings-registry'],
+                pageKeys: ['leaves.balances.list', 'leaves.requests.list', 'settings.registry'],
                 labelKey: 'settingsRegistry.leaves.allowCarryover',
                 descriptionKey: 'settingsRegistry.leaves.allowCarryoverHelp',
                 type: SettingValueType::Bool,
@@ -156,7 +156,7 @@ class SettingsRegistry
             new SettingDefinition(
                 key: 'leaves.balance.allow_negative',
                 moduleKey: 'leaves',
-                pageKeys: ['leaves-balances', 'leaves-requests', 'settings-registry'],
+                pageKeys: ['leaves.balances.list', 'leaves.requests.list', 'settings.registry'],
                 labelKey: 'settingsRegistry.leaves.allowNegative',
                 descriptionKey: 'settingsRegistry.leaves.allowNegativeHelp',
                 type: SettingValueType::Bool,
@@ -169,7 +169,7 @@ class SettingsRegistry
             new SettingDefinition(
                 key: 'leaves.request.min_days_notice',
                 moduleKey: 'leaves',
-                pageKeys: ['leaves-requests', 'settings-registry'],
+                pageKeys: ['leaves.requests.list', 'settings.registry'],
                 labelKey: 'settingsRegistry.leaves.minDaysNotice',
                 descriptionKey: 'settingsRegistry.leaves.minDaysNoticeHelp',
                 type: SettingValueType::Int,
@@ -184,7 +184,7 @@ class SettingsRegistry
             new SettingDefinition(
                 key: 'leaves.retention.months',
                 moduleKey: 'leaves',
-                pageKeys: ['leaves-requests', 'settings-registry'],
+                pageKeys: ['leaves.requests.list', 'settings.registry'],
                 labelKey: 'settingsRegistry.leaves.retentionMonths',
                 descriptionKey: 'settingsRegistry.leaves.retentionMonthsHelp',
                 type: SettingValueType::Int,
@@ -201,7 +201,7 @@ class SettingsRegistry
             new SettingDefinition(
                 key: 'reports.privacy.min_cell_enabled',
                 moduleKey: 'reports',
-                pageKeys: ['reports-builder', 'settings-report-privacy', 'settings-registry'],
+                pageKeys: ['analytics.reports.builder', 'settings.report_privacy', 'settings.registry'],
                 labelKey: 'settingsRegistry.reports.minCellEnabled',
                 descriptionKey: 'settingsRegistry.reports.minCellEnabledHelp',
                 type: SettingValueType::Bool,
@@ -215,7 +215,7 @@ class SettingsRegistry
             new SettingDefinition(
                 key: 'reports.privacy.min_cell_threshold',
                 moduleKey: 'reports',
-                pageKeys: ['reports-builder', 'settings-report-privacy', 'settings-registry'],
+                pageKeys: ['analytics.reports.builder', 'settings.report_privacy', 'settings.registry'],
                 labelKey: 'settingsRegistry.reports.minCellThreshold',
                 descriptionKey: 'settingsRegistry.reports.minCellThresholdHelp',
                 type: SettingValueType::Int,
@@ -230,7 +230,7 @@ class SettingsRegistry
             new SettingDefinition(
                 key: 'reports.cache.default_ttl_seconds',
                 moduleKey: 'reports',
-                pageKeys: ['reports-builder', 'settings-registry'],
+                pageKeys: ['analytics.reports.builder', 'settings.registry'],
                 labelKey: 'settingsRegistry.reports.cacheTtl',
                 descriptionKey: 'settingsRegistry.reports.cacheTtlHelp',
                 type: SettingValueType::Int,
@@ -246,7 +246,7 @@ class SettingsRegistry
             new SettingDefinition(
                 key: 'legal.kvkk.response_days.max',
                 moduleKey: 'settings',
-                pageKeys: ['settings-registry'],
+                pageKeys: ['settings.registry'],
                 labelKey: 'settingsRegistry.legal.kvkkResponseDaysMax',
                 descriptionKey: 'settingsRegistry.legal.kvkkResponseDaysMaxHelp',
                 type: SettingValueType::Int,
@@ -260,7 +260,7 @@ class SettingsRegistry
             new SettingDefinition(
                 key: 'kvkk.data_subject.response_days',
                 moduleKey: 'kvkk',
-                pageKeys: ['kvkk-requests', 'settings-registry'],
+                pageKeys: ['kvkk.requests', 'settings.registry'],
                 labelKey: 'settingsRegistry.kvkk.responseDays',
                 descriptionKey: 'settingsRegistry.kvkk.responseDaysHelp',
                 type: SettingValueType::Int,
@@ -275,7 +275,7 @@ class SettingsRegistry
             new SettingDefinition(
                 key: 'kvkk.data_subject.export_link_days',
                 moduleKey: 'kvkk',
-                pageKeys: ['kvkk-requests', 'settings-registry'],
+                pageKeys: ['kvkk.requests', 'settings.registry'],
                 labelKey: 'settingsRegistry.kvkk.exportLinkDays',
                 descriptionKey: 'settingsRegistry.kvkk.exportLinkDaysHelp',
                 type: SettingValueType::Int,
@@ -291,7 +291,7 @@ class SettingsRegistry
             new SettingDefinition(
                 key: 'legal.kvkk.retention.months.min',
                 moduleKey: 'settings',
-                pageKeys: ['settings-registry'],
+                pageKeys: ['settings.registry'],
                 labelKey: 'settingsRegistry.legal.kvkkRetentionMonthsMin',
                 descriptionKey: 'settingsRegistry.legal.kvkkRetentionMonthsMinHelp',
                 type: SettingValueType::Int,
@@ -305,7 +305,7 @@ class SettingsRegistry
             new SettingDefinition(
                 key: 'legal.kvkk.breach_notify_hours.max',
                 moduleKey: 'settings',
-                pageKeys: ['settings-registry'],
+                pageKeys: ['settings.registry'],
                 labelKey: 'settingsRegistry.legal.kvkkBreachHoursMax',
                 descriptionKey: 'settingsRegistry.legal.kvkkBreachHoursMaxHelp',
                 type: SettingValueType::Int,
@@ -319,7 +319,7 @@ class SettingsRegistry
             new SettingDefinition(
                 key: 'kvkk.destruction.review_period_months',
                 moduleKey: 'kvkk',
-                pageKeys: ['kvkk-destruction', 'settings-registry'],
+                pageKeys: ['kvkk.destruction', 'settings.registry'],
                 labelKey: 'settingsRegistry.kvkk.reviewPeriodMonths',
                 descriptionKey: 'settingsRegistry.kvkk.reviewPeriodMonthsHelp',
                 type: SettingValueType::Int,

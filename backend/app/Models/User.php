@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\UserType;
 use App\Notifications\ResetPasswordNotification;
+use App\Services\Auth\UserPermissionCache;
 use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,6 +17,19 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable
 {
     use Auditable, HasApiTokens, HasFactory, HasRoles, Notifiable, SoftDeletes;
+
+    protected static function booted(): void
+    {
+        static::updated(function (User $user): void {
+            if ($user->wasChanged(['is_active', 'type', 'company_id'])) {
+                UserPermissionCache::forgetForUser((int) $user->id);
+            }
+        });
+
+        static::deleted(function (User $user): void {
+            UserPermissionCache::forgetForUser((int) $user->id);
+        });
+    }
 
     /**
      * @var list<string>

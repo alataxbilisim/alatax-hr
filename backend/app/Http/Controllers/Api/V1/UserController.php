@@ -8,6 +8,7 @@ use App\Mail\PasswordResetByAdmin;
 use App\Mail\UserInvitation;
 use App\Models\ActivityLog;
 use App\Models\User;
+use App\Services\Auth\UserPermissionCache;
 use App\Services\InvitationService;
 use App\Services\TwoFactorService;
 use App\Support\PanelAccess;
@@ -139,11 +140,13 @@ class UserController extends BaseController
             $user->assignRole('employee');
         }
         $user->assignRole($roleName);
+        UserPermissionCache::forgetForUser((int) $user->id);
         $user->unsetRelation('roles');
         $user->load('roles');
 
         if (! PanelAccess::has($user)) {
             $user->removeRole($roleName);
+            UserPermissionCache::forgetForUser((int) $user->id);
 
             return $this->error('Atanan rol panel erişimi sağlamıyor', 422);
         }
@@ -192,6 +195,7 @@ class UserController extends BaseController
 
         // Tüm roller çıkar, yalnızca employee bırak (portal)
         $user->syncRoles(['employee']);
+        UserPermissionCache::forgetForUser((int) $user->id);
         $user->unsetRelation('roles');
         $user->load('roles');
 
@@ -311,9 +315,11 @@ class UserController extends BaseController
         $assignedRoles = [];
         if (! empty($validated['roles'])) {
             $user->roles()->sync($validated['roles']);
+            UserPermissionCache::forgetForUser((int) $user->id);
             $assignedRoles = $user->fresh()->roles->pluck('name')->values()->all();
         } else {
             $user->assignRole('employee');
+            UserPermissionCache::forgetForUser((int) $user->id);
             $assignedRoles = ['employee'];
         }
 
@@ -381,6 +387,7 @@ class UserController extends BaseController
         // Rolleri güncelle (ID'lerle) — pivot; observer yakalamaz
         if (isset($validated['roles'])) {
             $user->roles()->sync($validated['roles']);
+            UserPermissionCache::forgetForUser((int) $user->id);
             $newRoles = $user->fresh()->roles->pluck('name')->sort()->values()->all();
             if ($oldRoles !== $newRoles) {
                 ActivityLog::log(
@@ -536,6 +543,7 @@ class UserController extends BaseController
         // Roller atanırsa
         if (! empty($validated['roles'])) {
             $user->roles()->sync($validated['roles']);
+            UserPermissionCache::forgetForUser((int) $user->id);
             ActivityLog::log(
                 'role_sync',
                 $user,
@@ -709,6 +717,7 @@ class UserController extends BaseController
                 case 'assign_role':
                     if (! $user->roles->contains($validated['role_id'])) {
                         $user->roles()->attach($validated['role_id']);
+                        UserPermissionCache::forgetForUser((int) $user->id);
                         ActivityLog::log('role_sync', $user, "Kullanıcıya rol atandı: {$user->name}");
                         $count++;
                     }
@@ -716,6 +725,7 @@ class UserController extends BaseController
                 case 'remove_role':
                     if ($user->roles->contains($validated['role_id'])) {
                         $user->roles()->detach($validated['role_id']);
+                        UserPermissionCache::forgetForUser((int) $user->id);
                         ActivityLog::log('role_sync', $user, "Kullanıcıdan rol kaldırıldı: {$user->name}");
                         $count++;
                     }
@@ -852,6 +862,7 @@ class UserController extends BaseController
                         ->toArray();
                     if (! empty($roles)) {
                         $user->roles()->sync($roles);
+                        UserPermissionCache::forgetForUser((int) $user->id);
                     }
                 }
 

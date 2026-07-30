@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Models\ActivityLog;
 use App\Models\Role;
+use App\Services\Auth\UserPermissionCache;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
@@ -91,6 +92,7 @@ class RoleController extends BaseController
 
         // Pivot — observer yakalamaz; özel izin logu
         $role->syncPermissions($validated['permissions']);
+        UserPermissionCache::forgetForRole($role);
         ActivityLog::log(
             'permission_sync',
             $role,
@@ -137,6 +139,7 @@ class RoleController extends BaseController
         if (isset($validated['permissions'])) {
             $oldPermissions = $role->permissions->pluck('name')->sort()->values()->all();
             $role->syncPermissions($validated['permissions']);
+            UserPermissionCache::forgetForRole($role);
             $newPermissions = $role->permissions->pluck('name')->sort()->values()->all();
 
             if ($oldPermissions !== $newPermissions) {
@@ -184,6 +187,8 @@ class RoleController extends BaseController
         if ($usersCount > 0) {
             return $this->error('Bu role sahip kullanıcılar var. Önce kullanıcıların rollerini değiştirin.', 400);
         }
+
+        UserPermissionCache::forgetForRole($role);
 
         // Observer delete log yazar
         $role->delete();

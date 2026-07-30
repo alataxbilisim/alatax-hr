@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { BsBuilding } from 'react-icons/bs';
+import { BsBuilding, BsSearch } from 'react-icons/bs';
 import { useTranslation } from '@shared/i18n';
 import { RootState } from '../../store';
 import {
@@ -27,68 +27,52 @@ const ModuleRail: React.FC<ModuleRailProps> = ({
   const location = useLocation();
   const { t } = useTranslation('common');
   const { user } = useSelector((state: RootState) => state.auth);
+  const [query, setQuery] = useState('');
 
-  const hasModuleAccess = (module: ModuleGroup): boolean => {
-    if (!user) return false;
+  const userCtx = user
+    ? { type: user.type, permissions: user.permissions || [] }
+    : null;
 
-    if (user.type === 'company_admin' || user.type === 'super_admin') {
-      return true;
-    }
-
-    if (!module.permissionModule) return true;
-
-    const permissions = user.permissions || [];
-    const permModule = module.permissionModule;
-
-    if (permissions.includes('*') || permissions.includes(`${permModule}.*`)) {
-      return true;
-    }
-
-    return permissions.some((p: string) => p.startsWith(`${permModule}.`));
-  };
-
-  const filterByLicenseAndPerm = (modules: ModuleGroup[]): ModuleGroup[] =>
+  const filterVisible = (modules: ModuleGroup[]): ModuleGroup[] =>
     modules.filter((module) => {
+      if (module.hidden) return false;
       if (module.moduleKey && !activeModules.includes(module.moduleKey)) {
         return false;
       }
-      if (!hasModuleAccess(module)) {
-        return false;
-      }
-      const visibleItems = getFilteredMenuItems(
-        module,
-        user
-          ? { type: user.type, permissions: user.permissions || [] }
-          : null,
-        activeModules
-      );
-      return visibleItems.length > 0;
+      return getFilteredMenuItems(module, userCtx, activeModules).length > 0;
     });
 
-  const operational = filterByLicenseAndPerm(operationalModuleGroups);
+  const operational = filterVisible(operationalModuleGroups);
 
-  // Ayarlar: giriş yapmış herkes; Yönetim: modül yetkisi
   const pinned = pinnedModuleGroups.filter((module) => {
-    if (module.id === 'account') {
-      return !!user;
-    }
-    if (!hasModuleAccess(module)) {
-      return false;
-    }
-    return (
-      getFilteredMenuItems(
-        module,
-        user
-          ? { type: user.type, permissions: user.permissions || [] }
-          : null,
-        activeModules
-      ).length > 0
-    );
+    if (module.id === 'account') return !!user;
+    if (module.hidden) return false;
+    return getFilteredMenuItems(module, userCtx, activeModules).length > 0;
   });
 
+  const matchesQuery = (module: ModuleGroup): boolean => {
+    const q = query.trim().toLocaleLowerCase('tr');
+    if (!q) return true;
+    const label = t(module.labelKey).toLocaleLowerCase('tr');
+    if (label.includes(q)) return true;
+    return getFilteredMenuItems(module, userCtx, activeModules).some((item) =>
+      t(item.labelKey).toLocaleLowerCase('tr').includes(q)
+    );
+  };
+
+  const filteredOperational = operational.filter(matchesQuery);
+  const filteredPinned = pinned.filter(matchesQuery);
+
   const isModuleActive = (module: ModuleGroup): boolean => {
-    if (module.basePath) {
-      return location.pathname.startsWith(module.basePath);
+    if (module.basePath && location.pathname.startsWith(module.basePath)) {
+      return true;
+    }
+    if (
+      module.matchPrefixes?.some(
+        (p) => location.pathname === p || location.pathname.startsWith(`${p}/`)
+      )
+    ) {
+      return true;
     }
     return module.items.some(
       (item) =>
@@ -132,15 +116,27 @@ const ModuleRail: React.FC<ModuleRailProps> = ({
         </div>
       </div>
 
+      <div className="rail-search" role="search">
+        <BsSearch aria-hidden className="rail-search-icon" />
+        <input
+          type="search"
+          className="rail-search-input"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={t('nav.railSearchPlaceholder')}
+          aria-label={t('nav.railSearchPlaceholder')}
+        />
+      </div>
+
       <nav className="rail-nav" aria-label={t('nav.menu')}>
-        {operational.map(renderRailItem)}
+        {filteredOperational.map(renderRailItem)}
       </nav>
 
-      {pinned.length > 0 && (
+      {filteredPinned.length > 0 && (
         <>
           <div className="rail-pinned-separator" aria-hidden />
           <nav className="rail-pinned" aria-label={t('nav.pinnedSection')}>
-            {pinned.map(renderRailItem)}
+            {filteredPinned.map(renderRailItem)}
           </nav>
         </>
       )}

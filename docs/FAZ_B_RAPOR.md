@@ -503,3 +503,60 @@ Commits: `chore(db): migration baseline` · `perf(db): jsonb gin indeksleri` · 
 
 CI: https://github.com/alataxbilisim/alatax-hr/actions/runs/30534216541
 
+---
+
+## E0 — Bilgi mimarisi v2 (14 modül + rota + page_key)
+
+**Tarih:** 2026-07-30 · Branch: `faz4-form-engine`  
+**Permission rename:** yok · **Yeni sayfa:** yok · **KULLANICI GÖRSEL KONTROLÜ BEKLİYOR (borç)**
+
+### Teşhis (orphan)
+
+| Tip | Örnek |
+|-----|--------|
+| Route var / menü yok | detay/form (`/employees/:id`, `/reports/:id` …) — beklenen |
+| Menü Spec boşluğu kapatıldı | Organizasyon ayrı rail; onboarding ayrı; iletişim/ücret gruplandı |
+| İSG | slot `ohs` hidden — menüde yok |
+| Orphan FE API | `HrAnalyticsController` — FE caller yoktu → **SİLİNDİ** (+ Wave3 test güncellendi) |
+
+### Rail (14 + pin)
+
+1 Ana Sayfa · 2 Personel · 3 Organizasyon · 4 İşe Alım · 5 Oryantasyon & Çıkış · 6 PDKS · 7 İzin · 8 Ücret & Ödemeler · 9 Performans · 10 Eğitim · 11 İSG (gizli) · 12 Varlık & Doküman · 13 İletişim · 14 Analitik · pin: Ayarlar · Yönetim
+
+Gizli slotlar: disiplin, vekalet, avans, harcırah, kariyer-yedekleme, LMS, öneri, PDKS cihaz/QR menü.
+
+### Eski → yeni yönlendirme (Navigate replace)
+
+| Eski | Yeni |
+|------|------|
+| `/attendance/*` | `/pdks/*` |
+| `/employees/departments\|positions\|organization` | `/organization/*` |
+| `/branches` | `/organization/branches` |
+| `/payslips`, `/expenses/*`, `/employees/salary-*` | `/payroll/*` |
+| `/announcements`, `/surveys` | `/communication/*` |
+
+### page_key
+
+~80 stabil key (`pageRegistry.ts` + `tests/fixtures/e0_nav_registry.json`). D4a SettingsRegistry page_keys hizalandı (`leaves.balances.list` vb.).
+
+### /me cache
+
+`UserPermissionCache` — rol sync / user deaktif / panel revoke → anında forget (+ Spatie registrar). Test: `MePermissionCacheInvalidationTest`.
+
+### Nav kalite
+
+Rail arama · breadcrumb modül>sayfa · `findModuleIdByPath` · boş yetkisiz modül render edilmez · 404 `NotFoundPage`.
+
+### Test / commit
+
+| Kanıt | Sonuç |
+|-------|--------|
+| Suite ×3 | 604 passed (2437) — 594s / 581s / 596s |
+| Random | 604 passed — seed `1785410660` (603s) |
+| Sentinel | `admin@demo.test` OK |
+| tsc×3 + lint | 0 |
+
+Commit: `refactor(nav): E0 bilgi mimarisi v2 — 14 modül + rota grupları + page_key registry`
+
+CI: (push sonrası)
+

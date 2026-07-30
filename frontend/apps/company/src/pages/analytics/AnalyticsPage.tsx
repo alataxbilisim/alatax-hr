@@ -10,9 +10,8 @@ function isDashboardPayload(v: unknown): v is DashboardPayload {
 }
 
 /**
- * D1g — /analytics artık sistem panosunu (hr-analytics.overview) açar.
- * Eski HrAnalyticsController uçları deprecate (DUR — Faz 6 temizlik).
- * DataScope motor üzerinden uygulanır (eski sabit sorgularda yoktu).
+ * D1g/E0 — /analytics sistem panosunu (hr-analytics.overview) açar.
+ * HrAnalyticsController kaldırıldı (FE caller yoktu).
  */
 const AnalyticsPage: React.FC = () => {
   const { t } = useTranslation('common');
