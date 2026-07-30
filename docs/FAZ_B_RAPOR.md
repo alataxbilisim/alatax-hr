@@ -450,3 +450,56 @@ Commit’ler: `8e343d5` feat(B-3); `1c6b5b4` policy ad fix.
 | Select sentinel | **PASSED** |
 | DB wipe | **yok** |
 
+---
+
+## D3 — Teknik borç (migration baseline + JSONB + bundle + N+1 + ölü kod)
+
+**Tarih:** 2026-07-30 · Branch: `faz4-form-engine`  
+**Davranış değişikliği:** yok (yalnız performans/temizlik)
+
+### Madde 1 — Migration baseline
+
+| | |
+|--|--|
+| Yöntem | Laravel schema dump (`pg_dump`; `--prune` yok) |
+| Dosya | `backend/database/schema/pgsql-schema.sql` (~423 kB) |
+| App/CI | `postgresql-client` (Dockerfile + CI step) |
+| Güvence | Dump yalnız **boş** DB'de yüklenir; migrations kayıtlı mevcut kurulumlar etkilenmez |
+| Temiz / dolu | temiz: schema load OK; dolu: `migrate` noop + sentinel OK |
+| Şema diff | Katalog tablo/index/CHECK **birebir**; ham dump metni yalnız CHECK ARRAY cast kozmetiği |
+
+### Madde 2 — JSONB GIN
+
+| Kolon | Kanıt | Index |
+|-------|--------|--------|
+| `saved_reports.share_user_ids` | `@>` VisibleTo | GIN `jsonb_path_ops` |
+| `saved_reports.share_role_ids` | `@>` VisibleTo | GIN `jsonb_path_ops` |
+
+EXPLAIN (`enable_seqscan=off`): Bitmap Index Scan on `saved_reports_share_user_ids_gin`.  
+custom_fields/`->>` dinamik — GIN yok.
+
+### Madde 3 — Bundle
+
+Ana chunk ~3.6 MB → **~2.15 MB** (gzip 607 kB). Hedef &lt;1 MB ulaşılamadı. Lazy: Nivo raporları, org, kanban, form/workflow editor, analytics, kvkk. Kalan: shared vendor.
+
+### Madde 4 — N+1 /me
+
+Lookup `forType` memo + singleton; `/me` `fresh()` kaldırıldı; permissions 60 sn cache + `permissions_version`. Yetki listesi aynı.
+
+### Madde 5 — Ölü kod
+
+`analyticsApi` silindi. `HrAnalyticsController` route **DUR** (Faz 6). MySQL Docker servisi duruyor — dokunulmadı.
+
+### Test / commits
+
+| Kanıt | Sonuç |
+|-------|--------|
+| Suite ×3 | 599 passed (2366 assertions) — 616s / 588s / 589s |
+| Random | 599 passed — seed `1785405493` (609s) |
+| Sentinel | `admin@demo.test` OK |
+| tsc×3 + eslint | 0 |
+
+Commits: `chore(db): migration baseline` · `perf(db): jsonb gin indeksleri` · `perf(fe): bundle code-splitting` · `perf(api): n+1 ve /me payload` · `chore: ölü kod temizliği`
+
+CI: push sonrası Actions run (aşağıda güncellenir).
+

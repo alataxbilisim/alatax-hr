@@ -991,16 +991,6 @@ export const expensesApi = {
   },
 };
 
-// Analytics API
-export const analyticsApi = {
-  summary: () => api.get('/analytics/summary'),
-  workforce: () => api.get('/analytics/workforce'),
-  turnover: () => api.get('/analytics/turnover'),
-  recruitment: (params?: Record<string, unknown>) => api.get('/analytics/recruitment', { params }),
-  leaves: () => api.get('/analytics/leaves'),
-  training: (params?: Record<string, unknown>) => api.get('/analytics/training', { params }),
-};
-
 /** D1a/D1b — Rapor motoru (semantic layer) */
 export type ReportFieldRole = 'dimension' | 'measure';
 
