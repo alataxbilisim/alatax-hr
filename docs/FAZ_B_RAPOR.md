@@ -558,5 +558,5 @@ Rail arama · breadcrumb modül>sayfa · `findModuleIdByPath` · boş yetkisiz m
 
 Commit: `refactor(nav): E0 bilgi mimarisi v2 — 14 modül + rota grupları + page_key registry`
 
-CI: (push sonrası)
+CI: https://github.com/alataxbilisim/alatax-hr/actions/runs/30539165131
 
