@@ -10,9 +10,11 @@ use App\Models\LeaveRequest;
 use App\Models\LeaveType;
 use App\Services\CustomFieldValidationService;
 use App\Services\Leaves\LeaveRequestCancelService;
+use App\Services\WorkflowService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class PortalLeaveController extends BaseController
@@ -20,6 +22,7 @@ class PortalLeaveController extends BaseController
     public function __construct(
         protected LeaveRequestCancelService $cancelService,
         protected CustomFieldValidationService $customFieldValidation,
+        protected WorkflowService $workflowService,
     ) {}
 
     /**
@@ -172,13 +175,32 @@ class PortalLeaveController extends BaseController
                     'reason' => $validated['reason'] ?? null,
                     'custom_fields' => $customFields,
                     'document_path' => $documentPath,
-                    'status' => 'pending',
+                    'status' => LeaveRequest::STATUS_PENDING,
                 ]);
             });
 
-            ActivityLog::log('leave_requested', $leaveRequest, 'İzin talebi oluşturuldu: '.$leaveRequest->leaveType->name.' - '.$totalDays.' gün');
+            // Company LeaveRequestController ile aynı köprü — portal da ApprovalFlowEngine'e girer
+            $record = $this->workflowService->startWorkflow($leaveRequest, [
+                'total_days' => $totalDays,
+                'leave_type_id' => (int) $validated['leave_type_id'],
+                'requester_id' => $user->id,
+            ]);
 
-            return $this->created($leaveRequest, 'İzin talebi başarıyla oluşturuldu');
+            if (! $record) {
+                Log::warning('portal.leave.request.created_without_workflow', [
+                    'leave_request_id' => $leaveRequest->id,
+                    'company_id' => $leaveRequest->company_id,
+                ]);
+            }
+
+            $leaveRequest->load('leaveType:id,name');
+            ActivityLog::log(
+                'leave_requested',
+                $leaveRequest,
+                'İzin talebi oluşturuldu: '.($leaveRequest->leaveType?->name ?? '').' - '.$totalDays.' gün'
+            );
+
+            return $this->created($leaveRequest->fresh(['leaveType']), 'İzin talebi başarıyla oluşturuldu');
         });
     }
 
