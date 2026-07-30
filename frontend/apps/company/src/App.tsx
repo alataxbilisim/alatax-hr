@@ -23,7 +23,7 @@ const PORTAL_LOGIN_URL =
   (import.meta.env.VITE_PORTAL_URL as string | undefined)?.replace(/\/$/, '') ||
   'http://localhost:3003';
 
-/** Auth + panel erişimi (portal-only personel engeli) */
+/** Auth + panel eriÅŸimi (portal-only personel engeli) */
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, user, isLoading } = useSelector((state: RootState) => state.auth);
   const navigate = useNavigate();
@@ -57,7 +57,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     return (
       <div className="loading-screen">
         <div className="loading-spinner" style={{ width: 40, height: 40 }}></div>
-        <p style={{ marginTop: '1rem', color: 'var(--text-secondary)' }}>Yükleniyor...</p>
+        <p style={{ marginTop: '1rem', color: 'var(--text-secondary)' }}>YÃ¼kleniyor...</p>
       </div>
     );
   }
@@ -89,7 +89,7 @@ const withPermission = (
 ) => (
   <ProtectedRoute>
     <PermissionProtectedRoute module={module} page={pageKey} action={action}>
-      {page}
+      <React.Suspense fallback={<div className="page-loading">â€¦</div>}>{page}</React.Suspense>
     </PermissionProtectedRoute>
   </ProtectedRoute>
 );
@@ -118,7 +118,6 @@ import WebhooksPage from './pages/settings/WebhooksPage';
 import CustomFieldsIndexPage from './pages/settings/CustomFieldsIndexPage';
 import LookupsPage from './pages/lookups/LookupsPage';
 import SettingsRegistryPage from './pages/settings/SettingsRegistryPage';
-import KvkkPage from './pages/kvkk/KvkkPage';
 import AccountProfilePage from './pages/account/AccountProfilePage';
 import AccountSecurityPage from './pages/account/AccountSecurityPage';
 import AccountPreferencesPage from './pages/account/AccountPreferencesPage';
@@ -130,10 +129,8 @@ import EmployeesPage from './pages/employees/EmployeesPage';
 import EmployeeForm from './components/EmployeeForm';
 import EmployeeFormEnginePage from './pages/employees/EmployeeFormEnginePage';
 import LeaveRequestFormEnginePage from './pages/leaves/LeaveRequestFormEnginePage';
-import FormLayoutEditorPage from './pages/settings/FormLayoutEditorPage';
 import FormsIndexPage from './pages/settings/FormsIndexPage';
 import WorkflowsListPage from './pages/settings/WorkflowsListPage';
-import WorkflowEditorPage from './pages/settings/WorkflowEditorPage';
 import NotificationTemplatesPage from './pages/settings/NotificationTemplatesPage';
 import AssetFormEnginePage from './pages/assets/AssetFormEnginePage';
 import EmployeeDetailPage from './pages/employees/EmployeeDetailPage';
@@ -143,8 +140,6 @@ import PositionsPage from './pages/employees/PositionsPage';
 import SalaryBandsPage from './pages/employees/SalaryBandsPage';
 import SalaryReviewPeriodsPage from './pages/employees/SalaryReviewPeriodsPage';
 import SalaryReviewDetailPage from './pages/employees/SalaryReviewDetailPage';
-import OrganizationChartPage from './pages/employees/OrganizationChartPage';
-import EmployeeReportsPage from './pages/employees/EmployeeReportsPage';
 
 // Module Custom Fields Pages
 import LeaveCustomFieldsPage from './pages/leaves/LeaveCustomFieldsPage';
@@ -156,7 +151,6 @@ import AssetCustomFieldsPage from './pages/assets/AssetCustomFieldsPage';
 
 // Recruitment Module
 import JobPositionsPage from './pages/recruitment/JobPositionsPage';
-import ApplicationsPage from './pages/recruitment/ApplicationsPage';
 import CvPoolPage from './pages/recruitment/CvPoolPage';
 import InterviewsPage from './pages/recruitment/InterviewsPage';
 import RecruitmentReportsPage from './pages/recruitment/RecruitmentReportsPage';
@@ -164,7 +158,6 @@ import RecruitmentReportsPage from './pages/recruitment/RecruitmentReportsPage';
 // Documents Module
 import DocumentsPage from './pages/documents/DocumentsPage';
 import DocumentDetailPage from './pages/documents/DocumentDetailPage';
-import DocumentReportsPage from './pages/documents/DocumentReportsPage';
 
 // Leaves Module
 import LeavesPage from './pages/leaves/LeavesPage';
@@ -183,8 +176,6 @@ import AttendanceReportsPage from './pages/attendance/AttendanceReportsPage';
 import OnboardingPage from './pages/onboarding/OnboardingPage';
 import ProcessDetailPage from './pages/onboarding/ProcessDetailPage';
 
-// Performance Module
-import PerformancePage from './pages/performance/PerformancePage';
 import ReviewDetailPage from './pages/performance/ReviewDetailPage';
 
 // Training Module
@@ -202,23 +193,35 @@ import SurveysPage from './pages/surveys/SurveysPage';
 import AnnouncementsPage from './pages/announcements/AnnouncementsPage';
 import PayslipsAdminPage from './pages/payroll/PayslipsAdminPage';
 
-// Analytics Module
-import AnalyticsPage from './pages/analytics/AnalyticsPage';
-
-/** D1b — rapor motoru sayfaları lazy (echarts/tanstack bundle ayrımı) */
+/** D1b/D3 â€” aÄŸÄ±r sayfalar lazy (Nivo/org/kanban/form builder/analytics/kvkk) */
 const ReportsListPage = React.lazy(() => import('./pages/reports/ReportsListPage'));
 const ReportBuilderPage = React.lazy(() => import('./pages/reports/ReportBuilderPage'));
 const MeasuresLibraryPage = React.lazy(() => import('./pages/reports/MeasuresLibraryPage'));
 const ReportSchedulesPage = React.lazy(() => import('./pages/reports/ReportSchedulesPage'));
 const DashboardsListPage = React.lazy(() => import('./pages/dashboards/DashboardsListPage'));
 const DashboardViewPage = React.lazy(() => import('./pages/dashboards/DashboardViewPage'));
+const EmployeeReportsPage = React.lazy(() => import('./pages/employees/EmployeeReportsPage'));
+const OrganizationChartPage = React.lazy(() => import('./pages/employees/OrganizationChartPage'));
+const DocumentReportsPage = React.lazy(() => import('./pages/documents/DocumentReportsPage'));
+const ApplicationsPage = React.lazy(() => import('./pages/recruitment/ApplicationsPage'));
+const PerformancePage = React.lazy(() => import('./pages/performance/PerformancePage'));
+const AnalyticsPage = React.lazy(() => import('./pages/analytics/AnalyticsPage'));
+const KvkkPage = React.lazy(() => import('./pages/kvkk/KvkkPage'));
+const FormLayoutEditorPage = React.lazy(() => import('./pages/settings/FormLayoutEditorPage'));
+const WorkflowEditorPage = React.lazy(() => import('./pages/settings/WorkflowEditorPage'));
+
+const PageFallback = () => <div className="page-loading">â€¦</div>;
+
+const withSuspense = (node: React.ReactNode): React.ReactElement => (
+  <React.Suspense fallback={<PageFallback />}>{node}</React.Suspense>
+);
 
 const App: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { mode, density } = useSelector((state: RootState) => state.theme);
   const { isAuthenticated: authIsAuthenticated } = useSelector((state: RootState) => state.auth);
 
-  // İlk yüklemede tam checkAuth (izin dump dahil)
+  // Ä°lk yÃ¼klemede tam checkAuth (izin dump dahil)
   useEffect(() => {
     dispatch(checkAuth());
   }, [dispatch]);
@@ -235,7 +238,7 @@ const App: React.FC = () => {
     return () => window.removeEventListener('focus', handleFocus);
   }, [dispatch, authIsAuthenticated]);
 
-  // Periyodik sessiz yenileme — 5 dk (önceki 30 sn agresifti + remount döngüsü)
+  // Periyodik sessiz yenileme â€” 5 dk (Ã¶nceki 30 sn agresifti + remount dÃ¶ngÃ¼sÃ¼)
   useEffect(() => {
     if (!authIsAuthenticated) return;
 
@@ -274,10 +277,10 @@ const App: React.FC = () => {
           />
         </Route>
 
-        {/* Public kariyer başvurusu (auth yok) */}
+        {/* Public kariyer baÅŸvurusu (auth yok) */}
         <Route path="/careers/:companySlug/:positionSlug" element={<PublicCareerApplyPage />} />
 
-        {/* PDKS kiosk — tam ekran (MainLayout dışında) */}
+        {/* PDKS kiosk â€” tam ekran (MainLayout dÄ±ÅŸÄ±nda) */}
         <Route
           path="/attendance/kiosk"
           element={
@@ -411,7 +414,7 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <ModuleProtectedRoute moduleKey={MODULE_KEYS.JOB_APPLICATIONS}>
-                  <ApplicationsPage />
+                  {withSuspense(<ApplicationsPage />)}
                 </ModuleProtectedRoute>
               </ProtectedRoute>
             }
@@ -483,7 +486,7 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <ModuleProtectedRoute moduleKey={MODULE_KEYS.DOCUMENT_MANAGEMENT}>
-                  <DocumentReportsPage />
+                  {withSuspense(<DocumentReportsPage />)}
                 </ModuleProtectedRoute>
               </ProtectedRoute>
             }
@@ -707,7 +710,7 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <ModuleProtectedRoute moduleKey={MODULE_KEYS.PERFORMANCE}>
-                  <PerformancePage />
+                  {withSuspense(<PerformancePage />)}
                 </ModuleProtectedRoute>
               </ProtectedRoute>
             }
@@ -767,7 +770,7 @@ const App: React.FC = () => {
             }
           />
           
-          {/* Assets Module — static paths before :id */}
+          {/* Assets Module â€” static paths before :id */}
           <Route
             path="/assets"
             element={
@@ -853,19 +856,19 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <ModuleProtectedRoute moduleKey={MODULE_KEYS.HR_ANALYTICS}>
-                  <AnalyticsPage />
+                  {withSuspense(<AnalyticsPage />)}
                 </ModuleProtectedRoute>
               </ProtectedRoute>
             }
           />
 
-          {/* Rapor Motoru (D1b) — lazy + permission */}
+          {/* Rapor Motoru (D1b) â€” lazy + permission */}
           <Route
             path="/reports/schedules"
             element={
               <ProtectedRoute>
                 <PermissionProtectedRoute module="reports" page="schedules" action="view">
-                  <React.Suspense fallback={<div className="page-loading">…</div>}>
+                  <React.Suspense fallback={<div className="page-loading">â€¦</div>}>
                     <ReportSchedulesPage />
                   </React.Suspense>
                 </PermissionProtectedRoute>
@@ -877,7 +880,7 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <PermissionProtectedRoute module="reports" page="measures" action="view">
-                  <React.Suspense fallback={<div className="page-loading">…</div>}>
+                  <React.Suspense fallback={<div className="page-loading">â€¦</div>}>
                     <MeasuresLibraryPage />
                   </React.Suspense>
                 </PermissionProtectedRoute>
@@ -889,7 +892,7 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <PermissionProtectedRoute module="reports" page="definitions" action="view">
-                  <React.Suspense fallback={<div className="page-loading">…</div>}>
+                  <React.Suspense fallback={<div className="page-loading">â€¦</div>}>
                     <ReportsListPage />
                   </React.Suspense>
                 </PermissionProtectedRoute>
@@ -901,7 +904,7 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <PermissionProtectedRoute module="reports" page="definitions" action="create">
-                  <React.Suspense fallback={<div className="page-loading">…</div>}>
+                  <React.Suspense fallback={<div className="page-loading">â€¦</div>}>
                     <ReportBuilderPage />
                   </React.Suspense>
                 </PermissionProtectedRoute>
@@ -913,7 +916,7 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <PermissionProtectedRoute module="reports" page="definitions" action="edit">
-                  <React.Suspense fallback={<div className="page-loading">…</div>}>
+                  <React.Suspense fallback={<div className="page-loading">â€¦</div>}>
                     <ReportBuilderPage />
                   </React.Suspense>
                 </PermissionProtectedRoute>
@@ -925,7 +928,7 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <PermissionProtectedRoute module="reports" page="definitions" action="view">
-                  <React.Suspense fallback={<div className="page-loading">…</div>}>
+                  <React.Suspense fallback={<div className="page-loading">â€¦</div>}>
                     <ReportBuilderPage />
                   </React.Suspense>
                 </PermissionProtectedRoute>
@@ -939,7 +942,7 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <PermissionProtectedRoute module="reports" page="dashboards" action="view">
-                  <React.Suspense fallback={<div className="page-loading">…</div>}>
+                  <React.Suspense fallback={<div className="page-loading">â€¦</div>}>
                     <DashboardsListPage />
                   </React.Suspense>
                 </PermissionProtectedRoute>
@@ -951,7 +954,7 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <PermissionProtectedRoute module="reports" page="dashboards" action="view">
-                  <React.Suspense fallback={<div className="page-loading">…</div>}>
+                  <React.Suspense fallback={<div className="page-loading">â€¦</div>}>
                     <DashboardViewPage />
                   </React.Suspense>
                 </PermissionProtectedRoute>
@@ -999,7 +1002,7 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <PermissionProtectedRoute module="management" page="kvkk" action="view">
-                  <KvkkPage />
+                  {withSuspense(<KvkkPage />)}
                 </PermissionProtectedRoute>
               </ProtectedRoute>
             }
@@ -1033,7 +1036,7 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <PermissionProtectedRoute module="management" page="forms" action="view">
-                  <FormLayoutEditorPage />
+                  {withSuspense(<FormLayoutEditorPage />)}
                 </PermissionProtectedRoute>
               </ProtectedRoute>
             }
@@ -1053,7 +1056,7 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <PermissionProtectedRoute module="management" page="workflows" action="view">
-                  <WorkflowEditorPage />
+                  {withSuspense(<WorkflowEditorPage />)}
                 </PermissionProtectedRoute>
               </ProtectedRoute>
             }
@@ -1077,7 +1080,7 @@ const App: React.FC = () => {
             element={<ProtectedRoute><BranchDetailPage /></ProtectedRoute>}
           />
 
-          {/* Kişisel hesap — permission gerekmez */}
+          {/* KiÅŸisel hesap â€” permission gerekmez */}
           <Route path="/account" element={<ProtectedRoute><Navigate to="/account/profile" replace /></ProtectedRoute>} />
           <Route
             path="/account/profile"
