@@ -5,9 +5,80 @@ import { getErrorMessage } from '@shared/services/apiHelpers';
 import { usePermission } from '@shared/hooks';
 import toast from 'react-hot-toast';
 
-type Tab = 'inventory' | 'notices' | 'consents' | 'requests';
+type Tab =
+  | 'inventory'
+  | 'notices'
+  | 'consents'
+  | 'requests'
+  | 'policies'
+  | 'destruction'
+  | 'destructionLogs'
+  | 'legalHolds'
+  | 'breaches';
 
-const TAB_KEYS: Tab[] = ['inventory', 'notices', 'consents', 'requests'];
+const TAB_KEYS: Tab[] = [
+  'inventory',
+  'notices',
+  'consents',
+  'requests',
+  'policies',
+  'destruction',
+  'destructionLogs',
+  'legalHolds',
+  'breaches',
+];
+
+interface IdRow {
+  id: number;
+}
+
+interface PolicyRow extends IdRow {
+  name: string;
+  data_category: string;
+  subject_type: string;
+  retention_months: number;
+  strategy: string;
+  active: boolean;
+}
+
+interface CandidateRow extends IdRow {
+  subject_type: string;
+  subject_id: number;
+  data_category: string;
+  status: string;
+  strategy: string;
+  record_count: number;
+}
+
+interface DestructionSummary {
+  pending_count: number;
+  deferred_count: number;
+  active_policy_count: number;
+  no_policy_defined: boolean;
+}
+
+interface LogRow extends IdRow {
+  subject_type: string;
+  subject_id: number;
+  strategy: string;
+  rows_affected: number;
+  outcome: string;
+  created_at?: string;
+}
+
+interface HoldRow extends IdRow {
+  subject_type: string;
+  subject_id: number;
+  reason: string;
+  active: boolean;
+}
+
+interface BreachRow extends IdRow {
+  description: string;
+  severity: string;
+  status: string;
+  kvkk_deadline_overdue?: boolean;
+}
 
 interface ActivityRow {
   id: number;
@@ -88,6 +159,10 @@ function isRequestSummary(v: unknown): v is RequestSummary {
   return typeof v === 'object' && v !== null && 'open_count' in v;
 }
 
+function isDestructionSummary(v: unknown): v is DestructionSummary {
+  return typeof v === 'object' && v !== null && 'pending_count' in v && 'no_policy_defined' in v;
+}
+
 const KvkkPage: React.FC = () => {
   const { t } = useTranslation('common');
   const { canEdit, hasPermission } = usePermission();
@@ -95,6 +170,13 @@ const KvkkPage: React.FC = () => {
   const canViewRequests = hasPermission('management', 'kvkk_requests', 'view')
     || hasPermission('management', 'kvkk', 'view');
   const canRespondRequests = hasPermission('management', 'kvkk_requests', 'respond');
+
+  const canDestroy = hasPermission('management', 'kvkk', 'destruction')
+    || hasPermission('management', 'kvkk', 'edit');
+  const canLegalHold = hasPermission('management', 'kvkk', 'legal_hold')
+    || hasPermission('management', 'kvkk', 'edit');
+  const canViewBreaches = hasPermission('management', 'kvkk', 'breaches')
+    || hasPermission('management', 'kvkk', 'view');
 
   const [tab, setTab] = useState<Tab>('inventory');
   const [loading, setLoading] = useState(true);
@@ -106,6 +188,14 @@ const KvkkPage: React.FC = () => {
   const [requestSummary, setRequestSummary] = useState<RequestSummary | null>(null);
   const [selectedRequestId, setSelectedRequestId] = useState<number | null>(null);
   const [responseBody, setResponseBody] = useState('');
+  const [policies, setPolicies] = useState<PolicyRow[]>([]);
+  const [candidates, setCandidates] = useState<CandidateRow[]>([]);
+  const [destructionSummary, setDestructionSummary] = useState<DestructionSummary | null>(null);
+  const [logs, setLogs] = useState<LogRow[]>([]);
+  const [holds, setHolds] = useState<HoldRow[]>([]);
+  const [breaches, setBreaches] = useState<BreachRow[]>([]);
+  const [selectedCandidateIds, setSelectedCandidateIds] = useState<number[]>([]);
+  const [decisionReason, setDecisionReason] = useState('');
 
   const [draftTitle, setDraftTitle] = useState('');
   const [draftBody, setDraftBody] = useState('');
@@ -131,6 +221,31 @@ const KvkkPage: React.FC = () => {
         setRequests(Array.isArray(raw) ? raw.filter(isRequestRow) : []);
         const sum: unknown = sumRes.data.data;
         setRequestSummary(isRequestSummary(sum) ? sum : null);
+      } else if (tab === 'policies') {
+        const res = await kvkkApi.retentionPolicies.list({ per_page: 100 });
+        const raw: unknown = res.data.data;
+        setPolicies(Array.isArray(raw) ? raw.filter((v): v is PolicyRow => typeof v === 'object' && v !== null && 'name' in v) : []);
+      } else if (tab === 'destruction') {
+        const [cRes, sRes] = await Promise.all([
+          kvkkApi.destruction.candidates({ per_page: 50 }),
+          kvkkApi.destruction.summary(),
+        ]);
+        const raw: unknown = cRes.data.data;
+        setCandidates(Array.isArray(raw) ? raw.filter((v): v is CandidateRow => typeof v === 'object' && v !== null && 'subject_id' in v) : []);
+        const sum: unknown = sRes.data.data;
+        setDestructionSummary(isDestructionSummary(sum) ? sum : null);
+      } else if (tab === 'destructionLogs') {
+        const res = await kvkkApi.destruction.logs({ per_page: 50 });
+        const raw: unknown = res.data.data;
+        setLogs(Array.isArray(raw) ? raw.filter((v): v is LogRow => typeof v === 'object' && v !== null && 'outcome' in v) : []);
+      } else if (tab === 'legalHolds') {
+        const res = await kvkkApi.legalHolds.list({ per_page: 50 });
+        const raw: unknown = res.data.data;
+        setHolds(Array.isArray(raw) ? raw.filter((v): v is HoldRow => typeof v === 'object' && v !== null && 'reason' in v) : []);
+      } else if (tab === 'breaches') {
+        const res = await kvkkApi.breaches.list({ per_page: 50 });
+        const raw: unknown = res.data.data;
+        setBreaches(Array.isArray(raw) ? raw.filter((v): v is BreachRow => typeof v === 'object' && v !== null && 'severity' in v) : []);
       } else {
         const [cRes, mRes] = await Promise.all([
           kvkkApi.consents.list({ per_page: 100 }),
@@ -516,6 +631,318 @@ const KvkkPage: React.FC = () => {
               </div>
             </div>
           ) : null}
+        </div>
+      ) : null}
+
+      {!loading && tab === 'policies' ? (
+        <div>
+          <p className="text-muted" style={{ marginBottom: 'var(--sp-3)' }}>{t('kvkk.destruction.noPolicy')}</p>
+          {canEditKvkk ? (
+            <button
+              type="button"
+              className="btn btn--sm btn--primary"
+              style={{ marginBottom: 'var(--sp-3)' }}
+              onClick={() => {
+                void (async () => {
+                  try {
+                    await kvkkApi.retentionPolicies.seedDrafts();
+                    toast.success(t('kvkk.saveSuccess'));
+                    void load();
+                  } catch (error: unknown) {
+                    toast.error(getErrorMessage(error, t('kvkk.saveError')));
+                  }
+                })();
+              }}
+            >
+              {t('kvkk.destruction.seedDrafts')}
+            </button>
+          ) : null}
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>{t('kvkk.activityName')}</th>
+                  <th>category</th>
+                  <th>months</th>
+                  <th>strategy</th>
+                  <th>active</th>
+                </tr>
+              </thead>
+              <tbody>
+                {policies.map((p) => (
+                  <tr key={p.id}>
+                    <td>{p.name}</td>
+                    <td>{p.data_category}</td>
+                    <td>{p.retention_months}</td>
+                    <td>{p.strategy}</td>
+                    <td>{p.active ? '✓' : '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : null}
+
+      {!loading && tab === 'destruction' ? (
+        <div>
+          <p style={{ marginBottom: 'var(--sp-2)' }}>{t('kvkk.destruction.principle')}</p>
+          <p className="text-muted" style={{ marginBottom: 'var(--sp-3)' }}>{t('kvkk.destruction.backupNote')}</p>
+          {destructionSummary?.no_policy_defined ? (
+            <p style={{ color: 'var(--color-warning, #b45309)' }}>{t('kvkk.destruction.noPolicy')}</p>
+          ) : null}
+          <div style={{ display: 'flex', gap: 'var(--sp-2)', marginBottom: 'var(--sp-3)', flexWrap: 'wrap' }}>
+            <span>{t('kvkk.destruction.pending')}: {destructionSummary?.pending_count ?? 0}</span>
+            {canDestroy ? (
+              <>
+                <button
+                  type="button"
+                  className="btn btn--sm btn--ghost"
+                  onClick={() => {
+                    void (async () => {
+                      try {
+                        await kvkkApi.destruction.scan();
+                        toast.success(t('kvkk.destruction.scanDone'));
+                        void load();
+                      } catch (error: unknown) {
+                        toast.error(getErrorMessage(error, t('kvkk.saveError')));
+                      }
+                    })();
+                  }}
+                >
+                  {t('kvkk.destruction.scan')}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--sm btn--primary"
+                  disabled={selectedCandidateIds.length === 0}
+                  onClick={() => {
+                    void (async () => {
+                      try {
+                        await kvkkApi.destruction.approve({
+                          candidate_ids: selectedCandidateIds,
+                          dry_run_confirmed: true,
+                        });
+                        toast.success(t('kvkk.saveSuccess'));
+                        setSelectedCandidateIds([]);
+                        void load();
+                      } catch (error: unknown) {
+                        toast.error(getErrorMessage(error, t('kvkk.saveError')));
+                      }
+                    })();
+                  }}
+                >
+                  {t('kvkk.destruction.approve')}
+                </button>
+              </>
+            ) : null}
+          </div>
+          <input
+            className="form-control"
+            style={{ marginBottom: 'var(--sp-2)', maxWidth: '28rem' }}
+            value={decisionReason}
+            onChange={(e) => setDecisionReason(e.target.value)}
+            placeholder={t('kvkk.destruction.reason')}
+          />
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th />
+                  <th>#</th>
+                  <th>subject</th>
+                  <th>status</th>
+                  <th>strategy</th>
+                  <th>{t('kvkk.requests.actions')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {candidates.map((c) => (
+                  <tr key={c.id}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={selectedCandidateIds.includes(c.id)}
+                        onChange={(e) => {
+                          setSelectedCandidateIds((prev) =>
+                            e.target.checked ? [...prev, c.id] : prev.filter((id) => id !== c.id),
+                          );
+                        }}
+                      />
+                    </td>
+                    <td>{c.id}</td>
+                    <td>{c.subject_type}:{c.subject_id}</td>
+                    <td>{c.status}</td>
+                    <td>{c.strategy}</td>
+                    <td style={{ display: 'flex', gap: 'var(--sp-1)', flexWrap: 'wrap' }}>
+                      {canDestroy ? (
+                        <>
+                          <button
+                            type="button"
+                            className="btn btn--sm btn--ghost"
+                            onClick={() => {
+                              void (async () => {
+                                try {
+                                  await kvkkApi.destruction.dryRun(c.id);
+                                  toast.success(t('kvkk.destruction.dryRun'));
+                                } catch (error: unknown) {
+                                  toast.error(getErrorMessage(error, t('kvkk.saveError')));
+                                }
+                              })();
+                            }}
+                          >
+                            {t('kvkk.destruction.dryRun')}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn--sm btn--ghost"
+                            onClick={() => {
+                              void (async () => {
+                                try {
+                                  await kvkkApi.destruction.decide(c.id, {
+                                    decision: 'defer',
+                                    reason: decisionReason || t('kvkk.destruction.reason'),
+                                    defer_until: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10),
+                                  });
+                                  toast.success(t('kvkk.saveSuccess'));
+                                  void load();
+                                } catch (error: unknown) {
+                                  toast.error(getErrorMessage(error, t('kvkk.saveError')));
+                                }
+                              })();
+                            }}
+                          >
+                            {t('kvkk.destruction.defer')}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn--sm btn--ghost"
+                            onClick={() => {
+                              void (async () => {
+                                try {
+                                  await kvkkApi.destruction.decide(c.id, {
+                                    decision: 'exclude',
+                                    reason: decisionReason || t('kvkk.destruction.reason'),
+                                  });
+                                  toast.success(t('kvkk.saveSuccess'));
+                                  void load();
+                                } catch (error: unknown) {
+                                  toast.error(getErrorMessage(error, t('kvkk.saveError')));
+                                }
+                              })();
+                            }}
+                          >
+                            {t('kvkk.destruction.exclude')}
+                          </button>
+                        </>
+                      ) : null}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : null}
+
+      {!loading && tab === 'destructionLogs' ? (
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>subject</th>
+                <th>strategy</th>
+                <th>rows</th>
+                <th>outcome</th>
+              </tr>
+            </thead>
+            <tbody>
+              {logs.map((l) => (
+                <tr key={l.id}>
+                  <td>{l.id}</td>
+                  <td>{l.subject_type}:{l.subject_id}</td>
+                  <td>{l.strategy}</td>
+                  <td>{l.rows_affected}</td>
+                  <td>{l.outcome}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
+
+      {!loading && tab === 'legalHolds' && canLegalHold ? (
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>subject</th>
+                <th>{t('kvkk.destruction.reason')}</th>
+                <th>active</th>
+                <th>{t('kvkk.requests.actions')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {holds.map((h) => (
+                <tr key={h.id}>
+                  <td>{h.id}</td>
+                  <td>{h.subject_type}:{h.subject_id}</td>
+                  <td>{h.reason}</td>
+                  <td>{h.active ? '✓' : '—'}</td>
+                  <td>
+                    {h.active ? (
+                      <button
+                        type="button"
+                        className="btn btn--sm btn--ghost"
+                        onClick={() => {
+                          void (async () => {
+                            try {
+                              await kvkkApi.legalHolds.release(h.id);
+                              toast.success(t('kvkk.saveSuccess'));
+                              void load();
+                            } catch (error: unknown) {
+                              toast.error(getErrorMessage(error, t('kvkk.saveError')));
+                            }
+                          })();
+                        }}
+                      >
+                        {t('kvkk.legalHold.release')}
+                      </button>
+                    ) : null}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
+
+      {!loading && tab === 'breaches' && canViewBreaches ? (
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>severity</th>
+                <th>status</th>
+                <th>{t('kvkk.breaches.overdue')}</th>
+                <th>desc</th>
+              </tr>
+            </thead>
+            <tbody>
+              {breaches.map((b) => (
+                <tr key={b.id} style={b.kvkk_deadline_overdue ? { background: 'var(--color-danger-bg, #fef2f2)' } : undefined}>
+                  <td>{b.id}</td>
+                  <td>{b.severity}</td>
+                  <td>{b.status}</td>
+                  <td>{b.kvkk_deadline_overdue ? '!' : '—'}</td>
+                  <td>{b.description}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       ) : null}
     </div>

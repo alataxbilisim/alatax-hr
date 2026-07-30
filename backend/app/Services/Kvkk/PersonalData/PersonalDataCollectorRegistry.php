@@ -66,4 +66,24 @@ class PersonalDataCollectorRegistry
 
         return $out;
     }
+
+    /**
+     * @return list<array{collector: string, result: array{rows_affected: int, fields_masked: list<string>, files_deleted: list<string>, tables: list<string>}}>
+     */
+    public function destroyAll(string $subjectType, int $subjectId, int $companyId, string $strategy, bool $dryRun = false): array
+    {
+        $out = [];
+        foreach ($this->all() as $collector) {
+            $result = $collector->destroy($subjectType, $subjectId, $companyId, $strategy, $dryRun);
+            if ($result['rows_affected'] === 0 && $result['files_deleted'] === [] && $result['tables'] === []) {
+                continue;
+            }
+            $out[] = [
+                'collector' => $collector->key(),
+                'result' => $result,
+            ];
+        }
+
+        return $out;
+    }
 }

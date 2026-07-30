@@ -1,5 +1,44 @@
 # KVKK — Rapor
 
+## D2c + KVKK kapanış — Saklama + imha + ihlal defteri
+
+**Tarih:** 2026-07-30 · Branch: `faz4-form-engine`
+
+### Teşhis (özet)
+
+`destroy(subjectType, subjectId, companyId, strategy, dryRun)` — 15 collector.  
+FK: anonimleştirmede employee/user satırı kalır; bordro/puantaj/izin FK kırılmaz; istatistik alanları (dept/gender/status/hire) korunur. SoftDeletes birçok modelde var; imha soft-delete değil, alan maskeleme. legal_min: `legal.kvkk.retention.months.min`.
+
+### Politika / akış
+
+`retention_policies` (seed taslak PASİF) · `legal_holds` · `retention_decisions` (append-only) · `destruction_candidates` · `destruction_approvals` · `destruction_logs` (append-only) · `data_breaches`.  
+Üç aşama: tarama (dokunmaz) → dry-run + karar/onay → job (approval zorunlu). Varsayılan: anonymize.
+
+### Anonimleştirme alanları
+
+Maske: ad/e-posta/telefon/TCKN/IBAN/adres/CV/dosya/avatar. Kalır: departman, pozisyon, cinsiyet, status, hire/termination yılı istatistiği. Eşleme tablosu yok.
+
+### Guard kanıtı
+
+Legal hold → aday `skipped_legal_hold` / onay 422. Dry-run before=after. Onaysız job RuntimeException.
+
+### Yedek ve imha
+
+İmha edilen veri yedeklerde kalır — uyumluluk boşluğu. UI bilgilendirme + Faz 7 on-prem yedekleme DUR. Bu dalgada çözülmez.
+
+### Test / CI
+
+| | |
+|--|--|
+| `KvkkD2cTest` | **13 passed** |
+| Suite | **599 passed** (tek koşu, 0 fail; 586+13) |
+| tsc×3 + lint | 0 |
+| Sentinel | `admin@demo.test` |
+
+**KULLANICI GÖRSEL KONTROLÜ BEKLİYOR (borç)** — /kvkk yeni sekmeler UI.
+
+---
+
 ## D2b — Veri sahibi talepleri + kişisel veri ihracı
 
 **Tarih:** 2026-07-30 · Branch: `faz4-form-engine`

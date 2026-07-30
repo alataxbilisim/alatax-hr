@@ -316,6 +316,12 @@ class PermissionSeeder extends Seeder
         $permissions[] = 'management.kvkk.requests.edit';
         $permissions[] = 'management.kvkk.requests.respond';
 
+        // D2c
+        $permissions[] = 'management.kvkk.destruction.approve';
+        $permissions[] = 'management.kvkk.legal_hold.manage';
+        $permissions[] = 'management.kvkk.breaches.view';
+        $permissions[] = 'management.kvkk.breaches.edit';
+
         return $permissions;
     }
 
@@ -484,6 +490,9 @@ class PermissionSeeder extends Seeder
                     'management.kvkk.view', 'management.kvkk.edit',
                     'management.kvkk_requests.view', 'management.kvkk_requests.edit', 'management.kvkk_requests.respond',
                     'management.kvkk.requests.view', 'management.kvkk.requests.edit', 'management.kvkk.requests.respond',
+                    'management.kvkk.destruction.approve',
+                    'management.kvkk.legal_hold.manage',
+                    'management.kvkk.breaches.view', 'management.kvkk.breaches.edit',
                     // D4a Settings Registry
                     'settings.values.view', 'settings.values.edit',
                     'settings.leaves.view', 'settings.leaves.edit',

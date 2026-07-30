@@ -61,3 +61,9 @@ Schedule::command('kvkk:data-subject-maintenance')
     ->withoutOverlapping(120)
     ->onOneServer()
     ->name('kvkk-data-subject-maintenance');
+
+Schedule::command('kvkk:scan-retention')
+    ->weeklyOn(1, '04:30')
+    ->withoutOverlapping(180)
+    ->onOneServer()
+    ->name('kvkk-scan-retention');

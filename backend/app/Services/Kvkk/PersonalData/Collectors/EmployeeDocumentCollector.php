@@ -56,8 +56,43 @@ final class EmployeeDocumentCollector implements PersonalDataCollector
         ]];
     }
 
-    public function destroy(int $subjectId, int $companyId, string $strategy): void
+    public function destroy(string $subjectType, int $subjectId, int $companyId, string $strategy, bool $dryRun = false): array
     {
-        // D2c
+        $employeeId = $this->resolveEmployeeId($subjectType, $subjectId, $companyId);
+        if (! $employeeId) {
+            return \App\Services\Kvkk\PersonalData\AnonymizationHelper::emptyResult();
+        }
+
+        $rows = EmployeeDocument::query()
+            ->where('company_id', $companyId)
+            ->where('employee_id', $employeeId)
+            ->get();
+
+        $files = [];
+        foreach ($rows as $d) {
+            if ($d->file_path) {
+                $files[] = (string) $d->file_path;
+            }
+            if (! $dryRun) {
+                if ($d->file_path) {
+                    try {
+                        \Illuminate\Support\Facades\Storage::disk('private')->delete((string) $d->file_path);
+                    } catch (\Throwable) {
+                    }
+                }
+                $d->forceFill([
+                    'file_path' => null,
+                    'file_name' => null,
+                    'title' => 'Anonim belge',
+                ])->save();
+            }
+        }
+
+        return \App\Services\Kvkk\PersonalData\AnonymizationHelper::result(
+            $rows->count(),
+            ['file_path', 'file_name', 'title'],
+            $files,
+            ['employee_documents']
+        );
     }
 }

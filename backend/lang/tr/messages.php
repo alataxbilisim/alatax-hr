@@ -126,6 +126,9 @@ return [
 
         'kvkk_data_subject_due_soon_title' => 'KVKK talebi süresi yaklaşıyor',
         'kvkk_data_subject_due_soon_body' => ':entity veri sahibi talebinin yasal cevap süresi yaklaşıyor (:date).',
+
+        'kvkk_destruction_review_due_title' => 'KVKK imha incelemesi hatırlatması',
+        'kvkk_destruction_review_due_body' => 'Son imha turundan bu yana inceleme süresi doldu. Sistem otomatik imha etmez; /kvkk İmha Kuyruğu üzerinden karar verin (:date).',
     ],
 
 ];

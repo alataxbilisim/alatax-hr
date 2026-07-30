@@ -1237,7 +1237,34 @@
       "inventory": "Veri Envanteri",
       "notices": "Aydınlatma Metinleri",
       "consents": "Rıza Durumu",
-      "requests": "Veri Sahibi Talepleri"
+      "requests": "Veri Sahibi Talepleri",
+      "policies": "Saklama Politikaları",
+      "destruction": "İmha Kuyruğu",
+      "destructionLogs": "İmha Kayıtları",
+      "legalHolds": "Hukuki Tutmalar",
+      "breaches": "İhlal Defteri"
+    },
+    "destruction": {
+      "principle": "Sistem hiçbir veriyi kendi başına imha etmez. Tarama yalnız listeler; karar ve uygulama size aittir.",
+      "noPolicy": "Saklama politikası tanımlanmamış — bilgilendirme (engel değil). Taslak ekleyip inceleyerek aktifleştirebilirsiniz.",
+      "backupNote": "Yedeklerdeki kopyalar yedek saklama süresi dolduğunda ortadan kalkar; yedek politikanızı buna göre tanımlayın.",
+      "scan": "Aday taraması çalıştır",
+      "scanDone": "Tarama tamamlandı (veriye dokunulmadı)",
+      "dryRun": "Ne olacağını göster",
+      "approve": "Seçilenleri imha et",
+      "defer": "Ertele",
+      "exclude": "Kapsam dışı",
+      "reason": "Gerekçe",
+      "pending": "Bekleyen aday",
+      "seedDrafts": "Taslak politikaları ekle"
+    },
+    "breaches": {
+      "overdue": "72s aşımı",
+      "open": "Açık ihlal"
+    },
+    "legalHold": {
+      "place": "Hukuki tutma koy",
+      "release": "Kaldır"
     },
     "requests": {
       "open": "Açık talep",
@@ -1469,7 +1496,11 @@
       "minDaysNoticeMin": "İzin talep önceliği yasal asgari (gün)",
       "minDaysNoticeMinHelp": "Mevzuat tabanı — firmalar altına inemez",
       "kvkkResponseDaysMax": "KVKK cevap süresi yasal azami (gün)",
-      "kvkkResponseDaysMaxHelp": "Firma bu sürenin üstüne çıkamaz (varsayılan 30)"
+      "kvkkResponseDaysMaxHelp": "Firma bu sürenin üstüne çıkamaz (varsayılan 30)",
+      "kvkkRetentionMonthsMin": "KVKK saklama yasal asgari (ay)",
+      "kvkkRetentionMonthsMinHelp": "Firma saklama süresini bu değerin altına indiremez",
+      "kvkkBreachHoursMax": "Veri ihlali KVKK bildirim azami (saat)",
+      "kvkkBreachHoursMaxHelp": "detected_at sonrası bildirim süresi (yasal azami 72)"
     },
     "leaves": {
       "allowCarryover": "Bakiye devri",
@@ -1493,7 +1524,9 @@
       "responseDays": "Veri sahibi talebi cevap süresi (gün)",
       "responseDaysHelp": "Başvurudan itibaren azami cevap süresi; yasal azamiyi aşamaz",
       "exportLinkDays": "İhraç paket indirme süresi (gün)",
-      "exportLinkDaysHelp": "Paket private diskte bu süre sonunda otomatik silinir"
+      "exportLinkDaysHelp": "Paket private diskte bu süre sonunda otomatik silinir",
+      "reviewPeriodMonths": "İmha inceleme hatırlatma süresi (ay)",
+      "reviewPeriodMonthsHelp": "Son imha turundan sonra İK'ya hatırlatma — otomatik imha yok"
     },
     "affects": {
       "legalFloor": "Yasal taban — firma sınırlarını belirler",
@@ -1504,7 +1537,8 @@
       "reportPrivacy": "Rapor min-hücre gizliliği",
       "reportCache": "Rapor sonuç önbelleği",
       "kvkkDue": "KVKK talep due_date hesabı",
-      "kvkkExport": "İhraç paket süresi"
+      "kvkkExport": "İhraç paket süresi",
+      "kvkkDestruction": "İmha inceleme hatırlatması"
     }
   },
   "reportAccessLogs": {

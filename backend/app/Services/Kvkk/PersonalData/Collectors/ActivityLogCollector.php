@@ -52,9 +52,31 @@ final class ActivityLogCollector implements PersonalDataCollector
         ]];
     }
 
-    public function destroy(int $subjectId, int $companyId, string $strategy): void
+    public function destroy(string $subjectType, int $subjectId, int $companyId, string $strategy, bool $dryRun = false): array
     {
-        // D2c
+        // Log satırı silinmez — aktör adı maskelenir (denetim izi korunur).
+        $userId = $this->resolveUserId($subjectType, $subjectId, $companyId);
+        if (! $userId) {
+            return \App\Services\Kvkk\PersonalData\AnonymizationHelper::emptyResult();
+        }
+
+        $q = ActivityLog::query()->where('company_id', $companyId)->where('user_id', $userId);
+        $count = (clone $q)->count();
+        $label = \App\Services\Kvkk\PersonalData\AnonymizationHelper::anonymLabel($userId);
+        if (! $dryRun && $count > 0) {
+            $q->update([
+                'user_name' => $label,
+                'ip_address' => null,
+                'user_agent' => null,
+            ]);
+        }
+
+        return \App\Services\Kvkk\PersonalData\AnonymizationHelper::result(
+            $count,
+            ['user_name', 'ip_address', 'user_agent'],
+            [],
+            ['activity_logs']
+        );
     }
 
     /** @param  array<string, mixed>|string|null  $value */

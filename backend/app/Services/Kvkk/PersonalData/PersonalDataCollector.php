@@ -3,8 +3,10 @@
 namespace App\Services\Kvkk\PersonalData;
 
 /**
- * D2b — Modül kişisel veri toplayıcısı (D1a/D4a registry deseni).
- * destroy() D2c'de çağrılacak; bu dalgada tanımlanır, çağrılmaz.
+ * D2b/D2c — Modül kişisel veri toplayıcısı + imha.
+ *
+ * İlke (D2c): Sistem kendi başına veri imha etmez. destroy() yalnız onaylı
+ * DestructionApproval kaydı olan işlerden çağrılır. Varsayılan strateji anonymize.
  */
 interface PersonalDataCollector
 {
@@ -23,9 +25,10 @@ interface PersonalDataCollector
     public function collect(string $subjectType, int $subjectId, int $companyId): array;
 
     /**
-     * D2c — silme/anonimleştirme. D2b'de çağrılmaz.
+     * İmha/anonimleştirme.
      *
      * @param  'delete'|'anonymize'  $strategy
+     * @return array{rows_affected: int, fields_masked: list<string>, files_deleted: list<string>, tables: list<string>}
      */
-    public function destroy(int $subjectId, int $companyId, string $strategy): void;
+    public function destroy(string $subjectType, int $subjectId, int $companyId, string $strategy, bool $dryRun = false): array;
 }

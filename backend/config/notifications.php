@@ -267,6 +267,16 @@ return [
             'variables' => ['user', 'entity', 'date'],
         ],
 
+        'kvkk.destruction.review_due' => [
+            'group' => 'tasks',
+            'panel' => 'company',
+            'path' => '/kvkk',
+            'email_default' => true,
+            'title_key' => 'messages.notifications.kvkk_destruction_review_due_title',
+            'body_key' => 'messages.notifications.kvkk_destruction_review_due_body',
+            'variables' => ['user', 'entity', 'date'],
+        ],
+
     ],
 
 ];

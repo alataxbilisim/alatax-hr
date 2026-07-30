@@ -47,8 +47,10 @@ final class PerformanceCollector implements PersonalDataCollector
         ]];
     }
 
-    public function destroy(int $subjectId, int $companyId, string $strategy): void
+    public function destroy(string $subjectType, int $subjectId, int $companyId, string $strategy, bool $dryRun = false): array
     {
-        // D2c
+        // D2c: istatistik kay�tlar� kal�r; kimlik alanlar� �st collector (employee_profile) maskeler.
+        // Bu collector i�in ek PII yoksa no-op; dry-run da ayn� sonucu d�ner.
+        return \App\Services\Kvkk\PersonalData\AnonymizationHelper::emptyResult();
     }
 }

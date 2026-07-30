@@ -343,7 +343,7 @@ D1a–D1g tamam. **11 dataset**, whitelist query builder, builder UI, pivot/DSL,
 #### 6C. KVKK (çekirdek — satılmaz)
 - [x] **D2a** Aydınlatma versiyonlama + portal rıza + veri envanteri
 - [x] **D2b** Veri sahibi talepleri + kişisel veri ihracı (`docs/KVKK_RAPOR.md`)
-- [ ] **D2c** Silme/anonimleştirme (destruction_pending)
+- [x] **D2c** Silme/anonimleştirme (destruction_pending)
 - [ ] Saklama politikaları job'ları
 - [ ] Modül bazlı KVKK sınıfı enforcement turu — özellikle İSG sağlık, PDKS biyometri/konum
 

@@ -490,6 +490,58 @@ Route::prefix('v1')->group(function () {
             Route::post('/data-subject-requests/{id}/respond', [\App\Http\Controllers\Api\V1\Kvkk\DataSubjectRequestController::class, 'respond'])
                 ->middleware('permission:management.kvkk.requests.respond')
                 ->whereNumber('id');
+
+            // D2c — Saklama / imha / hukuki tutma / ihlal
+            Route::get('/retention-policies', [\App\Http\Controllers\Api\V1\Kvkk\RetentionPolicyController::class, 'index'])
+                ->middleware('permission:management.kvkk.view');
+            Route::post('/retention-policies', [\App\Http\Controllers\Api\V1\Kvkk\RetentionPolicyController::class, 'store'])
+                ->middleware('permission:management.kvkk.edit');
+            Route::put('/retention-policies/{id}', [\App\Http\Controllers\Api\V1\Kvkk\RetentionPolicyController::class, 'update'])
+                ->middleware('permission:management.kvkk.edit')
+                ->whereNumber('id');
+            Route::post('/retention-policies/seed-drafts', [\App\Http\Controllers\Api\V1\Kvkk\RetentionPolicyController::class, 'seedDrafts'])
+                ->middleware('permission:management.kvkk.edit');
+
+            Route::get('/destruction/summary', [\App\Http\Controllers\Api\V1\Kvkk\DestructionController::class, 'summary'])
+                ->middleware('permission:management.kvkk.destruction.approve');
+            Route::get('/destruction/candidates', [\App\Http\Controllers\Api\V1\Kvkk\DestructionController::class, 'candidates'])
+                ->middleware('permission:management.kvkk.destruction.approve');
+            Route::post('/destruction/scan', [\App\Http\Controllers\Api\V1\Kvkk\DestructionController::class, 'scan'])
+                ->middleware('permission:management.kvkk.destruction.approve');
+            Route::post('/destruction/candidates/{id}/decide', [\App\Http\Controllers\Api\V1\Kvkk\DestructionController::class, 'decide'])
+                ->middleware('permission:management.kvkk.destruction.approve')
+                ->whereNumber('id');
+            Route::post('/destruction/candidates/{id}/dry-run', [\App\Http\Controllers\Api\V1\Kvkk\DestructionController::class, 'dryRun'])
+                ->middleware('permission:management.kvkk.destruction.approve')
+                ->whereNumber('id');
+            Route::post('/destruction/approve', [\App\Http\Controllers\Api\V1\Kvkk\DestructionController::class, 'approve'])
+                ->middleware('permission:management.kvkk.destruction.approve');
+            Route::get('/destruction/logs', [\App\Http\Controllers\Api\V1\Kvkk\DestructionController::class, 'logs'])
+                ->middleware('permission:management.kvkk.view');
+            Route::get('/destruction/logs/{id}/certificate', [\App\Http\Controllers\Api\V1\Kvkk\DestructionController::class, 'logCertificate'])
+                ->middleware('permission:management.kvkk.view')
+                ->whereNumber('id');
+
+            Route::get('/legal-holds', [\App\Http\Controllers\Api\V1\Kvkk\LegalHoldController::class, 'index'])
+                ->middleware('permission:management.kvkk.legal_hold.manage');
+            Route::post('/legal-holds', [\App\Http\Controllers\Api\V1\Kvkk\LegalHoldController::class, 'store'])
+                ->middleware('permission:management.kvkk.legal_hold.manage');
+            Route::post('/legal-holds/{id}/release', [\App\Http\Controllers\Api\V1\Kvkk\LegalHoldController::class, 'release'])
+                ->middleware('permission:management.kvkk.legal_hold.manage')
+                ->whereNumber('id');
+
+            Route::get('/breaches/summary', [\App\Http\Controllers\Api\V1\Kvkk\DataBreachController::class, 'summary'])
+                ->middleware('permission:management.kvkk.breaches.view');
+            Route::get('/breaches', [\App\Http\Controllers\Api\V1\Kvkk\DataBreachController::class, 'index'])
+                ->middleware('permission:management.kvkk.breaches.view');
+            Route::post('/breaches', [\App\Http\Controllers\Api\V1\Kvkk\DataBreachController::class, 'store'])
+                ->middleware('permission:management.kvkk.breaches.edit');
+            Route::put('/breaches/{id}', [\App\Http\Controllers\Api\V1\Kvkk\DataBreachController::class, 'update'])
+                ->middleware('permission:management.kvkk.breaches.edit')
+                ->whereNumber('id');
+            Route::get('/breaches/{id}/report', [\App\Http\Controllers\Api\V1\Kvkk\DataBreachController::class, 'report'])
+                ->middleware('permission:management.kvkk.breaches.view')
+                ->whereNumber('id');
         });
 
         // Custom Fields (global admin UI)

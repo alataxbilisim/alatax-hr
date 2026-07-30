@@ -1448,6 +1448,36 @@ export const kvkkApi = {
     respond: (id: number, data: Record<string, unknown>) =>
       api.post(`/kvkk/data-subject-requests/${id}/respond`, data),
   },
+  retentionPolicies: {
+    list: (params?: Record<string, unknown>) => api.get('/kvkk/retention-policies', { params }),
+    create: (data: Record<string, unknown>) => api.post('/kvkk/retention-policies', data),
+    update: (id: number, data: Record<string, unknown>) => api.put(`/kvkk/retention-policies/${id}`, data),
+    seedDrafts: () => api.post('/kvkk/retention-policies/seed-drafts'),
+  },
+  destruction: {
+    summary: () => api.get('/kvkk/destruction/summary'),
+    candidates: (params?: Record<string, unknown>) => api.get('/kvkk/destruction/candidates', { params }),
+    scan: () => api.post('/kvkk/destruction/scan'),
+    decide: (id: number, data: Record<string, unknown>) =>
+      api.post(`/kvkk/destruction/candidates/${id}/decide`, data),
+    dryRun: (id: number) => api.post(`/kvkk/destruction/candidates/${id}/dry-run`),
+    approve: (data: Record<string, unknown>) => api.post('/kvkk/destruction/approve', data),
+    logs: (params?: Record<string, unknown>) => api.get('/kvkk/destruction/logs', { params }),
+    certificate: (id: number) =>
+      api.get(`/kvkk/destruction/logs/${id}/certificate`, { responseType: 'blob' }),
+  },
+  legalHolds: {
+    list: (params?: Record<string, unknown>) => api.get('/kvkk/legal-holds', { params }),
+    create: (data: Record<string, unknown>) => api.post('/kvkk/legal-holds', data),
+    release: (id: number) => api.post(`/kvkk/legal-holds/${id}/release`),
+  },
+  breaches: {
+    summary: () => api.get('/kvkk/breaches/summary'),
+    list: (params?: Record<string, unknown>) => api.get('/kvkk/breaches', { params }),
+    create: (data: Record<string, unknown>) => api.post('/kvkk/breaches', data),
+    update: (id: number, data: Record<string, unknown>) => api.put(`/kvkk/breaches/${id}`, data),
+    report: (id: number) => api.get(`/kvkk/breaches/${id}/report`, { responseType: 'blob' }),
+  },
 };
 
 // Portal API (Personel Self-Servis)
