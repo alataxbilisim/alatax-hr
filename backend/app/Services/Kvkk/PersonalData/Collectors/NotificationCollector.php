@@ -58,8 +58,8 @@ final class NotificationCollector implements PersonalDataCollector
 
     public function destroy(string $subjectType, int $subjectId, int $companyId, string $strategy, bool $dryRun = false): array
     {
-        // D2c: istatistik kay�tlar� kal�r; kimlik alanlar� �st collector (employee_profile) maskeler.
-        // Bu collector i�in ek PII yoksa no-op; dry-run da ayn� sonucu d�ner.
+        // D2c: istatistik kayıtları kalır; kimlik alanları üst collector (employee_profile) maskeler.
+        // Bu collector için ek PII yoksa no-op; dry-run da aynı sonucu döner.
         return \App\Services\Kvkk\PersonalData\AnonymizationHelper::emptyResult();
     }
 }

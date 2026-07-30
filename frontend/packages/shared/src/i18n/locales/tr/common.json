@@ -1,5 +1,5 @@
 {
-  "appName": "DOBEDAN HOTELS HR SİSTEMİ",
+  "appName": "ALATAX HR",
   "loading": "Yükleniyor...",
   "save": "Kaydet",
   "saving": "Kaydediliyor…",
@@ -8,6 +8,10 @@
   "back": "Geri",
   "error": "Bir hata oluştu",
   "success": "İşlem başarılı",
+  "dashboard": {
+    "welcome": "Hoş geldiniz",
+    "welcomeNamed": "Hoş geldiniz, {{name}}"
+  },
   "actions": {
     "newEmployee": "Yeni Personel"
   },
@@ -23,6 +27,7 @@
     "themeDark": "Koyu",
     "nav": {
       "home": "Ana Sayfa",
+      "homeShort": "Ana",
       "leaves": "İzinler",
       "qr": "QR Giriş/Çıkış",
       "requests": "Talepler",
@@ -121,14 +126,17 @@
     "announcements": "Duyurular",
     "payslipsAdmin": "Bordrolar",
     "payroll": "Ücret & Ödemeler",
+    "payrollShort": "Ücret",
     "documents": "Evraklar",
     "documentsList": "Belgeler",
     "documentsCategories": "Kategoriler",
     "documentsReports": "Raporlar",
     "documentsCustomFields": "Özel Alanlar",
     "assetsDocuments": "Varlık & Doküman",
+    "assetsDocumentsShort": "Varlık",
     "onboarding": "Oryantasyon",
     "onboardingExit": "Oryantasyon & Çıkış",
+    "onboardingExitShort": "Oryantasyon",
     "onboardingProcesses": "Oryantasyon Süreçleri",
     "onboardingTemplates": "Oryantasyon Şablonları",
     "performance": "Performans",
@@ -655,7 +663,9 @@
     "approver": "Onaycı",
     "stepStatus": "Durum",
     "noApprovalSteps": "Onay adımı kaydı yok",
-    "rejectionReason": "Red Nedeni"
+    "rejectionReason": "Red Nedeni",
+    "daysRemaining": "gün kaldı",
+    "loadFailed": "Veriler yüklenemedi"
   },
   "expenses": {
     "title": "Masraflar",

@@ -217,7 +217,7 @@ const LoginPage: React.FC = () => {
           )}
         </div>
 
-        {!challenge && (
+        {!challenge && import.meta.env.DEV && (
           <div className="auth-demo-hint">
             <strong>{t('auth:login.demoTitle')}</strong>
             <div>{t('auth:login.demoCredentials')}</div>
