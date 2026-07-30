@@ -261,6 +261,8 @@ Fark yaratacak 4 şey:
 
 **DoD (Settings Registry):** Her modül dalgası, modülün ayarlarını Settings Registry'ye kaydetmeden ve bağlamsal ⚙ panelinde göstermeden **BİTMİŞ SAYILMAZ**.
 
+**DoD (Personal Data Collector):** Kişisel veri tutan her yeni modül, `PersonalDataCollector`'ını kaydetmeden **BİTMİŞ SAYILMAZ**.
+
 ---
 
 ### FAZ 5 — Rapor & Analitik Motoru ✅ KAPANDI (2026-07-29)
@@ -339,11 +341,11 @@ D1a–D1g tamam. **11 dataset**, whitelist query builder, builder UI, pivot/DSL,
 - [ ] **A4 Talep/Vaka:** SLA + kategori atama + helpdesk görünümü
 
 #### 6C. KVKK (çekirdek — satılmaz)
-- [ ] Aydınlatma versiyonlama + portal rıza
-- [ ] Veri ihracı (JSON/PDF)
-- [ ] Silme/anonimleştirme (workflow + saklama sonrası job)
-- [ ] Saklama politikaları + veri envanteri (VERBİS yardımcısı)
-- [ ] Modül bazlı KVKK sınıfı (normal/kişisel/özel nitelikli) enforcement turu — özellikle İSG sağlık, PDKS biyometri/konum
+- [x] **D2a** Aydınlatma versiyonlama + portal rıza + veri envanteri
+- [x] **D2b** Veri sahibi talepleri + kişisel veri ihracı (`docs/KVKK_RAPOR.md`)
+- [ ] **D2c** Silme/anonimleştirme (destruction_pending)
+- [ ] Saklama politikaları job'ları
+- [ ] Modül bazlı KVKK sınıfı enforcement turu — özellikle İSG sağlık, PDKS biyometri/konum
 
 **DoD (modül başına):** Form Engine + izin matrisi + dataset + `module_key` pano + bildirim olayları + KVKK sınıfı; feature testleri yeşil; lisans aç/kapa.
 

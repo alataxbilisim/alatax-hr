@@ -1,5 +1,44 @@
 # KVKK — Rapor
 
+## D2b — Veri sahibi talepleri + kişisel veri ihracı
+
+**Tarih:** 2026-07-30 · Branch: `faz4-form-engine`
+
+### Teşhis (özet)
+
+D2a envanteri kategori/faaliyet düzeyinde; ihraç için kolon envanteri değil → **PersonalDataCollector** registry ile tamamlandı.  
+Tablo dağılımı: `employees`, `leave_requests`, `leave_balances`, `attendance_records`, `expense_claims`, `payslips`, `employee_documents`, `assets`/`asset_assignments`, `training_participants`, `survey_responses` (anonim hariç), `consent_records`, `activity_logs`, `notifications`, `job_applications`, performans/onboarding…  
+Workflow: `entity_type=data_subject_request` → mevcut motor.
+
+### Collector registry (15)
+
+employee_profile, leave, attendance, expense, payslip, employee_document, asset_assignment, training, survey, consent, activity_log, notification, job_application, performance, onboarding.  
+DoD: kişisel veri tutan modül collector kaydetmeden bitmiş sayılmaz. `destroy()` D2c.
+
+### Talep şeması
+
+`data_subject_requests` + `data_subject_export_packages` + `data_subject_export_access_logs`.  
+due_date=+N (`kvkk.data_subject.response_days`, legal_max=30). Kimlik yok → paket **422**. Kanallar: portal / public (e-posta) / İK manuel.
+
+### Paket güvenliği
+
+Private disk · UUID · süre sonu otomatik silme · e-posta eki yok · İK önizleme yok · indirme logu · A≠B kapsam testi yeşil.
+
+### Silme sınırı
+
+Onay → `destruction_pending`; veri **silinmez** (D2c).
+
+### Test / CI
+
+| | |
+|--|--|
+| `KvkkD2bTest` | 10 passed |
+| Suite | **586 passed** (tek koşu, 0 fail) |
+| tsc ×3 + lint | 0 |
+| Sentinel / Actions | push sonrası |
+
+---
+
 ## D2a — Veri envanteri + aydınlatma metinleri + rıza kayıtları
 
 **Tarih:** 2026-07-29  

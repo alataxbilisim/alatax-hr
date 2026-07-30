@@ -30,6 +30,7 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import { InviteAcceptPage, ForcedPasswordChangePage } from '@shared/components';
 import DashboardPage from './pages/DashboardPage';
 import ProfilePage from './pages/ProfilePage';
+import MyDataPage from './pages/MyDataPage';
 import LeavesPage from './pages/LeavesPage';
 import LeaveFormEnginePage from './pages/LeaveFormEnginePage';
 import DocumentsPage from './pages/DocumentsPage';
@@ -153,6 +154,7 @@ const AppRoutes: React.FC = () => {
       >
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/my-data" element={<MyDataPage />} />
         <Route path="/leaves" element={<LeavesPage />} />
         <Route path="/leaves/form-engine" element={<LeaveFormEnginePage />} />
         <Route path="/documents" element={<DocumentsPage />} />

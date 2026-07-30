@@ -1435,6 +1435,19 @@ export const kvkkApi = {
     create: (data: Record<string, unknown>) => api.post('/kvkk/consents', data),
     withdraw: (id: number) => api.post(`/kvkk/consents/${id}/withdraw`),
   },
+  dataSubjectRequests: {
+    summary: () => api.get('/kvkk/data-subject-requests/summary'),
+    list: (params?: Record<string, unknown>) => api.get('/kvkk/data-subject-requests', { params }),
+    get: (id: number) => api.get(`/kvkk/data-subject-requests/${id}`),
+    create: (data: Record<string, unknown>) => api.post('/kvkk/data-subject-requests', data),
+    verifyIdentity: (id: number, data: { verification_method: string }) =>
+      api.post(`/kvkk/data-subject-requests/${id}/verify-identity`, data),
+    buildExport: (id: number) => api.post(`/kvkk/data-subject-requests/${id}/export`),
+    downloadExport: (id: number, uuid: string) =>
+      api.get(`/kvkk/data-subject-requests/${id}/export/${uuid}/download`, { responseType: 'blob' }),
+    respond: (id: number, data: Record<string, unknown>) =>
+      api.post(`/kvkk/data-subject-requests/${id}/respond`, data),
+  },
 };
 
 // Portal API (Personel Self-Servis)
@@ -1462,6 +1475,14 @@ export const portalApi = {
     acknowledge: (data: { notice_id: number; granted: boolean }) =>
       api.post('/portal/privacy/acknowledge', data),
     withdraw: (id: number) => api.post(`/portal/privacy/consents/${id}/withdraw`),
+  },
+
+  dataSubjectRequests: {
+    list: () => api.get('/portal/data-subject-requests'),
+    create: (data: Record<string, unknown>) => api.post('/portal/data-subject-requests', data),
+    export: (id: number) => api.post(`/portal/data-subject-requests/${id}/export`),
+    download: (id: number, uuid: string) =>
+      api.get(`/portal/data-subject-requests/${id}/export/${uuid}/download`, { responseType: 'blob' }),
   },
   
   // Leaves (İzinler)

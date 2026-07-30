@@ -467,6 +467,29 @@ Route::prefix('v1')->group(function () {
             Route::post('/consents/{id}/withdraw', [\App\Http\Controllers\Api\V1\Kvkk\ConsentRecordController::class, 'withdraw'])
                 ->middleware('permission:management.kvkk.edit')
                 ->whereNumber('id');
+
+            // D2b — Veri sahibi talepleri
+            Route::get('/data-subject-requests/summary', [\App\Http\Controllers\Api\V1\Kvkk\DataSubjectRequestController::class, 'summary'])
+                ->middleware('permission:management.kvkk.requests.view');
+            Route::get('/data-subject-requests', [\App\Http\Controllers\Api\V1\Kvkk\DataSubjectRequestController::class, 'index'])
+                ->middleware('permission:management.kvkk.requests.view');
+            Route::post('/data-subject-requests', [\App\Http\Controllers\Api\V1\Kvkk\DataSubjectRequestController::class, 'store'])
+                ->middleware('permission:management.kvkk.requests.edit');
+            Route::get('/data-subject-requests/{id}', [\App\Http\Controllers\Api\V1\Kvkk\DataSubjectRequestController::class, 'show'])
+                ->middleware('permission:management.kvkk.requests.view')
+                ->whereNumber('id');
+            Route::post('/data-subject-requests/{id}/verify-identity', [\App\Http\Controllers\Api\V1\Kvkk\DataSubjectRequestController::class, 'verifyIdentity'])
+                ->middleware('permission:management.kvkk.requests.edit')
+                ->whereNumber('id');
+            Route::post('/data-subject-requests/{id}/export', [\App\Http\Controllers\Api\V1\Kvkk\DataSubjectRequestController::class, 'buildExport'])
+                ->middleware('permission:management.kvkk.requests.respond')
+                ->whereNumber('id');
+            Route::get('/data-subject-requests/{id}/export/{uuid}/download', [\App\Http\Controllers\Api\V1\Kvkk\DataSubjectRequestController::class, 'downloadExport'])
+                ->middleware('permission:management.kvkk.requests.view')
+                ->whereNumber('id');
+            Route::post('/data-subject-requests/{id}/respond', [\App\Http\Controllers\Api\V1\Kvkk\DataSubjectRequestController::class, 'respond'])
+                ->middleware('permission:management.kvkk.requests.respond')
+                ->whereNumber('id');
         });
 
         // Custom Fields (global admin UI)
@@ -1389,6 +1412,14 @@ Route::prefix('v1')->group(function () {
         Route::post('/privacy/consents/{id}/withdraw', [\App\Http\Controllers\Api\V1\Portal\PortalPrivacyController::class, 'withdraw'])
             ->whereNumber('id');
 
+        // D2b — Verilerim
+        Route::get('/data-subject-requests', [\App\Http\Controllers\Api\V1\Portal\PortalDataSubjectRequestController::class, 'index']);
+        Route::post('/data-subject-requests', [\App\Http\Controllers\Api\V1\Portal\PortalDataSubjectRequestController::class, 'store']);
+        Route::post('/data-subject-requests/{id}/export', [\App\Http\Controllers\Api\V1\Portal\PortalDataSubjectRequestController::class, 'requestExport'])
+            ->whereNumber('id');
+        Route::get('/data-subject-requests/{id}/export/{uuid}/download', [\App\Http\Controllers\Api\V1\Portal\PortalDataSubjectRequestController::class, 'downloadExport'])
+            ->whereNumber('id');
+
         // Ücretim (yalnız kendi)
         Route::get('/salary', [\App\Http\Controllers\Api\V1\Portal\PortalSalaryController::class, 'me']);
         Route::get('/salary/{id}', [\App\Http\Controllers\Api\V1\Portal\PortalSalaryController::class, 'show']);
@@ -1511,6 +1542,11 @@ Route::prefix('v1')->group(function () {
 
         // D2a — aday aydınlatma (aktif versiyon, hukuki metin firmadan)
         Route::get('/companies/{companySlug}/privacy-notice', [\App\Http\Controllers\Api\V1\Public\PublicPrivacyNoticeController::class, 'show']);
+
+        // D2b — public veri sahibi talebi
+        Route::post('/companies/{companySlug}/data-subject-requests', [\App\Http\Controllers\Api\V1\Public\PublicDataSubjectRequestController::class, 'store']);
+        Route::post('/companies/{companySlug}/data-subject-requests/{id}/verify-email', [\App\Http\Controllers\Api\V1\Public\PublicDataSubjectRequestController::class, 'verifyEmail'])
+            ->whereNumber('id');
 
         // Başvuru gönder (company_slug body veya route param — tenant)
         Route::post('/jobs/{positionSlug}/apply', [\App\Http\Controllers\Api\V1\Public\ApplicationController::class, 'store']);

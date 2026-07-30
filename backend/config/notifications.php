@@ -257,6 +257,16 @@ return [
             'variables' => ['user', 'entity', 'title'],
         ],
 
+        'kvkk.data_subject.due_soon' => [
+            'group' => 'tasks',
+            'panel' => 'company',
+            'path' => '/kvkk',
+            'email_default' => true,
+            'title_key' => 'messages.notifications.kvkk_data_subject_due_soon_title',
+            'body_key' => 'messages.notifications.kvkk_data_subject_due_soon_body',
+            'variables' => ['user', 'entity', 'date'],
+        ],
+
     ],
 
 ];

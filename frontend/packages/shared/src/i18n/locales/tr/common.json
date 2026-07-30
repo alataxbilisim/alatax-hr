@@ -1236,7 +1236,29 @@
     "tabs": {
       "inventory": "Veri Envanteri",
       "notices": "Aydınlatma Metinleri",
-      "consents": "Rıza Durumu"
+      "consents": "Rıza Durumu",
+      "requests": "Veri Sahibi Talepleri"
+    },
+    "requests": {
+      "open": "Açık talep",
+      "dueSoon": "Süresi yaklaşan",
+      "overdue": "Süresi geçen",
+      "avgDays": "Ort. cevap (gün)",
+      "applicant": "Başvuran",
+      "status": "Durum",
+      "due": "Son tarih",
+      "actions": "İşlem",
+      "daysLeft": "gün",
+      "verify": "Kimlik doğrula",
+      "verifySuccess": "Kimlik doğrulandı",
+      "export": "Paket üret",
+      "exportReady": "Paket hazır — indiriliyor",
+      "respond": "Cevapla",
+      "accept": "Kabul",
+      "partial": "Kısmi kabul",
+      "reject": "Ret",
+      "responsePlaceholder": "Cevap metni",
+      "defaultResponse": "Talebiniz incelenmiş ve sonuçlandırılmıştır."
     },
     "loadError": "KVKK verileri yüklenemedi",
     "saveSuccess": "Kaydedildi",
@@ -1264,6 +1286,26 @@
     "noticeRead": "Aydınlatma okundu",
     "explicitSpecial": "Açık rıza (özel nitelikli)",
     "legalDisclaimer": "Hukuki metinler ve saklama süreleri firmaya aittir; sistem yalnızca altyapı sağlar."
+  },
+  "portalMyData": {
+    "title": "Verilerim",
+    "subtitle": "KVKK m.11 talepleri ve kişisel veri paketi",
+    "newRequest": "Yeni talep",
+    "description": "Açıklama (isteğe bağlı)",
+    "submit": "Talep gönder",
+    "created": "Talebiniz alındı",
+    "empty": "Henüz talebiniz yok",
+    "loadError": "Talepler yüklenemedi",
+    "saveError": "İşlem başarısız",
+    "downloadPackage": "Paketi indir",
+    "exportReady": "Paket indiriliyor",
+    "types": {
+      "bilgi_talebi": "Bilgi talebi",
+      "tasinabilirlik": "Taşınabilirlik",
+      "silme": "Silme",
+      "duzeltme": "Düzeltme",
+      "itiraz": "İtiraz"
+    }
   },
   "portalPrivacy": {
     "title": "Aydınlatma metni",
@@ -1425,7 +1467,9 @@
       "leavesRetentionMin": "İzin saklama yasal asgari (ay)",
       "leavesRetentionMinHelp": "Mevzuat tabanı — firmalar altına inemez",
       "minDaysNoticeMin": "İzin talep önceliği yasal asgari (gün)",
-      "minDaysNoticeMinHelp": "Mevzuat tabanı — firmalar altına inemez"
+      "minDaysNoticeMinHelp": "Mevzuat tabanı — firmalar altına inemez",
+      "kvkkResponseDaysMax": "KVKK cevap süresi yasal azami (gün)",
+      "kvkkResponseDaysMaxHelp": "Firma bu sürenin üstüne çıkamaz (varsayılan 30)"
     },
     "leaves": {
       "allowCarryover": "Bakiye devri",
@@ -1445,6 +1489,12 @@
       "cacheTtl": "Rapor cache TTL (sn)",
       "cacheTtlHelp": "Rapor sonucu önbellek süresi; 0 = kapalı"
     },
+    "kvkk": {
+      "responseDays": "Veri sahibi talebi cevap süresi (gün)",
+      "responseDaysHelp": "Başvurudan itibaren azami cevap süresi; yasal azamiyi aşamaz",
+      "exportLinkDays": "İhraç paket indirme süresi (gün)",
+      "exportLinkDaysHelp": "Paket private diskte bu süre sonunda otomatik silinir"
+    },
     "affects": {
       "legalFloor": "Yasal taban — firma sınırlarını belirler",
       "leaveCarryover": "Yıl sonu bakiye devri iş kuralı",
@@ -1452,7 +1502,9 @@
       "leaveNotice": "İzin talep tarih doğrulaması",
       "leaveRetention": "İzin veri saklama politikası",
       "reportPrivacy": "Rapor min-hücre gizliliği",
-      "reportCache": "Rapor sonuç önbelleği"
+      "reportCache": "Rapor sonuç önbelleği",
+      "kvkkDue": "KVKK talep due_date hesabı",
+      "kvkkExport": "İhraç paket süresi"
     }
   },
   "reportAccessLogs": {

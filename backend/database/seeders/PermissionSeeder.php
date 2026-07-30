@@ -162,6 +162,8 @@ class PermissionSeeder extends Seeder
                 'notifications' => ['view', 'edit'],
                 // D2a KVKK
                 'kvkk' => ['view', 'edit'],
+                // D2b veri sahibi talepleri (management.kvkk.requests.*)
+                'kvkk_requests' => ['view', 'edit', 'respond'],
             ],
 
             // D4a — Settings Registry (davranış parametreleri; Lookup değil)
@@ -169,6 +171,7 @@ class PermissionSeeder extends Seeder
                 'values' => ['view', 'edit'],
                 'leaves' => ['view', 'edit'],
                 'reports' => ['view', 'edit'],
+                'kvkk' => ['view', 'edit'],
             ],
 
             // Personel Modülü
@@ -307,6 +310,11 @@ class PermissionSeeder extends Seeder
                 }
             }
         }
+
+        // D2b — 4 parçalı isim (management.kvkk.requests.*)
+        $permissions[] = 'management.kvkk.requests.view';
+        $permissions[] = 'management.kvkk.requests.edit';
+        $permissions[] = 'management.kvkk.requests.respond';
 
         return $permissions;
     }
@@ -474,10 +482,13 @@ class PermissionSeeder extends Seeder
                     'management.forms.view', 'management.forms.edit',
                     'management.notifications.view', 'management.notifications.edit',
                     'management.kvkk.view', 'management.kvkk.edit',
+                    'management.kvkk_requests.view', 'management.kvkk_requests.edit', 'management.kvkk_requests.respond',
+                    'management.kvkk.requests.view', 'management.kvkk.requests.edit', 'management.kvkk.requests.respond',
                     // D4a Settings Registry
                     'settings.values.view', 'settings.values.edit',
                     'settings.leaves.view', 'settings.leaves.edit',
                     'settings.reports.view', 'settings.reports.edit',
+                    'settings.kvkk.view', 'settings.kvkk.edit',
                     // api_keys / webhooks / workflows → yalnızca admin (company_admin / admin rolü)
 
                     // Personel - Tam yetki

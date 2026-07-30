@@ -55,3 +55,9 @@ Schedule::command('reports:run-schedules')
     ->withoutOverlapping(5)
     ->onOneServer()
     ->name('reports-run-schedules');
+
+Schedule::command('kvkk:data-subject-maintenance')
+    ->dailyAt('08:15')
+    ->withoutOverlapping(120)
+    ->onOneServer()
+    ->name('kvkk-data-subject-maintenance');

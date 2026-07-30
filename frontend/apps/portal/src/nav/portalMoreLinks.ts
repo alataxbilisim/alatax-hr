@@ -22,6 +22,7 @@ export const PORTAL_MORE_LINKS: PortalMoreLink[] = [
   { path: '/payslips', labelKey: 'portalShell.more.payslips', icon: BsCurrencyDollar },
   { path: '/salary', labelKey: 'portalShell.more.salary', icon: BsCashCoin },
   { path: '/documents', labelKey: 'portalShell.more.documents', icon: BsFileEarmarkText },
+  { path: '/my-data', labelKey: 'portalMyData.title', icon: BsFileEarmarkText },
   { path: '/training', labelKey: 'portalShell.more.training', icon: BsMortarboard },
   { path: '/performance', labelKey: 'portalShell.more.performance', icon: BsGraphUp },
   { path: '/surveys', labelKey: 'portalShell.more.surveys', icon: BsClipboardData },

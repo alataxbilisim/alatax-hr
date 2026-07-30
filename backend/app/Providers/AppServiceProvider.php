@@ -26,6 +26,7 @@ class AppServiceProvider extends ServiceProvider
         // D4a — istek başına çözümleme cache'i için singleton
         $this->app->singleton(SettingsRegistry::class);
         $this->app->singleton(SettingsResolver::class);
+        $this->app->singleton(\App\Services\Kvkk\PersonalData\PersonalDataCollectorRegistry::class);
     }
 
     /**

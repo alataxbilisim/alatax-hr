@@ -5,7 +5,9 @@ import { getErrorMessage } from '@shared/services/apiHelpers';
 import { usePermission } from '@shared/hooks';
 import toast from 'react-hot-toast';
 
-type Tab = 'inventory' | 'notices' | 'consents';
+type Tab = 'inventory' | 'notices' | 'consents' | 'requests';
+
+const TAB_KEYS: Tab[] = ['inventory', 'notices', 'consents', 'requests'];
 
 interface ActivityRow {
   id: number;
@@ -44,6 +46,24 @@ interface MissingRow {
   notice_version: number;
 }
 
+interface RequestRow {
+  id: number;
+  applicant_name: string;
+  status: string;
+  due_date?: string | null;
+  days_remaining?: number;
+  is_overdue?: boolean;
+  identity_verified: boolean;
+  request_types: string[];
+}
+
+interface RequestSummary {
+  open_count: number;
+  due_soon_count: number;
+  overdue_count: number;
+  avg_response_days: number | null;
+}
+
 function isActivityRow(v: unknown): v is ActivityRow {
   return typeof v === 'object' && v !== null && 'id' in v && 'name' in v;
 }
@@ -60,10 +80,21 @@ function isMissingRow(v: unknown): v is MissingRow {
   return typeof v === 'object' && v !== null && 'user_id' in v && 'employee_id' in v;
 }
 
+function isRequestRow(v: unknown): v is RequestRow {
+  return typeof v === 'object' && v !== null && 'id' in v && 'applicant_name' in v && 'status' in v;
+}
+
+function isRequestSummary(v: unknown): v is RequestSummary {
+  return typeof v === 'object' && v !== null && 'open_count' in v;
+}
+
 const KvkkPage: React.FC = () => {
   const { t } = useTranslation('common');
-  const { canEdit } = usePermission();
+  const { canEdit, hasPermission } = usePermission();
   const canEditKvkk = canEdit('management', 'kvkk');
+  const canViewRequests = hasPermission('management', 'kvkk_requests', 'view')
+    || hasPermission('management', 'kvkk', 'view');
+  const canRespondRequests = hasPermission('management', 'kvkk_requests', 'respond');
 
   const [tab, setTab] = useState<Tab>('inventory');
   const [loading, setLoading] = useState(true);
@@ -71,6 +102,10 @@ const KvkkPage: React.FC = () => {
   const [notices, setNotices] = useState<NoticeRow[]>([]);
   const [consents, setConsents] = useState<ConsentRow[]>([]);
   const [missing, setMissing] = useState<MissingRow[]>([]);
+  const [requests, setRequests] = useState<RequestRow[]>([]);
+  const [requestSummary, setRequestSummary] = useState<RequestSummary | null>(null);
+  const [selectedRequestId, setSelectedRequestId] = useState<number | null>(null);
+  const [responseBody, setResponseBody] = useState('');
 
   const [draftTitle, setDraftTitle] = useState('');
   const [draftBody, setDraftBody] = useState('');
@@ -87,6 +122,15 @@ const KvkkPage: React.FC = () => {
         const res = await kvkkApi.notices.list({ per_page: 100 });
         const raw: unknown = res.data.data;
         setNotices(Array.isArray(raw) ? raw.filter(isNoticeRow) : []);
+      } else if (tab === 'requests') {
+        const [listRes, sumRes] = await Promise.all([
+          kvkkApi.dataSubjectRequests.list({ per_page: 50 }),
+          kvkkApi.dataSubjectRequests.summary(),
+        ]);
+        const raw: unknown = listRes.data.data;
+        setRequests(Array.isArray(raw) ? raw.filter(isRequestRow) : []);
+        const sum: unknown = sumRes.data.data;
+        setRequestSummary(isRequestSummary(sum) ? sum : null);
       } else {
         const [cRes, mRes] = await Promise.all([
           kvkkApi.consents.list({ per_page: 100 }),
@@ -150,6 +194,52 @@ const KvkkPage: React.FC = () => {
     }
   };
 
+  const verifyRequest = async (id: number) => {
+    try {
+      await kvkkApi.dataSubjectRequests.verifyIdentity(id, { verification_method: 'manual_id_check' });
+      toast.success(t('kvkk.requests.verifySuccess'));
+      void load();
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, t('kvkk.saveError')));
+    }
+  };
+
+  const buildExport = async (id: number) => {
+    try {
+      const res = await kvkkApi.dataSubjectRequests.buildExport(id);
+      const uuid = res.data.data?.package?.uuid;
+      toast.success(t('kvkk.requests.exportReady'));
+      if (typeof uuid === 'string') {
+        const dl = await kvkkApi.dataSubjectRequests.downloadExport(id, uuid);
+        const blob = new Blob([dl.data], { type: 'application/zip' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `kvkk-paket-${uuid}.zip`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+      void load();
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, t('kvkk.saveError')));
+    }
+  };
+
+  const respondRequest = async (id: number, template: 'accept' | 'partial' | 'reject') => {
+    try {
+      await kvkkApi.dataSubjectRequests.respond(id, {
+        template,
+        body: responseBody || t('kvkk.requests.defaultResponse'),
+      });
+      toast.success(t('kvkk.saveSuccess'));
+      setSelectedRequestId(null);
+      setResponseBody('');
+      void load();
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, t('kvkk.saveError')));
+    }
+  };
+
   return (
     <div className="page-container animate-fade-in">
       <div className="page-header">
@@ -163,7 +253,7 @@ const KvkkPage: React.FC = () => {
       </div>
 
       <div className="tabs" style={{ display: 'flex', gap: 'var(--sp-2)', marginBottom: 'var(--sp-4)' }}>
-        {(['inventory', 'notices', 'consents'] as Tab[]).map((key) => (
+        {TAB_KEYS.map((key) => (
           <button
             key={key}
             type="button"
@@ -330,6 +420,102 @@ const KvkkPage: React.FC = () => {
               </tbody>
             </table>
           </div>
+        </div>
+      ) : null}
+
+      {!loading && tab === 'requests' && canViewRequests ? (
+        <div>
+          {requestSummary ? (
+            <div
+              style={{
+                display: 'flex',
+                gap: 'var(--sp-4)',
+                marginBottom: 'var(--sp-4)',
+                flexWrap: 'wrap',
+              }}
+            >
+              <span>{t('kvkk.requests.open')}: {requestSummary.open_count}</span>
+              <span>{t('kvkk.requests.dueSoon')}: {requestSummary.due_soon_count}</span>
+              <span style={{ color: 'var(--color-danger, #b91c1c)' }}>
+                {t('kvkk.requests.overdue')}: {requestSummary.overdue_count}
+              </span>
+              <span>
+                {t('kvkk.requests.avgDays')}: {requestSummary.avg_response_days ?? '—'}
+              </span>
+            </div>
+          ) : null}
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>{t('kvkk.requests.applicant')}</th>
+                  <th>{t('kvkk.requests.status')}</th>
+                  <th>{t('kvkk.requests.due')}</th>
+                  <th>{t('kvkk.requests.actions')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {requests.map((r) => (
+                  <tr key={r.id} style={r.is_overdue ? { background: 'var(--color-danger-bg, #fef2f2)' } : undefined}>
+                    <td>{r.id}</td>
+                    <td>{r.applicant_name}</td>
+                    <td>{r.status}</td>
+                    <td>
+                      {r.due_date}
+                      {typeof r.days_remaining === 'number'
+                        ? ` (${r.days_remaining} ${t('kvkk.requests.daysLeft')})`
+                        : ''}
+                    </td>
+                    <td style={{ display: 'flex', gap: 'var(--sp-1)', flexWrap: 'wrap' }}>
+                      {!r.identity_verified && canEditKvkk ? (
+                        <button type="button" className="btn btn--sm btn--ghost" onClick={() => void verifyRequest(r.id)}>
+                          {t('kvkk.requests.verify')}
+                        </button>
+                      ) : null}
+                      {r.identity_verified && canRespondRequests ? (
+                        <button type="button" className="btn btn--sm btn--ghost" onClick={() => void buildExport(r.id)}>
+                          {t('kvkk.requests.export')}
+                        </button>
+                      ) : null}
+                      {canRespondRequests ? (
+                        <button
+                          type="button"
+                          className="btn btn--sm btn--primary"
+                          onClick={() => setSelectedRequestId(r.id)}
+                        >
+                          {t('kvkk.requests.respond')}
+                        </button>
+                      ) : null}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {selectedRequestId !== null ? (
+            <div style={{ marginTop: 'var(--sp-4)', maxWidth: '40rem' }}>
+              <h3>{t('kvkk.requests.respond')} #{selectedRequestId}</h3>
+              <textarea
+                className="form-control"
+                rows={4}
+                value={responseBody}
+                onChange={(e) => setResponseBody(e.target.value)}
+                placeholder={t('kvkk.requests.responsePlaceholder')}
+              />
+              <div style={{ display: 'flex', gap: 'var(--sp-2)', marginTop: 'var(--sp-2)' }}>
+                <button type="button" className="btn btn--primary" onClick={() => void respondRequest(selectedRequestId, 'accept')}>
+                  {t('kvkk.requests.accept')}
+                </button>
+                <button type="button" className="btn btn--ghost" onClick={() => void respondRequest(selectedRequestId, 'partial')}>
+                  {t('kvkk.requests.partial')}
+                </button>
+                <button type="button" className="btn btn--ghost" onClick={() => void respondRequest(selectedRequestId, 'reject')}>
+                  {t('kvkk.requests.reject')}
+                </button>
+              </div>
+            </div>
+          ) : null}
         </div>
       ) : null}
     </div>

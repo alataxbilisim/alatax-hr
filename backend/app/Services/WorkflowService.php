@@ -318,6 +318,7 @@ class WorkflowService
             'TrainingRequest' => ApprovalWorkflow::ENTITY_TRAINING_REQUEST,
             'Document' => ApprovalWorkflow::ENTITY_DOCUMENT_APPROVAL,
             'SalaryReviewPeriod' => ApprovalWorkflow::ENTITY_SALARY_REVIEW,
+            'DataSubjectRequest' => ApprovalWorkflow::ENTITY_DATA_SUBJECT_REQUEST,
         ];
 
         return $mapping[$class] ?? strtolower($class);

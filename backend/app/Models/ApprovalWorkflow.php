@@ -47,6 +47,8 @@ class ApprovalWorkflow extends Model
 
     const ENTITY_SALARY_REVIEW = 'salary_review';
 
+    const ENTITY_DATA_SUBJECT_REQUEST = 'data_subject_request';
+
     public static function getEntityTypes(): array
     {
         return [
@@ -56,6 +58,7 @@ class ApprovalWorkflow extends Model
             self::ENTITY_TRAINING_REQUEST => 'Eğitim Talebi',
             self::ENTITY_DOCUMENT_APPROVAL => 'Evrak Onayı',
             self::ENTITY_SALARY_REVIEW => 'Zam Dönemi',
+            self::ENTITY_DATA_SUBJECT_REQUEST => 'KVKK Veri Sahibi Talebi',
         ];
     }
 

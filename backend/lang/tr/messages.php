@@ -123,6 +123,9 @@ return [
 
         'report_export_ready_title' => 'Rapor dışa aktarımı hazır',
         'report_export_ready_body' => ':entity dışa aktarımı tamamlandı. Uygulamadan indirebilirsiniz.',
+
+        'kvkk_data_subject_due_soon_title' => 'KVKK talebi süresi yaklaşıyor',
+        'kvkk_data_subject_due_soon_body' => ':entity veri sahibi talebinin yasal cevap süresi yaklaşıyor (:date).',
     ],
 
 ];
