@@ -13,7 +13,9 @@ use App\Models\ApprovalWorkflow;
 use App\Models\User;
 use App\Services\Approval\ApprovalEntityRegistry;
 use App\Services\Approval\ApprovalFlowEngine;
+use App\Support\PostgresAdvisoryLock;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -70,49 +72,86 @@ class WorkflowService
             return null;
         }
 
-        $instance = ApprovalInstance::create([
-            'company_id' => $companyId,
-            'approval_workflow_id' => $workflow->id,
-            'approvable_type' => get_class($approvable),
-            'approvable_id' => $approvable->id,
-            'current_step' => $resolvedFirst->step_order,
-            'status' => ApprovalInstance::STATUS_IN_PROGRESS,
-            'started_at' => now(),
-        ]);
-
-        if ($this->approvableHasWorkflowColumns($approvable)) {
-            $approvable->update([
-                'approval_workflow_id' => $workflow->id,
-                'current_step' => $resolvedFirst->step_order,
-                'workflow_status' => 'in_progress',
-            ]);
-        }
-
-        $records = $this->flowEngine->openWave(
-            $instance,
-            $workflow,
+        // W1-fix: yarışta çift instance engeli — xact lock + açık instance kontrolü
+        return DB::transaction(function () use (
             $approvable,
             $context,
+            $entityType,
+            $companyId,
+            $workflow,
             $resolvedFirst,
-            $skippedSteps
-        );
+            $skippedSteps,
+        ): ?ApprovalRecord {
+            PostgresAdvisoryLock::transactionScoped(
+                $companyId,
+                'workflow_start:'.$entityType,
+                (int) $approvable->id,
+            );
 
-        $record = $records[0] ?? null;
+            $openInstance = ApprovalInstance::query()
+                ->where('approvable_type', get_class($approvable))
+                ->where('approvable_id', $approvable->id)
+                ->whereIn('status', [
+                    ApprovalInstance::STATUS_PENDING,
+                    ApprovalInstance::STATUS_IN_PROGRESS,
+                ])
+                ->orderBy('id')
+                ->first();
 
-        ActivityLog::log(
-            'workflow_started',
-            $approvable,
-            "Onay akışı başlatıldı: {$workflow->name}",
-            null,
-            [
-                'workflow_id' => $workflow->id,
-                'instance_id' => $instance->id,
-                'approver_id' => $record?->approver_id,
-                'opened_count' => count($records),
-            ]
-        );
+            if ($openInstance) {
+                return ApprovalRecord::query()
+                    ->where('approval_instance_id', $openInstance->id)
+                    ->where('is_current', true)
+                    ->where('status', ApprovalRecord::STATUS_PENDING)
+                    ->orderBy('step_order')
+                    ->orderBy('id')
+                    ->first();
+            }
 
-        return $record;
+            $instance = ApprovalInstance::create([
+                'company_id' => $companyId,
+                'approval_workflow_id' => $workflow->id,
+                'approvable_type' => get_class($approvable),
+                'approvable_id' => $approvable->id,
+                'current_step' => $resolvedFirst->step_order,
+                'status' => ApprovalInstance::STATUS_IN_PROGRESS,
+                'started_at' => now(),
+            ]);
+
+            if ($this->approvableHasWorkflowColumns($approvable)) {
+                $approvable->update([
+                    'approval_workflow_id' => $workflow->id,
+                    'current_step' => $resolvedFirst->step_order,
+                    'workflow_status' => 'in_progress',
+                ]);
+            }
+
+            $records = $this->flowEngine->openWave(
+                $instance,
+                $workflow,
+                $approvable,
+                $context,
+                $resolvedFirst,
+                $skippedSteps
+            );
+
+            $record = $records[0] ?? null;
+
+            ActivityLog::log(
+                'workflow_started',
+                $approvable,
+                "Onay akışı başlatıldı: {$workflow->name}",
+                null,
+                [
+                    'workflow_id' => $workflow->id,
+                    'instance_id' => $instance->id,
+                    'approver_id' => $record?->approver_id,
+                    'opened_count' => count($records),
+                ]
+            );
+
+            return $record;
+        });
     }
 
     /**

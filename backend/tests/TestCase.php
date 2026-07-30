@@ -4,6 +4,7 @@ namespace Tests;
 
 use App\Models\Role;
 use App\Models\User;
+use App\Support\PostgresAdvisoryLock;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
@@ -38,6 +39,29 @@ abstract class TestCase extends BaseTestCase
         }
 
         parent::tearDown();
+
+        // W1-fix: oturum ömürlü advisory kilit sızıntısı — test TX rollback sonrası
+        // xact kilitler düşmüş olmalı; kalan granted advisory = sızıntı.
+        $this->assertNoLeakedAdvisoryLocks();
+    }
+
+    protected function assertNoLeakedAdvisoryLocks(): void
+    {
+        try {
+            if (DB::connection()->getDriverName() !== 'pgsql') {
+                return;
+            }
+
+            $held = PostgresAdvisoryLock::heldByCurrentBackend();
+        } catch (\Throwable) {
+            return;
+        }
+
+        $this->assertSame(
+            [],
+            $held,
+            'Bırakılmamış advisory lock (pg_locks): '.json_encode($held)
+        );
     }
 
     /**

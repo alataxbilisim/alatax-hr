@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Role;
+use App\Support\PostgresAdvisoryLock;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -19,18 +20,15 @@ class PermissionSeeder extends Seeder
      * - module.* = Modüldeki tüm yetkiler
      * - module.page.* = Sayfadaki tüm yetkiler
      */
-    /** Test ortamında eşzamanlı PermissionSeeder yarışını engelle (migrate lock'tan ayrı). */
-    private const TESTING_SEED_LOCK_KEY = 74290115;
-
     public function run(): void
     {
+        // W1-fix: oturum kilidi varsayılan TX üzerindeydi; aborted TX'de unlock
+        // SQLSTATE 25P02 → kilit sızıntısı. Ayrı PDO oturumunda kilitle.
         if (app()->environment('testing')) {
-            DB::select('SELECT pg_advisory_lock(?)', [self::TESTING_SEED_LOCK_KEY]);
-            try {
-                $this->runSeeding();
-            } finally {
-                DB::select('SELECT pg_advisory_unlock(?)', [self::TESTING_SEED_LOCK_KEY]);
-            }
+            PostgresAdvisoryLock::withSessionLockOnSideConnection(
+                PostgresAdvisoryLock::KEY_TESTING_PERMISSION_SEED,
+                fn () => $this->runSeeding()
+            );
 
             return;
         }

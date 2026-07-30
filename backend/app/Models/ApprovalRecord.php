@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Services\Approval\ApprovalFlowEngine;
 use App\Services\Notification\NotificationService;
+use App\Support\PostgresAdvisoryLock;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -111,6 +112,8 @@ class ApprovalRecord extends Model
     public function approve(?string $comment = null, ?int $actingApproverId = null): bool
     {
         return (bool) DB::transaction(function () use ($comment, $actingApproverId): bool {
+            $this->acquireInstanceAdvisoryLock();
+
             if ($this->approval_instance_id) {
                 ApprovalInstance::query()->whereKey($this->approval_instance_id)->lockForUpdate()->first();
             }
@@ -154,6 +157,8 @@ class ApprovalRecord extends Model
     public function reject(string $reason, ?int $actingApproverId = null): bool
     {
         return (bool) DB::transaction(function () use ($reason, $actingApproverId): bool {
+            $this->acquireInstanceAdvisoryLock();
+
             if ($this->approval_instance_id) {
                 ApprovalInstance::query()->whereKey($this->approval_instance_id)->lockForUpdate()->first();
             }
@@ -206,6 +211,8 @@ class ApprovalRecord extends Model
     public function skip(?string $reason = null, ?int $actingApproverId = null): bool
     {
         return (bool) DB::transaction(function () use ($reason, $actingApproverId): bool {
+            $this->acquireInstanceAdvisoryLock();
+
             if ($this->approval_instance_id) {
                 ApprovalInstance::query()->whereKey($this->approval_instance_id)->lockForUpdate()->first();
             }
@@ -235,5 +242,22 @@ class ApprovalRecord extends Model
 
             return true;
         });
+    }
+
+    /**
+     * W1-fix: transaction ömürlü advisory lock (company + instance).
+     * Exception/rollback → otomatik bırakılır; timeout → 423.
+     */
+    private function acquireInstanceAdvisoryLock(): void
+    {
+        if (! $this->approval_instance_id) {
+            return;
+        }
+
+        PostgresAdvisoryLock::transactionScoped(
+            (int) $this->company_id,
+            'approval_instance',
+            (int) $this->approval_instance_id,
+        );
     }
 }

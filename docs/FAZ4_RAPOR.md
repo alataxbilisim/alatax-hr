@@ -1510,3 +1510,46 @@ Demo firmada `employee_request` + `expense_request` için koşullu + paralel wor
 | Mojibake | **OK** |
 | DB wipe | **yok** |
 | Motor B0–B5 | **dokunulmadı** |
+
+---
+
+## W1-fix — Advisory lock ömrü + anahtar kapsamı
+
+**Tarih:** 2026-07-30 · **Branch:** `faz4-form-engine`
+
+### Kök neden
+
+`PermissionSeeder` (testing) ve `RefreshDatabase` **oturum ömürlü** `pg_advisory_lock` kullanıyordu; unlock varsayılan bağlantıda, çoğu zaman RefreshDatabase dış TX içindeydi. Seed/migrate sırasında SQL hatası → `SQLSTATE 25P02` (aborted TX) → `pg_advisory_unlock` başarısız → **kilit sızıntısı** → sonraki testler `pg_advisory_lock` / unlock’ta düşüyordu.
+
+### Üretim riski
+
+| Alan | Risk |
+|------|------|
+| PermissionSeeder / RefreshDatabase kilitleri | Yalnız `testing` — prod seed’de yok |
+| Onay yolu (`ApprovalRecord`) | Önceden yalnız `lockForUpdate` (TX ömürlü, güvenli). Concurrent `startWorkflow` kilitsizdi → çift instance riski |
+| Queue worker + session lock kaçışı | Bu kod yolunda yoktu; yine de yanlış desen (session lock + TX içi unlock) prod’da kalıcı kilit üretir |
+
+**Sonuç:** Suite kırığı test altyapısı kaynaklıydı; onayda ek sertleştirme yapıldı (xact lock + timeout + tenant anahtar).
+
+### Kilit envanteri (düzeltme sonrası)
+
+| Yer | Tip | Bırakma | Anahtar |
+|-----|-----|---------|---------|
+| `RefreshDatabase::migrateDatabases` | session, **yan PDO** | finally unlock + PDO close | `74290114` |
+| `PermissionSeeder` (testing) | session, **yan PDO** | finally unlock + PDO close | `74290115` |
+| `ApprovalRecord` approve/reject/skip | `pg_advisory_xact_lock` | TX commit/rollback | `company_id` + crc32(`approval_instance:id`) |
+| `WorkflowService::startWorkflow` | `pg_advisory_xact_lock` | TX commit/rollback | `company_id` + crc32(`workflow_start:{entity}:id`) |
+| `lockForUpdate` (leave/salary/…) | row TX | TX sonu | satır PK |
+
+### Anahtar çakışma
+
+`k1 = company_id` (doğrudan) → aynı entity id farklı firmalarda **çakışmaz** (tenant sızıntısı yok). Timeout: `SET LOCAL lock_timeout` → `AdvisoryLockTimeoutException` **423**.
+
+### Kanıt
+
+| Metrik | Sonuç |
+|--------|--------|
+| `AdvisoryLockW1FixTest` | **5 passed** |
+| Suite | **624 passed** ×5 ardışık + random `111111111` / `222222222` / `333333333` |
+| `pg_locks` tearDown assert | her test sonrası boş |
+| DB wipe | **yok** |

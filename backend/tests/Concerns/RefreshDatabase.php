@@ -2,12 +2,14 @@
 
 namespace Tests\Concerns;
 
+use App\Support\PostgresAdvisoryLock;
 use Illuminate\Foundation\Testing\RefreshDatabase as LaravelRefreshDatabase;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Laravel RefreshDatabase + testing DB advisory lock.
- * Eşzamanlı suite'lerin migrate:fresh / DROP TABLE deadlock'unu engeller.
+ *
+ * Kilit ayrı PDO oturumunda tutulur — migrate sırasında varsayılan bağlantıda
+ * aborted transaction olsa bile unlock/sızıntı olmaz (W1-fix).
  */
 trait RefreshDatabase
 {
@@ -20,13 +22,9 @@ trait RefreshDatabase
      */
     protected function migrateDatabases()
     {
-        $lockKey = 74290114;
-        DB::select('SELECT pg_advisory_lock(?)', [$lockKey]);
-
-        try {
-            $this->laravelMigrateDatabases();
-        } finally {
-            DB::select('SELECT pg_advisory_unlock(?)', [$lockKey]);
-        }
+        PostgresAdvisoryLock::withSessionLockOnSideConnection(
+            PostgresAdvisoryLock::KEY_TESTING_MIGRATE,
+            fn () => $this->laravelMigrateDatabases()
+        );
     }
 }
