@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { portalApi, lookupsApi, type LookupItem } from '@shared/services/api';
+import { extractListData } from '@shared/services/apiHelpers';
 import {
   Select,
   FormEngine,
@@ -73,7 +74,7 @@ const RequestsPage: React.FC = () => {
         lookupsApi.forType('employee_request_status'),
         lookupsApi.forType('employee_request_priority'),
       ]);
-      setRequests(requestsRes.data.data.data || []);
+      setRequests(extractListData<EmployeeRequest>(requestsRes));
       setRequestTypes(typesRes.data.data || []);
       setStatusLookups(statusRes.data.data ?? []);
       setPriorityLookups(priorityRes.data.data ?? []);

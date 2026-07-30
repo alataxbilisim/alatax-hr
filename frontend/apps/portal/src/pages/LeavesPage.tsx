@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { portalApi } from '@shared/services/api';
+import { extractListData } from '@shared/services/apiHelpers';
 import { Select } from '@shared/components';
 import { useTranslation } from '@shared/i18n';
 import toast from 'react-hot-toast';
@@ -24,11 +25,14 @@ interface LeaveType {
 }
 
 interface LeaveBalance {
-  type: string;
-  type_id: number;
-  remaining: number;
-  used: number;
-  total: number;
+  id: number;
+  leave_type_id: number;
+  leave_type?: { id: number; name: string; default_days?: number };
+  remaining_days: number;
+  used_days: number;
+  total_days: number;
+  pending_days?: number;
+  year: number;
 }
 
 const LeavesPage: React.FC = () => {
@@ -48,26 +52,27 @@ const LeavesPage: React.FC = () => {
     reason: '',
   });
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const [leavesRes, typesRes, balancesRes] = await Promise.all([
         portalApi.leaves.list(),
         portalApi.leaves.types(),
         portalApi.leaves.balances(),
       ]);
-      setLeaves(leavesRes.data.data.data || []);
+      setLeaves(extractListData<LeaveRequest>(leavesRes));
       setLeaveTypes(typesRes.data.data || []);
-      setBalances(balancesRes.data.data || []);
+      const rawBalances = balancesRes.data.data;
+      setBalances(Array.isArray(rawBalances) ? (rawBalances as LeaveBalance[]) : []);
     } catch {
-      toast.error('Veriler yüklenemedi');
+      toast.error(t('leaves.loadFailed'));
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
+
+  useEffect(() => {
+    void loadData();
+  }, [loadData]);
 
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, { label: string; class: string }> = {
@@ -139,13 +144,13 @@ const LeavesPage: React.FC = () => {
       {/* Bakiye Kartları */}
       {balances.length > 0 && (
         <div className="row mb-4">
-          {balances.map((balance, index) => (
-            <div key={index} className="col-6 col-lg-3 mb-3">
+          {balances.map((balance) => (
+            <div key={balance.id} className="col-6 col-lg-3 mb-3">
               <div className="balance-card">
                 <div className="balance-info">
-                  <div className="balance-type">{balance.type}</div>
-                  <div className="balance-value">{balance.remaining}</div>
-                  <div className="balance-label">gün kaldı</div>
+                  <div className="balance-type">{balance.leave_type?.name}</div>
+                  <div className="balance-value">{balance.remaining_days}</div>
+                  <div className="balance-label">{t('leaves.daysRemaining')}</div>
                 </div>
               </div>
             </div>

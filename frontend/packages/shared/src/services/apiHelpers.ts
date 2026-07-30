@@ -24,6 +24,28 @@ export function extractData<T>(response: AxiosResponse<ApiResponse<T>>): T {
 }
 
 /**
+ * Extract list rows from API response.
+ * ApiResponse::paginated puts items in `data` (array); some callers historically
+ * expected nested `data.data` (Laravel default paginator JSON). Prefer flat list.
+ *
+ * @return list<T>
+ */
+export function extractListData<T = unknown>(response: AxiosResponse<{ data?: unknown }>): T[] {
+  const payload = response.data?.data;
+  if (Array.isArray(payload)) {
+    return payload as T[];
+  }
+  if (
+    payload !== null
+    && typeof payload === 'object'
+    && Array.isArray((payload as { data?: unknown }).data)
+  ) {
+    return (payload as { data: T[] }).data;
+  }
+  return [];
+}
+
+/**
  * Extract paginated data from API response
  */
 export function extractPaginatedData<T>(

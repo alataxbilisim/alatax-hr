@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { portalApi, lookupsApi, type LookupItem } from '@shared/services/api';
+import { extractListData } from '@shared/services/apiHelpers';
 import { Select } from '@shared/components';
 import toast from 'react-hot-toast';
 import { BsGraphUp, BsListCheck, BsChatDots, BsPlus, BsX } from 'react-icons/bs';
@@ -93,13 +94,13 @@ const PerformancePage: React.FC = () => {
     try {
       if (activeTab === 'reviews') {
         const response = await portalApi.performance.reviews.list();
-        setReviews(response.data.data.data || []);
+        setReviews(extractListData<Review>(response));
       } else if (activeTab === 'okrs') {
         const response = await portalApi.performance.okrs.list({ active_only: true });
-        setOkrs(response.data.data.data || []);
+        setOkrs(extractListData<Objective>(response));
       } else if (activeTab === 'feedbacks') {
         const response = await portalApi.performance.feedbacks.list();
-        setFeedbacks(response.data.data.data || []);
+        setFeedbacks(extractListData<Feedback>(response));
       }
     } catch {
       toast.error('Veriler yüklenemedi');

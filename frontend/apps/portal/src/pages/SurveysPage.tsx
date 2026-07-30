@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { portalApi } from '@shared/services/api';
+import { extractListData } from '@shared/services/apiHelpers';
 import toast from 'react-hot-toast';
 import { BsClipboardData, BsCheckCircle, BsX, BsChevronRight } from 'react-icons/bs';
 
@@ -46,7 +47,7 @@ const SurveysPage: React.FC = () => {
         params.completed_only = true;
       }
       const response = await portalApi.surveys.list(params);
-      setSurveys(response.data.data.data || []);
+      setSurveys(extractListData<Survey>(response));
     } catch {
       toast.error('Anketler yüklenemedi');
     } finally {

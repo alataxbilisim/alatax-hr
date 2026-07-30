@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { portalApi } from '@shared/services/api';
+import { extractListData } from '@shared/services/apiHelpers';
 import toast from 'react-hot-toast';
 import { BsCurrencyDollar, BsDownload, BsEye } from 'react-icons/bs';
 
@@ -27,7 +28,7 @@ const PayslipsPage: React.FC = () => {
   const loadPayslips = async () => {
     try {
       const response = await portalApi.payslips.list();
-      setPayslips(response.data.data.data || []);
+      setPayslips(extractListData<Payslip>(response));
     } catch {
       toast.error('Bordrolar yüklenemedi');
     } finally {

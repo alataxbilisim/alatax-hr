@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { portalApi } from '@shared/services/api';
+import { extractListData } from '@shared/services/apiHelpers';
 import toast from 'react-hot-toast';
 import { BsMegaphone } from 'react-icons/bs';
 
@@ -26,7 +27,7 @@ const AnnouncementsPage: React.FC = () => {
   const loadAnnouncements = async () => {
     try {
       const response = await portalApi.announcements.list();
-      setAnnouncements(response.data.data.data || []);
+      setAnnouncements(extractListData<Announcement>(response));
     } catch {
       toast.error('Duyurular yüklenemedi');
     } finally {

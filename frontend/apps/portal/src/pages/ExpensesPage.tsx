@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { portalApi, lookupsApi, type LookupItem } from '@shared/services/api';
+import { extractListData } from '@shared/services/apiHelpers';
 import { Select } from '@shared/components';
 import { useTranslation } from '@shared/i18n';
 import toast from 'react-hot-toast';
@@ -84,7 +85,7 @@ const ExpensesPage: React.FC = () => {
         portalApi.expenses.summary(),
         lookupsApi.forType('expense_claim_status'),
       ]);
-      setClaims(claimsRes.data.data.data || []);
+      setClaims(extractListData<ExpenseClaim>(claimsRes));
       setCategories(categoriesRes.data.data || []);
       setSummary(summaryRes.data.data);
       setStatusLookups(statusRes.data.data ?? []);

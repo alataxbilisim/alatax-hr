@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { portalApi } from '@shared/services/api';
+import { extractListData } from '@shared/services/apiHelpers';
 import toast from 'react-hot-toast';
 import { BsFileEarmarkText, BsDownload } from 'react-icons/bs';
 
@@ -27,7 +28,7 @@ const DocumentsPage: React.FC = () => {
   const loadDocuments = async () => {
     try {
       const response = await portalApi.documents.list();
-      setDocuments(response.data.data.data || []);
+      setDocuments(extractListData<Document>(response));
     } catch {
       toast.error('Belgeler yüklenemedi');
     } finally {

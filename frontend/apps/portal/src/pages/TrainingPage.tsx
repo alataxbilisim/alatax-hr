@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { portalApi } from '@shared/services/api';
+import { extractListData } from '@shared/services/apiHelpers';
 import toast from 'react-hot-toast';
 import { BsMortarboard, BsAward } from 'react-icons/bs';
 
@@ -45,7 +46,7 @@ const TrainingPage: React.FC = () => {
         params.completed_only = true;
       }
       const response = await portalApi.training.list(params);
-      setTrainings(response.data.data.data || []);
+      setTrainings(extractListData<Training>(response));
     } catch {
       toast.error('Eğitimler yüklenemedi');
     } finally {
