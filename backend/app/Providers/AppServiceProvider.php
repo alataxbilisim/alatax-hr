@@ -27,6 +27,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(SettingsRegistry::class);
         $this->app->singleton(SettingsResolver::class);
         $this->app->singleton(\App\Services\Kvkk\PersonalData\PersonalDataCollectorRegistry::class);
+        // W1 — onaya tabi entity kataloğu
+        $this->app->singleton(\App\Services\Approval\ApprovalEntityRegistry::class);
         // D3 — EmployeeResource resolve() başına DB yerine istek içi memo
         $this->app->singleton(\App\Services\LookupService::class);
     }

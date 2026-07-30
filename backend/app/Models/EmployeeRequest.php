@@ -2,13 +2,16 @@
 
 namespace App\Models;
 
+use App\Services\WorkflowService;
 use App\Traits\BelongsToCompany;
 use App\Traits\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use RuntimeException;
 
 class EmployeeRequest extends Model
 {
@@ -61,41 +64,31 @@ class EmployeeRequest extends Model
 
     const PRIORITY_URGENT = 'urgent';
 
-    /**
-     * Personel
-     */
     public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class);
     }
 
-    /**
-     * Talep tipi
-     */
     public function requestType(): BelongsTo
     {
         return $this->belongsTo(RequestType::class);
     }
 
-    /**
-     * Onaylayan
-     */
     public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
     }
 
-    /**
-     * Geçmiş kayıtları
-     */
     public function history(): HasMany
     {
         return $this->hasMany(EmployeeRequestHistory::class)->orderByDesc('created_at');
     }
 
-    /**
-     * Durum etiketi
-     */
+    public function approvalRecords(): MorphMany
+    {
+        return $this->morphMany(ApprovalRecord::class, 'approvable');
+    }
+
     public function getStatusLabelAttribute(): string
     {
         $statuses = [
@@ -109,9 +102,6 @@ class EmployeeRequest extends Model
         return $statuses[$this->status] ?? $this->status;
     }
 
-    /**
-     * Öncelik etiketi
-     */
     public function getPriorityLabelAttribute(): string
     {
         $priorities = [
@@ -124,19 +114,68 @@ class EmployeeRequest extends Model
         return $priorities[$this->priority] ?? $this->priority;
     }
 
-    /**
-     * Beklemede mi?
-     */
     public function isPending(): bool
     {
         return $this->status === self::STATUS_PENDING;
     }
 
     /**
-     * Onayla
+     * Motor tamamlandığında (tek yol — yeni kayıtlar).
+     */
+    public function onWorkflowCompleted(?int $approverId = null): void
+    {
+        $oldStatus = $this->status;
+        $actorId = $approverId ?? auth()->id();
+
+        $this->update([
+            'status' => self::STATUS_APPROVED,
+            'approved_by' => $actorId,
+            'approved_at' => now(),
+            'rejection_reason' => null,
+        ]);
+
+        $this->history()->create([
+            'old_status' => $oldStatus,
+            'new_status' => self::STATUS_APPROVED,
+            'comment' => 'Onay akışı tamamlandı',
+            'changed_by' => $actorId,
+        ]);
+    }
+
+    /**
+     * Motor reddi.
+     */
+    public function onWorkflowRejected(string $reason, int $rejecterId): void
+    {
+        $oldStatus = $this->status;
+
+        $this->update([
+            'status' => self::STATUS_REJECTED,
+            'rejection_reason' => $reason,
+            'approved_by' => $rejecterId,
+            'approved_at' => now(),
+        ]);
+
+        $this->history()->create([
+            'old_status' => $oldStatus,
+            'new_status' => self::STATUS_REJECTED,
+            'comment' => $reason,
+            'changed_by' => $rejecterId,
+        ]);
+    }
+
+    /**
+     * Geçiş verisi (instance yok): legacy doğrudan onay.
+     * Açık instance varken ÇAĞRILMAZ — çift onay engeli.
      */
     public function approve(?string $note = null): void
     {
+        if (app(WorkflowService::class)->hasOpenInstance($this)) {
+            throw new RuntimeException(
+                'Bu talep onay motoru üzerinden sonuçlandırılmalıdır (açık approval_instance var).'
+            );
+        }
+
         $oldStatus = $this->status;
 
         $this->update([
@@ -154,10 +193,16 @@ class EmployeeRequest extends Model
     }
 
     /**
-     * Reddet
+     * Geçiş verisi (instance yok): legacy red.
      */
     public function reject(string $reason): void
     {
+        if (app(WorkflowService::class)->hasOpenInstance($this)) {
+            throw new RuntimeException(
+                'Bu talep onay motoru üzerinden sonuçlandırılmalıdır (açık approval_instance var).'
+            );
+        }
+
         $oldStatus = $this->status;
 
         $this->update([
@@ -175,11 +220,10 @@ class EmployeeRequest extends Model
         ]);
     }
 
-    /**
-     * İptal et
-     */
     public function cancel(): void
     {
+        app(WorkflowService::class)->cancelOpenInstances($this);
+
         $oldStatus = $this->status;
 
         $this->update([
@@ -194,17 +238,11 @@ class EmployeeRequest extends Model
         ]);
     }
 
-    /**
-     * Bekleyen talepler
-     */
     public function scopePending($query)
     {
         return $query->where('status', self::STATUS_PENDING);
     }
 
-    /**
-     * Onay bekleyen
-     */
     public function scopeAwaitingApproval($query)
     {
         return $query->whereIn('status', [self::STATUS_PENDING, self::STATUS_IN_REVIEW]);

@@ -81,6 +81,26 @@ class DataSubjectRequest extends Model
         return $this->morphMany(ApprovalRecord::class, 'approvable');
     }
 
+    /**
+     * Onay motoru tamam — yanıt/export hattı ayrı; inceleme durumuna taşır.
+     */
+    public function onWorkflowCompleted(?int $approverId = null): void
+    {
+        $this->forceFill([
+            'status' => DataSubjectRequestStatus::InReview,
+            'updated_by' => $approverId,
+        ])->save();
+    }
+
+    public function onWorkflowRejected(string $reason, int $rejecterId): void
+    {
+        $this->forceFill([
+            'status' => DataSubjectRequestStatus::Rejected,
+            'rejection_reason' => $reason,
+            'updated_by' => $rejecterId,
+        ])->save();
+    }
+
     public function isOverdue(): bool
     {
         return $this->due_date !== null

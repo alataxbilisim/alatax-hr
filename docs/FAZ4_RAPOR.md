@@ -1456,3 +1456,57 @@ Policy: `ApprovalWorkflowPolicy` (company scope). Audit: `Auditable` + ActivityL
 | DB wipe | **yok** |
 
 **DUR — KULLANICI GÖRSEL KONTROLÜ BEKLİYOR:** Stüdyo → Onay Akışları editörü (adım kartları, koşul, paralel önizleme, seed butonu).
+
+---
+
+## W1 — Onay motoru yayılımı + ApprovalEntityRegistry
+
+**Tarih:** 2026-07-10 · **Branch:** `faz4-form-engine` · **Motor:** ApprovalFlowEngine B0–B5 **dokunulmadı**.
+
+### Teşhis tablosu
+
+| Entity | Bugünkü mantık | Bağlandı mı? | Gerekçe |
+|--------|----------------|--------------|---------|
+| `leave_request` | Portal/company create → `startWorkflow` | Registry (davranış aynı) | Zaten motor |
+| `expense_request` | Portal submit → `startWorkflow` | Registry (davranış aynı) | Zaten motor |
+| `employee_request` | Portal create → `pending`; model `approve`/`reject` var; company approve API yok; `requires_approval`/`approval_flow` kullanılmıyordu | **Evet** | Gerçek talep/onay alanı; çok adımlı karar |
+| `salary_review` | Submit → motor | Registry | Zaten motor |
+| `data_subject_request` | Create/verify → motor | Registry (+ `onWorkflowCompleted/Rejected`) | Zaten motor |
+| `job_application` | Kanban `PUT …/status` | **Hayır (DUR)** | Manuel pipeline; sıralı onay zinciri değil |
+| Onboarding görevleri | Checklist complete/skip | **Hayır (DUR)** | Checklist; onay motoru değil |
+
+### Registry
+
+`ApprovalEntityRegistry` (D1a/D2b/D4a deseni): entity_type, model, trigger, outcome, conditionFields, cancelBehavior.  
+`WorkflowService::getEntityType` + Stüdyo `getEntityTypes` / condition-meta registry’den beslenir.
+
+### Geçiş verisi
+
+**Seçim (ii) geriye uyum:** instance’sız bekleyen `employee_request` → `EmployeeRequest::approve/reject` (legacy).  
+Açık instance varken model approve **RuntimeException** (çift onay yok).  
+Opsiyonel: `php artisan approvals:backfill-employee-requests` (i).
+
+### Workflow yoksa
+
+Leave/expense ile tutarlı: **pending kalır, otomatik onay YOK**.  
+`requires_approval=false` → create’te otomatik `approved` (motor yok).
+
+### Yapısal guard
+
+`ApprovalEntityRegistryStructuralTest`: registry anahtarları ↔ probe map birebir; her entity gerçek API yolundan → `approval_instance`.
+
+### Demo seed
+
+Demo firmada `employee_request` + `expense_request` için koşullu + paralel workflow (Stüdyo’da görünür).
+
+### Doğrulama
+
+| Metrik | Sonuç |
+|--------|--------|
+| W1 feature | `ApprovalEntityRegistryStructuralTest` 2 + `EmployeeRequestApprovalWorkflowW1Test` 8 |
+| Tam suite | **619 passed / 0 fail** (tek + 3× ardışık + random seed `1862358535`) |
+| 3 SPA `tsc -b` + lint | **0** |
+| Select sentinel | **PASSED** |
+| Mojibake | **OK** |
+| DB wipe | **yok** |
+| Motor B0–B5 | **dokunulmadı** |

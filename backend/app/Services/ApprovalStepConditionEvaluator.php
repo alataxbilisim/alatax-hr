@@ -19,6 +19,9 @@ class ApprovalStepConditionEvaluator
         'requester_id',
         'amount',
         'department_id',
+        // W1 — employee_request (ApprovalEntityRegistry conditionFields)
+        'priority',
+        'request_type_id',
     ];
 
     /** @var list<string> */

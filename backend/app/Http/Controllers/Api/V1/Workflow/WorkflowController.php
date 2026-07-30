@@ -7,6 +7,7 @@ use App\Http\Requests\Workflow\StoreWorkflowRequest;
 use App\Http\Requests\Workflow\UpdateWorkflowRequest;
 use App\Models\ApprovalStep;
 use App\Models\ApprovalWorkflow;
+use App\Services\Approval\ApprovalEntityRegistry;
 use App\Services\ApprovalStepConditionEvaluator;
 use App\Services\Workflow\WorkflowManagementService;
 use Illuminate\Http\JsonResponse;
@@ -123,12 +124,17 @@ class WorkflowController extends BaseController
     }
 
     /**
-     * B3 koşul whitelist — Stüdyo UI için.
+     * B3 koşul whitelist — Stüdyo UI için (evaluator + registry birleşimi).
      */
     public function getConditionMeta(): JsonResponse
     {
+        $fields = array_values(array_unique(array_merge(
+            ApprovalStepConditionEvaluator::allowedFields(),
+            app(ApprovalEntityRegistry::class)->conditionFields(),
+        )));
+
         return $this->success([
-            'fields' => ApprovalStepConditionEvaluator::allowedFields(),
+            'fields' => $fields,
             'ops' => ApprovalStepConditionEvaluator::allowedOps(),
         ], 'Koşul meta');
     }

@@ -218,6 +218,8 @@ class PortalExpenseController extends BaseController
             return $this->error('Bu masraf talebi iptal edilemez', 422);
         }
 
+        $this->workflowService->cancelOpenInstances($claim);
+
         ExpenseClaim::withoutAuditing(fn () => $claim->delete());
 
         ActivityLog::log('expense_claim_cancelled', $claim, 'Masraf talebi iptal edildi');

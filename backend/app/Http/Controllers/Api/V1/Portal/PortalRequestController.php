@@ -8,15 +8,18 @@ use App\Models\EmployeeRequest;
 use App\Models\RequestType;
 use App\Services\LookupService;
 use App\Services\RequestTypeFormFieldsAdapter;
+use App\Services\WorkflowService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PortalRequestController extends BaseController
 {
     public function __construct(
         protected LookupService $lookups,
         protected RequestTypeFormFieldsAdapter $formFieldsAdapter,
+        protected WorkflowService $workflowService,
     ) {}
 
     /**
@@ -151,7 +154,7 @@ class PortalRequestController extends BaseController
             $validated['form_data'] ?? []
         );
 
-        return DB::transaction(function () use ($request, $validated, $user, $employee) {
+        return DB::transaction(function () use ($request, $validated, $user, $employee, $requestType) {
             // Dosyaları yükle
             $attachments = [];
             if ($request->hasFile('attachments')) {
@@ -166,6 +169,8 @@ class PortalRequestController extends BaseController
                 }
             }
 
+            $requiresApproval = (bool) $requestType->requires_approval;
+
             $employeeRequest = EmployeeRequest::create([
                 'company_id' => $user->company_id,
                 'employee_id' => $employee->id,
@@ -176,17 +181,37 @@ class PortalRequestController extends BaseController
                 'priority' => $validated['priority'] ?? 'normal',
                 'effective_date' => $validated['effective_date'] ?? null,
                 'attachments' => ! empty($attachments) ? $attachments : null,
-                'status' => 'pending',
+                'status' => $requiresApproval
+                    ? EmployeeRequest::STATUS_PENDING
+                    : EmployeeRequest::STATUS_APPROVED,
+                'approved_by' => $requiresApproval ? null : $user->id,
+                'approved_at' => $requiresApproval ? null : now(),
                 'created_by' => $user->id,
             ]);
 
-            // Geçmiş kaydı ekle
             $employeeRequest->history()->create([
                 'old_status' => null,
-                'new_status' => 'pending',
-                'comment' => 'Talep oluşturuldu',
+                'new_status' => $employeeRequest->status,
+                'comment' => $requiresApproval ? 'Talep oluşturuldu' : 'Onay gerektirmeyen talep — otomatik onay',
                 'changed_by' => $user->id,
             ]);
+
+            // W1: requires_approval → ApprovalFlowEngine (workflow yoksa pending kalır; otomatik onay YOK)
+            if ($requiresApproval) {
+                $record = $this->workflowService->startWorkflow($employeeRequest, [
+                    'requester_id' => $user->id,
+                    'priority' => $employeeRequest->priority,
+                    'request_type_id' => (int) $employeeRequest->request_type_id,
+                    'department_id' => $employee->department_id,
+                ]);
+
+                if (! $record) {
+                    Log::warning('portal.employee_request.created_without_workflow', [
+                        'employee_request_id' => $employeeRequest->id,
+                        'company_id' => $employeeRequest->company_id,
+                    ]);
+                }
+            }
 
             return $this->created($employeeRequest->load('requestType:id,name'), 'Talep başarıyla oluşturuldu');
         });

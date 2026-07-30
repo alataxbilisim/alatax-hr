@@ -49,9 +49,23 @@ class ApprovalWorkflow extends Model
 
     const ENTITY_DATA_SUBJECT_REQUEST = 'data_subject_request';
 
+    const ENTITY_EMPLOYEE_REQUEST = 'employee_request';
+
+    /**
+     * Stüdyo / FormRequest — ApprovalEntityRegistry kaynağı (bağlı entity'ler).
+     * Henüz registry'de olmayan legacy anahtarlar geriye uyumluluk için eklenir.
+     *
+     * @return array<string, string>
+     */
     public static function getEntityTypes(): array
     {
-        return [
+        $fromRegistry = [];
+        if (app()->bound(\App\Services\Approval\ApprovalEntityRegistry::class)) {
+            $fromRegistry = app(\App\Services\Approval\ApprovalEntityRegistry::class)->entityTypeLabels();
+        }
+
+        // Registry dışı (henüz motora bağlanmamış / pipeline) — Stüdyo'da seçilebilir kalsın
+        $legacy = [
             self::ENTITY_LEAVE_REQUEST => 'İzin Talebi',
             self::ENTITY_ASSET_REQUEST => 'Varlık Talebi',
             self::ENTITY_EXPENSE_REQUEST => 'Masraf Talebi',
@@ -59,7 +73,10 @@ class ApprovalWorkflow extends Model
             self::ENTITY_DOCUMENT_APPROVAL => 'Evrak Onayı',
             self::ENTITY_SALARY_REVIEW => 'Zam Dönemi',
             self::ENTITY_DATA_SUBJECT_REQUEST => 'KVKK Veri Sahibi Talebi',
+            self::ENTITY_EMPLOYEE_REQUEST => 'Personel Talebi',
         ];
+
+        return $fromRegistry + $legacy;
     }
 
     // Relationships

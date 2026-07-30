@@ -11,6 +11,7 @@ use App\Models\ApprovalRecord;
 use App\Models\ApprovalStep;
 use App\Models\ApprovalWorkflow;
 use App\Models\User;
+use App\Services\Approval\ApprovalEntityRegistry;
 use App\Services\Approval\ApprovalFlowEngine;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
@@ -119,6 +120,27 @@ class WorkflowService
      */
     public function resubmitWorkflow(Model $approvable, array $context = []): ?ApprovalRecord
     {
+        $this->cancelOpenInstances($approvable, 'Yeniden gönderim — önceki onay adımı kapatıldı');
+
+        if ($this->approvableHasWorkflowColumns($approvable)) {
+            $approvable->update([
+                'approval_workflow_id' => null,
+                'current_step' => null,
+                'workflow_status' => 'pending',
+            ]);
+        }
+
+        return $this->startWorkflow($approvable, $context);
+    }
+
+    /**
+     * Entity iptal/yeniden gönderim — açık instance + pending record kapat.
+     * ApprovalFlowEngine runtime'ına dokunmaz (bağlantı katmanı).
+     */
+    public function cancelOpenInstances(
+        Model $approvable,
+        string $skipComment = 'Talep iptal edildi — onay adımı atlandı',
+    ): void {
         ApprovalInstance::query()
             ->where('approvable_type', get_class($approvable))
             ->where('approvable_id', $approvable->id)
@@ -137,17 +159,31 @@ class WorkflowService
             ->where('approvable_type', get_class($approvable))
             ->where('approvable_id', $approvable->id)
             ->where('is_current', true)
-            ->update(['is_current' => false]);
-
-        if ($this->approvableHasWorkflowColumns($approvable)) {
-            $approvable->update([
-                'approval_workflow_id' => null,
-                'current_step' => null,
-                'workflow_status' => 'pending',
+            ->where('status', ApprovalRecord::STATUS_PENDING)
+            ->update([
+                'status' => ApprovalRecord::STATUS_SKIPPED,
+                'comment' => $skipComment,
+                'decided_at' => now(),
+                'is_current' => false,
             ]);
-        }
 
-        return $this->startWorkflow($approvable, $context);
+        ApprovalRecord::query()
+            ->where('approvable_type', get_class($approvable))
+            ->where('approvable_id', $approvable->id)
+            ->where('is_current', true)
+            ->update(['is_current' => false]);
+    }
+
+    public function hasOpenInstance(Model $approvable): bool
+    {
+        return ApprovalInstance::query()
+            ->where('approvable_type', get_class($approvable))
+            ->where('approvable_id', $approvable->id)
+            ->whereIn('status', [
+                ApprovalInstance::STATUS_PENDING,
+                ApprovalInstance::STATUS_IN_PROGRESS,
+            ])
+            ->exists();
     }
 
     public function approve(ApprovalRecord $record, int $approverId, ?string $comment = null): bool
@@ -308,17 +344,20 @@ class WorkflowService
 
     protected function getEntityType(Model $approvable): string
     {
-        $class = class_basename($approvable);
+        $fromRegistry = app(ApprovalEntityRegistry::class)
+            ->findByModelClass(get_class($approvable));
 
+        if ($fromRegistry !== null) {
+            return $fromRegistry->entityType;
+        }
+
+        // Registry dışı legacy / henüz bağlanmamış modeller
+        $class = class_basename($approvable);
         $mapping = [
-            'LeaveRequest' => ApprovalWorkflow::ENTITY_LEAVE_REQUEST,
             'AssetRequest' => ApprovalWorkflow::ENTITY_ASSET_REQUEST,
             'ExpenseRequest' => ApprovalWorkflow::ENTITY_EXPENSE_REQUEST,
-            'ExpenseClaim' => ApprovalWorkflow::ENTITY_EXPENSE_REQUEST,
             'TrainingRequest' => ApprovalWorkflow::ENTITY_TRAINING_REQUEST,
             'Document' => ApprovalWorkflow::ENTITY_DOCUMENT_APPROVAL,
-            'SalaryReviewPeriod' => ApprovalWorkflow::ENTITY_SALARY_REVIEW,
-            'DataSubjectRequest' => ApprovalWorkflow::ENTITY_DATA_SUBJECT_REQUEST,
         ];
 
         return $mapping[$class] ?? strtolower($class);

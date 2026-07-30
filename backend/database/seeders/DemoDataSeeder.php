@@ -642,6 +642,82 @@ class DemoDataSeeder extends Seeder
             'approver_type' => ApprovalStep::APPROVER_USER, 'specific_user_id' => $ik->id, 'is_required' => true,
             'parallel_group' => 1, 'completion_policy' => ApprovalStep::COMPLETION_ALL,
         ]);
+
+        // W1 — personel talebi (koşullu + paralel)
+        ApprovalWorkflow::query()
+            ->where('company_id', $company->id)
+            ->where('entity_type', ApprovalWorkflow::ENTITY_EMPLOYEE_REQUEST)
+            ->where('is_default', true)
+            ->update(['is_default' => false]);
+
+        $reqConditional = ApprovalWorkflow::updateOrCreate(
+            ['company_id' => $company->id, 'name' => 'Demo QA Koşullu Talep', 'entity_type' => ApprovalWorkflow::ENTITY_EMPLOYEE_REQUEST],
+            ['description' => 'W1 koşullu personel talebi', 'is_active' => true, 'is_default' => true, 'created_by' => $admin->id]
+        );
+        ApprovalStep::query()->where('approval_workflow_id', $reqConditional->id)->delete();
+        ApprovalStep::create([
+            'approval_workflow_id' => $reqConditional->id, 'step_order' => 1, 'name' => 'Direkt Yönetici',
+            'approver_type' => ApprovalStep::APPROVER_DYNAMIC_MANAGER, 'is_required' => true,
+        ]);
+        ApprovalStep::create([
+            'approval_workflow_id' => $reqConditional->id, 'step_order' => 2, 'name' => 'İK (yüksek öncelik)',
+            'approver_type' => ApprovalStep::APPROVER_USER, 'specific_user_id' => $ik->id, 'is_required' => true,
+            'condition' => ['field' => 'priority', 'op' => 'in', 'value' => ['high', 'urgent']],
+        ]);
+
+        $reqParallel = ApprovalWorkflow::updateOrCreate(
+            ['company_id' => $company->id, 'name' => 'Demo Paralel Talep', 'entity_type' => ApprovalWorkflow::ENTITY_EMPLOYEE_REQUEST],
+            ['description' => 'W1 paralel personel talebi', 'is_active' => true, 'is_default' => false, 'created_by' => $admin->id]
+        );
+        ApprovalStep::query()->where('approval_workflow_id', $reqParallel->id)->delete();
+        ApprovalStep::create([
+            'approval_workflow_id' => $reqParallel->id, 'step_order' => 1, 'name' => 'Paralel A (Müdür)',
+            'approver_type' => ApprovalStep::APPROVER_USER, 'specific_user_id' => $mudur->id, 'is_required' => true,
+            'parallel_group' => 1, 'completion_policy' => ApprovalStep::COMPLETION_ALL,
+        ]);
+        ApprovalStep::create([
+            'approval_workflow_id' => $reqParallel->id, 'step_order' => 2, 'name' => 'Paralel B (İK)',
+            'approver_type' => ApprovalStep::APPROVER_USER, 'specific_user_id' => $ik->id, 'is_required' => true,
+            'parallel_group' => 1, 'completion_policy' => ApprovalStep::COMPLETION_ALL,
+        ]);
+
+        // W1 — masraf (koşullu varsayılan)
+        ApprovalWorkflow::query()
+            ->where('company_id', $company->id)
+            ->where('entity_type', ApprovalWorkflow::ENTITY_EXPENSE_REQUEST)
+            ->where('is_default', true)
+            ->update(['is_default' => false]);
+
+        $expConditional = ApprovalWorkflow::updateOrCreate(
+            ['company_id' => $company->id, 'name' => 'Demo QA Koşullu Masraf', 'entity_type' => ApprovalWorkflow::ENTITY_EXPENSE_REQUEST],
+            ['description' => 'W1 koşullu masraf', 'is_active' => true, 'is_default' => true, 'created_by' => $admin->id]
+        );
+        ApprovalStep::query()->where('approval_workflow_id', $expConditional->id)->delete();
+        ApprovalStep::create([
+            'approval_workflow_id' => $expConditional->id, 'step_order' => 1, 'name' => 'Yönetici',
+            'approver_type' => ApprovalStep::APPROVER_DYNAMIC_MANAGER, 'is_required' => true,
+        ]);
+        ApprovalStep::create([
+            'approval_workflow_id' => $expConditional->id, 'step_order' => 2, 'name' => 'İK (>1000 TL)',
+            'approver_type' => ApprovalStep::APPROVER_USER, 'specific_user_id' => $ik->id, 'is_required' => true,
+            'condition' => ['field' => 'amount', 'op' => '>', 'value' => 1000],
+        ]);
+
+        $expParallel = ApprovalWorkflow::updateOrCreate(
+            ['company_id' => $company->id, 'name' => 'Demo Paralel Masraf', 'entity_type' => ApprovalWorkflow::ENTITY_EXPENSE_REQUEST],
+            ['description' => 'W1 paralel masraf', 'is_active' => true, 'is_default' => false, 'created_by' => $admin->id]
+        );
+        ApprovalStep::query()->where('approval_workflow_id', $expParallel->id)->delete();
+        ApprovalStep::create([
+            'approval_workflow_id' => $expParallel->id, 'step_order' => 1, 'name' => 'Paralel A (Müdür)',
+            'approver_type' => ApprovalStep::APPROVER_USER, 'specific_user_id' => $mudur->id, 'is_required' => true,
+            'parallel_group' => 1, 'completion_policy' => ApprovalStep::COMPLETION_ALL,
+        ]);
+        ApprovalStep::create([
+            'approval_workflow_id' => $expParallel->id, 'step_order' => 2, 'name' => 'Paralel B (İK)',
+            'approver_type' => ApprovalStep::APPROVER_USER, 'specific_user_id' => $ik->id, 'is_required' => true,
+            'parallel_group' => 1, 'completion_policy' => ApprovalStep::COMPLETION_ALL,
+        ]);
     }
 
     private function seedKvkk(Company $company): void
