@@ -74,7 +74,22 @@ jobs:
             echo "TELESCOPE_ENABLED=false"
           } >> .env
 
+      - name: Install PostgreSQL client (schema dump load)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends postgresql-client
+
       - name: Migrate (PostgreSQL)
+        run: php artisan migrate --force
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: alatax_hr_testing
+          DB_USERNAME: alatax
+          DB_PASSWORD: secret
+
+      - name: Migrate again on existing schema (idempotent)
         run: php artisan migrate --force
         env:
           DB_CONNECTION: pgsql
