@@ -159,3 +159,131 @@ Bu dalgada yalnız izin bağlandı. Kanıt: `PortalLeaveApprovalWorkflowQa2Test`
 ### Kalan açık
 - Talepler / başvuru / onboarding → motor (DUR)
 - Rapor builder derin (pivot, ECharts, Excel/PDF içerik), rapor@ gizlendi şeridi UI, pano çapraz filtre, KVKK paket JSON+PDF UI, yasal 422 UI, 1366 taşma tam tarama
+
+---
+
+## QA-2b — Derin UI süpürmesi (rapor / pano / onay / KVKK / ayar / portal)
+
+**Tarih:** 2026-07-31  
+**Branch:** `faz4-form-engine`  
+**Kapsam:** Teşhis odaklı (🔴/🟠 yapısal bulgular düzeltilmedi; ayrı dalga)  
+**Mutlak:** DB silinmedi · gerçek imha yok (yalnız dry-run / aday=0) · suite’e dokunulmadı  
+**Ortam notu:** Vite varsayılan `localhost:8000` tarayıcıda `Failed to fetch`; yerel `.env.local` → `VITE_API_URL=http://127.0.0.1:8000/api/v1` (gitignore `*.local`, commit yok)
+
+### Özet sayılar
+
+| Ağırlık | Adet |
+|---------|------|
+| 🔴 kırık | 3 |
+| 🟠 hatalı | 5 |
+| 🟡 kozmetik | 4 |
+| 🔵 iyileştirme / bloklanan | 6 |
+| **Toplam** | **18** |
+
+Ekran görüntüsü: **`21`…`38`** (+ `qa2b-dsr-data.json`) — `docs/qa/e2e/`
+
+---
+
+### Bulgular
+
+| # | Ekran | Bulgu | Ağırlık | Görüntü |
+|---|-------|-------|---------|---------|
+| 1 | `/dashboards` → sistem panoları (Puantaj #3, İzin #2) | Tüm widget’lar «Widget raporu bulunamadı veya erişim yok»; ham i18n anahtarları (`timesheet.*`, `leaves.*`). Sistem panoları veri göstermiyor. | 🔴 | `28-dashboard-puantaj-widgets-missing.png`, `29-dashboard-izin-widgets.png` |
+| 2 | Portal `/profile` | Sayfa sık beyaz ekran (`#root` boş); tema UI buradan test edilemedi. `GET /portal/profile` ≥12 sn (yavaş). | 🔴 | `38-portal-profile-blank.png` |
+| 3 | Portal talepler + W1 `employee_request` | Workflow #5 API ile tanımlandı; `request_types` demo’da **0 satır** → `GET /portal/requests/types` boş → talep açılamıyor → `approval_instances` **0** (Stüdyo→gerçek instance kanıtı yok). | 🔴 | — |
+| 4 | Rapor builder toolbar | `t('reportEngine.measures')` → *KEY 'REPORTENGİNE.MEASURES (TR)' RETURNED AN OBJECT…* (i18n nesne vs string). | 🟠 | `23-report-builder-preview-filter.png` |
+| 5 | Employees dataset | Katalogda custom field yok (`CUSTOM_COUNT=0`); «biri custom field olsun» adımı seçilemedi. | 🟠 | — |
+| 6 | Rapor pivot UI | 2D matris (satır=dept × sütun=cinsiyet) UI’da flaky; cinsiyet count (19/21) görüldü. API pivot + alt toplam OK. Drill / detay satırları UI’da tamamlanamadı. | 🟠 | `24-report-pivot-partial.png` |
+| 7 | `/reports/schedules` | Alıcı seçimi `window.prompt(user_id)` — UX kırılgan; kayıt API ile schedule #1 oluştu. | 🟠 | — |
+| 8 | Portal bordro | Liste var; `has_file=false` → «Bordro dosyası bulunamadı» (PDF açılamıyor). | 🟠 | — |
+| 9 | Ayar registry modül grupları | Grup etiketlerinde ham slug (`kvkk`, `leaves`, `reports`). | 🟡 | `32-settings-registry.png` |
+| 10 | `rapor@` maaş raporu #52 | Gizlenen sütun şeridi OK; seçili kolon listesinde `gross_salary` / `net_salary` ham key. | 🟡 | `36-rapor-hidden-columns-banner.png` |
+| 11 | KVKK 9. sekme screenshot | `31-kvkk-9-tabs.png` kimi oturumlarda siyah/boş kare (CDP metin: 9 sekme doğrulandı). | 🟡 | `31-kvkk-9-tabs.png` |
+| 12 | Zamanlama / ölçü UX | Ölçü DSL hata mesajları TR ve net; schedule UI prompt’a bağımlı. | 🟡 | `25` / `26` |
+| 13 | Pano düzenleme / çapraz filtre | Widget taşı-boyutlandır-kaydet, global filtre, dilim çapraz filtre UI derinliği bu dalgada tamamlanamadı (widget veri yokluğu blokladı). | 🔵 | `27-dashboards-sistem.png` |
+| 14 | Excel / PDF export içerik | FE client-side; API `POST …/reports/51/export` JSON satır döndü (8 IK). Açılmış .xlsx/.pdf dosya içeriği bu oturumda dosya olarak doğrulanamadı. | 🔵 | — |
+| 15 | ECharts grafik modu | Builder grafik modu derin UI doğrulanamadı. | 🔵 | — |
+| 16 | KVKK saklama dry-run UI | Aktif politika + `kvkk:scan-retention --company=demo-firma` → **aday 0**; ERTELE / dry-run önizleme UI’si adaysız koşulamadı. İmha onaylanmadı. | 🔵 | — |
+| 17 | Ayar departman scope badge | Yasal taban 422 OK; «bu departman için özel» göstergesi bu ayarda scope yasak → derin test eksik. İzin davranışı değişimi tam kanıtlanmadı. | 🔵 | — |
+| 18 | Ortam | Host `localhost` vs `127.0.0.1` API fetch kırığı — yerel `.env.local` ile aşıldı (ürün default’u tartışmalı). | 🔵 | `21-login-attempt.png` |
+
+---
+
+### Doğrulanan yetenekler
+
+| Yetenek | Sonuç | Not |
+|---------|-------|-----|
+| Builder: dataset + 4 alan + filtre + önizleme + kaydet | ✅ | Departman=İK → **8 satır**; kayıt **#51** `QA2b Personel IK` (`23`) |
+| Custom field seçimi | ❌ | Katalogda yok |
+| Pivot matris + alt toplam | ⚠️ | API ✅; UI kısmi (`24`) |
+| Drill / detay satırları | ❌ | UI tamamlanamadı |
+| Ölçü DSL validate + hatalı formül | ✅ | `sum(olmayan_alan)` net TR; kayıt `qa2b_dept_ratio` (`25`/`26`) |
+| ECharts grafik | ❌ | Derin UI yok |
+| Excel içerik (açık dosya) | ⚠️ | API export dolu; .xlsx açılmadı |
+| PDF Türkçe karakter | ⚠️ | Dosya açılmadı |
+| «X sütun gizlendi» şeridi (`rapor@`) | ✅ | `2 sütun… gizlendi: Brüt Maaş, Net Maaş` (`36`) |
+| Zamanlanmış rapor | ⚠️ | API schedule #1; UI `prompt` |
+| Sistem panoları listeleniyor | ✅ | 9 pano (`27`) |
+| Widget veri | ❌ | «rapor bulunamadı» (`28`/`29`) |
+| Pano düzenleme kalıcılığı | ❌ | Bloklandı |
+| Global / çapraz filtre | ❌ | Bloklandı |
+| ModuleInsightsBar (3 modül) | ✅ | `/leaves`, `/recruitment/applications`, `/pdks` — Pano \| Raporlar (`37`) |
+| Onay stüdyo (adım/koşul/paralel) | ✅ | Workflow #3 Demo QA Koşullu İzin (`30`) |
+| `employee_request` → instance | ❌ | `request_types` boş; instance 0 |
+| Onaycı bildirim + durum | ❌ | Önceki adıma bağlı |
+| KVKK 9 sekme | ✅ | CDP/UI |
+| Yayınlı aydınlatma edit engeli | ✅ | Net TR mesaj |
+| Kimlik yokken paket engeli | ✅ | «Kimlik doğrulanmadan ihraç paketi üretilemez.» |
+| DSR paket kapsamı (yalnız kişi) | ✅ | ZIP `data.json`+`ozet.html`; yalnız **DEM-020** / Demo Personel; başka DEM/admin yok (`qa2b-dsr-data.json`) |
+| Saklama dry-run UI | ⚠️ | Aday 0 — UI yok |
+| Yasal taban 422 TR | ✅ | `leaves.retention.months=1` → «Yasal asgari 12.» |
+| Portal liste + bakiye | ✅ | Liste dolu; **12 gün** (`34`) — QA-2 doğrulaması |
+| Portal ≥1024 rail / &lt;1024 alt çubuk | ✅ | Alt çubuk 5 sekme+QR (`35`) |
+| Portal koyu tema kalıcılığı | ⚠️ | `localStorage.theme` + `data-theme` reload’da kalır; Profil UI beyaz ekran |
+| 1366×768 yatay taşma | ✅ | Gezilen sayfalarda genel yok |
+
+---
+
+### Konsol hataları (sayfa başına)
+
+| Sayfa | Hata / gözlem |
+|-------|----------------|
+| Company login (API `localhost:8000`) | `Failed to fetch` / ağ hatası — `.env.local` sonrası düzeldi |
+| `/reports` (builder) | i18n: `REPORTENGİNE.MEASURES` object-as-string |
+| `/dashboards/:id` (sistem) | Widget yükleme başarısız mesajı (UI); ham key toast/label |
+| `/reports` `rapor@` #52 | Şerit OK; seçili kolon ham key (konsol kırmızısı yok) |
+| `/settings/workflows/3` | Görünür kırmızı yok |
+| `/kvkk` | Görünür kırmızı yok |
+| `/settings/registry` | Görünür kırmızı yok |
+| `/leaves`, `/pdks`, recruitment | ModuleInsightsBar OK; konsol kritik yok |
+| Portal `/dashboard`, `/leaves` | Kritik kırmızı yok; bazı API &gt;3 sn |
+| Portal `/profile` | Beyaz ekran; `portal/profile` ~12 s; React ağacı boş |
+| Portal bordro | «Bordro dosyası bulunamadı» (iş kuralı / seed dosya eksik) |
+
+---
+
+### &gt;3 sn yükleme (gözlenen)
+
+| Kaynak | Süre (yaklaşık) |
+|--------|-----------------|
+| `GET /portal/profile` | 5–12 sn |
+| `GET /portal/dashboard` + timesheet/privacy | ~4.8 sn |
+| `GET /v1/notifications` | 3–9 sn |
+
+---
+
+### Kalan açık maddeler (sonraki dalga)
+
+1. Sistem pano widget ↔ kayıtlı/sistem rapor bağları (🔴)  
+2. Portal `/profile` crash + yavaşlık (🔴)  
+3. Demo `request_types` seed + W1 `employee_request` uçtan uca instance/onay (🔴)  
+4. `reportEngine.measures` i18n nesne hatası (🟠)  
+5. Employees custom field → rapor kataloğu (🟠)  
+6. Pivot UI 2D + drill + ECharts + Excel/PDF dosya açma (🟠/🔵)  
+7. Pano edit / global / çapraz filtre (widget fix sonrası)  
+8. Schedule alıcı seçici (prompt yerine)  
+9. Bordro PDF seed/dosya  
+10. KVKK saklama adayı üretip dry-run + ERTELE gerekçe UI  
+11. Ayar departman scope badge + izin ayarı davranış kanıtı  
+
+**İmha:** onaylanmadı. **DB:** silinmedi.
