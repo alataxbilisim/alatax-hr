@@ -287,3 +287,68 @@ Ekran görüntüsü: **`21`…`38`** (+ `qa2b-dsr-data.json`) — `docs/qa/e2e/`
 11. Ayar departman scope badge + izin ayarı davranış kanıtı  
 
 **İmha:** onaylanmadı. **DB:** silinmedi.
+
+---
+
+## QA-3 — Kritik bulgu düzeltmeleri + seed içerik guard
+
+**Tarih:** 2026-07-31  
+**Branch:** `faz4-form-engine`  
+**Kapsam:** QA-2b 🔴 düzeltme + yapısal guard (DB silinmedi; imha yok)
+
+### ADIM 1 — Kök neden (EN BAŞA)
+
+**Sonuç: (c) — runtime report resolve**
+
+Sistem panoları `report_id` ile **global şablon** raporlara (`company_id NULL`, `is_system=true`) bağlanıyor. `DashboardService::runWidget` ise:
+
+```php
+SavedReport::query()->where('company_id', $companyId)->whereKey($reportId)
+```
+
+kullanıyordu. `BelongsToCompany` global scope + firma filtresi şablonları gizledi → her widget «Widget raporu bulunamadı veya erişim yok».
+
+D1d/D1g yeşildi çünkü testler **firma-içi** `report_id` / inline config kullanıyordu; sistem paket batch run’ı yoktu.
+
+İkincil: bazı dataset join’leri (`trainings`→`training_sessions`, `personDistinctColumn`→`survey_submissions`) eksik bağlanıyordu → guard kırmızıya düşürdü; `ReportQueryBuilder::applyJoins` bağımlılık + topo sıra ile düzeltildi.
+
+**(a)/(b)/(d) değil:** seeder `report_id` şeması doğru; demo verisi (izin/puantaj) mevcut; sorun resolve + join runtime.
+
+### ADIM 3 — Portal `/profile` JS hatası
+
+**Stack / semptom:** React `#root` boş; konsol tipi: *Objects are not valid as a React child (found: object with keys {id, name, …})*.
+
+**Kök:** `PortalProfileController` `EmployeeResource` döndürüyordu → `employee.department` **nesne**. `ProfilePage` bunu JSX’te doğrudan yazıyordu.
+
+**Başka sayfa?** Portal’da aynı pattern yok (yalnız `ProfilePage`). Rota smoke + API smoke eklendi.
+
+### Yapısal guard’lar
+
+| Guard | Dosya |
+|-------|--------|
+| Sistem rapor dataset/alan + run + pano batch | `SystemReportPackageContentGuardTest` |
+| Sistem pano → sistem report_id regresyon | `DashboardV2Test::test_system_dashboard_widgets_resolve_system_report_ids` |
+| Join bağımlılığı | `ReportQueryJoinDependencyTest` |
+| Portal profil sözleşmesi (department string) | `PortalProfileContractTest` |
+| Portal API smoke | `PortalRouteApiSmokeTest` |
+| Portal rota dosya/App.tsx smoke (CI) | `scripts/portal-route-smoke.mjs` + `portalProtectedRoutes.ts` |
+
+### Doğrulama (tarayıcı / API)
+
+| Kanıt | Sonuç |
+|-------|--------|
+| İzin Panosu widget veri | ✅ (`40-izin-pano-widgets-data.png`) — örn. pending **11** |
+| Puantaj Panosu | ✅ (`41`) — status **25**, hours **517** |
+| Portal profil | ✅ (`39`) — «Satış Temsilcisi — Satış», beyaz ekran yok |
+| Demo request_types + instance | ✅ 3 tip; 3 `approval_instances` `EmployeeRequest` in_progress (`42`) |
+
+### Kalan (bilinçli)
+
+- Pano düzenleme / global / çapraz filtre derin UI (kısmi — widget artık dolu; ayrı polish)
+- Widget başlıkları seed’de rapor adına çekildi (yeniden seed sonrası)
+- QA-2b 🟠 i18n `reportEngine.measures`, custom field katalog, Excel/PDF dosya açma, bordro PDF
+
+### Test / CI
+
+- Tek koşu: **633 passed** (2813 assertions) — `alatax_hr_testing`
+- 3× ardışık + random seed `1785420999` + sentinel + portal-route-smoke + 3 SPA tsc/lint → Actions

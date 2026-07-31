@@ -27,6 +27,7 @@ use App\Models\DataSubjectRequest;
 use App\Models\Department;
 use App\Models\Document;
 use App\Models\Employee;
+use App\Models\EmployeeRequest;
 use App\Models\ExpenseCategory;
 use App\Models\ExpenseClaim;
 use App\Models\Holiday;
@@ -39,6 +40,7 @@ use App\Models\Module;
 use App\Models\Payslip;
 use App\Models\Position;
 use App\Models\PrivacyNotice;
+use App\Models\RequestType;
 use App\Models\RetentionPolicy;
 use App\Models\Role;
 use App\Models\Survey;
@@ -101,6 +103,7 @@ class DemoDataSeeder extends Seeder
         $this->seedRecruitment($company);
         $this->seedAnnouncements($company);
         $this->seedWorkflows($company);
+        $this->seedRequestTypes($company);
         $this->seedKvkk($company);
 
         $this->command?->info('DemoDataSeeder tamam (idempotent).');
@@ -718,6 +721,131 @@ class DemoDataSeeder extends Seeder
             'approver_type' => ApprovalStep::APPROVER_USER, 'specific_user_id' => $ik->id, 'is_required' => true,
             'parallel_group' => 1, 'completion_policy' => ApprovalStep::COMPLETION_ALL,
         ]);
+    }
+
+    /**
+     * Portal talep tipleri + örnek talepler (W1 employee_request akışı için demo içerik).
+     */
+    private function seedRequestTypes(Company $company): void
+    {
+        $admin = $this->qaUsers['admin@demo.test'];
+        $personel = $this->employeesByCode['DEM-020'] ?? null;
+        if (! $personel) {
+            return;
+        }
+
+        $types = [
+            [
+                'slug' => 'belge-talebi',
+                'name' => 'Belge Talebi',
+                'description' => 'İşe giriş / bordro belgesi talebi',
+                'requires_approval' => true,
+                'requires_attachment' => false,
+                'sort_order' => 1,
+                'form_fields' => [
+                    ['key' => 'document_kind', 'type' => 'text', 'label' => 'Belge türü', 'required' => true],
+                ],
+            ],
+            [
+                'slug' => 'avans-talebi',
+                'name' => 'Avans Talebi',
+                'description' => 'Maaş avansı',
+                'requires_approval' => true,
+                'requires_attachment' => false,
+                'sort_order' => 2,
+                'form_fields' => [
+                    ['key' => 'amount', 'type' => 'number', 'label' => 'Tutar', 'required' => true],
+                ],
+            ],
+            [
+                'slug' => 'donanim-talebi',
+                'name' => 'Donanım Talebi',
+                'description' => 'Laptop / monitör / çevre birimi',
+                'requires_approval' => true,
+                'requires_attachment' => false,
+                'sort_order' => 3,
+                'form_fields' => [
+                    ['key' => 'asset_kind', 'type' => 'text', 'label' => 'Donanım', 'required' => true],
+                ],
+            ],
+        ];
+
+        $typeModels = [];
+        foreach ($types as $def) {
+            $typeModels[$def['slug']] = RequestType::updateOrCreate(
+                ['company_id' => $company->id, 'slug' => $def['slug']],
+                [
+                    'name' => $def['name'],
+                    'description' => $def['description'],
+                    'requires_approval' => $def['requires_approval'],
+                    'requires_attachment' => $def['requires_attachment'],
+                    'form_fields' => $def['form_fields'],
+                    'is_active' => true,
+                    'sort_order' => $def['sort_order'],
+                    'created_by' => $admin->id,
+                ]
+            );
+        }
+
+        // Örnek talepler — idempotent: title + employee
+        $samples = [
+            [
+                'slug' => 'belge-talebi',
+                'title' => 'Demo Belge Talebi',
+                'description' => 'QA demo — çalışma belgesi',
+                'priority' => 'normal',
+                'form_data' => ['document_kind' => 'Çalışma belgesi'],
+            ],
+            [
+                'slug' => 'avans-talebi',
+                'title' => 'Demo Avans Talebi',
+                'description' => 'QA demo — yüksek öncelik (koşullu adım)',
+                'priority' => 'high',
+                'form_data' => ['amount' => 5000],
+            ],
+            [
+                'slug' => 'donanim-talebi',
+                'title' => 'Demo Donanım Talebi',
+                'description' => 'QA demo — monitör',
+                'priority' => 'normal',
+                'form_data' => ['asset_kind' => 'Monitör'],
+            ],
+        ];
+
+        $workflow = app(\App\Services\WorkflowService::class);
+        foreach ($samples as $sample) {
+            $type = $typeModels[$sample['slug']] ?? null;
+            if (! $type) {
+                continue;
+            }
+            $existing = EmployeeRequest::query()
+                ->where('company_id', $company->id)
+                ->where('employee_id', $personel->id)
+                ->where('title', $sample['title'])
+                ->first();
+            if ($existing) {
+                continue;
+            }
+
+            $req = EmployeeRequest::create([
+                'company_id' => $company->id,
+                'employee_id' => $personel->id,
+                'request_type_id' => $type->id,
+                'title' => $sample['title'],
+                'description' => $sample['description'],
+                'form_data' => $sample['form_data'],
+                'priority' => $sample['priority'],
+                'status' => EmployeeRequest::STATUS_PENDING,
+                'created_by' => $this->qaUsers['personel@demo.test']->id,
+            ]);
+
+            $workflow->startWorkflow($req, [
+                'requester_id' => $this->qaUsers['personel@demo.test']->id,
+                'priority' => $req->priority,
+                'request_type_id' => (int) $req->request_type_id,
+                'department_id' => $personel->department_id,
+            ]);
+        }
     }
 
     private function seedKvkk(Company $company): void
