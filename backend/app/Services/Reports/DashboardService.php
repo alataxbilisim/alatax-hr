@@ -247,14 +247,11 @@ class DashboardService
         $ignoreCross = (bool) ($widget['ignore_cross_filter'] ?? false);
         $merged = $this->mergeFiltersForWidget($widget, $runtimeFilters, $ignoreCross, $companyId);
 
-        // Kaynak: report_id (varsayılan) veya inline config
+        // Kaynak: report_id (firma tanımı veya global sistem şablonu) veya inline config
         $reportId = $widget['report_id'] ?? null;
         if (is_int($reportId) || (is_string($reportId) && ctype_digit($reportId))) {
-            $report = SavedReport::query()
-                ->where('company_id', $companyId)
-                ->whereKey((int) $reportId)
-                ->first();
-            if (! $report || ! $report->isAccessibleBy($viewer)) {
+            $report = $this->resolveReportForWidget((int) $reportId, $companyId, $viewer);
+            if (! $report) {
                 throw new InvalidArgumentException('Widget raporu bulunamadı veya erişim yok');
             }
 
@@ -462,13 +459,44 @@ class DashboardService
             return $widget['config']['dataset'];
         }
         $reportId = $widget['report_id'] ?? null;
-        if ($reportId) {
-            $r = SavedReport::query()->whereKey((int) $reportId)->first();
+        if (is_int($reportId) || (is_string($reportId) && ctype_digit($reportId))) {
+            $r = SavedReport::withoutGlobalScope('company')
+                ->whereKey((int) $reportId)
+                ->where(function ($q) {
+                    $q->whereNotNull('company_id')
+                        ->orWhere(function ($q2) {
+                            $q2->whereNull('company_id')->where('is_system', true);
+                        });
+                })
+                ->first();
 
             return $r?->dataset_key;
         }
 
         return null;
+    }
+
+    /**
+     * Widget report_id → firma raporu veya company_id NULL sistem şablonu.
+     * BelongsToCompany scope sistem şablonlarını gizlediği için withoutGlobalScope zorunlu.
+     */
+    private function resolveReportForWidget(int $reportId, int $companyId, User $viewer): ?SavedReport
+    {
+        $report = SavedReport::withoutGlobalScope('company')
+            ->whereKey($reportId)
+            ->where(function ($q) use ($companyId) {
+                $q->where('company_id', $companyId)
+                    ->orWhere(function ($q2) {
+                        $q2->whereNull('company_id')->where('is_system', true);
+                    });
+            })
+            ->first();
+
+        if (! $report || ! $report->isAccessibleBy($viewer)) {
+            return null;
+        }
+
+        return $report;
     }
 
     /**

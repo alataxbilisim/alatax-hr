@@ -270,21 +270,41 @@ class ReportQueryBuilder
                 $prefix = $join['table'].'.';
                 if (str_starts_with($field->column, $prefix)) {
                     $needed[$jk] = $join;
-                    if ($jk === 'surveys' && isset($allowed['survey_submissions'])) {
-                        $needed['survey_submissions'] = $allowed['survey_submissions'];
+                }
+            }
+        }
+
+        // min_cell / personDistinctColumn (ör. survey_submissions.user_id) join gerektirir
+        $personCol = $dataset->personDistinctColumn();
+        if (is_string($personCol) && $personCol !== '') {
+            foreach ($allowed as $jk => $join) {
+                if (str_starts_with($personCol, $join['table'].'.')) {
+                    $needed[$jk] = $join;
+                }
+            }
+        }
+
+        // Bağımlı join: first tarafı başka join tablosuna referans ediyorsa onu da ekle
+        // (trainings → training_sessions, surveys → survey_submissions)
+        $changed = true;
+        while ($changed) {
+            $changed = false;
+            foreach ($needed as $join) {
+                foreach ($allowed as $jk => $cand) {
+                    if (isset($needed[$jk])) {
+                        continue;
+                    }
+                    $prefix = $cand['table'].'.';
+                    if (str_starts_with((string) ($join['first'] ?? ''), $prefix)) {
+                        $needed[$jk] = $cand;
+                        $changed = true;
                     }
                 }
             }
         }
 
-        $ordered = [];
-        if (isset($needed['survey_submissions'])) {
-            $ordered['survey_submissions'] = $needed['survey_submissions'];
-            unset($needed['survey_submissions']);
-        }
-        foreach ($needed as $k => $j) {
-            $ordered[$k] = $j;
-        }
+        $baseTable = $dataset->table();
+        $ordered = $this->orderJoinsTopologically($needed, $baseTable);
 
         foreach ($ordered as $join) {
             $type = $join['type'] ?? 'left';
@@ -294,6 +314,41 @@ class ReportQueryBuilder
                 $query->leftJoin($join['table'], $join['first'], $join['operator'], $join['second']);
             }
         }
+    }
+
+    /**
+     * @param  array<string, array<string, mixed>>  $needed
+     * @return list<array<string, mixed>>
+     */
+    private function orderJoinsTopologically(array $needed, string $baseTable): array
+    {
+        $remaining = $needed;
+        $ordered = [];
+        $available = [$baseTable => true];
+
+        while ($remaining !== []) {
+            $progress = false;
+            foreach ($remaining as $jk => $join) {
+                $first = (string) ($join['first'] ?? '');
+                $firstTable = str_contains($first, '.') ? explode('.', $first, 2)[0] : $baseTable;
+                if (! isset($available[$firstTable])) {
+                    continue;
+                }
+                $ordered[] = $join;
+                $available[(string) $join['table']] = true;
+                unset($remaining[$jk]);
+                $progress = true;
+            }
+            if (! $progress) {
+                // Döngü / eksik bağımlılık — kalanları olduğu gibi ekle (eski davranış)
+                foreach ($remaining as $join) {
+                    $ordered[] = $join;
+                }
+                break;
+            }
+        }
+
+        return $ordered;
     }
 
     /**

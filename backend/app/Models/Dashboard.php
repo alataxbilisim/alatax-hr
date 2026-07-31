@@ -59,8 +59,21 @@ class Dashboard extends Model
     {
         $layout = is_array($this->layout) ? $this->layout : [];
         $widgets = $layout['widgets'] ?? [];
+        if (! is_array($widgets)) {
+            return [];
+        }
 
-        return is_array($widgets) ? array_values($widgets) : [];
+        // Eski seed `grid` yazdı; runtime/FE `layout` bekler
+        return array_values(array_map(static function ($w) {
+            if (! is_array($w)) {
+                return $w;
+            }
+            if (! isset($w['layout']) && isset($w['grid']) && is_array($w['grid'])) {
+                $w['layout'] = $w['grid'];
+            }
+
+            return $w;
+        }, $widgets));
     }
 
     public function scopeAccessibleBy($query, User $user)

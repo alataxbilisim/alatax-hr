@@ -20,6 +20,7 @@ class SystemReportPackageSeeder extends Seeder
     public function run(): void
     {
         $reportIds = [];
+        $reportNames = [];
 
         foreach ($this->reportDefinitions() as $def) {
             $report = SavedReport::withoutGlobalScopes()->updateOrCreate(
@@ -41,9 +42,10 @@ class SystemReportPackageSeeder extends Seeder
                 ]
             );
             $reportIds[$def['system_key']] = (int) $report->id;
+            $reportNames[$def['system_key']] = $def['name'];
         }
 
-        foreach ($this->dashboardDefinitions($reportIds) as $def) {
+        foreach ($this->dashboardDefinitions($reportIds, $reportNames) as $def) {
             Dashboard::withoutGlobalScopes()->updateOrCreate(
                 [
                     'company_id' => null,
@@ -215,11 +217,12 @@ class SystemReportPackageSeeder extends Seeder
 
     /**
      * @param  array<string, int>  $reportIds
+     * @param  array<string, string>  $reportNames
      * @return list<array<string, mixed>>
      */
-    private function dashboardDefinitions(array $reportIds): array
+    private function dashboardDefinitions(array $reportIds, array $reportNames = []): array
     {
-        $mk = function (string $module, string $key, string $name, array $widgetReportKeys) use ($reportIds): array {
+        $mk = function (string $module, string $key, string $name, array $widgetReportKeys) use ($reportIds, $reportNames): array {
             $widgets = [];
             $x = 0;
             $y = 0;
@@ -230,9 +233,10 @@ class SystemReportPackageSeeder extends Seeder
                 $widgets[] = [
                     'id' => (string) Str::uuid(),
                     'type' => $i % 2 === 0 ? 'kpi' : 'chart',
-                    'title' => $rk,
+                    'title' => $reportNames[$rk] ?? $rk,
                     'report_id' => $reportIds[$rk],
-                    'grid' => ['x' => $x, 'y' => $y, 'w' => 6, 'h' => 4],
+                    // FE DashboardViewPage `layout` bekler (`grid` değil)
+                    'layout' => ['x' => $x, 'y' => $y, 'w' => 6, 'h' => 4],
                     'visual' => ['chart_type' => 'bar'],
                     'refresh_interval' => 60,
                 ];
