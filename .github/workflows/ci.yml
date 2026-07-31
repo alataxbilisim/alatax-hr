@@ -140,6 +140,10 @@ jobs:
         working-directory: .
         run: node scripts/check-mojibake.mjs
 
+      - name: Portal route smoke (page modules + App.tsx)
+        working-directory: .
+        run: node scripts/portal-route-smoke.mjs
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 

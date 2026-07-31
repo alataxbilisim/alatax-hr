@@ -309,4 +309,58 @@ class DashboardV2Test extends TestCase
         $this->assertSame(8, DashboardService::WIDGET_TIMEOUT_SEC);
         $this->assertSame(45, DashboardService::BATCH_TIMEOUT_SEC);
     }
+
+    /**
+     * QA-3 regresyon: sistem panosu widget'ları company_id NULL raporlara report_id ile bağlanır.
+     * BelongsToCompany + where(company_id) bu raporları gizleyince "Widget raporu bulunamadı" oluşuyordu.
+     */
+    public function test_system_dashboard_widgets_resolve_system_report_ids(): void
+    {
+        $sysReport = SavedReport::withoutGlobalScopes()->create([
+            'company_id' => null,
+            'user_id' => null,
+            'name' => 'Sistem Emp Count',
+            'dataset_key' => 'employees',
+            'config' => [
+                'dataset' => 'employees',
+                'fields' => ['status'],
+                'aggregations' => [['fn' => 'count', 'field' => '*', 'alias' => 'adet']],
+                'group_by' => ['status'],
+            ],
+            'is_system' => true,
+            'system_key' => 'qa3.system_emp_count',
+            'is_shared' => false,
+        ]);
+
+        $dash = Dashboard::withoutGlobalScopes()->create([
+            'company_id' => null,
+            'owner_id' => null,
+            'created_by' => null,
+            'name' => 'QA3 Sistem Pano',
+            'is_system' => true,
+            'system_key' => 'qa3.system_dash',
+            'layout' => [
+                'widgets' => [
+                    [
+                        'id' => 'sys-kpi',
+                        'type' => 'kpi',
+                        'title' => 'Sistem KPI',
+                        'report_id' => $sysReport->id,
+                        'layout' => ['x' => 0, 'y' => 0, 'w' => 6, 'h' => 4],
+                    ],
+                ],
+            ],
+            'global_filters' => ['fields' => []],
+        ]);
+
+        Sanctum::actingAs($this->admin->fresh());
+        $run = $this->postJson('/api/v1/dashboards/'.$dash->id.'/run', [])
+            ->assertOk()
+            ->json('data');
+
+        $widget = collect($run['widgets'])->firstWhere('id', 'sys-kpi');
+        $this->assertNotNull($widget);
+        $this->assertTrue($widget['success'], $widget['error'] ?? 'widget failed');
+        $this->assertNull($widget['error']);
+    }
 }
