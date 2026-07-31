@@ -60,8 +60,9 @@ use Illuminate\Support\Facades\Schema;
 use Spatie\Permission\Models\Permission;
 
 /**
- * QA-1 demo veri seti (idempotent). Production'da çalışmaz.
+ * QA/demo veri seti — TEK KAYNAK (QA-4). Production'da çalışmaz.
  * php artisan demo:seed — şifre: Demo1234!
+ * DemoSeeder bu sınıfı çağıran ince sarmalayıcıdır.
  */
 class DemoDataSeeder extends Seeder
 {
@@ -105,6 +106,7 @@ class DemoDataSeeder extends Seeder
         $this->seedWorkflows($company);
         $this->seedRequestTypes($company);
         $this->seedKvkk($company);
+        $this->seedSisterCompanies();
 
         $this->command?->info('DemoDataSeeder tamam (idempotent).');
         $this->command?->table(
@@ -118,6 +120,8 @@ class DemoDataSeeder extends Seeder
                 ['hr@demo.test', 'Demo İK (legacy)', 'hr_manager', self::PASSWORD],
                 ['sube-ist@demo.test', 'İstanbul Şube Yöneticisi', 'branch_manager', self::PASSWORD],
                 ['sube-ank@demo.test', 'Ankara Şube Yöneticisi', 'branch_manager', self::PASSWORD],
+                ['admin@otel-b.demo.test', 'Demo Otel B Admin', 'admin', self::PASSWORD],
+                ['admin@otel-c.demo.test', 'Demo Otel C Admin', 'admin', self::PASSWORD],
             ]
         );
     }
@@ -901,11 +905,132 @@ class DemoDataSeeder extends Seeder
             [
                 'data_category' => 'identity', 'subject_type' => DataSubjectType::FormerEmployee->value,
                 'trigger_event' => RetentionTriggerEvent::IstenAyrilma, 'retention_months' => 120,
-                'strategy' => RetentionStrategy::Anonymize, 'legal_basis_note' => 'QA demo — dry-run için aktif',
-                // QA-2: aday listesi + dry-run görülebilsin; gerçek imha onaylanmaz
-                'active' => true, 'requires_approval' => true, 'is_system_draft' => false, 'created_by' => $publisher->id,
+                'strategy' => RetentionStrategy::Anonymize,
+                'legal_basis_note' => 'QA demo — D2c: varsayılan pasif; aktifleştirmek için demo:seed --activate-retention',
+                // D2c / QA-4: seed politikası asla otomatik aktif olmaz
+                'active' => false, 'requires_approval' => true, 'is_system_draft' => false, 'created_by' => $publisher->id,
             ]
         );
+    }
+
+    /**
+     * Faz G öncesi bağımsız kardeş firmalar (organizations henüz yok).
+     * Her birinde ~10 personel — cross-company izolasyon fikstürü.
+     */
+    private function seedSisterCompanies(): void
+    {
+        $defs = [
+            [
+                'slug' => 'demo-otel-b',
+                'name' => 'Demo Otel B',
+                'admin_email' => 'admin@otel-b.demo.test',
+                'admin_name' => 'Demo Otel B Admin',
+                'code_prefix' => 'OTB',
+            ],
+            [
+                'slug' => 'demo-otel-c',
+                'name' => 'Demo Otel C',
+                'admin_email' => 'admin@otel-c.demo.test',
+                'admin_name' => 'Demo Otel C Admin',
+                'code_prefix' => 'OTC',
+            ],
+        ];
+
+        foreach ($defs as $def) {
+            $this->seedSisterCompany($def);
+        }
+    }
+
+    /**
+     * @param  array{slug: string, name: string, admin_email: string, admin_name: string, code_prefix: string}  $def
+     */
+    private function seedSisterCompany(array $def): void
+    {
+        $company = Company::firstOrCreate(
+            ['slug' => $def['slug']],
+            [
+                'name' => $def['name'],
+                'status' => 'active',
+                'package_type' => 'professional',
+                'user_limit' => 50,
+                'trial_ends_at' => now()->addYear(),
+            ]
+        );
+        $company->update(['name' => $def['name'], 'status' => 'active']);
+
+        $sync = [];
+        foreach (Module::query()->where('is_active', true)->get() as $module) {
+            $sync[$module->id] = ['is_active' => true, 'activated_at' => now()];
+        }
+        $company->modules()->syncWithoutDetaching($sync);
+
+        app(DefaultLeaveApprovalWorkflowService::class)->ensureForCompany($company);
+        app(DefaultCompanyHrSeedService::class)->ensureForCompany($company);
+
+        $hq = Branch::firstOrCreate(
+            ['company_id' => $company->id, 'code' => 'HQ'],
+            ['name' => 'Merkez', 'city' => 'İstanbul', 'is_active' => true, 'is_headquarters' => true]
+        );
+        $dept = Department::firstOrCreate(
+            ['company_id' => $company->id, 'code' => 'IK'],
+            ['name' => 'İnsan Kaynakları', 'is_active' => true]
+        );
+        $pos = Position::firstOrCreate(
+            ['company_id' => $company->id, 'code' => $def['code_prefix'].'_POS'],
+            ['name' => 'Personel', 'is_active' => true, 'sort_order' => 1]
+        );
+
+        $admin = $this->upsertUser(
+            $company->id,
+            $def['admin_email'],
+            $def['admin_name'],
+            'admin',
+            UserType::CompanyAdmin
+        );
+
+        Employee::updateOrCreate(
+            ['company_id' => $company->id, 'employee_code' => $def['code_prefix'].'-001'],
+            [
+                'user_id' => $admin->id,
+                'department_id' => $dept->id,
+                'branch_id' => $hq->id,
+                'title' => 'Genel Müdür',
+                'position' => $pos->name,
+                'hire_date' => '2020-01-01',
+                'contract_type' => 'permanent',
+                'work_type' => 'full_time',
+                'status' => 'active',
+                'personal_email' => $admin->email,
+                'currency' => 'TRY',
+            ]
+        );
+
+        $mailHost = str_replace('demo-', '', $def['slug']); // otel-b | otel-c
+        for ($i = 2; $i <= 10; $i++) {
+            $email = sprintf('personel%02d@%s.demo.test', $i, $mailHost);
+            $user = $this->upsertUser(
+                $company->id,
+                $email,
+                sprintf('%s Personel %02d', $def['name'], $i),
+                'employee'
+            );
+            Employee::updateOrCreate(
+                ['company_id' => $company->id, 'employee_code' => sprintf('%s-%03d', $def['code_prefix'], $i)],
+                [
+                    'user_id' => $user->id,
+                    'department_id' => $dept->id,
+                    'branch_id' => $hq->id,
+                    'title' => $pos->name,
+                    'position' => $pos->name,
+                    'hire_date' => sprintf('2022-%02d-15', min(12, $i)),
+                    'contract_type' => 'permanent',
+                    'work_type' => 'full_time',
+                    'status' => 'active',
+                    'personal_email' => $user->email,
+                    'currency' => 'TRY',
+                ]
+            );
+        }
     }
 
     private function upsertUser(int $companyId, string $email, string $name, string $roleName, UserType $type = UserType::User): User
