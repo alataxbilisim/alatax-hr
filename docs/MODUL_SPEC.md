@@ -227,6 +227,44 @@ Her ana / çekirdek / premium modül için zorunlu ortak katman:
 
 ---
 
+## D2. MOBİL UYGULAMA (Portal native paketleme)
+
+> UI dil: `TASARIM_REHBERI.md` §10. Sıra: ROADMAP PORTAL-2a…4 (web) → Faz 8 (Capacitor/mağaza). **Bugün paket kurulmaz.**
+
+### D2.1 Teknoloji kararı
+
+| Karar | Detay |
+|-------|--------|
+| **Capacitor** | Mevcut Portal React SPA native kabuğa alınır |
+| Flutter / React Native | **YOK** — yeniden yazım yapılmaz |
+| Gerekçe | Aynı kod tabanı; API-first zaten mobil hazır |
+
+### D2.2 Platform gerçekleri (planlama girdisi)
+
+| Platform | Gerçek |
+|----------|--------|
+| **Android** | Windows/Linux’ta Android Studio ile APK/AAB. Play Console tek seferlik ücret. |
+| **iOS** | ⚠️ **macOS + Xcode zorunlu.** Seçenek: Mac donanımı, bulut Mac veya macOS CI. Apple Developer Program yıllık ücret. |
+| **Mağaza incelemesi** | Yalnız web saran “wrapper” uygulamalar reddedilebilir. **Karşı önlem (yayın şartı, süs değil):** QR/kamera, push, biyometrik giriş, çevrimdışı, dosya paylaşımı. |
+
+### D2.3 Dağıtım modeli (güncel karar)
+
+| Madde | Karar |
+|-------|--------|
+| Yayın kapsamı | Ürün **şu an tek müşteri** için yayınlanır |
+| Firma/sunucu seçim ekranı | **OLMAYACAK** |
+| Sunucu adresi | Tek build ayarı: `.env` / Capacitor config — **koda dağılmış sabit değil**. İkinci müşteri: ikinci build veya bu değer seçim ekranına çevrilir (bugün sıfır ekstra maliyet) |
+| ⚠️ Mimari | Backend **çok kiracılı kalır** (`company_id`, lisans, DataScope). “Tek müşteri” pazarlama/dağıtım kararıdır; çok kiracılığı kaldıran değişiklik **yapılmaz** |
+| İleride (backlog) | Kurumsal MDM dağıtımı; müşteriye özel build |
+
+### D2.4 Native yetenekler (Faz 8 — bugün kurulmaz)
+
+Kamera/QR · push (FCM/APNs) · biyometrik giriş · dosya indirme-paylaşma · derin bağlantı (bildirim→ekran) · güvenli alan (çentik) · çevrimdışı önbellek.
+
+Önce **PORTAL-4 PWA** (mağazasız, düşük maliyet); Capacitor + mağaza Faz 8.
+
+---
+
 ## E. ERTELENEN (Faz 8 / backlog — bölüm açılmaz)
 
 Şartnamede bilinçli olarak **ana bölüm açılmayan** özellikler:
@@ -282,16 +320,20 @@ Takvim (Google/Outlook), SSO (Azure AD/Google), e-imza, canlı PDKS cihaz — RO
 
 ## H. MODÜL → FAZ EŞLEMESİ
 
-| Faz 6 sırası (öneri) | Modüller | Gerekçe |
+| Faz 6 sırası (öneri) | Odak | Gerekçe |
 |---|---|---|
-| 1. Navigasyon / org iskeleti | B1 Organizasyon + menü/rail hizası | Diğer tüm modüller şube/dept/pozisyon’a bağlanır |
-| 2. PDKS | B4 | Operasyonel omurga; izin yansıması + bordro paketi |
-| 3. İzin derinleştirme | B3 | PDKS bağı + TR hakediş UI borçları |
-| 4. Ücret & Ödemeler | B5 | Masraf birleşimi, avans, aktarım paketi tüketicisi |
-| 5. Eğitim (LMS) | B9 | İSG eğitim köprüsü için önkoşul |
-| 6. İSG | B10 | LMS + org + personel sonrası; mevzuat parametreleri lookup |
-| 7. Kalanlar | B2 genişletme, B6–B8, B11–B14, A4 SLA, A7 KVKK | Pilot geri bildirimine göre sırlanabilir |
+| 0. **PORTAL-2a** | Portal Liquid Glass temel malzeme + token | PDKS/LMS/İSG portal ekranları iki kez yapılmasın |
+| 1. Navigasyon / org | B1 + menü/rail | Omurga |
+| 2. PDKS | B4 | Operasyon + izin yansıması + bordro paketi |
+| 3. İzin derinleştirme | B3 | PDKS bağı + TR hakediş UI |
+| 4. Ücret & Ödemeler | B5 | Masraf/avans/aktarım |
+| 5. Eğitim (LMS) | B9 | İSG eğitim köprüsü önkoşulu |
+| 6. İSG | B10 | LMS + org + personel sonrası |
+| 7. Kalanlar | B2, B6–B8, B11–B14, A4, A7 | Pilot’a göre |
+| 8. **PORTAL-2b → 3 → 4** | Hareket + kalan sayfalar + Bootstrap kaldırma + **PWA** | Modül portal yüzleri oturduktan sonra |
 
-**Sürekli (Faz 2–5’te doğar):** A1 Kullanıcı/Rol (F2) · A6 Audit (F2) · A5 Bildirim (F4) · C1 Workflow (F4) · B14 Analitik motor (F5) · A7 KVKK (F6C).
+**Faz 8:** Capacitor paketleme + mağaza + push + biyometrik (`MODUL_SPEC` §D2).
+
+**Sürekli (Faz 2–5):** A1 Rol (F2) · A6 Audit (F2) · A5 Bildirim (F4) · C1 Workflow (F4) · B14 Analitik (F5) · A7 KVKK (F6C).
 
 Detaylı paket matrisi: `ROADMAP.md` §6.

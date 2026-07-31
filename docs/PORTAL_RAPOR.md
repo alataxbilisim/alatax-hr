@@ -56,6 +56,18 @@ Shell: `PortalLayout` (AppShell) + `DesktopRail` (≥1024px)
 - Company / SuperAdmin’e dokunulmadı.
 - Token katmanı: `apps/portal/src/styles/portal-theme.css`
 
+### Tasarım yönü değişikliği (DOK-2 — 2026-07-31)
+
+Portal arayüzü Apple iOS 26 **Liquid Glass** diline geçirilecek (`TASARIM_REHBERI.md` §10). **Company etkilenmez.**
+
+| Korunan (PORTAL-1) | Değişecek |
+|--------------------|-----------|
+| Token katmanı, UI kit, AppShell, BottomNav/Sheet iskeleti, ana ekran bilgi mimarisi | Malzeme (cam navigasyon / opak içerik), tipografi ölçeği (HIG), vurgu-renk teması, hareket (2b) |
+
+**Sıfırdan yazım YOK** — PORTAL-1 bileşenleri iOS malzemesine göre yeniden giydirilir.  
+Sıra: **PORTAL-2a** (malzeme+token) → modüller → **PORTAL-2b** (hareket) → **PORTAL-3** (kalan sayfalar + Bootstrap kaldırma) → **PORTAL-4** (PWA) → Faz 8 Capacitor/mağaza.  
+SF Pro / SF Symbols yasak; ikon Lucide veya Phosphor/Tabler (2a’da karar).
+
 ---
 
 **KULLANICI BEĞENİ KONTROLÜ BEKLİYOR**

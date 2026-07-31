@@ -88,3 +88,62 @@ Mevcut kimlik korunur: Company emerald #10b981, SuperAdmin indigo #6366f1, Porta
 ## 9. Yasaklar
 
 Hero/banner kartlar · 2 satırlı sayfa başlıkları · 44px+ input · tablo içinde 13px+ rozet · sayfa içinde sayfa scroll'u (tek scroll alanı) · hardcoded renk/boşluk · 1366'da yatay scroll.
+
+---
+
+## 10. Portal tasarım yönü — Apple iOS 26 "Liquid Glass"
+
+> **Kapsam:** Yalnız `apps/portal`. **Company ve SuperAdmin bu karardan etkilenmez** (masaüstü; mevcut Faz 3 token/density devam eder).  
+> Detay uygulama dalgaları: `PORTAL_RAPOR.md` · sıra: `ROADMAP.md` (PORTAL-2a → … → PORTAL-4 → Faz 8 Capacitor).
+
+### 10.1 Karar
+
+Portal arayüzü Apple iOS 26 **Liquid Glass** tasarım diline geçirilir: cam/saydam navigasyon katmanı + opak içerik + HIG ölçüleri + vurgu-renk teması. PORTAL-1 token/bileşenleri **sıfırdan yazılmaz**; iOS malzemesine göre yeniden giydirilir.
+
+### 10.2 Malzeme kuralları (pazarlıksız)
+
+| Kural | Zorunluluk |
+|-------|------------|
+| Cam / saydamlık | **Yalnız navigasyon katmanı:** alt sekme çubuğu, üst başlık, alt sayfa (sheet) |
+| İçerik katmanı | **Her zaman opak.** Bordro tutarı, izin bakiyesi, puantaj saati vb. veriler saydam yüzey üzerine **yazılmaz** |
+| Kontrast | Metin ≥ **4.5:1** (WCAG AA). Saydamlık eşiği düşürüyorsa efekt geri alınır |
+| `backdrop-filter` | Uzun / kaydırılan listelerde **kullanılmaz** (GPU; düşük Android’de takılma) |
+| Erişilebilirlik | `prefers-reduced-transparency` → cam opak yüzeye düşer; `prefers-reduced-motion` → animasyonlar kapanır |
+
+### 10.3 Kademeli açılım
+
+| Dalga | Kapsam | Ölçüt |
+|-------|--------|--------|
+| **PORTAL-2a** | Temel malzeme (alt çubuk, başlık, sheet) + token katmanı | Okunabilirliği düşüren efekt geri alınır |
+| **PORTAL-2b** | Hareket: kaydırmaya duyarlı saydamlık, geçişler, arka plandan renk emme, katmanlı derinlik | Aynı ölçüt |
+
+### 10.4 Ölçü ve tipografi (iOS HIG)
+
+- Tipografi ölçeği (pt): **11 / 13 / 15 / 17 (gövde) / 22 / 28 / 34** (büyük başlık)
+- Minimum dokunma hedefi: **44pt**
+- Alt sekme çubuğu: ekran kenarlarından girintili, kapsül; içerik altından akar
+- Büyük başlık: kaydırınca küçülüp üst başlığa yapışır
+- Alt sayfalar: kademeli (yarım / tam yükseklik)
+- Satır aksiyonları: kaydırma (swipe)
+
+### 10.5 Lisans kısıtı — ihlal edilemez
+
+| Yasak | Gerekçe / alternatif |
+|-------|----------------------|
+| **SF Pro / SF Compact / SF Mono** | Apple lisansı yalnız Apple OS arayüz taslakları için; web/Android’e gömmek ve ürüne dahil etmek yasak. → `font-family: -apple-system, system-ui, "Inter", sans-serif` (Apple’da sistem SF render — meşru; diğerlerinde Inter). **`@font-face` ile SF indirme/gömme YASAK.** |
+| **SF Symbols** | Aynı kısıt → **kullanılmaz**. İkon: Lucide (mevcut) veya Phosphor/Tabler — nihai seçim **PORTAL-2a**. |
+
+### 10.6 Tema sistemi (Portal)
+
+- **10 vurgu rengi × açık/koyu = 20** kombinasyon. Tema **yalnız vurgu rengini** değiştirir; yüzey, metin, kenarlık token’ları sabit kalır.
+- Palet: Mavi (varsayılan) · Indigo · Mor · Pembe · Kırmızı · Turuncu · Sarı · Yeşil · Turkuaz · Grafit
+- Firma kurumsal renk girebilir → ton skalası otomatik üretilir.
+- Tüm renkler token; bileşende sabit renk yok (mevcut kural).
+
+### 10.7 Ana ekran düzeni (onaylanmış taslak)
+
+1. Selamlama + tarih + vardiya  
+2. **BUGÜN** kartı — giriş durumu + çalışılan süre + büyük QR aksiyonu  
+3. **2×2** hızlı işlem — izin talebi/bakiye · masraf · bordro · talep  
+4. Duyurular listesi  
+5. Girintili cam sekme çubuğu: **Ana sayfa · İzinler · [ORTA: taşan QR] · Talepler · Profil**

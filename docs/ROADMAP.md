@@ -310,15 +310,18 @@ D1a–D1g tamam. **11 dataset**, whitelist query builder, builder UI, pivot/DSL,
 
 | # | Odak | Gerekçe |
 |---|------|---------|
-| 1 | **Navigasyon + B1 Organizasyon** | Menü/rail 14’lü yapıya hizalanır; şube/dept/pozisyon/norm kadro diğer her şeyin omurgası |
+| **0** | **PORTAL-2a — Portal tasarım sistemi** (Liquid Glass temel malzeme + token; `TASARIM_REHBERI` §10) | PDKS, LMS, İSG portal ekranları getirecek; sistem önce kurulmazsa o ekranlar **iki kez** yapılır. Company etkilenmez. |
+| 1 | **Navigasyon + B1 Organizasyon** | Menü/rail 14’lü yapıya hizalanır; şube/dept/pozisyon/norm kadro omurgası |
 | 2 | **B4 PDKS** | Günlük operasyon + puantaj kartı + vardiya/mesai; bordro aktarım paketinin üreticisi |
 | 3 | **B3 İzin derinleştirme** | Onaylı izin → puantaja otomatik akış; TR hakediş UI + tatil API borçları |
 | 4 | **B5 Ücret & Ödemeler** | Masraf birleşimi, avans-borç, harcırah; aktarım paketi tüketicisi |
 | 5 | **B9 Eğitim (LMS)** | İçerik/atama/portal öğrenme; İSG eğitim köprüsünün önkoşulu |
 | 6 | **B10 İSG** | Mevzuat parametreleri lookup’ta; LMS + personel + org sonrası |
-| 7 | **Kalanlar** | B2 (disiplin/vekalet), B6 İşe Alım, B7 Oryantasyon & Çıkış, B8 Performans (+kariyer/yedekleme/kalibrasyon), B11–B14, A4 SLA, A7 KVKK — pilot geri bildirimine göre |
+| 7 | **Kalanlar** | B2 (disiplin/vekalet), B6 İşe Alım, B7 Oryantasyon & Çıkış, B8 Performans (+kariyer/yedekleme/kalibrasyon), B11–B14, A4 SLA, A7 KVKK — pilot’a göre |
+| **8** | **PORTAL-2b** (hareket/derinlik) → **PORTAL-3** (kalan sayfalar + Bootstrap kaldırma) → **PORTAL-4 PWA** | Modül portal yüzleri oturduktan sonra; PWA mağazasız, düşük maliyet — Capacitor’dan önce |
 
-#### 6A. Pilot çekirdeği (sıra 1–4 ile hizalı)
+#### 6A. Pilot çekirdeği (sıra 0–4 ile hizalı)
+- [ ] **PORTAL-2a:** Liquid Glass temel malzeme (alt çubuk, başlık, sheet) + token; SF yasak / ikon seti kararı; içerik opak + WCAG AA (`PORTAL_RAPOR`, `TASARIM_REHBERI` §10)
 - [ ] **B1 Organizasyon:** şube/dept/pozisyon + şema + norm kadro + kadro talebi (workflow); Ayarlar kısayolları buraya
 - [ ] **B2 Personel (pilot dilim):** TR alan seti; çıkış sihirbazi; 🆕 disiplin & ödül + vekalet (tamamı 6B’de tamamlanabilir)
 - [ ] **B4 PDKS:** günlük takip, puantaj kartı (dönem×dept/şube), onay zinciri (puantör→gözetmen→İK), kilit, vardiya/rotasyon/yasal kontrol, mesai, kurallar, QR/cihaz kaydı, manuel audit düzeltme, ziyaretçi, aktarım paketi (generic); canlı cihaz → Faz 8
@@ -329,7 +332,7 @@ D1a–D1g tamam. **11 dataset**, whitelist query builder, builder UI, pivot/DSL,
 - [ ] **B13 Doküman+:** zorunlu set + süre takibi + versiyonlama polish
 - [ ] **A3 NOT (holding ertelendi):** çok hukuki şirket → `organizations` seçeneği; şimdilik tek şirket + şube DataScope
 
-#### 6B. İkinci halka (sıra 5–7)
+#### 6B. İkinci halka (sıra 5–8)
 - [ ] **B9 Eğitim (LMS):** katalog/kurs/video (yükleme+YouTube/Vimeo, indirme yok)/soru bankası/sertifika; öğrenme yolu; portal oynatıcı; ölçme; eğitmen & maliyet. SCORM → Faz 8
 - [ ] **B10 İSG:** yapılandırma (NACE/tehlike/ekip/takvim), risk, olay/DÖF, sağlık gözetimi (özel nitelikli), LMS köprüsü, KKD/denetim, kurul, taşeron, İBYS hazırlık. **Mevzuat parametreleri kodda değil — ayar/lookup**
 - [ ] **B8 Performans:** periods/criteria route; OKR/360; 🆕 kariyer yolları + yedekleme + kalibrasyon
@@ -339,6 +342,9 @@ D1a–D1g tamam. **11 dataset**, whitelist query builder, builder UI, pivot/DSL,
 - [ ] **B12 Anket & eNPS:** anonimlik garantisi; eNPS trend
 - [ ] **B14 Analitik:** Faz 5 motorunu modül panoları + lisansla paketleme
 - [ ] **A4 Talep/Vaka:** SLA + kategori atama + helpdesk görünümü
+- [ ] **PORTAL-2b:** kaydırmaya duyarlı saydamlık, geçişler, renk emme, katmanlı derinlik (`prefers-reduced-*`)
+- [ ] **PORTAL-3:** kalan portal sayfaları + Bootstrap kaldırma (shared design system)
+- [ ] **PORTAL-4 — PWA:** kurulabilir web uygulaması (mağaza yok, düşük maliyet); Capacitor’dan hemen önce
 
 #### 6C. KVKK (çekirdek — satılmaz)
 - [x] **D2a** Aydınlatma versiyonlama + portal rıza + veri envanteri
@@ -369,11 +375,11 @@ D1a–D1g tamam. **11 dataset**, whitelist query builder, builder UI, pivot/DSL,
 
 ### FAZ 8 — Sonraki Ufuk (GA sonrası, sıralaması pazara göre)
 
-- [ ] **Mobil uygulama:** Portal Capacitor; push (bildirim 4. kanal); Bootstrap → shared design system
+- [ ] **Mobil (Capacitor) paketleme + mağaza yayını** (`MODUL_SPEC` §D2): tek müşteri build (sunucu adresi config’te; seçim ekranı yok; çok kiracılı mimari korunur) · APK/AAB + iOS (macOS/Xcode) · push (FCM/APNs) · biyometrik giriş · QR/kamera · çevrimdışı · dosya paylaşımı · derin bağlantı — mağaza incelemesi için native yetenekler zorunlu. *(Web/PWA ve Bootstrap kaldırma PORTAL-2…4 / Faz 6’da biter.)*
 - [ ] **AI katmanı:** doğal dille rapor, CV ayrıştırma, anket özet, İK asistanı
 - [ ] **Bordro modülü:** B5 Ücret & Ödemeler + aktarım paketi üzerine; SGK/e-Bildirge — ayrı büyük proje
 - [ ] **Entegrasyon pazarı:** Logo/Mikro/Netsis **adaptörleri** (standart paket v1’de tasarlanır — `MODUL_SPEC` §F); takvim; SSO; canlı PDKS cihaz; İBYS
-- [ ] **Backlog modüller (şartnamede bölüm yok):** Yemekhane/Kantin · Bütçe Simülasyonu · Sendika · Araç & Filo (Varlık altında) · SCORM import
+- [ ] **Backlog:** Yemekhane/Kantin · Bütçe Simülasyonu · Sendika · Araç & Filo · SCORM · MDM / müşteriye özel build
 - [ ] Toplu i18n + EN → global açılım
 - [ ] PostgreSQL RLS, audit partisyon, read replica
 
@@ -473,4 +479,4 @@ Toplam tahmin: **~29–42 hafta (7–10 ay)** tam zamanlı. Pilot geri bildirimi
 
 ---
 
-*Faz 0–3 ve Faz 5 kapandı. Aktif: Faz 4 kalanları + Faz 6 (`faz4-form-engine`). Modül şartnamesi: 14’lü yapı (`MODUL_SPEC`). Her fazın başında bu belge üzerinden Cursor promptları hazırlanır.*
+*Faz 0–3 ve Faz 5 kapandı. Aktif: Faz 4 kalanları + Faz 6 (`faz4-form-engine`). Portal: Liquid Glass (PORTAL-2a başta) → PWA (PORTAL-4) → Capacitor (Faz 8). Her fazın başında bu belge üzerinden Cursor promptları hazırlanır.*
