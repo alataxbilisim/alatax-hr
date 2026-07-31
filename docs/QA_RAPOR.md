@@ -355,14 +355,74 @@ D1d/D1g yeşildi çünkü testler **firma-içi** `report_id` / inline config kul
 
 ---
 
-## DOK-3 → QA-4 (belge teşhisi; kod yok)
+## DOK-3 → QA-4 (belge teşhisi; kod yok) — ✅ QA-4’te kapatıldı
 
 | # | Bulgu | QA-4 |
 |---|--------|------|
-| 1.1 | `DemoSeeder` + `DemoDataSeeder` ikisi `admin@demo.test` / `demo-firma` | Tek kaynak veya net öncelik |
-| 1.2 | Retention seed `active=true` (D2c ihlali) | Seed’de `active=false` (dry-run ayrı) |
+| 1.1 | `DemoSeeder` + `DemoDataSeeder` ikisi `admin@demo.test` / `demo-firma` | ✅ Tek kaynak: `DemoDataSeeder`; `DemoSeeder` ince sarmalayıcı |
+| 1.2 | Retention seed `active=true` (D2c ihlali) | ✅ `active=false`; `--activate-retention` ayrı |
 
-Detay: `GUNCEL_DURUM_RAPORU.md` § DOK-3.
+---
+
+## QA-4 — DOK-3 düzeltmeleri + Faz G ön hazırlık
+
+**Tarih:** 31 Temmuz 2026 · **Branch:** `faz4-form-engine`  
+**Mutlak:** DB silinmedi · `alatax_hr` korunur · testler `alatax_hr_testing`
+
+### Seeder tek kaynak kararı
+
+**Seçim:** `DemoDataSeeder` ana kaynak; `DemoSeeder` → `$this->call(DemoDataSeeder::class)` ince sarmalayıcı.
+
+**Gerekçe:** QA/demo veri seti (`demo:seed`) zaten PermissionSeeder + zengin fikstür içeriyor; A6 `DemoSeeder` aynı e-posta/slug ile daraltılmış ikinci yol üretiyordu (drift + 403). Sarmalayıcı eski `db:seed --class=DemoSeeder` çağrılarını kırmaz.
+
+**Sentinel:** `php artisan demo:sentinel` — firma slug `demo-firma`, type `company_admin`, Spatie `admin`, ≥50 izin + kritik yetki seti, `DEM-001`, kardeş firmalar. `demo:seed` sonunda otomatik çalışır.
+
+### Retention (D2c)
+
+| Kontrol | Sonuç |
+|---------|--------|
+| Seed sonrası `active=true` sayısı | **0** (`demo:seed` sonrası kanıt) |
+| Dry-run / aktif | `demo:seed --activate-retention` (açık bayrak) |
+| Regresyon | `DemoDataSeederGuardTest::test_retention_policies_inactive_after_seed` |
+
+### İndeks (attendance)
+
+Migration: `2026_07_31_150000_add_attendance_records_company_date_indexes`  
+- `attendance_records_company_date_idx (company_id, date)`  
+- `attendance_records_company_status_date_idx (company_id, status, date)`  
+- `unique(user_id, date)` **değişmedi**
+
+**EXPLAIN** (`alatax_hr`, ~305 satır — planner hâlâ mevcut `company_id_*` indekslerini seçebilir; yeni indeksler `\d` ile doğrulandı):
+
+| | Plan |
+|--|------|
+| İndeks öncesi (drop) | `Index Scan` `attendance_records_company_id_source_index` + Filter date · exec ~0.11 ms |
+| İndeks sonrası | Aynı küçük hacimde benzer plan · exec ~0.07 ms; indeksler hazır (`company_date` / `company_status_date`) |
+| Not | ~1.5M satır / grup `IN (...)` + tarih aralığında `(company_id, date)` seçiciliği artar |
+
+### Fikstür (Faz G öncesi)
+
+| Firma | Slug | Admin | Personel |
+|-------|------|-------|----------|
+| Ana | `demo-firma` | `admin@demo.test` | ~40 (DEM-*) |
+| Kardeş B | `demo-otel-b` | `admin@otel-b.demo.test` | 10 (OTB-*) |
+| Kardeş C | `demo-otel-c` | `admin@otel-c.demo.test` | 10 (OTC-*) |
+
+`organizations` yok — bağımsız firmalar; Faz G’de gruba bağlanacak.  
+İzolasyon: A admin B listesini görmez; B detay A’dan 404 (`DemoDataSeederGuardTest`).
+
+### Test / CI
+
+| Kanıt | Sonuç |
+|-------|--------|
+| Tek koşu | **641 passed** (2858 assertions) |
+| 3× ardışık | 641 / 641 / 641 |
+| Random | seed `1785500001` → 641 |
+| `demo:sentinel` | OK (442 izin) |
+| Select contract | PASSED |
+| portal-route-smoke | OK |
+| 3 SPA tsc | 0 |
+| 3 SPA lint (`pnpm -r --filter "./apps/**" lint`) | 0 |
 
 ---
 
