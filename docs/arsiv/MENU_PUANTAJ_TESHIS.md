@@ -1,3 +1,7 @@
+﻿> **ARŞİV — 31 Temmuz 2026 tarihli tarihsel kayıt.** Güncel durum: [GUNCEL_DURUM_RAPORU.md](../GUNCEL_DURUM_RAPORU.md). Bu dosya artık yol gösterici değildir.
+
+---
+
 # MENU + PUANTAJ TEŞHİS
 
 **Branch:** `faz4-form-engine`  

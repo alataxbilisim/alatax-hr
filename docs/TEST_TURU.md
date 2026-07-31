@@ -1,6 +1,8 @@
 # ALATAX HR — Manuel Test Turu
 
-Kısa smoke / regresyon listesi. Otomasyon yerine QA / geliştirici kontrolü içindir.
+Kısa smoke / regresyon listesi.
+
+> **Otomatik / tarayıcı turu:** `QA_RAPOR.md` + `php artisan demo:seed` (QA demo verisi). Bu dosya yalnızca manuel checklist’tir; QA süreç sonuçları ve açık görsel borçlar `QA_RAPOR.md` sonunda toplanır.
 
 ## Genel
 

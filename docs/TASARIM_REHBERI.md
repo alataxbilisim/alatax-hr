@@ -73,7 +73,7 @@ Kural: 11px altı metin yasak (okunabilirlik). Sayfa başlığı ile içerik ara
 
 ## 7. Renk ve Tema
 
-Mevcut kimlik korunur: Company emerald #10b981, SuperAdmin indigo #6366f1, Portal sky #0ea5e9; dark varsayılan. Yeni kural: durum renkleri tek settir (success/warning/danger/info/neutral) ve rozetlerde arka plan %12 opaklık + tam renk metin kullanılır. Kontrast: metinler WCAG AA (4.5:1) altına düşmez.
+Mevcut kimlik korunur: Company emerald #10b981, SuperAdmin indigo #6366f1, Portal sky #0ea5e9. **Tema varsayılanı (DOK-3):** Company / SuperAdmin mevcut davranış; **Portal açık tema**. Yeni kural: durum renkleri tek settir (success/warning/danger/info/neutral) ve rozetlerde arka plan %12 opaklık + tam renk metin kullanılır. Kontrast: metinler WCAG AA (4.5:1) altına düşmez.
 
 ## 8. Yapılacaklar Listesi (Faz 3 uygulama sırası)
 

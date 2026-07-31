@@ -46,10 +46,11 @@ Shell: `PortalLayout` (AppShell) + `DesktopRail` (≥1024px)
 | portal `tsc` | **0** |
 | portal lint | **0 error** (RequestsPage hooks warning — önceden vardı) |
 | Select sentinel | **PASSED** |
-| Suite | BE değişmedi — 457 hedef (regresyon yok) |
+| Suite | BE değişmedi — 457 hedef (regresyon yok); güncel suite bkz. `QA_RAPOR` / `GUNCEL_DURUM_RAPORU` (**633** QA-3) |
 | DB wipe | **yok** |
-| PUSH | **yok** |
+| Push | Tarihsel dalga notu; branch remote ile senkron (güncel durum için git) |
 | Bootstrap | **kaldırılmadı** (PORTAL-3) |
+| Tema | **Portal açık varsayılan** (DOK-3 tutarlılık) |
 
 ### Notlar
 

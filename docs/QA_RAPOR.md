@@ -149,7 +149,7 @@ Bu dalgada yalnız izin bağlandı. Kanıt: `PortalLeaveApprovalWorkflowQa2Test`
 | 5 | Açık Pozisyon 0 | ✅ | KPI `published` → `JobPositionStatus::Active`; `open_positions=3` |
 | 6 | Mojibake `â€¦` | ✅ | App.tsx + collectors + `scripts/check-mojibake.mjs` CI |
 | 7–14 | Kozmetik/branding/redirect | ✅ | ALATAX HR, DEV-only demo hint, shortLabel, greeting, `/management/workflows` → `/settings/workflows` |
-| 15–16 | KVKK 9 sekme / saklama | ✅ karar | MODUL_SPEC 9 sekme; seeder politika `active=true` (aday 0 = süre penceresi) |
+| 15–16 | KVKK 9 sekme / saklama | ✅ karar | MODUL_SPEC 9 sekme; seeder `active=true` — **D2c ihlali → QA-4** (DOK-3) |
 | 17 | Bloklanan derin UI | ⏭ kısmi | Liste/motor/KPI/branding doğrulandı; pivot/export/çapraz filtre/KVKK paket derin UI QA-2b’ye |
 
 ### Yeni ekranlar
@@ -352,3 +352,35 @@ D1d/D1g yeşildi çünkü testler **firma-içi** `report_id` / inline config kul
 
 - Tek koşu: **633 passed** (2813 assertions) — `alatax_hr_testing`
 - 3× ardışık + random seed `1785420999` + sentinel + portal-route-smoke + 3 SPA tsc/lint → Actions
+
+---
+
+## DOK-3 → QA-4 (belge teşhisi; kod yok)
+
+| # | Bulgu | QA-4 |
+|---|--------|------|
+| 1.1 | `DemoSeeder` + `DemoDataSeeder` ikisi `admin@demo.test` / `demo-firma` | Tek kaynak veya net öncelik |
+| 1.2 | Retention seed `active=true` (D2c ihlali) | Seed’de `active=false` (dry-run ayrı) |
+
+Detay: `GUNCEL_DURUM_RAPORU.md` § DOK-3.
+
+---
+
+## Açık görsel / manuel borçlar (tek liste — DOK-3)
+
+QA-1 / 2 / 2b / 3’te doğrulananlar ilgili raporlarda **✅ QA’da doğrulandı** işaretlendi. Aşağıdakiler hâlâ açık:
+
+| # | Madde | Kaynak |
+|---|--------|--------|
+| 1 | Rapor builder: pivot / ECharts derin UI, çapraz + global filtre polish | QA-2b |
+| 2 | Excel/PDF export — dosya içeriği açılıp doğrulanmadı | QA-2b 🟠 |
+| 3 | i18n `reportEngine.measures` + custom field katalog etiketleri | QA-2b 🟠 |
+| 4 | Bordro PDF görsel / içerik | QA-2b |
+| 5 | 1366×768 tam taşma tarama | QA-1 #17 |
+| 6 | Yasal taban 422 UI mesajı | QA-1 |
+| 7 | KVKK paket JSON+PDF derin UI | QA-2 |
+| 8 | Pano düzenleme UI polish (widget veri ✅ QA-3) | QA-3 kalan |
+| 9 | Bundle &lt;1MB | FE borç |
+| 10 | Onaylı izin → puantaj “izinli gün” (wire yok) | DOK-3 §1.3 / Faz 6 |
+
+Manuel smoke: `TEST_TURU.md`. Otomatik tur kanıtı: bu dosya + `demo:seed`.

@@ -1,3 +1,7 @@
+﻿> **ARŞİV — 31 Temmuz 2026 tarihli tarihsel kayıt.** Güncel durum: [GUNCEL_DURUM_RAPORU.md](../GUNCEL_DURUM_RAPORU.md). Bu dosya artık yol gösterici değildir.
+
+---
+
 # ALATAX HR — PROJECT_SNAPSHOT
 
 > **Not (FAZ A/B güncellemesi):** 13 Tem 2026 baseline; FAZ A/B ile güncellendi (branch-context, izin/işe alım/masraf/puantaj HR, test **~338**). Tam yeniden envanter üretilmedi — detay: `docs/FAZ_B_RAPOR.md`.

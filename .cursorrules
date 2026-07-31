@@ -43,6 +43,7 @@ ALATAX HR: Türkiye odaklı, multi-tenant B2B HR SaaS. Backend: Laravel 12 REST 
 - **Formlar:** react-hook-form + zod. Form Engine (Faz 4) hazır olduktan sonra entity formları FormEngine bileşeniyle kurulur, elle form yazılmaz.
 - **Settings Registry (D4a+):** Her modül dalgası, modülün ayarlarını Settings Registry'ye kaydetmeden ve bağlamsal ⚙ panelinde (`PageSettingsButton`) göstermeden **BİTMİŞ SAYILMAZ**. Lookup = liste değerleri; Settings = davranış parametreleri — birleştirilmez.
 - **Personal Data Collector (D2b+):** Kişisel veri tutan her yeni modül, `PersonalDataCollector`'ını kaydetmeden **BİTMİŞ SAYILMAZ**.
+- **Yardım içeriği (D4b motorundan bağımsız):** Her modül dalgası, kendi yardım içeriğini `docs/help/{modul}/{sayfa}.md` olarak yazmadan **BİTMİŞ SAYILMAZ**. Yardım motoru Faz 8'de bu dosyaları render eder.
 - **Stil:** Renk/spacing/font-size hardcode YASAK; her zaman `theme.css` CSS variable'ları. Yeni token gerekiyorsa önce theme.css'e eklenir. Density (`data-density`) desteğini boz­ma.
 - **Metinler:** Yeni her UI metni i18n `t()` ile yazılır; string hardcode edilmez. Namespace: `common` / `auth` / `validation` (+ modül JSON'ları). Dil sabit `tr` (switcher yok). Eski hardcoded metinler backlog.
 - **Yapı:** Bir bileşen 2+ app'te kullanılacaksa `packages/shared`'a, tek app'e özelse o app'in `components/` klasörüne. Sayfa eklerken üçlü birlikte yapılır: route tanımı + sidebar girişi + permission/module guard. Sidebar'a route'suz link eklemek yasak.

@@ -301,7 +301,7 @@ Yok.
 | **B / B1** Sıralı çok adım | ✅ | 2+ adım; red→resubmit yeni instance; adım2 erken onay 403 |
 | **C / B2** Dinamik onaycılar + vekalet | ✅ | 3 kademe; unresolved→hr_manager (atlanmaz); vekalet motor bağlı |
 | **D / B3** Koşullu adım | ✅ | whitelist evaluator; 3g→GM atla; 15g→GM zorunlu |
-| **E** Derin analiz (snapshot/TEST_TURU/ROADMAP) | ✅ | `docs/PROJECT_SNAPSHOT.md` + TEST_TURU 4B + ROADMAP B0–B3 |
+| **E** Derin analiz (snapshot/TEST_TURU/ROADMAP) | ✅ | `docs/arsiv/PROJECT_SNAPSHOT.md` (arşiv) + TEST_TURU 4B + ROADMAP B0–B3 |
 
 ### B3 özeti
 

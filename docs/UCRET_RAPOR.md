@@ -16,11 +16,11 @@
 
 | Kontrol | Sonuç |
 |---------|--------|
-| Suite | **457 passed / 0 fail** (448 + 9 salary) |
+| Suite (dalga anı) | **457 passed / 0 fail** (448 + 9 salary); güncel: bkz. QA-3 **633** |
 | company + portal `tsc` | **0** |
 | Select sentinel | **PASSED** |
 | DB wipe | **yok** (ekleyici migration) |
-| PUSH | **yok** |
+| Push | Tarihsel “PUSH yok” — dalga sonrası remote’a alındı |
 
 ## İzinler (mevcut — gevşetilmedi)
 

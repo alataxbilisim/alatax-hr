@@ -2,7 +2,8 @@
 
 ## PDKS-2 — Vardiya + hesap + düzeltme + raporlar (16 Temmuz 2026)
 
-**Branch:** `faz4-form-engine` · **Suite:** 435 passed / 0 fail · company+portal `tsc` 0 · Select sentinel OK · PUSH yok · DB wipe yok
+**Branch:** `faz4-form-engine` · **Suite:** 435 passed / 0 fail · company+portal `tsc` 0 · Select sentinel OK · DB wipe yok  
+*(Tarihsel not: bu dalga commit’leri sonradan push edildi; “PUSH yok” güncel değil.)*
 
 ### Zincir tablosu
 
@@ -25,12 +26,12 @@
 
 - `GET/POST/PUT/DELETE /api/v1/shifts`
 - `GET/POST /api/v1/employee-shifts`, `POST .../bulk`, `DELETE .../{id}`
-- `GET /api/v1/attendance/reports`, `GET .../reports/export`
+- `GET /api/v1/attendance/reports`, `GET .../reports/export` *(API öneki `attendance` kalır)*
 - create/update attendance: `reason` zorunlu → ActivityLog eski→yeni
 
 ### FE
 
-- Company: `/attendance/shifts`, `/attendance/shift-assignments`, `/attendance/reports`
+- Company FE rotaları (güncel): `/pdks/shifts`, `/pdks/shift-assignments`, `/pdks/reports` — eski `/attendance/*` → `/pdks` yönlendirme (✅ QA’da doğrulandı)
 - AttendancePage: ekle/düzenle modalı
 - Portal Puantajım: **Vardiyalarım** sekmesi (`GET /portal/timesheet/shifts`)
 - Firma Ayarları: `default_work_start/end`, `late_tolerance_minutes`
@@ -44,20 +45,20 @@
 
 ### DB / push
 
-Ekleyici migration uygulandı (`late_minutes`, `early_leave_minutes`, `missing_minutes`). Fresh/wipe yok. Lokal 3 commit; **push yok**.
+Ekleyici migration uygulandı (`late_minutes`, `early_leave_minutes`, `missing_minutes`). Fresh/wipe yok.
 
 ---
 
 ## PDKS-1 — QR ile giriş-çıkış (15 Temmuz 2026)
 
-**Branch:** `faz4-form-engine` · **Suite:** 416 passed / 0 fail · company+portal `tsc` 0 · Select sentinel OK · PUSH yok
+**Branch:** `faz4-form-engine` · **Suite:** 416 passed / 0 fail · company+portal `tsc` 0 · Select sentinel OK
 
 ### Kiosk (Company)
 
 | Öğe | Detay |
 |-----|--------|
-| Sayfa | `/attendance/kiosk` — MainLayout dışı tam ekran |
-| Menü | Puantaj → `nav.timesheetKiosk` (`timesheet.kiosk.view`) |
+| Sayfa | `/pdks/kiosk` (eski `/attendance/kiosk` yönlendirilir) — MainLayout dışı tam ekran |
+| Menü | PDKS → `nav.timesheetKiosk` (`timesheet.kiosk.view`) |
 | Token | `POST /api/v1/attendance/kiosk/token` — 30 sn TTL, ~25 sn’de sessiz yenileme |
 | Şube | Seçilebilir `branch_id` → kayıtta tutulur |
 | Offline | Bağlantı kopunca görünür uyarı |

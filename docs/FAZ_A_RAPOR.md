@@ -34,7 +34,7 @@
 | A3 branch DataScope | ✅ bitti | `employees.branch_id` + gerçek branch scope + `branch_manager` rolü + FE şube Select |
 | A4 org şeması 3 mod | ✅ bitti | people / department / hybrid; `OrganizationChartService` |
 | A5 pozisyon + SGK | ✅ bitti | `positions` kataloğu, gömülü SGK kod seed, CRUD, personel Select |
-| Holding/group | ⏸️ ertelendi | ROADMAP notu; companies=tenant kırılmadı |
+| Holding/group | ✅ **SEÇENEK 1 ONAYLANDI (DOK-3)** | Uygulama: **Faz G** (Faz 6 öncesi). SEÇENEK 2 reddedildi. Park kararı iptal. |
 | Borç lint | ✅ minimal | hardcoded white org diff geri alındı |
 
 ### Lokal commit listesi (push yok)
@@ -60,7 +60,7 @@ Faz 2 DataScope/policy **yeşil kaldı**. Güvenlik testi kırılmadı.
 
 ### KARAR BEKLENENLER
 
-- Holding (SEÇENEK 1) ne zaman? → şimdilik yok
+- ~~Holding (SEÇENEK 1) ne zaman?~~ → **DOK-3: SEÇENEK 1 onay; Faz G (modüllerden önce)**
 - Org şemasına şube katmanı (A3 sonrası opsiyonel)
 - A1 borçları (hakediş UI + dini bayram API) — Zincir 2/3
 
@@ -293,8 +293,9 @@ Her şirket bugünkü gibi bağımsız tenant. Grup membership tablosu; grup İK
 
 **Net öneri metni:**  
 > Kısa vade: company=tenant kalsın + branch DataScope.  
-> Orta vade grup: SEÇENEK 1 (`organizations` / `company_groups` + DataScope `group` + kontrollü multi-company scope).  
-> SEÇENEK 2 ancak “tamamen ayrı hukuki kiracılar asla ortak DB görünümü istemez” ürün kararıysa.
+> **KARAR (DOK-3 / 31 Temmuz 2026):** SEÇENEK 1 onaylandı. SEÇENEK 2 reddedildi.
+> Uygulama fazı: ROADMAP **Faz G**. DoD: mevcut DataScope/Policy yeşil + grup izolasyon test paketi.
+> En kritik risk: cross-company veri sızıntısı.
 
 ---
 

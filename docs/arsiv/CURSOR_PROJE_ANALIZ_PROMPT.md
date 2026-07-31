@@ -1,3 +1,7 @@
+﻿> **ARŞİV — 31 Temmuz 2026 tarihli tarihsel kayıt.** Güncel durum: [GUNCEL_DURUM_RAPORU.md](../GUNCEL_DURUM_RAPORU.md). Bu dosya artık yol gösterici değildir.
+
+---
+
 # CURSOR PROJE ANALİZ PROMPT'U
 
 > **Kullanım:** Bu dosyanın "PROMPT BAŞLANGICI" satırından sonrasını kopyala ve Cursor'da

@@ -13,7 +13,7 @@ Branch: `faz4-form-engine` · Push yok (lokal commit)
 | Stub | `ApprovalRequestedNotification` → sadece database; mesaj hardcode |
 | FE zil | Company/Portal header’da sahte badge; API bağlı değildi |
 | Event | `ApprovalRequested(record, approver, approvable, step)` |
-| Onaylandı/red/iade event | Yok (model hook + ActivityLog); `approval.returned` tetikleyici henüz yok |
+| Onaylandı/red/iade event | Onay/red bağlandı; `approval.returned` tetikleyici yok → **W2 (Faz 6 başı)** |
 | Tercihler | theme/locale/density; kanal tercihi yoktu |
 
 ### Olay kataloğu (9)
@@ -23,7 +23,7 @@ Branch: `faz4-form-engine` · Push yok (lokal commit)
 | `approval.requested` | approvals | company |
 | `approval.approved` | approvals | portal |
 | `approval.rejected` | approvals | portal |
-| `approval.returned` | approvals | portal (katalogda; tetikleyici yok) |
+| `approval.returned` | approvals | portal (katalogda; tetikleyici → **W2**) |
 | `leave.approved` / `leave.rejected` | requests | portal |
 | `expense.approved` / `expense.rejected` | requests | portal |
 | `onboarding.task_assigned` | tasks | company |
@@ -61,7 +61,7 @@ in-app her zaman; email kapalıysa atlanır. Company Ayarlar + Portal Profil.
 
 ### Kapsam dışı (4C-2+)
 
-SMS, push, şablon editörü, FormEngine yüzeyi, `approval.returned` iş akışı tetikleyicisi.
+SMS, push (Faz 8), şablon editörü, FormEngine yüzeyi, `approval.returned` (**W2**).
 
 ---
 
@@ -115,16 +115,16 @@ Branch: `faz4-form-engine`
 | Olay | Durum | Not |
 |------|--------|-----|
 | `approval.requested/approved/rejected/reminder/escalated` | vardı | Değişmedi; reminder e-posta varsayılan kapalı |
-| `approval.returned` | katalogda / DUR tetik | Workflow iade aksiyonu yok |
+| `approval.returned` | katalogda / **DUR tetik → W2** | Workflow iade aksiyonu yok; **Faz 6 başı (W2)** |
 | `leave.approved/rejected/cancelled` | vardı | — |
 | `expense.approved/rejected` | vardı | Outcome servisi + test |
 | `onboarding.task_assigned` | vardı | — |
 | `document.expiring` | vardı | Scheduler |
 | `asset.assigned` | **eklendi** | Zimmet `AssetController::assign` |
 | `security.password_changed` / `two_factor_*` | **eklendi** | Tercihle kapatılamaz |
-| `request.approved/rejected` | katalog / **DUR** | Company HR onay endpoint yok |
+| `request.approved/rejected` | ~~DUR~~ → **W1’de bağlandı** | EmployeeRequest onay hattı + demo seed (QA-3) |
 | `announcement.published` | katalog → **C5 kapandı** | Company publish + hedef kitle (C5) |
-| Push (Capacitor) | **DUR** | Ayrı dalga — altyapı kurulmadı |
+| Push (Capacitor) | **Faz 8** | Altyapı kurulmadı (tarihsel “PUSH yok” satırları bilgi amaçlı) |
 | `ApprovalRequestedNotification` stub | no-op | Gerçek yol: `NotificationService` |
 
 ### Tercihler (B)

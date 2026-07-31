@@ -123,7 +123,7 @@ Ana `index-*.js` (~3.6 MB) Nivo/mevcut app; rapor paketleri lazy ayrıldı.
 
 ### Not
 
-**KULLANICI GÖRSEL KONTROLÜ BEKLİYOR (borç)**
+**Görsel:** temel builder/liste/pano widget ✅ QA’da doğrulandı (QA-1/2/2b/3). Kalan derin UI → `QA_RAPOR.md` son liste.
 
 ### DUR / sonraki
 
@@ -183,7 +183,7 @@ Ana `index-*.js` (~3.6 MB) Nivo/mevcut app; rapor paketleri lazy ayrıldı.
 
 ### Not
 
-**KULLANICI GÖRSEL KONTROLÜ BEKLİYOR (borç)**
+**Görsel:** temel builder/liste/pano widget ✅ QA’da doğrulandı (QA-1/2/2b/3). Kalan derin UI → `QA_RAPOR.md` son liste.
 
 ---
 
@@ -246,7 +246,7 @@ Kaynak varsayılan: kayıtlı rapor; inline config alternatif. **Motor tüketici
 
 ### Not
 
-**KULLANICI GÖRSEL KONTROLÜ BEKLİYOR (borç)**
+**Görsel:** temel builder/liste/pano widget ✅ QA’da doğrulandı (QA-1/2/2b/3). Kalan derin UI → `QA_RAPOR.md` son liste.
 
 ---
 
@@ -288,7 +288,7 @@ Hedef: kullanıcı / rol / departman. Klasör paylaşımı yok. Offboarding hook
 
 ### Not
 
-**KULLANICI GÖRSEL KONTROLÜ BEKLİYOR (borç)**
+**Görsel:** temel builder/liste/pano widget ✅ QA’da doğrulandı (QA-1/2/2b/3). Kalan derin UI → `QA_RAPOR.md` son liste.
 
 ---
 
@@ -351,7 +351,7 @@ UI: `meta.computed_at` + `bypass_cache` / Şimdi yenile.
 
 ### Not
 
-**KULLANICI GÖRSEL KONTROLÜ BEKLİYOR (borç)**
+**Görsel:** temel builder/liste/pano widget ✅ QA’da doğrulandı (QA-1/2/2b/3). Kalan derin UI → `QA_RAPOR.md` son liste.
 
 ---
 
@@ -422,7 +422,7 @@ D1a semantic/query → D1b builder UI → D1c pivot/DSL → D1d dashboard v2 →
 
 ### Açık borçlar
 
-- KULLANICI GÖRSEL KONTROLÜ BEKLİYOR (borç)
+- Görsel derin UI (pivot/export/çapraz filtre) — `QA_RAPOR.md` açık liste; temel yollar ✅ QA’da doğrulandı
 - HrAnalyticsController kaldırma (Faz 6)
 - employee_dashboards (personel BI) birleştirme
 - WebSocket / canlı widget

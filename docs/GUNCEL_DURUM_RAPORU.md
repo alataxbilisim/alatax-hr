@@ -1,407 +1,116 @@
-# ALATAX HR — Güncel Durum Raporu (AI Handoff)
+# ALATAX HR — Güncel Durum Raporu
 
-**Üretim tarihi:** 29 Temmuz 2026 (D1g / Faz 5 kapanış güncellemesi)  
-**Amaç:** Claude Opus 4.8 (veya başka bir agent) için tek kaynaklı, kod + `docs/` karşılaştırmalı durum.  
-**Yöntem:** Kod + `docs/FAZ5_RAPOR.md` / `ROADMAP.md` ile doğrulandı.  
-**Aktif branch:** `faz4-form-engine`
+**Üretim:** 31 Temmuz 2026 (DOK-3) · **Branch:** `faz4-form-engine`  
+**Amaç:** Tek sayfa handoff. Detay faz raporlarında; tarihsel teşhisler `docs/arsiv/`.
 
 ---
 
-## 0. Yönetici özeti (30 saniye)
+## DOK-3 — Teşhis bulguları (ADIM 1)
 
-ALATAX HR, Türkiye odaklı multi-tenant B2B HR SaaS’tır. Backend Laravel 12 REST (`/api/v1`), frontend pnpm monorepo (3 React 19 SPA + `@alatax/shared`), DB PostgreSQL.
+| # | Bulgu | Sonuç | Devret |
+|---|--------|--------|--------|
+| **1.1** | `DemoSeeder` (Faz A6) ve `DemoDataSeeder` (QA-1 / `demo:seed`) ikisi de `admin@demo.test` üretiyor; ikisi de `slug=demo-firma` (“Demo Firma AŞ”). Sentinel (`admin@demo.test` @ `alatax_hr`) hangi seeder’ın yazdığına bakmaz — kullanıcı varlığını kontrol eder. Çift kaynak / drift riski. | 🔴 | **QA-4** |
+| **1.2** | `DemoDataSeeder` → `RetentionPolicy` seed: **`active => true`** (yorum: QA dry-run). D2c kuralı (“seed politika asla otomatik aktif olmaz”) **ihlal**. | 🔴 | **QA-4** |
+| **1.3** | Onaylı izin → puantaj: `LeaveRequest::onWorkflowCompleted` yalnızca status + bakiye; `AttendanceRecord` (`status=leave`) üretmez. Model/UI “izinli gün”i destekler ama **otomatik wire yok** (AKIS_SPEC §1/§2 borcu). | ⬜ açık | Faz 6 B3 |
+| **1.4** | `AKIS_SEMA_EDITOR.html` **repoda var** (`docs/`). `SISTEM_ISLEYIS.md` linki geçerli — kaldırma yok. | ✅ | — |
+
+---
+
+## 0. Müşteri ve ölçek bağlamı
+
+| Madde | Değer |
+|-------|--------|
+| İlk müşteri | **Dobedan Otel Grubu** |
+| Kurulum | **ON-PREM** (aynı kod → cloud + on-prem paket satışı) |
+| Ölçek | 3 şirket (→10) · 6 şube (→40) · ~3000 personel |
+| Yönetim | Tek merkez İK; şirket verisi karışmaz; raporlama gruba yayılır |
+| Bordro | Logo’da; bizim çıktı = puantaj aktarım paketi (API/dosya) |
+| PDKS | Donanım yok → telefon QR; vardiya başı **500+ eşzamanlı** okutma |
+| İlk sürüm | **14 modülün tamamı** (kısmi çıkış yok) |
+
+→ Her tasarım kararı buna göre: `ROADMAP.md` §0.
+
+---
+
+## 1. Bugün (30 saniye)
 
 | Katman | Durum |
 |--------|--------|
-| Faz 0–2 | ✅ Kapandı |
-| Faz 3 | ✅ Tasarım sistemi |
-| Faz 4 | 🔶 Form Engine / workflow — devam (branch üzerinde) |
-| FAZ A (TR/org) | ✅ A1–A5 |
-| **Faz 5** | ✅ **KAPANDI (D1a–D1g)** — rapor motoru **platform yeteneği** (semantic layer, builder, pivot, panolar, paylaşım, schedule/cache, hazır paket, `/analytics` motor) |
-| Faz 6–8 | ☐ Açık |
-| Test | **561 passed** (D1g sonrası) |
-
-**Rapor motoru:** Artık modül-içi sabit sorgulara bağlı değil; dataset registry + whitelist builder + DataScope/alan izni + sistem rapor/pano paketi (`module_key` / `system_key`). Detay: `docs/FAZ5_RAPOR.md` § D1g.
-
-**Bir sonraki mantıklı iş:** Faz 6 modül derinleştirme / Faz 4 kalanları; görsel kontrol borcu (rapor/pano UI).
-
-**Kritik kural:** Yalnızca `faz4-form-engine` üzerinde çalış. `main` / `faz3-tasarim` dokunma. DB asla silinmez.
+| Test | **633 passed** (QA-3; `alatax_hr_testing`) |
+| Faz 0–3 | ✅ |
+| Faz 4 | 🔶 Lookup/Workflow/Bildirim/Ayar; Form Engine 4A + W2 iade açık |
+| Faz 5 | ✅ Rapor motoru (11 dataset) |
+| FAZ A/B + KVKK D2a–c çekirdek | ✅ |
+| Faz G | ☐ Grup/Holding — **modüllerden önce** |
+| Faz 6 → 7 → 8 | ☐ |
 
 ---
 
-## 1. Proje kimliği
+## 2. Kurulan 6 motor + 4 registry
 
-| Alan | Değer |
-|------|-------|
-| Ad | ALATAX HR |
-| Tip | Multi-tenant B2B HR SaaS (Türkiye first; cloud + ileride on-prem) |
-| Repo kök | `c:\xampp\htdocs\alatax-hr` |
-| Backend | `backend/` — Laravel ^12, PHP ^8.2, Sanctum, Spatie Permission, Telescope, Google2FA |
-| Frontend | `frontend/` — pnpm: `apps/company` (:3002), `apps/portal` (:3003), `apps/superadmin` (:3001), `packages/shared` |
-| Auth | Sanctum Bearer; TOTP 2FA; davet + must_change_password (A2) |
-| RBAC | `{module}.{page}.{action}` + wildcard; Policy + DataScope |
-| Tenancy | `company_id` + `BelongsToCompany` global scope; client’tan `company_id` **asla** alınmaz |
-| Bordro | ROADMAP Faz 8 motoru hâlâ ufuk; **C5** Company PDF upload/yayın + Portal “Bordrolarım” |
-| Kurallar | `.cursorrules` — API katmanları, migration, i18n `t()`, DataTable, FormRequest |
-
----
-
-## 2. Git / branch haritası
-
-| Branch | Rol |
-|--------|-----|
-| `main` | Faz 2 merge sonrası baseline |
-| `faz1-postgresql` | Kapalı |
-| `faz2-rbac-audit` | Kapalı |
-| `faz3-tasarim` | Tasarım sistemi (token, density, sidebar) — merge edilmiş / temel |
-| **`faz4-form-engine`** | **Aktif çalışma branch’i** |
-
-### Push edilmemiş 5 commit (HEAD = `d44bead`)
-
-```
-d44bead docs(A): gece özeti — A3/A4/A5 tamam, güvenlik yeşil, push yok
-a014316 feat(A5): pozisyon kataloğu + SGK meslek kodu seed + personel Select
-7a8582c feat(A4): org şeması 3 mod — people/department/hybrid
-5faab49 feat(A3): employees.branch_id + DataScope branch + branch_manager rolü
-86d4d47 docs(A3): A1 borç ROADMAP + grup/şirket/şube mimari teşhis (kod yok)
-```
-
-A1/A2 commit’leri remote’ta (önceki push’lar). A3–A5 + gece docs henüz remote’ta değil.
-
----
-
-## 3. Docs envanteri — her dosya ne işe yarar / güncelliği
-
-| Dosya | Amaç | Güncellik (14 Tem 2026) |
-|-------|------|-------------------------|
-| `BURADAN_BASLA.md` | 7 belgeyi bağlayan giriş | ⚠️ **ESKİ** — hâlâ “Faz 0’a başla”, SQLite kararı anlatıyor |
-| `SISTEM_ISLEYIS.md` | Çalışan yaşam döngüsü (hedef hikaye) | Spec; kodla birebir değil |
-| `ROADMAP.md` | Ana pusula Faz 0–8 | ⚠️ Faz 3 checkbox’lar açık; test sayısı 186; footer “sonraki Faz 3” eski. A1 borç + A3 holding notu **var** |
-| `MODUL_SPEC.md` | Modül ekran/CRUD şartnamesi | Hedef spec; birçok ekran YARIM/YOK |
-| `AKIS_SPEC.md` | Talep→Onay→Sonuç mekanizması | Spec |
-| `TASARIM_REHBERI.md` | Kompakt UI token şartı | Faz 3 referansı |
-| `I18N.md` | `t()` kuralları | Geçerli |
-| `CURSOR_PROJE_ANALIZ_PROMPT.md` | Snapshot üretme prompt’u | Araç |
-| `PROJECT_SNAPSHOT.md` | 13 Tem teknik röntgen | ⚠️ Migration 70→**74**, model 81→**82**, A1–A5 sonrası güncellenmedi |
-| `DEPLOY_UBUNTU.md` | Ubuntu Docker + host FE | Geçerli (Aşama 1 doğrulandı) |
-| `TEST_TURU.md` | Manuel smoke checklist | Geçerli |
-| `AKIS_ENVANTERI.md` | 13 Tem akış teşhisi | ⚠️ **Kısmen bayat** — register leave type seed A1 ile düzeldi; diğer kopukluklar büyük ölçüde duruyor |
-| `FAZ1_RAPOR.md` … `FAZ4_RAPOR.md` | Faz kapanış/teşhis | Tarihsel; FAZ4 Lookup+B0–B3+panel/scroll |
-| `FAZ_A_RAPOR.md` | A1–A5 + gece özeti | ✅ **En güncel faz raporu** |
-| **Bu dosya** `GUNCEL_DURUM_RAPORU.md` | AI handoff | ✅ 14 Tem |
-
----
-
-## 4. ROADMAP faz durumu — doküman vs kod
-
-| Faz | ROADMAP işareti | Kod gerçeği | Sapma |
-|-----|-----------------|-------------|-------|
-| **0 Stabilizasyon** | ✅ KAPANDI | ✅ | Açık borçlar: Mailtrap E2E, 6 kayıp route, `_archive_old_app`, i18n backlog |
-| **1 PostgreSQL** | ✅ KAPANDI | ✅ pgsql default; mysql legacy | Squash/GIN/pg_dump ertelendi |
-| **2 RBAC+Audit** | ✅ KAPANDI | ✅ 343 permission route, Policy, Auditable P0, TOTP, 186→şimdi **294** test | ROADMAP hâlâ “186”; DataScope’ta `branch` A3’te eklendi (Faz 2 metni eski) |
-| **3 Tasarım** | ☐ Tüm maddeler açık | 🔶 `faz3-tasarim` + FAZ3_RAPOR: token, density, sidebar, scroll | **ROADMAP senkron değil** — pratikte kısmen/büyük oranda yapıldı |
-| **4 Platform** | AKTİF (checkbox karışık) | Lookup ✅ Select ✅ B0–B3 ✅ · **4A FormEngine yok** · B4/B5/4C yok | Lookup/B0–B3 ROADMAP’te kısmen işaretli; 4A açık |
-| **A (TR/org)** | ROADMAP 6A altında borç notları | A1–A5 kodda ✅ (local) | Holding SEÇENEK 1 ertelendi |
-| **5 Rapor motoru** | ☐ | ☐ | — |
-| **6 Modül+KVKK** | ☐ | Kısmi CRUD; derinleştirme yok | — |
-| **7 On-prem+lisans** | ☐ | `DEPLOY_UBUNTU` Aşama 1 manuel | Installer/lisans yok |
-| **8 Mobil/AI/bordro** | ☐ | Portal Capacitor notları var | — |
-
-**Kilometre taşları:** M1 ✅ · M2 (Faz 5) · M3 (Faz 6A) · M4 (Faz 7) — açık.
-
----
-
-## 5. Backend — güncel envanter
-
-### 5.1 Stack
-
-- Laravel 12, PHP 8.2+, Sanctum 4.2, Spatie Permission 6.24, Telescope, Google2FA + Bacon QR, PHPUnit 11, Pint
-
-### 5.2 Modüller (`ModuleSeeder`)
-
-**Core (3):** `user-management`, `company-management`, `audit-logs`  
-**Satılabilir (10):** `job-applications`, `document-management`, `onboarding`, `leave-management`, `performance`, `training`, `asset-management`, `hr-analytics`, `surveys` (+ bir daha — toplam ~13)  
-**Yok:** tam bordro motoru (Faz 8); C5’te `payroll.payslips.*` permission + upload var
-
-### 5.3 API
-
-- `routes/api.php` ~1160 satır, `/api/v1`, tahmini **~350–400** endpoint
-- Alanlar: auth, users/roles/branches, employees/departments/**positions**, lookups, recruitment, documents, onboarding, leaves (+accrual/holidays), workflows/approvals, expenses, performance, training, assets, surveys, analytics, attendance, admin, portal, public kariyer
-- Middleware: `auth:sanctum`, `company.active`, `permission:*`, `module.access:*`, `portal.access`, `super_admin`, throttle
-
-### 5.4 Multi-tenancy / RBAC / DataScope
-
-- `BelongsToCompany` — ~50+ model; Lookup istisna (`company_id` nullable)
-- Roller: `admin`, `hr_manager`, `hr_specialist`, `branch_manager` (**A3**), `manager`, `employee`
-- DataScope seviyeleri: `own` < `team` < `department` < **`branch`** < `company`
-- Policy’ler: Employee, LeaveRequest, Document, EmployeeDocument, ExpenseClaim, PerformanceReview, ApprovalRecord
-- Alan izinleri: maaş/TCKN Resource filtre; `field_permissions` tablosu Form Engine’e ertelenmiş
-
-### 5.5 Auth (A2 dahil)
-
-| Özellik | Durum |
-|---------|--------|
-| Login / logout / me | ✅ |
-| Register (firma + admin + trial) | ✅ + **HR default seed (A1)** |
-| Forgot / reset | ✅ (Mailtrap E2E borç) |
-| Davet `InvitationService` | ✅ sha256, 7g, tek kullanım; public accept |
-| `must_change_password` + force-change SPA | ✅ |
-| TOTP 2FA | ✅ |
-
-### 5.6 FAZ A kod kanıtları
-
-| İş | Ana dosyalar |
-|----|----------------|
-| A1 TR seed | `DefaultCompanyHrSeedService`, `AccrualPolicy::calculateAnnualEntitlement`, `Holiday::seedTurkishHolidays*`, migration `2026_07_14_000001`, artisan `alatax:seed-defaults` |
-| A2 Davet | `InvitationService`, Auth accept endpoints, shared Invite/ForcedPasswordChange pages |
-| A3 Şube | `employees.branch_id`, `DataScopeService` branch, `branch_manager`, `BranchDataScopeTest` |
-| A4 Org | `OrganizationChartService` modes: people \| department \| hybrid |
-| A5 Pozisyon | `positions` tablosu (**≠** recruitment `job_positions`), `PositionCatalogSeedService` ~40 SGK kodu, CRUD + FE |
-
-### 5.7 Sayılar (kod sayımı 14 Tem)
-
-| Metrik | Değer |
-|--------|-------|
-| Migrations | **74** |
-| Models | **82** |
-| Feature test dosyası | **34** |
-| Unit test dosyası | **4** |
-| Lokal suite | **294 passed**, 1 risky |
-
-Son migration’lar: leave_types system flags, must_change_password, branch_id, positions (2026_07_14_*).
-
-### 5.8 Bilinen backend boşluklar
-
-- ~~İzin bakiyesi / iptal route~~ → **C1** kapandı
-- ~~Bordro upload / duyuru admin / vardiya~~ → **C5**
-- ~~6 kayıp sidebar route~~ → **B-4 / C6** (assignments link kaldırıldı)
-- `approval.returned` / workflow iade aksiyonu → **Faz 6** (C6 teşhis)
-- condition-meta + custom_fields motor → **Faz 6** (C6 DUR; motor dokunulmaz)
-- legacy `application_forms` / `form_id` okuma yolu → **Faz 6’da kaldırılacak** (C6 köprü: `form_definition_id`)
-- Capacitor push → açık
-- B5+PORTAL-1 görsel kontroller → açık
-- Custom field validation TODO (kısmi)
-
----
-
-## 6. Frontend — güncel envanter
-
-### 6.1 Stack
-
-React 19, TS ~5.9, Vite 7, RRD 7, Redux Toolkit (auth/theme/ui), TanStack Query (Portal + shared peer), RHF+zod, axios via `@shared/services/api`, i18next (namespaces: `common`, `auth`, `validation` — **yalnızca tr**), Radix Select, Nivo/grid-layout (company)
-
-### 6.2 Company rotaları (özet)
-
-Dashboard · Personel (+departments, **positions**, **organization**, custom-fields, reports) · Recruitment · Leaves · Documents · Onboarding (+templates) · Performance (+periods/criteria) · Training (+sessions) · Assets (+categories) · Surveys · Analytics · Announcements · Payslips · Settings/users/roles/**branches**/lookups/webhooks/audit/forms · Account
-
-**Sidebar ↔ App drift (Faz 0):** ~~6 path~~ → **B-4/C6 kapandı** (`/assets/assignments` link kaldırıldı; zimmet detayda).
-
-### 6.3 Shared — kritik gerçekler
-
-| Bileşen | Durum |
-|---------|--------|
-| **FormEngine** | ✅ (4A) — entity formları + public kariyer |
-| CustomFieldRenderer | ✅ |
-| Select + useLookupOptions | ✅ |
-| DataTable | ⚠️ Company-local (`apps/company/.../DataTable.tsx`), shared değil |
-| InviteAccept / ForcedPasswordChange / 2FA | ✅ shared |
-| theme.css / density | ✅ Faz 3 |
-| `_archive_old_app/` | ❌ **C6’da silindi** |
-
-### 6.4 Portal / SuperAdmin
-
-- Portal: Bootstrap 5 kalıntısı; self-service leave/attendance/expenses/payslip/announcements
-- SuperAdmin: şirketler, lisans paketleri, sistem yönetimi
-
----
-
-## 7. FAZ A özeti (en güncel ürün işi)
-
-Detay: `docs/FAZ_A_RAPOR.md`
-
-| Madde | Durum | Not |
+| Motor | Durum | Not |
 |-------|--------|-----|
-| A1 TR default seed | ✅ (pushed) | 10 izin türü, tenure_rules 14/20/26 + yaş, tatil 2026–28, overtime_type lookup |
-| A2 Invite + şifre | ✅ (pushed) | CI yeşil geçmişte |
-| A3 branch DataScope | ✅ local | Holding **yok**; companies=tenant |
-| A4 org 3 mod | ✅ local | |
-| A5 pozisyon+SGK | ✅ local | |
-| A1 borç | Açık | Hakediş UI yok; dini bayram sabit → API sonra (ROADMAP 6A) |
+| Lookup | ✅ | Cascading borç |
+| Form Engine | 🔶 | 4A tam geçiş açık |
+| Workflow / onay | ✅ motor | İade (`returned`) = **W2 / Faz 6 başı** |
+| Bildirim | ✅ 4C çekirdek | Push → Faz 8; `approval.returned` DUR (W2) |
+| Rapor | ✅ Faz 5 | 11 dataset |
+| Ayar (Settings Registry) | ✅ D4a | Pilot: izin + rapor |
 
-**Karar kilitleri:** Holding = SEÇENEK 1 ileride; şimdilik branch yeterli. A4/A5 A3’ten bağımsız tamamlandı.
+| Registry | DoD |
+|----------|-----|
+| Dataset registry | Modül dataset’siz bitmez |
+| PersonalDataCollector | Kişisel veri modülü collector’sız bitmez |
+| Settings Registry | Ayar + ⚙ panel bağlanmadan bitmez |
+| Approval entity registry | Onaylı entity kayıtlı + outcome hook |
 
----
-
-## 8. Akış olgunluğu (`AKIS_ENVANTERI` + A1 sonrası düzeltme)
-
-**13 Tem sayaç:** ~28 TAM · ~32 YARIM · ~24 KOPUK · ~18 YOK
-
-### A1 sonrası düzelen
-
-| Akış (eski etiket) | Yeni gerçek |
-|--------------------|-------------|
-| Register → leave type seed ⬜ | ✅ `AuthController` + `DefaultCompanyHrSeedService::ensureForCompany` |
-
-### Hâlâ kritik kopukluklar (AKIS — büyük ölçüde geçerli)
-
-1. **İzin bakiyesi manuel atama** — FE var, BE update route yok  
-2. **İzin iptal** — cancel route eksik  
-3. **İşe alım public başvuru** — şema/status uyumsuz; Kanban boş riski  
-4. **hired → employee/onboarding** wire yok  
-5. **Puantaj** — portal clock-in OK; company attendance + vardiya CRUD **var** (PDKS/C5); Portal shifts tarih eşleşmesi C5’te düzeltildi  
-
-6. **Masraf** — portal OK; company HR UI + workflow zayıf  
-7. **Form Engine / Stüdyo / tam bildirim** yok  
-8. Nav/route drift (6 path)
+**Yardım içeriği DoD (motor Faz 8):** Her modül dalgası `docs/help/{modul}/{sayfa}.md` yazar; D4b sonda render eder. (`.cursorrules` + ROADMAP)
 
 ---
 
-## 9. Doküman ↔ kod sapma listesi (agent için zorunlu okuma)
+## 3. Revize yol haritası (faz sırası)
 
-Bu liste yanlış varsayımı önler:
+| Sıra | Faz | Durum |
+|------|-----|--------|
+| — | Faz 0–5 (+A/B/KVKK çekirdek) | ✅ / 🔶4 |
+| **G1** | **Faz G — Grup/Holding** (SEÇENEK 1) | ☐ önce |
+| **6** | Modül derinleştirme (W2 iade başta → 14 modül) | ☐ |
+| **7** | On-prem installer + imzalı lisans + yedekleme + izleme | ☐ canlıdan önce |
+| **8** | Yardım motoru (D4b) + mobil/AI/entegrasyon ufku | ☐ en sonda |
 
-1. **`BURADAN_BASLA.md`** — “Faz 0’a başla” artık yanlış; proje Faz 4 + FAZ A’da.
-2. **`ROADMAP.md` Faz 3** — checkbox’lar boş ama tasarım kodu büyük ölçüde mevcut; “Faz 3’ü sıfırdan yap” deme.
-3. **`ROADMAP.md` test** — “186” yazıyor → **294**.
-4. **`ROADMAP.md` DataScope** — Faz 2 metninde branch yok → A3’te `branch` + `branch_manager` var.
-5. **`PROJECT_SNAPSHOT.md`** — 70 migration / 81 model / A1–A5 yok → **74 / 82** + FAZ A.
-6. **`AKIS_ENVANTERI.md`** — “register leave type seed etmez” **YANLIŞ oldu** (A1). Diğer izin/recruitment/masraf kopuklukları duruyor.
-7. **Form Engine** — ROADMAP 4A ve snapshot “yok” diyor → kodda da **yok**; CustomFieldRenderer ≠ FormEngine.
-8. **`leave_types` vs Lookup** — A1 kararı: türler **ayrı tablo** (`system_code`); Lookup’a taşınmadı.
-9. **`positions` vs `job_positions`** — A5 katalog ≠ recruitment iş ilanı pozisyonu; karıştırma.
-10. **Holding** — dokümanda SEÇENEK 1 önerisi; kodda **yok**; companies=tenant kırılmamalı.
-11. **Push** — FAZ_A “4 commit önde” demişti; şu an **5** (gece docs dahil).
-12. **Faz sırası** — “önce platform sonra modül”; Form Engine (4A) roadmap önceliği; FAZ A istisnai TR/org işiydi.
+**Holding kararı (park iptal):** SEÇENEK 1 onay (`organizations` + DataScope `group`). SEÇENEK 2 reddedildi.  
+**Risk:** cross-company veri sızıntısı. **DoD:** mevcut DataScope/Policy yeşil + yeni grup izolasyon paketi.
 
 ---
 
-## 10. Deploy / ortam
+## 4. Lisans / SuperAdmin / tema
 
-- Lokal: sıkça XAMPP + Windows; staging: Ubuntu LAN (`DEPLOY_UBUNTU.md`)
-- Docker: app + nginx + **postgres** + redis + worker + scheduler (+ mysql legacy)
-- FE host pnpm: **Node 20 + pnpm@9.15.9** (pnpm 11 kırılır)
-- LAN: `CORS_ALLOWED_ORIGINS` + `VITE_API_URL=SUNUCU_IP:8000`
-- Seed: SuperAdmin seed; Company/Portal için register + personel + portal-access
-- Otomatik deploy yok; `deploy-ubuntu-update` script chore olarak var
+- **Lisans:** Her modül à la carte (`modules` + `company_modules`); SuperAdmin’den aç/kapa. İSG/PDKS/LMS dahil.  
+- **SuperAdmin:** Müşteriye görünmez (değişiklik yok). On-prem’de panel gizlemek koruma değildir — gerçek koruma **imzalı lisans + sözleşme** (Faz 7/8).  
+- **Tema:** Company/SuperAdmin mevcut davranış; **Portal açık tema varsayılan.**
 
 ---
 
-## 11. Test / CI
+## 5. Açık borçlar (tek liste)
 
-| Suit | Not |
-|------|-----|
-| PHPUnit lokal | 294 passed, 1 risky (~215s) — A3 sonrası DataScope/policy yeşil |
-| Kritik güvenlik | PermissionEnforcement Wave1–4, RouteAuthorization, DataScope*, BranchDataScope, Invite*, PanelAccess, Totp2fa, Audit* |
-| FAZ A testleri | DefaultCompanyHrSeed*, InviteAndPasswordOnboarding*, BranchDataScope*, OrganizationChart*, PositionCatalog*, AccrualPolicyEntitlement* |
-| CI | Push sonrası GitHub Actions: Pint + FE lint/build + PHPUnit (pgsql) — **A3–A5 için henüz koşmadı** (push yok) |
-| Company `tsc` | Gece özetine göre yeşil |
-
-**DoD kuralı (.cursorrules):** Yeni endpoint → auth 401, yetkisiz 403, happy path, tenant izolasyonu testleri.
-
----
-
-## 12. Mimari kararlar (kilitli)
-
-1. Modüler monolith — mikroservis yok  
-2. PostgreSQL default; MySQL legacy silinmez  
-3. API-first; UI’a özel gizli endpoint yok  
-4. `company_id` yalnız auth’tan  
-5. Enum → string + CHECK + PHP backed enum  
-6. Baseline migration düzenlenmez — yeni migration  
-7. UI metinleri Türkçe + `t()`  
-8. Form Engine gelince entity formları ona geçer — şimdilik elle OK  
-9. Holding gelince SEÇENEK 1 (`organizations`); şimdi branch yeterli  
-10. Bordro kapsam dışı (Faz 8 ufuk)
+| Borç | Sahip |
+|------|--------|
+| DemoSeeder ↔ DemoDataSeeder çakışması | QA-4 |
+| Retention seed `active=true` (D2c ihlali) | QA-4 |
+| Onaylı izin → puantaj wire | Faz 6 B3 |
+| İade (`returned`) akışı | Faz 6 W2 |
+| E-posta doğrulama (Mailtrap E2E) | Faz 0 kalıntı |
+| Bundle &lt;1MB | FE borç |
+| i18n EN + dil switcher | Backlog / Faz 8 |
+| Görsel kontroller (QA kalanları) | `QA_RAPOR.md` son liste |
+| Form Engine 4A tam geçiş | Faz 4 |
+| Saklama politikaları job’ları | KVKK |
+| Cascading picklist | Faz 4 sonu |
 
 ---
 
-## 13. Açık borçlar — öncelik grupları
+## 6. Belge haritası
 
-### P0 — Güvenlik / regresyon
+Giriş: `BURADAN_BASLA.md`. Pusula: `ROADMAP.md`. QA: `QA_RAPOR.md` + `TEST_TURU.md`. Arşiv: `docs/arsiv/` (PROJECT_SNAPSHOT, AKIS_ENVANTERI, MENU_PUANTAJ_TESHIS, CURSOR_PROJE_ANALIZ_PROMPT).
 
-- Push sonrası CI yeşil teyit  
-- DataScope/policy suite’i yeşil tut (her org değişikliğinde)
-
-### P1 — Platform (ROADMAP Faz 4)
-
-- **4A Form Engine** (Personel formu ilk geçiş)  
-- B4 paralel/eskalasyon  
-- B5 Stüdyo workflow UI  
-- 4C Bildirim Merkezi  
-- Cascading picklist (`parent_lookup_id`)
-
-### P2 — Kullanıcıyı “kopuk” hissettiren dikey akışlar
-
-- İzin: balance update route + cancel + portal alan drift  
-- İşe alım: public apply şema + hired→employee  
-- Masraf/puantaj company HR UI  
-- 6 kayıp sidebar route kararı
-
-### P3 — Doküman hijyeni
-
-- ROADMAP Faz 3 checkbox senkronu  
-- PROJECT_SNAPSHOT / AKIS_ENVANTERI A1+A3–A5 güncellemesi  
-- BURADAN_BASLA modernizasyonu  
-- `_archive_old_app` temizliği
-
-### P4 — Faz 5–7
-
-- Rapor semantic layer  
-- KVKK  
-- On-prem installer + lisans
-
-### A1 teknik borç (Zincir 2/3)
-
-- Accrual kuralları yönetim UI  
-- Dini bayram tarihleri API
-
----
-
-## 14. Agent’a çalışma talimatı (kopyala-yapıştır)
-
-```
-Proje: ALATAX HR — branch yalnızca faz4-form-engine.
-Kurallar: .cursorrules + docs/ROADMAP.md + docs/FAZ_A_RAPOR.md + bu GUNCEL_DURUM_RAPORU.md.
-UI Türkçe t(); company_id client'tan alma; FormRequest+Service+ApiResponse; BelongsToCompany.
-FormEngine henüz YOK — icat etme, istenirse 4A olarak tasarla.
-positions ≠ job_positions; leave_types Lookup değil.
-Holding ekleme (ertelendi). Push yalnız kullanıcı isterse.
-Faz 2 DataScope/permission testleri kırılırsa özellik bitmiş sayılmaz.
-docs/AKIS_ENVANTERI.md'teki "register leave seed yok" satırı ESKİ — A1 düzeltti.
-```
-
----
-
-## 15. Önerilen okuma sırası (yeni agent)
-
-1. Bu dosya (`GUNCEL_DURUM_RAPORU.md`)  
-2. `.cursorrules`  
-3. `docs/FAZ_A_RAPOR.md` (gece özeti + A1–A5)  
-4. `docs/ROADMAP.md` §Faz 4 + §Faz 6A A1/A3 notları (checkbox sapmalarına dikkat)  
-5. `docs/AKIS_ENVANTERI.md` (kopukluklar; A1 satırını düzelt)  
-6. `docs/FAZ4_RAPOR.md` (Lookup + panel/scroll)  
-7. İhtiyaç halinde: `SISTEM_ISLEYIS` / `MODUL_SPEC` / `AKIS_SPEC` / `DEPLOY_UBUNTU`
-
----
-
-## 16. Hızlı dosya indeksi
-
-```
-backend/app/Services/DefaultCompanyHrSeedService.php
-backend/app/Services/InvitationService.php
-backend/app/Services/DataScopeService.php
-backend/app/Services/OrganizationChartService.php
-backend/app/Services/PositionCatalogSeedService.php
-backend/app/Services/DefaultLeaveApprovalWorkflowService.php
-backend/config/data-scope.php
-backend/routes/api.php
-backend/database/seeders/{Module,Permission,LeaveType}Seeder.php
-frontend/apps/company/src/App.tsx
-frontend/apps/company/src/pages/{employees,lookups,organization,positions}/
-frontend/packages/shared/src/{components/Select.tsx,hooks/useLookupOptions.ts,styles/theme.css}
-docs/{ROADMAP,FAZ_A_RAPOR,AKIS_ENVANTERI,FAZ4_RAPOR,DEPLOY_UBUNTU,PROJECT_SNAPSHOT}.md
-```
-
----
-
-*Bu rapor 14 Temmuz 2026 tarihinde kod sayımı + docs karşılaştırması ile üretilmiştir. Push sonrası CI sonucu ve yeni özellikler eklendikçe güncellenmelidir.*
+**Git kuralı:** Yalnız `faz4-form-engine`. DB wipe yok.

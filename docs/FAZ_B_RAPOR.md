@@ -262,8 +262,8 @@ Commit’ler: `8e343d5` feat(B-3); `1c6b5b4` policy ad fix.
 | `PROJE_RAPORU.md` | Repoda **yoktu** — silinecek bir şey yok |
 | `BURADAN_BASLA.md` | Faz 0/SQLite bloğu → güncel durum (Faz 0–2 kapalı, Faz 4+A/B, pgsql, ~338) |
 | `ROADMAP.md` | Faz 3 çekirdek ✅; test ~338; 6 route borcu B-4’te kapatıldı |
-| `PROJECT_SNAPSHOT.md` | Üst not: FAZ A/B + test 338 |
-| `AKIS_ENVANTERI.md` | B-1/B-2/B-3 kopuklukları ✅/🟡 güncellendi |
+| `arsiv/PROJECT_SNAPSHOT.md` | Tarihsel; güncel: `GUNCEL_DURUM_RAPORU.md` |
+| `arsiv/AKIS_ENVANTERI.md` | Tarihsel teşhis (DOK-3 arşiv) |
 
 ### Doğrulama
 

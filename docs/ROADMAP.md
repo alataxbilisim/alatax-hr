@@ -1,8 +1,29 @@
-# ALATAX HR — ROADMAP v1.0
+# ALATAX HR — ROADMAP v1.1
 
-**Tarih:** 11 Temmuz 2026 (Faz 2 kapanışı)
-**Girdiler:** PROJECT_SNAPSHOT.md (10 Tem 2026) + global HR SaaS pazar/mimari araştırması + proje sahibi hedefleri
-**Bağlam:** Solo geliştirici (Cursor + AI destekli), önce Türkiye pazarı, mobil uygulama sonraki fazda, bordro modülü kapsam dışı (ileride).
+**Tarih:** 31 Temmuz 2026 (DOK-3 revizyon) · önceki: 11 Tem 2026 (Faz 2)
+**Girdiler:** Güncel kod + `GUNCEL_DURUM_RAPORU.md` + müşteri/ölçek kararları + FAZ_A §A3 holding kararı
+**Bağlam:** Solo geliştirici (Cursor + AI destekli), Türkiye first, Dobedan on-prem pilot, bordro motoru kapsam dışı (aktarım paketi var).
+
+---
+
+## 0. Müşteri ve ölçek bağlamı
+
+> Her tasarım ve faz kararı bu bölüme göre verilir.
+
+| Madde | Değer |
+|-------|--------|
+| İlk müşteri | **Dobedan Otel Grubu** |
+| Kurulum | **ON-PREM** |
+| İlerisi | Aynı kod tabanı → cloud SaaS + on-prem paket satışı |
+| Ölçek | **3 şirket** (artacak, ~10’a kadar) · **6 şube** (~40’a kadar) · **~3000 personel** |
+| Yönetim modeli | **Tek merkez İK** — tüm şirketleri yönetir; şirket verisi karışmaz; raporlama gruba yayılır |
+| Bordro | Logo’da kalır → bizim çıktı = **puantaj aktarım paketi** (API veya dosya) |
+| PDKS | Donanım yok → telefondan **QR okutma**; ⚠️ vardiya başı **500+ eşzamanlı** okutma |
+| İlk sürüm | **14 modülün tamamı hazır** (kısmi çıkış / “yarım paket” yok) |
+
+**Holding kararı (DOK-3):** FAZ_A §A3 **SEÇENEK 1 onaylandı** (`organizations` / company_groups + DataScope `group`). SEÇENEK 2 (cross-tenant bypass) reddedildi. Önceki “holding park” kararı **iptal**. Uygulama fazı: **Faz G** (Faz 6’dan önce).
+
+**Tema (tutarlılık):** Company / SuperAdmin mevcut davranış; Portal varsayılan **açık tema**.
 
 ---
 
@@ -25,7 +46,7 @@ Fark yaratacak 4 şey:
 3. **API-first.** Company/Portal/SuperAdmin SPA'larının kullandığı API, ileride mobil uygulamanın kullanacağı API'nin ta kendisidir. UI'a özel gizli endpoint yazılmaz.
 4. **Tek veritabanı motoru (uygulama default): PostgreSQL.** Default connection `pgsql`. MySQL bilgisayardan / Docker'dan **ASLA silinmez** — legacy olarak korunur (devre dışı bırakılabilir ama servis/bağımlılık kalır). SQLite yalnızca acil lokal deneme; CI ve prod pgsql. JSONB + GIN index, custom field ve audit mimarisinin temelidir.
 5. **Kod cloud/on-prem ayrımı bilmez.** Fark yalnızca konfigürasyon (`APP_MODE`) ve lisans katmanındadır.
-6. **Derinlik > genişlik.** Pilot için seçilen çekirdek modüller "satılabilir" kaliteye getirilir; kalanlar lisans sisteminde kapalı tutulur. Yarım 15 modül yerine tam 7 modül.
+6. **Derinlik > genişlik — ama ilk müşteri için 14’ün tamamı.** Paket satışında à la carte korunur; Dobedan ilk sürümünde 14 modül “satılabilir” kalitede çıkar (kısmi çıkış yok). Yarım modül teslim edilmez.
 7. **Türkçe-first, i18n-ready.** Arayüz Türkçe; ancak bugünden itibaren yazılan her yeni metin çeviri altyapısından (t()) geçer. Toplu string migrasyonu global açılım öncesine ertelenir.
 8. **Her faz test ve dokümantasyonla kapanır.** DoD (Definition of Done) karşılanmadan sonraki faza geçilmez.
 
@@ -46,7 +67,7 @@ Fark yaratacak 4 şey:
 | Deployment | Docker Compose + CI (Pint/FE/PHPUnit blocking) | On-prem installer, imzalı lisans |
 | UI | Desktop odaklı, ekranlar büyük | Kompakt token ölçeği, 1366×768 hedefi, density modu |
 | i18n | Altyapı kurulu (tr); yeni kod t() zorunlu (Faz 0) | Toplu string migrasyonu + dil switcher + EN (backlog) |
-| Test | **~338 passed** (B-3 sonrası, `alatax_hr_testing`), PHPUnit CI blocking | Endpoint auth+permission+happy path genişletme |
+| Test | **633 passed** (QA-3, `alatax_hr_testing`), PHPUnit CI blocking | Endpoint auth+permission+happy path + grup izolasyon (Faz G) |
 
 ---
 
@@ -256,12 +277,15 @@ Fark yaratacak 4 şey:
 - [ ] `/settings` tek çatı altında yeniden örgütlenir: Firma & Şubeler / Modüller / **Formlar & Alanlar** (Form Engine UI) / Liste Görünümleri / **İş Akışları** / **Bildirim Şablonları** / Roller & İzinler / İzin-Tatil Politikaları / Görünüm (tema-density-logo) / API & Webhook / Veri (import-export-KVKK)
 - [ ] Her modülün ayarı kendi sayfasına gömülü değil, stüdyoda modül sekmesi olarak yaşar (Zoho deseni)
 - [x] **D4a Settings Registry** — davranış parametreleri motoru (`setting_values`, kapsamlı çözümleme, merkezi + bağlamsal ⚙ UI). Pilot: İzin + Rapor. Lookup ile birleştirilmez. Detay: `docs/AYAR_MOTORU.md`.
+- [ ] **D4b Yardım motoru** → **Faz 8** (en son). İçerik borcu ertelenmez — aşağı DoD.
 
 **DoD:** Bir firma admin'i kod olmadan: personel formuna alan ekler/kaldırır/yeniden adlandırır, alanı role kapatır, "5 günden uzun izinler GM onayına gitsin + e-posta atsın" akışını kurar, bildirim şablonunu düzenler — hepsi Ayarlar Stüdyosu'ndan.
 
 **DoD (Settings Registry):** Her modül dalgası, modülün ayarlarını Settings Registry'ye kaydetmeden ve bağlamsal ⚙ panelinde göstermeden **BİTMİŞ SAYILMAZ**.
 
 **DoD (Personal Data Collector):** Kişisel veri tutan her yeni modül, `PersonalDataCollector`'ını kaydetmeden **BİTMİŞ SAYILMAZ**.
+
+**DoD (Yardım içeriği — D4b motorundan bağımsız):** Her modül dalgası, kendi yardım içeriğini `docs/help/{modul}/{sayfa}.md` olarak **YAZAR**. Yardım motoru (Faz 8) bu dosyaları render eder; içeriksiz modül dalgası bitmiş sayılmaz.
 
 ---
 
@@ -300,9 +324,40 @@ D1a–D1g tamam. **11 dataset**, whitelist query builder, builder UI, pivot/DSL,
 
 ---
 
+### FAZ G — Grup / Holding mimarisi (Faz 6’dan ÖNCE)
+
+**Karar (DOK-3):** FAZ_A §A3 **SEÇENEK 1 ONAYLANDI**. SEÇENEK 2 (cross-tenant bypass) **reddedildi**. Önceki “holding park / ertelendi” kararı **iptal**.
+
+**Gerekçe (kısa):** 14 modül tek-şirket varsayımıyla yazılırsa grup katmanı sonradan hepsini yeniden yazdırır. Rapor motoru bugün 11 dataset iken genişletmek ucuz; modül derinleştirmeden sonra pahalı.
+
+⚠️ **RİSK NOTU (en kritik):** Cross-company **veri sızıntısı**. Her `company_id` filtresi, Policy, BelongsToCompany ve rapor sorgusu grup kapsamında yanlışlıkla genişleyebilir.
+
+**DoD (pazarlıksız):**
+- Mevcut tüm DataScope / Policy testleri **yeşil kalır**
+- Yeni **grup izolasyon test paketi** yeşil (grup A kullanıcısı grup B / yabancı şirket verisini göremez; `group` scope yalnızca organization altındaki şirket setini görür)
+
+#### Kapsam taslağı (kod yok — plan)
+
+| Parça | Not |
+|-------|-----|
+| `organizations` (veya `company_groups`) tablosu | Holding / grup kökü |
+| `companies.organization_id` | Şirket → grup FK |
+| DataScope `group` seviyesi | `group` > `company` > `branch` > … |
+| BelongsToCompany | “erişilebilir şirket seti” modeli (tek `company_id` yerine kontrollü set) |
+| FE şirket bağlamı seçici | Merkez İK hangi şirket(ler) üzerinde çalışıyor |
+| Grup kapsamlı rapor / pano | Dataset’ler organization setiyle |
+| Audit’te şirket ayrımı | Her olayda hangi `company_id` net |
+| Lisans / modül seviyesi | Şirket mi grup mu? → **karar Faz G içinde verilir** |
+
+**Sıra kuralı:** Faz G DoD karşılanmadan Faz 6 modül dalgalarına girilmez (W2 iade iskeleti Faz 6 başında; G tamamlanmış olmalı).
+
+---
+
 ### FAZ 6 — Modül Derinleştirme + Türkiye Uyumu (8–12 hafta)
 
-**Amaç:** 14’lü ana modül haritasını (`MODUL_SPEC` B1–B14) “satılabilir” kaliteye çekmek. Her modül geçiş paketi: **Form Engine + izin matrisi + dataset + modül panosu (`module_key`) + bildirim olayları + KVKK sınıfı + eksikler**.
+**Amaç:** 14’lü ana modül haritasını (`MODUL_SPEC` B1–B14) “satılabilir” kaliteye çekmek. Her modül geçiş paketi: **Form Engine + izin matrisi + dataset + modül panosu (`module_key`) + bildirim olayları + KVKK sınıfı + yardım md + eksikler**.
+
+**Önkoşul:** Faz G DoD ✅.
 
 **Departman erişimi (Faz 4B bağlama):** DataScope `department` + rol ile dept yöneticisi kendi kapsamında CV/ilan/personel/PDKS görür. Zincir motoru 4B; ekran bağlama bu fazda.
 
@@ -310,6 +365,7 @@ D1a–D1g tamam. **11 dataset**, whitelist query builder, builder UI, pivot/DSL,
 
 | # | Odak | Gerekçe |
 |---|------|---------|
+| **W2** | **İade (`returned`) akışı** — Faz 6 **başı** | Onaycı “iade et” → talep sahibine (gerekçe zorunlu) → düzeltip yeniden gönder → akış kaldığı adımdan devam. `AKIS_SPEC` §0 durum makinesi. `approval.returned` bildirim tetikleyici burada bağlanır. |
 | **0** | **PORTAL-2a — Portal tasarım sistemi** (Liquid Glass temel malzeme + token; `TASARIM_REHBERI` §10) | PDKS, LMS, İSG portal ekranları getirecek; sistem önce kurulmazsa o ekranlar **iki kez** yapılır. Company etkilenmez. |
 | 1 | **Navigasyon + B1 Organizasyon** | Menü/rail 14’lü yapıya hizalanır; şube/dept/pozisyon/norm kadro omurgası |
 | 2 | **B4 PDKS** | Günlük operasyon + puantaj kartı + vardiya/mesai; bordro aktarım paketinin üreticisi |
@@ -330,7 +386,7 @@ D1a–D1g tamam. **11 dataset**, whitelist query builder, builder UI, pivot/DSL,
   - [ ] **A1 BORÇ:** Dini bayram tarihleri API’den (kod sabiti kalkar)
 - [ ] **B5 Ücret & Ödemeler:** ücret bantları/geçmiş/zam + masraf company UI/limit + 🆕 avans-borç (taksit/faiz/icra/öncelik) + harcırah
 - [ ] **B13 Doküman+:** zorunlu set + süre takibi + versiyonlama polish
-- [ ] **A3 NOT (holding ertelendi):** çok hukuki şirket → `organizations` seçeneği; şimdilik tek şirket + şube DataScope
+- [x] **A3 holding** → **Faz G’ye taşındı** (SEÇENEK 1 onaylı; park iptal)
 
 #### 6B. İkinci halka (sıra 5–8)
 - [ ] **B9 Eğitim (LMS):** katalog/kurs/video (yükleme+YouTube/Vimeo, indirme yok)/soru bankası/sertifika; öğrenme yolu; portal oynatıcı; ölçme; eğitmen & maliyet. SCORM → Faz 8
@@ -353,15 +409,18 @@ D1a–D1g tamam. **11 dataset**, whitelist query builder, builder UI, pivot/DSL,
 - [ ] Saklama politikaları job'ları
 - [ ] Modül bazlı KVKK sınıfı enforcement turu — özellikle İSG sağlık, PDKS biyometri/konum
 
-**DoD (modül başına):** Form Engine + izin matrisi + dataset + `module_key` pano + bildirim olayları + KVKK sınıfı; feature testleri yeşil; lisans aç/kapa.
+**DoD (modül başına):** Form Engine + izin matrisi + dataset + `module_key` pano + bildirim olayları + KVKK sınıfı + `docs/help/{modul}/…` içerik; feature testleri yeşil; lisans aç/kapa.
 
 ---
 
 ### FAZ 7 — On-Prem Paketleme + Lisans v1 + GA Hazırlığı (3–4 hafta)
 
-- [ ] `APP_MODE=standalone`: SuperAdmin gizli, tek firma otomatik, kayıt kapalı; kod içinde if/else minimum (config + service provider seviyesinde)
+> **Sıra:** Modül derinleştirme (Faz 6) **sonra**, canlıya çıkış **önce**. Dobedan on-prem kurulumu bu fazın DoD’sine bağlıdır.
+
+- [ ] `APP_MODE=standalone`: SuperAdmin gizli, tek firma/organization otomatik, kayıt kapalı; kod içinde if/else minimum (config + service provider seviyesinde)
 - [ ] On-prem dağıtım paketi: versiyonlu Docker imajları + docker-compose.prod.yml + `install.sh` (env üretimi, key generate, migrate, seed, ilk admin)
-- [ ] **Lisans v1:** ed25519 imzalı lisans dosyası (firma adı, modül listesi, kullanıcı limiti, bitiş tarihi) — offline doğrulama; uygulama açılışta + günlük kontrol. *(Gelişmiş/özel lisanslama mekanizması ayrı ve gizli bir iş kalemi olarak bu fazdan sonra ele alınacak — bu belgede detaylandırılmaz.)*
+- [ ] **Lisans v1:** ed25519 imzalı lisans dosyası (firma/grup, modül listesi, kullanıcı limiti, bitiş tarihi) — offline doğrulama; uygulama açılışta + günlük kontrol. *(Gelişmiş/özel lisanslama mekanizması ayrı ve gizli bir iş kalemi olarak bu fazdan sonra ele alınacak — bu belgede detaylandırılmaz.)*
+- [ ] ⚠️ **Not:** On-prem’de sunucu müşterinindir; SuperAdmin panelini gizlemek **koruma değildir**. Gerçek koruma **imzalı lisans + sözleşme**dir (Faz 7/8 konusu).
 - [ ] Güncelleme mekanizması: `update.sh` (imaj çek → maintenance → migrate → up); sürüm notları düzeni
 - [ ] Yedekleme/geri yükleme aracı: pg_dump + storage arşivi, cron'lu; restore prosedürü dokümante
 - [ ] Sağlık/izleme: `/up` genişletilir (db, redis, queue, storage, lisans durumu); on-prem admin'e sistem durumu sayfası
@@ -373,8 +432,9 @@ D1a–D1g tamam. **11 dataset**, whitelist query builder, builder UI, pivot/DSL,
 
 ---
 
-### FAZ 8 — Sonraki Ufuk (GA sonrası, sıralaması pazara göre)
+### FAZ 8 — Sonraki Ufuk (GA sonrası; yardım motoru EN SONDA)
 
+- [ ] **D4b Yardım motoru** — `docs/help/{modul}/{sayfa}.md` dosyalarını render eder (içerik Faz 6 dalgalarında yazılmış olmalı). UI: bağlamsal yardım paneli.
 - [ ] **Mobil (Capacitor) paketleme + mağaza yayını** (`MODUL_SPEC` §D2): tek müşteri build (sunucu adresi config’te; seçim ekranı yok; çok kiracılı mimari korunur) · APK/AAB + iOS (macOS/Xcode) · push (FCM/APNs) · biyometrik giriş · QR/kamera · çevrimdışı · dosya paylaşımı · derin bağlantı — mağaza incelemesi için native yetenekler zorunlu. *(Web/PWA ve Bootstrap kaldırma PORTAL-2…4 / Faz 6’da biter.)*
 - [ ] **AI katmanı:** doğal dille rapor, CV ayrıştırma, anket özet, İK asistanı
 - [ ] **Bordro modülü:** B5 Ücret & Ödemeler + aktarım paketi üzerine; SGK/e-Bildirge — ayrı büyük proje
@@ -387,9 +447,9 @@ D1a–D1g tamam. **11 dataset**, whitelist query builder, builder UI, pivot/DSL,
 
 ## 6. Modül Envanteri ve Satış Paketleri
 
-> Kaynak şartname: `docs/MODUL_SPEC.md` (2026-07-29 — 14’lü yapı). `modules` + `company_modules` + `license_packages` altyapısı korunur; seeder paket içerikleri bu tabloya göre revize edilir (Faz 6/7’de kod).
+> Kaynak: `docs/MODUL_SPEC.md` (14’lü yapı). **Karar (DOK-3):** Her modül **ayrı satılabilir** (à la carte); SuperAdmin’den açılır/kapanır. Mevcut `modules` + `company_modules` (+ `license_packages` paket önerisi) korunur. İSG / PDKS / LMS dahil **tüm** operasyonel modüller tekil aç/kapa.
 
-### 6.1 Çekirdek platform (her lisansta, ayrıca satılmaz)
+### 6.1 Çekirdek platform (her lisansta, ayrıca satılmaz — kapatılamaz)
 
 | Bileşen | Not |
 |---------|-----|
@@ -444,9 +504,11 @@ Analitik (B14) Professional’da “hazır pano + sınırlı builder”, Enterpr
 | **Professional** | Starter + **PDKS + Ücret & Ödemeler + İşe Alım + Oryantasyon & Çıkış + Performans + Eğitim (LMS)** + Analitik (hazır panolar + kopyalanabilir raporlar) | Temel workflow zincir editörü | KOBİ / ölçeklenen İK |
 | **Enterprise** | **14’ün tamamı** (+ İSG + Varlık + Anket + Analitik tam builder/ölçü/zamanlama) | Gelişmiş Workflow + API & Webhook + on-prem seçeneği + aktarım adaptörleri (Faz 8) | Kurumsal / fabrika / holding adayı |
 
-**Tekil modül satışı:** Professional üstü müşteri eksik modülü `company_modules` ile açabilir (ör. yalnız İSG ekleme). Starter’da PDKS/İSG/LMS kapalı kalır.
+**Tekil / à la carte:** SuperAdmin (veya imzalı lisans dosyası) her modülü bağımsız aç/kapa — İSG, PDKS, LMS dahil. Paket tablosu (Starter/Pro/Enterprise) yalnızca **önerilen demet**; zorunlu kilit değildir. Dobedan ilk sürümünde 14’ü de açık gelir.
 
-**Aktarım:** Standart bordro aktarım paketi Professional+ (PDKS/Ücret açıkken); Logo/Netsis/Mikro adaptörleri Enterprise / Faz 8.
+**SuperAdmin:** Müşteri kurulumunda görünmez kalır (davranış değişmez). On-prem’de gizlilik ≠ güvenlik; koruma imzalı lisans + sözleşmedir (Faz 7).
+
+**Aktarım:** Standart bordro aktarım paketi PDKS/Ücret açıkken; Logo/Netsis/Mikro adaptörleri Faz 8.
 
 ---
 
@@ -456,10 +518,11 @@ Analitik (B14) Professional’da “hazır pano + sınırlı builder”, Enterpr
 |------|----------|-------------------|
 | **M1 — Güvenli Çekirdek** | ✅ Faz 2 sonu (11 Tem 2026) | İzin sistemi gerçek; demo verilebilir |
 | **M2 — Platform Tamam** | ✅ Faz 5 sonu (2026-07-29) | Özelleştirme + BI çalışıyor; dogfooding başlar |
-| **M3 — Pilot** | Faz 6A sonu | 1–2 dost firma canlı (org + personel + izin + PDKS + ücret/ödemeler + doküman) |
-| **M4 — GA v1.0** | Faz 7 sonu | Cloud satış açık + on-prem teklif verilebilir |
+| **M2.5 — Grup hazır** | Faz G sonu | Organization + DataScope `group` + izolasyon testleri |
+| **M3 — Pilot (Dobedan)** | Faz 6 + Faz 7 | 14 modül + on-prem kurulum + aktarım paketi |
+| **M4 — GA v1.0** | Faz 7 sonu (cloud paket) | Cloud satış + on-prem teklif |
 
-Toplam tahmin: **~29–42 hafta (7–10 ay)** tam zamanlı. Pilot geri bildirimi Faz 6B önceliklerini değiştirebilir — bu belge yaşayan bir belgedir, her faz sonunda revize edilir.
+Sıra özeti: **G1 → Faz 6 (W2→modüller) → Faz 7 → Faz 8**. Bu belge yaşayan bir belgedir.
 
 ---
 
@@ -479,4 +542,4 @@ Toplam tahmin: **~29–42 hafta (7–10 ay)** tam zamanlı. Pilot geri bildirimi
 
 ---
 
-*Faz 0–3 ve Faz 5 kapandı. Aktif: Faz 4 kalanları + Faz 6 (`faz4-form-engine`). Portal: Liquid Glass (PORTAL-2a başta) → PWA (PORTAL-4) → Capacitor (Faz 8). Her fazın başında bu belge üzerinden Cursor promptları hazırlanır.*
+*Faz 0–3 ve Faz 5 kapandı; Faz 4 kısmen. Sıradaki mimari: **Faz G**. Sonra Faz 6 (W2 iade → 14 modül) → Faz 7 (on-prem/lisans) → Faz 8 (yardım motoru + ufuk). Branch: `faz4-form-engine`. DOK-3: müşteri bağlamı + holding SEÇENEK 1.*
