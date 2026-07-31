@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\V1\Portal;
 
 use App\Http\Controllers\Api\V1\BaseController;
-use App\Http\Resources\EmployeeResource;
 use App\Models\ActivityLog;
 use App\Models\Employee;
 use App\Services\Notification\NotificationService;
@@ -32,6 +31,8 @@ class PortalProfileController extends BaseController
             return $this->error('Personel kaydı bulunamadı', null, 404);
         }
 
+        // Portal FE düz string alanlar bekler — EmployeeResource.department nesne döner
+        // ve React "Objects are not valid as a React child" ile beyaz ekran üretir.
         return $this->success([
             'user' => [
                 'id' => $user->id,
@@ -41,7 +42,21 @@ class PortalProfileController extends BaseController
                 'avatar' => $user->avatar,
                 'preferences' => $user->preferences ?? [],
             ],
-            'employee' => new EmployeeResource($employee),
+            'employee' => [
+                'employee_code' => $employee->employee_code,
+                'position' => $employee->position,
+                'title' => $employee->title,
+                'department' => $employee->department?->name,
+                'hire_date' => $employee->hire_date,
+                'birth_date' => $employee->birth_date,
+                'personal_email' => $employee->personal_email,
+                'personal_phone' => $employee->personal_phone,
+                'address' => $employee->address,
+                'city' => $employee->city,
+                'emergency_contact_name' => $employee->emergency_contact_name,
+                'emergency_contact_phone' => $employee->emergency_contact_phone,
+                'emergency_contact_relation' => $employee->emergency_contact_relation,
+            ],
         ]);
     }
 

@@ -1334,6 +1334,10 @@
     "explicitSpecial": "Açık rıza (özel nitelikli)",
     "legalDisclaimer": "Hukuki metinler ve saklama süreleri firmaya aittir; sistem yalnızca altyapı sağlar."
   },
+  "portalProfile": {
+    "hireDate": "İşe Başlama",
+    "employeeCode": "Sicil No"
+  },
   "portalMyData": {
     "title": "Verilerim",
     "subtitle": "KVKK m.11 talepleri ve kişisel veri paketi",

@@ -15,6 +15,11 @@ import { BsEnvelope, BsPhone, BsGeoAlt, BsCalendar, BsBuilding, BsCheck, BsMoon,
 import { AppCard } from '../components/ui';
 import { PORTAL_MORE_LINKS } from '../nav/portalMoreLinks';
 
+interface ProfileDepartmentRef {
+  id?: number;
+  name?: string | null;
+}
+
 interface ProfileData {
   user: {
     name: string;
@@ -29,8 +34,9 @@ interface ProfileData {
   };
   employee: {
     employee_code: string;
-    position: string;
-    department: string;
+    position: string | null;
+    /** API string döner; eski/yanlış sarmalayıcı nesne gönderebilir */
+    department: string | ProfileDepartmentRef | null;
     hire_date: string;
     birth_date: string | null;
     personal_email: string | null;
@@ -41,6 +47,16 @@ interface ProfileData {
     emergency_contact_phone: string | null;
     emergency_contact_relation: string | null;
   };
+}
+
+function departmentLabel(department: ProfileData['employee']['department']): string {
+  if (typeof department === 'string') {
+    return department;
+  }
+  if (department && typeof department === 'object' && typeof department.name === 'string') {
+    return department.name;
+  }
+  return '';
 }
 
 function prefsFromProfile(
@@ -164,10 +180,14 @@ const ProfilePage: React.FC = () => {
         </div>
         <div className="profile-info">
           <h2>{profile?.user?.name}</h2>
-          <p>{profile?.employee?.position} - {profile?.employee?.department}</p>
+          <p>
+            {[profile?.employee?.position, departmentLabel(profile?.employee?.department ?? null)]
+              .filter((part) => typeof part === 'string' && part.trim() !== '')
+              .join(' — ') || '—'}
+          </p>
           <div className="profile-meta">
-            <span><BsCalendar /> İşe Başlama: {profile?.employee?.hire_date ? new Date(profile.employee.hire_date).toLocaleDateString('tr-TR') : '-'}</span>
-            <span><BsBuilding /> Sicil No: {profile?.employee?.employee_code}</span>
+            <span><BsCalendar /> {t('portalProfile.hireDate')}: {profile?.employee?.hire_date ? new Date(profile.employee.hire_date).toLocaleDateString('tr-TR') : '-'}</span>
+            <span><BsBuilding /> {t('portalProfile.employeeCode')}: {profile?.employee?.employee_code}</span>
           </div>
         </div>
       </div>
