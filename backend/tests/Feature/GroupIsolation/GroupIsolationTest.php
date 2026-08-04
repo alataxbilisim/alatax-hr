@@ -417,4 +417,45 @@ class GroupIsolationTest extends TestCase
         $this->assertCount(1, $companies);
         $this->assertSame($this->companyC->id, (int) $companies[0]['id']);
     }
+
+    /**
+     * Tur2 A — dashboard KPI/firma kartı aktif CompanyContext'ten gelir (home company_id değil).
+     */
+    public function test_16_dashboard_stats_follow_active_company_context(): void
+    {
+        // B'de ekstra aktif kullanıcı — sayılar A'dan farklı olsun
+        User::factory()->create([
+            'company_id' => $this->companyB->id,
+            'type' => UserType::User,
+            'is_active' => true,
+        ]);
+
+        Sanctum::actingAs($this->userA);
+
+        $countA = User::query()
+            ->where('company_id', $this->companyA->id)
+            ->where('is_active', true)
+            ->count();
+        $countB = User::query()
+            ->where('company_id', $this->companyB->id)
+            ->where('is_active', true)
+            ->count();
+        $this->assertNotSame($countA, $countB);
+
+        $resA = $this->getJson('/api/v1/dashboard', $this->companyHeaders($this->companyA->id))
+            ->assertOk();
+        $this->assertSame($this->companyA->id, (int) $resA->json('data.company.id'));
+        $this->assertSame($this->companyA->name, $resA->json('data.company.name'));
+        $this->assertSame($countA, (int) $resA->json('data.stats.total_users'));
+
+        $resB = $this->getJson('/api/v1/dashboard', $this->companyHeaders($this->companyB->id))
+            ->assertOk();
+        $this->assertSame($this->companyB->id, (int) $resB->json('data.company.id'));
+        $this->assertSame($this->companyB->name, $resB->json('data.company.name'));
+        $this->assertSame($countB, (int) $resB->json('data.stats.total_users'));
+        $this->assertNotSame(
+            (int) $resA->json('data.stats.total_users'),
+            (int) $resB->json('data.stats.total_users')
+        );
+    }
 }

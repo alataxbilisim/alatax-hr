@@ -57,6 +57,7 @@ const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation('common');
   const { user } = useSelector((state: RootState) => state.auth);
+  const companyVersion = useSelector((state: RootState) => state.companyContext.version);
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -70,28 +71,35 @@ const DashboardPage: React.FC = () => {
     : t('dashboard.welcome');
 
   useEffect(() => {
-    loadDashboard();
-  }, []);
+    let cancelled = false;
+    const loadDashboard = async () => {
+      setLoading(true);
+      try {
+        const response = await dashboardApi.get();
+        const dashboardData = response.data.data;
 
-  const loadDashboard = async () => {
-    try {
-      const response = await dashboardApi.get();
-      const dashboardData = response.data.data;
-      
-      // SuperAdmin ise admin paneline yönlendir
-      if (dashboardData.redirect_to_admin) {
-        window.location.href = 'http://localhost:3001/dashboard';
-        return;
+        if (dashboardData.redirect_to_admin) {
+          window.location.href = 'http://localhost:3001/dashboard';
+          return;
+        }
+
+        if (!cancelled) {
+          setData(dashboardData);
+        }
+      } catch (error) {
+        console.error('Dashboard error:', error);
+        toast.error('Dashboard verileri yüklenemedi');
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
-      
-      setData(dashboardData);
-    } catch (error) {
-      console.error('Dashboard error:', error);
-      toast.error('Dashboard verileri yüklenemedi');
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+    void loadDashboard();
+    return () => {
+      cancelled = true;
+    };
+  }, [companyVersion]);
 
   if (loading) {
     return (

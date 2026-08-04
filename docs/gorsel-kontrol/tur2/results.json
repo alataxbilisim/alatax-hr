@@ -1,0 +1,102 @@
+[
+  {
+    "id": "G3",
+    "title": "A→B değişimi → dashboard + bağlam",
+    "status": "pass",
+    "measurement": "url=/dashboard; title=\"Hoş geldiniz, Demo\"; subtitle=\"Demo Otel B\"; label=\"Şirket: Demo Firma AŞ\"; id 71→69; usersKPI=11",
+    "screenshot": "ss/01-G3-sirket-degisimi.png",
+    "tur1": "✅ (url/ss çelişkisi)"
+  },
+  {
+    "id": "G4",
+    "title": "Şirket değişince şube seçici (bağlam eşleşmeli)",
+    "status": "pass",
+    "measurement": "company=\"Şirket: Demo Otel C\" id=72; branchExists=false; branchText=\"\"; options=[]",
+    "screenshot": "ss/02-G4-sube-context.png",
+    "tur1": "✅ (şube vs görsel)",
+    "detail": "Ölçüm hangi şirket bağlamında alındığı ss ile eşleşmeli"
+  },
+  {
+    "id": "T1",
+    "title": "Dikey scroll",
+    "status": "pass",
+    "measurement": "/employees: canScroll=false scrolled=false oy=auto sw=1366; /lookups: canScroll=true scrolled=true oy=auto sw=1366; /leaves: canScroll=true scrolled=true oy=auto sw=1366; /dashboard: canScroll=false scrolled=false oy=auto sw=1366; /settings: canScroll=true scrolled=true oy=auto sw=1366; /account/preferences: canScroll=false scrolled=false oy=auto sw=1366",
+    "screenshot": "ss/03-T1-scroll.png",
+    "tur1": "✅ (iskelet)"
+  },
+  {
+    "id": "T2",
+    "title": "Yatay taşma yok",
+    "status": "pass",
+    "measurement": "/employees: canScroll=false scrolled=false oy=auto sw=1366; /lookups: canScroll=true scrolled=true oy=auto sw=1366; /leaves: canScroll=true scrolled=true oy=auto sw=1366; /dashboard: canScroll=false scrolled=false oy=auto sw=1366; /settings: canScroll=true scrolled=true oy=auto sw=1366; /account/preferences: canScroll=false scrolled=false oy=auto sw=1366",
+    "screenshot": "ss/04-T2-yatay.png",
+    "tur1": "✅"
+  },
+  {
+    "id": "L1",
+    "title": "Form Select menü opak",
+    "status": "pass",
+    "measurement": "bg=rgb(28, 28, 36) alpha=1 (hedef: form Select, şirket seçici değil)",
+    "screenshot": "ss/05-L1-L2-form-select.png",
+    "tur1": "✅ (yanlış hedef: şirket seçici)"
+  },
+  {
+    "id": "L2",
+    "title": "Ellipsis + title (eşiği: ellipsis zorunlu)",
+    "status": "fail",
+    "severity": "🟠",
+    "measurement": "textOverflow=clip; title=\"null\"",
+    "screenshot": "ss/05-L1-L2-form-select.png",
+    "tur1": "✅ (clip iken geçti — hatalı)",
+    "detail": "clip/ellipsis değil → ✅ olamaz"
+  },
+  {
+    "id": "L4",
+    "title": "Filtre daraltır",
+    "status": "pass",
+    "measurement": "rows before=15 afterFilter=0 narrowed=true",
+    "screenshot": "ss/06-L4-filter.png",
+    "tur1": "✅ (satır değişmedi)"
+  },
+  {
+    "id": "L6",
+    "title": "Lookups sayfa yapısı",
+    "status": "pass",
+    "measurement": "table=true rows=4 left=true",
+    "screenshot": "ss/07-L6-lookups.png",
+    "tur1": "✅"
+  },
+  {
+    "id": "L7",
+    "title": "Hibrit tip (görsel)",
+    "status": "warn",
+    "severity": "🟡",
+    "measurement": "yalnız görsel — hibrit tip UI seçimi otomatik doğrulanmadı",
+    "screenshot": "ss/07-L6-lookups.png",
+    "tur1": "✅ (görsel)",
+    "visualOnly": true
+  },
+  {
+    "id": "Y2",
+    "title": "Users: portal-only yok",
+    "status": "pass",
+    "measurement": "portalEmailVisible=false; panelBadges≈3",
+    "screenshot": "ss/08-Y2-users.png",
+    "tur1": "✅"
+  },
+  {
+    "id": "Y4",
+    "title": "2FA doğru kod → dashboard",
+    "status": "pass",
+    "measurement": "url=http://127.0.0.1:3002/dashboard; textEmpty=false",
+    "screenshot": "ss/09-Y4-2fa-ok.png",
+    "tur1": "✅ (siyah ss)"
+  },
+  {
+    "id": "B4a",
+    "title": "Form header şirket seçici var mı?",
+    "status": "pass",
+    "measurement": "header-company-selector count=1 (MainLayout tüm authenticated route'larda; bilinçli gizleme kodu yok)",
+    "screenshot": "ss/10-B4-form-header.png"
+  }
+]

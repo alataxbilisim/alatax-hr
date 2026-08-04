@@ -25,8 +25,13 @@ class DashboardController extends BaseController
             return $this->superAdminDashboard($user);
         }
 
-        // Company yoksa hata döndürme, boş dashboard göster
-        if (! $user->company) {
+        // G1: operasyonel bağlam = CompanyContext (header / last_company), home company_id değil
+        $companyId = $this->getCompanyId();
+        $company = $companyId !== null
+            ? Company::query()->find($companyId)
+            : null;
+
+        if (! $company) {
             return $this->success([
                 'welcome_message' => 'Hoş geldiniz, '.$user->name,
                 'company' => null,
@@ -37,10 +42,9 @@ class DashboardController extends BaseController
             ]);
         }
 
-        $company = $user->company;
         $activeModules = $company->activeModules()->pluck('slug')->toArray();
 
-        // Temel istatistikler
+        // Temel istatistikler — aktif şirket bağlamı
         $stats = [
             'total_users' => User::where('company_id', $company->id)->where('is_active', true)->count(),
             'active_modules' => count($activeModules),
