@@ -76,6 +76,16 @@ Kritik düzeltme: `company.context` / `branch.context` → `SubstituteBindings` 
 
 ---
 
+## Test / CI
+
+- Suite: **656 passed** (tek koşu + 3× ardışık + `--order-by=random`) — hepsi yeşil
+- Demo sentinel: OK (migrate sonrası)
+- 3 SPA: tsc 0 · lint 0
+- Push: `faz4-form-engine` ahead 0
+- Actions: https://github.com/alataxbilisim/alatax-hr/actions?query=branch%3Afaz4-form-engine
+
+---
+
 ## KULLANICI GÖRSEL KONTROLÜ BEKLİYOR (borç)
 
 - Company navbar: çok şirketli kullanıcıda seçici + aktif şirket adı
