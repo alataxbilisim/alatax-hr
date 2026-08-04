@@ -2,29 +2,26 @@
 
 namespace App\Http\Controllers\Api\V1\Kvkk;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\DataBreach;
 use App\Services\Kvkk\Breach\DataBreachService;
-use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
-class DataBreachController extends Controller
+class DataBreachController extends BaseController
 {
-    use ApiResponse;
-
     public function __construct(private DataBreachService $service) {}
 
     public function summary(Request $request): JsonResponse
     {
-        return $this->success($this->service->summary((int) $request->user()->company_id), 'İhlal özeti');
+        return $this->success($this->service->summary((int) $this->getCompanyId()), 'İhlal özeti');
     }
 
     public function index(Request $request): JsonResponse
     {
         $rows = DataBreach::query()
-            ->where('company_id', $request->user()->company_id)
+            ->where('company_id', (int) $this->getCompanyId())
             ->orderByDesc('id')
             ->paginate(min(100, max(1, (int) $request->input('per_page', 25))));
 
@@ -54,7 +51,7 @@ class DataBreachController extends Controller
             'containment_actions' => ['nullable', 'string'],
         ]);
 
-        $row = $this->service->create((int) $request->user()->company_id, $request->user(), $data);
+        $row = $this->service->create((int) $this->getCompanyId(), $request->user(), $data);
 
         return $this->success($row, 'İhlal kaydı oluşturuldu', 201);
     }
@@ -62,7 +59,7 @@ class DataBreachController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         $breach = DataBreach::query()
-            ->where('company_id', $request->user()->company_id)
+            ->where('company_id', (int) $this->getCompanyId())
             ->findOrFail($id);
 
         $data = $request->validate([
@@ -88,7 +85,7 @@ class DataBreachController extends Controller
     public function report(Request $request, int $id): Response
     {
         $breach = DataBreach::query()
-            ->where('company_id', $request->user()->company_id)
+            ->where('company_id', (int) $this->getCompanyId())
             ->findOrFail($id);
 
         return response($this->service->reportHtml($breach), 200, [

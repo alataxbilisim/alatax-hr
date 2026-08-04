@@ -5,6 +5,7 @@ namespace App\Services\Timesheet;
 use App\Models\ActivityLog;
 use App\Models\AttendanceRecord;
 use App\Models\User;
+use App\Support\CompanyContext;
 use InvalidArgumentException;
 
 /**
@@ -23,6 +24,21 @@ class AttendanceClockService
     ) {}
 
     /**
+     * Operasyonel şirket: açık $companyId → CompanyContext → home company_id.
+     */
+    protected function resolveCompanyId(User $user, ?int $companyId = null): int
+    {
+        if ($companyId !== null && $companyId > 0) {
+            return $companyId;
+        }
+        if (CompanyContext::isBound()) {
+            return (int) CompanyContext::id();
+        }
+
+        return (int) $user->company_id;
+    }
+
+    /**
      * @param  array{
      *   latitude?: float|null,
      *   longitude?: float|null,
@@ -34,11 +50,12 @@ class AttendanceClockService
      * }  $meta
      * @return array{action: 'clock_in', record: AttendanceRecord, clock_time: string}
      */
-    public function clockIn(User $user, array $meta = []): array
+    public function clockIn(User $user, array $meta = [], ?int $companyId = null): array
     {
+        $companyId = $this->resolveCompanyId($user, $companyId);
         $today = now()->toDateString();
         $existing = AttendanceRecord::query()
-            ->where('company_id', $user->company_id)
+            ->where('company_id', $companyId)
             ->where('user_id', $user->id)
             ->whereDate('date', $today)
             ->first();
@@ -51,7 +68,7 @@ class AttendanceClockService
         $source = $meta['source'] ?? self::SOURCE_PORTAL;
 
         $data = [
-            'company_id' => $user->company_id,
+            'company_id' => $companyId,
             'user_id' => $user->id,
             'date' => $today,
             'clock_in' => now()->format('H:i'),
@@ -93,11 +110,12 @@ class AttendanceClockService
      * }  $meta
      * @return array{action: 'clock_out', record: AttendanceRecord, clock_time: string}
      */
-    public function clockOut(User $user, array $meta = []): array
+    public function clockOut(User $user, array $meta = [], ?int $companyId = null): array
     {
+        $companyId = $this->resolveCompanyId($user, $companyId);
         $today = now()->toDateString();
         $record = AttendanceRecord::query()
-            ->where('company_id', $user->company_id)
+            ->where('company_id', $companyId)
             ->where('user_id', $user->id)
             ->whereDate('date', $today)
             ->first();
@@ -144,20 +162,21 @@ class AttendanceClockService
      * @param  array<string, mixed>  $meta
      * @return array{action: 'clock_in'|'clock_out', record: AttendanceRecord, clock_time: string}
      */
-    public function punch(User $user, array $meta = []): array
+    public function punch(User $user, array $meta = [], ?int $companyId = null): array
     {
+        $companyId = $this->resolveCompanyId($user, $companyId);
         $today = now()->toDateString();
         $existing = AttendanceRecord::query()
-            ->where('company_id', $user->company_id)
+            ->where('company_id', $companyId)
             ->where('user_id', $user->id)
             ->whereDate('date', $today)
             ->first();
 
         if ($existing && $existing->clock_in && ! $existing->clock_out) {
-            return $this->clockOut($user, $meta);
+            return $this->clockOut($user, $meta, $companyId);
         }
 
-        return $this->clockIn($user, $meta);
+        return $this->clockIn($user, $meta, $companyId);
     }
 
     protected function truncateDevice(?string $info): ?string

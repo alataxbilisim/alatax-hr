@@ -2,22 +2,19 @@
 
 namespace App\Http\Controllers\Api\V1\Kvkk;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\RetentionPolicy;
 use App\Services\Kvkk\Retention\RetentionPolicyService;
-use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class RetentionPolicyController extends Controller
+class RetentionPolicyController extends BaseController
 {
-    use ApiResponse;
-
     public function __construct(private RetentionPolicyService $service) {}
 
     public function index(Request $request): JsonResponse
     {
-        $companyId = (int) $request->user()->company_id;
+        $companyId = (int) $this->getCompanyId();
         $rows = RetentionPolicy::query()
             ->where('company_id', $companyId)
             ->orderByDesc('id')
@@ -40,7 +37,7 @@ class RetentionPolicyController extends Controller
             'requires_approval' => ['nullable', 'boolean'],
         ]);
 
-        $row = $this->service->create((int) $request->user()->company_id, $request->user(), $data);
+        $row = $this->service->create((int) $this->getCompanyId(), $request->user(), $data);
 
         return $this->success($row, 'Politika oluşturuldu', 201);
     }
@@ -48,7 +45,7 @@ class RetentionPolicyController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         $policy = RetentionPolicy::query()
-            ->where('company_id', $request->user()->company_id)
+            ->where('company_id', (int) $this->getCompanyId())
             ->findOrFail($id);
 
         $data = $request->validate([
@@ -68,7 +65,7 @@ class RetentionPolicyController extends Controller
 
     public function seedDrafts(Request $request): JsonResponse
     {
-        $created = $this->service->seedDraftsForCompany((int) $request->user()->company_id);
+        $created = $this->service->seedDraftsForCompany((int) $this->getCompanyId());
 
         return $this->success(['count' => count($created), 'items' => $created], 'Taslak politikalar eklendi (pasif)');
     }

@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers\Api\V1\Kvkk;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\V1\BaseController;
 use App\Jobs\ExecuteDestructionApprovalJob;
 use App\Models\DestructionCandidate;
 use App\Models\DestructionLog;
 use App\Models\RetentionPolicy;
 use App\Services\Kvkk\Retention\DestructionEngine;
 use App\Services\Settings\Settings;
-use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -17,15 +16,13 @@ use Illuminate\Http\Response;
 /**
  * İmha kuyruğu — sistem yalnız listeler; karar ve uygulama insana aittir.
  */
-class DestructionController extends Controller
+class DestructionController extends BaseController
 {
-    use ApiResponse;
-
     public function __construct(private DestructionEngine $engine) {}
 
     public function summary(Request $request): JsonResponse
     {
-        $companyId = (int) $request->user()->company_id;
+        $companyId = (int) $this->getCompanyId();
         $pending = DestructionCandidate::query()->where('company_id', $companyId)->where('status', 'pending')->count();
         $deferred = DestructionCandidate::query()->where('company_id', $companyId)->where('status', 'deferred')->count();
         $policyCount = RetentionPolicy::query()->where('company_id', $companyId)->where('active', true)->count();
@@ -49,7 +46,7 @@ class DestructionController extends Controller
 
     public function candidates(Request $request): JsonResponse
     {
-        $companyId = (int) $request->user()->company_id;
+        $companyId = (int) $this->getCompanyId();
         $q = DestructionCandidate::query()
             ->where('company_id', $companyId)
             ->with('policy:id,name,strategy,retention_months')
@@ -64,7 +61,7 @@ class DestructionController extends Controller
 
     public function scan(Request $request): JsonResponse
     {
-        $result = $this->engine->scan((int) $request->user()->company_id);
+        $result = $this->engine->scan((int) $this->getCompanyId());
 
         return $this->success($result, 'Tarama tamamlandı (veriye dokunulmadı)');
     }
@@ -72,7 +69,7 @@ class DestructionController extends Controller
     public function decide(Request $request, int $id): JsonResponse
     {
         $candidate = DestructionCandidate::query()
-            ->where('company_id', $request->user()->company_id)
+            ->where('company_id', (int) $this->getCompanyId())
             ->findOrFail($id);
 
         $data = $request->validate([
@@ -95,7 +92,7 @@ class DestructionController extends Controller
     public function dryRun(Request $request, int $id): JsonResponse
     {
         $candidate = DestructionCandidate::query()
-            ->where('company_id', $request->user()->company_id)
+            ->where('company_id', (int) $this->getCompanyId())
             ->findOrFail($id);
 
         $preview = $this->engine->dryRun($candidate);
@@ -113,7 +110,7 @@ class DestructionController extends Controller
         ]);
 
         $approval = $this->engine->approve(
-            (int) $request->user()->company_id,
+            (int) $this->getCompanyId(),
             $request->user(),
             $data['candidate_ids'],
             (bool) $data['dry_run_confirmed'],
@@ -128,7 +125,7 @@ class DestructionController extends Controller
     public function logs(Request $request): JsonResponse
     {
         $rows = DestructionLog::query()
-            ->where('company_id', $request->user()->company_id)
+            ->where('company_id', (int) $this->getCompanyId())
             ->orderByDesc('id')
             ->paginate(min(100, max(1, (int) $request->input('per_page', 25))));
 
@@ -138,7 +135,7 @@ class DestructionController extends Controller
     public function logCertificate(Request $request, int $id): Response
     {
         $log = DestructionLog::query()
-            ->where('company_id', $request->user()->company_id)
+            ->where('company_id', (int) $this->getCompanyId())
             ->findOrFail($id);
 
         $html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>İmha Tutanağı</title></head><body>'

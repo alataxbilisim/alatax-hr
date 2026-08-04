@@ -1,0 +1,18 @@
+[
+  {
+    "id": "G3a",
+    "title": "69→71 dört alan + KPI",
+    "status": "pass",
+    "measurement": "id=71; label=\"Şirket: Demo Otel B\"; selector=\"Demo Otel B\"; subtitle=\"Demo Otel B\"; firmaCard=\"Demo Otel B\"; kpi=11; expected=Demo Otel B/11",
+    "screenshot": "ss/01-G3-69-to-71.png",
+    "detail": "{\"idOk\":true,\"labelOk\":true,\"selectorOk\":true,\"subtitleOk\":true,\"cardOk\":true,\"kpiOk\":true}"
+  },
+  {
+    "id": "G3b",
+    "title": "71→69 dört alan + KPI",
+    "status": "pass",
+    "measurement": "id=69; label=\"Şirket: Demo Firma AŞ\"; selector=\"Demo Firma AŞ\"; subtitle=\"Demo Firma AŞ\"; firmaCard=\"Demo Firma AŞ\"; kpi=51; expected=Demo Firma AŞ/51",
+    "screenshot": "ss/02-G3-71-to-69.png",
+    "detail": "{\"idOk\":true,\"labelOk\":true,\"selectorOk\":true,\"subtitleOk\":true,\"cardOk\":true,\"kpiOk\":true}"
+  }
+]

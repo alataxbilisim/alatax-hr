@@ -207,6 +207,59 @@ export function icon(s) {
   return { pass: '✅', fail: '❌', warn: '⚠️', skip: '⏭️', na: '➖' }[s] || s;
 }
 
+/** Bilinen demo şirket adları — ölçüm satırında >1 → çelişki */
+export const DEMO_COMPANY_NAMES = ['Demo Firma AŞ', 'Demo Otel B', 'Demo Otel C', 'Company A', 'Company B'];
+
+/**
+ * Ölçüm satırında birden fazla şirket adı / birbirini dışlayan değer → çelişki.
+ * @param {string} measurement
+ * @param {string[]} [companyNames]
+ */
+export function detectContradiction(measurement, companyNames = DEMO_COMPANY_NAMES) {
+  const hits = companyNames.filter((n) => measurement.includes(n));
+  const exclusivePairs = [
+    [/kpi=51\b/, /kpi=11\b/],
+    [/id=69\b/, /id=71\b/],
+    [/expected=[^;]*Demo Firma/, /subtitle="[^"]*Demo Otel/],
+  ];
+  let exclusive = false;
+  for (const [a, b] of exclusivePairs) {
+    if (a.test(measurement) && b.test(measurement)) {
+      exclusive = true;
+      break;
+    }
+  }
+  return { contradiction: hits.length > 1 || exclusive, hits, exclusive };
+}
+
+/**
+ * Sonuç finalize: çelişki → zorla fail; canScroll=false scroll kontrolünde → na.
+ * Elle pass override edilemez.
+ * @param {CheckResult} result
+ * @param {{ scrollCheck?: boolean, canScroll?: boolean }} [opts]
+ */
+export function finalizeResult(result, opts = {}) {
+  const { contradiction, hits } = detectContradiction(result.measurement || '');
+  if (opts.scrollCheck && opts.canScroll === false) {
+    return {
+      ...result,
+      status: 'na',
+      measurement: `${result.measurement}; canScroll=false → ➖ (içerik viewport'tan kısa)`,
+      detail: (result.detail ? result.detail + ' · ' : '') + 'C0: scroll uygulanamaz',
+    };
+  }
+  if (contradiction) {
+    return {
+      ...result,
+      status: 'fail',
+      severity: result.severity || '🔴',
+      measurement: `${result.measurement}; CONTRADICTION=${hits.join('|') || 'exclusive'}`,
+      detail: (result.detail ? result.detail + ' · ' : '') + 'C0: ölçüm çelişkisi — ✅ yasak',
+    };
+  }
+  return result;
+}
+
 /**
  * @param {CheckResult[]} results
  * @param {object} meta

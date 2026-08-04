@@ -1,0 +1,106 @@
+[
+  {
+    "id": "G3b",
+    "title": "71→69 dört alan + KPI",
+    "status": "pass",
+    "measurement": "id=69; label=\"Şirket: Demo Firma AŞ\"; selector=\"Demo Firma AŞ\"; subtitle=\"Demo Firma AŞ\"; firmaCard=\"Demo Firma AŞ\"; kpi=51; expected=Demo Firma AŞ/51",
+    "screenshot": "ss/02-G3-71-to-69.png",
+    "detail": "{\"idOk\":true,\"labelOk\":true,\"selectorOk\":true,\"subtitleOk\":true,\"cardOk\":true,\"kpiOk\":true}"
+  },
+  {
+    "id": "G3a",
+    "title": "69→71 dört alan + KPI",
+    "status": "pass",
+    "measurement": "id=71; label=\"Şirket: Demo Otel B\"; selector=\"Demo Otel B\"; subtitle=\"Demo Otel B\"; firmaCard=\"Demo Otel B\"; kpi=11; expected=Demo Otel B/11",
+    "screenshot": "ss/01-G3-69-to-71.png",
+    "detail": "{\"idOk\":true,\"labelOk\":true,\"selectorOk\":true,\"subtitleOk\":true,\"cardOk\":true,\"kpiOk\":true}"
+  },
+  {
+    "id": "C0a",
+    "title": "C0 scroll: kısa içerik → ➖",
+    "status": "na",
+    "measurement": "scrollHeight=768 clientHeight=768 canScroll=false; canScroll=false → ➖ (içerik viewport'tan kısa)",
+    "screenshot": "ss/01-C0-scroll-na.png",
+    "detail": "C0: scroll uygulanamaz"
+  },
+  {
+    "id": "Y3",
+    "title": "Yetkisiz /employees/new → Erişim Engeli",
+    "status": "fail",
+    "severity": "🟠",
+    "measurement": "sessionOk=false; denied=false; empty=false; form=true; textLen=221; url=/login",
+    "screenshot": "ss/02-Y3-erisim-engeli.png",
+    "detail": "oturum kurulamadı — test hatası (ürün bulgusu değil)"
+  },
+  {
+    "id": "T9",
+    "title": "Kanban kolon genişlik",
+    "status": "warn",
+    "severity": "🟡",
+    "measurement": "cols=0 widths=[] overflow=false",
+    "screenshot": "ss/03-T9-kanban.png"
+  },
+  {
+    "id": "P4",
+    "title": "Portal X-Company-Id yok sayılıyor",
+    "status": "pass",
+    "measurement": "token=true; sameBody=true; statusA=200 statusB=200; lenA=169 lenB=169",
+    "screenshot": "ss/04-P4-portal-header.png"
+  },
+  {
+    "id": "T6",
+    "title": "Personel formu 1920 iki kolon",
+    "status": "pass",
+    "severity": "🟡",
+    "measurement": "grid=\"none\" cols=0 twoColLayout=true fields=9 viewport=1920x1080",
+    "screenshot": "ss/05-T6-form-1920.png"
+  },
+  {
+    "id": "L3",
+    "title": "Opsiyonel Select boş → payload",
+    "status": "skip",
+    "measurement": "submit yakalanamadı; emptyOk=null",
+    "screenshot": "ss/06-L3-optional-empty.png",
+    "detail": "Zorunlu alan validasyonu submit engelledi"
+  },
+  {
+    "id": "L8",
+    "title": "Lookup rename + geri al",
+    "status": "skip",
+    "measurement": "renamed=false reverted=false old=\"active\tAktif\t\t10\tAktif\tFirma\t\" mid=\"Aktif (GK)\" final=\"\"",
+    "screenshot": "ss/07-L8-lookup-rename.png",
+    "detail": "Düzenle UI bulunamadı"
+  },
+  {
+    "id": "T8",
+    "title": "Rapor dashboard widget sürükle",
+    "status": "skip",
+    "severity": "🟡",
+    "measurement": "grid item yok",
+    "screenshot": "ss/08-T8-dashboard-drag.png"
+  },
+  {
+    "id": "T11",
+    "title": "Modal lg/xl genişlik",
+    "status": "skip",
+    "measurement": "modalWidth=nullpx",
+    "screenshot": "ss/09-T11-modal.png"
+  },
+  {
+    "id": "L4",
+    "title": "Filtre daralt + clear geri dönüş",
+    "status": "fail",
+    "severity": "🟠",
+    "measurement": "before=10 afterFilter=10 afterClear=10 filter=\"\" narrowed=false restored=true",
+    "screenshot": "ss/10-L4-filter-clear.png"
+  },
+  {
+    "id": "L2",
+    "title": "L2 Select trigger tespiti (düzeltme yok)",
+    "status": "fail",
+    "severity": "🟠",
+    "measurement": "trigger.textOverflow=clip; valueText.textOverflow=ellipsis; title=null; text=\"Seçiniz...\"; loc=@shared/components/Select.tsx:134 title + components.css:1077-1084 .ax-select-value-text",
+    "screenshot": "ss/11-L2-select-locate.png",
+    "detail": "Faz3 borcu: uzun etiket kesilsin + title. CSS ellipsis .ax-select-value-text üzerinde tanımlı; Tur2 yanlış hedef (#header-company-selector/combobox root clip) ölçmüş olabilir. Bu turda ürün kodu değiştirilmedi."
+  }
+]

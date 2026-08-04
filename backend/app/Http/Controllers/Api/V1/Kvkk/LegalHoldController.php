@@ -2,23 +2,20 @@
 
 namespace App\Http\Controllers\Api\V1\Kvkk;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\LegalHold;
 use App\Services\Kvkk\Retention\LegalHoldService;
-use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class LegalHoldController extends Controller
+class LegalHoldController extends BaseController
 {
-    use ApiResponse;
-
     public function __construct(private LegalHoldService $service) {}
 
     public function index(Request $request): JsonResponse
     {
         $rows = LegalHold::query()
-            ->where('company_id', $request->user()->company_id)
+            ->where('company_id', (int) $this->getCompanyId())
             ->orderByDesc('id')
             ->paginate(min(100, max(1, (int) $request->input('per_page', 25))));
 
@@ -35,7 +32,7 @@ class LegalHoldController extends Controller
         ]);
 
         $hold = $this->service->place(
-            (int) $request->user()->company_id,
+            (int) $this->getCompanyId(),
             $request->user(),
             $data['subject_type'],
             (int) $data['subject_id'],
@@ -49,7 +46,7 @@ class LegalHoldController extends Controller
     public function release(Request $request, int $id): JsonResponse
     {
         $hold = LegalHold::query()
-            ->where('company_id', $request->user()->company_id)
+            ->where('company_id', (int) $this->getCompanyId())
             ->findOrFail($id);
 
         return $this->success($this->service->release($hold, $request->user()), 'Hukuki tutma kaldırıldı');

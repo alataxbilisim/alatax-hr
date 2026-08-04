@@ -47,7 +47,7 @@ class PortalAttendanceQrController extends BaseController
                 'source' => AttendanceClockService::SOURCE_QR,
                 'branch_id' => $meta['branch_id'],
                 'device_info' => $request->userAgent(),
-            ]);
+            ], (int) $this->getCompanyId());
         } catch (InvalidArgumentException $e) {
             return $this->error($e->getMessage(), 422);
         }

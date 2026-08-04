@@ -214,8 +214,11 @@ class DataSubjectRequestController extends BaseController
         if ($user->can('management.kvkk.requests.view') || $user->can('management.kvkk_requests.view') || $user->isSuperAdmin()) {
             return true;
         }
-        // Talep sahibi (portal)
-        $emp = Employee::query()->where('user_id', $user->id)->where('company_id', $user->company_id)->first();
+        // Talep sahibi (portal) — aktif CompanyContext (home company_id değil)
+        $emp = Employee::query()
+            ->where('user_id', $user->id)
+            ->where('company_id', (int) $this->getCompanyId())
+            ->first();
         if ($emp && (int) $row->subject_id === (int) $emp->id) {
             return true;
         }
