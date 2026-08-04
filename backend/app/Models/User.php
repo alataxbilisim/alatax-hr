@@ -5,9 +5,12 @@ namespace App\Models;
 use App\Enums\UserType;
 use App\Notifications\ResetPasswordNotification;
 use App\Services\Auth\UserPermissionCache;
+use App\Services\CompanyContextService;
 use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -29,6 +32,24 @@ class User extends Authenticatable
         static::deleted(function (User $user): void {
             UserPermissionCache::forgetForUser((int) $user->id);
         });
+
+        // G1: home company → membership + last_company_id (factory/test/seeder uyumu)
+        static::saved(function (User $user): void {
+            if ($user->type === UserType::SuperAdmin || $user->company_id === null) {
+                return;
+            }
+
+            if (! $user->wasRecentlyCreated && ! $user->wasChanged('company_id')) {
+                // last_company boşsa doldur
+                if ($user->last_company_id === null) {
+                    $user->forceFill(['last_company_id' => $user->company_id])->saveQuietly();
+                }
+
+                return;
+            }
+
+            app(CompanyContextService::class)->syncHomeMembership($user->fresh() ?? $user);
+        });
     }
 
     /**
@@ -47,6 +68,7 @@ class User extends Authenticatable
 
     protected $fillable = [
         'company_id',
+        'last_company_id',
         'name',
         'email',
         'phone',
@@ -94,11 +116,30 @@ class User extends Authenticatable
     }
 
     /**
-     * Firma ilişkisi
+     * Firma ilişkisi (home / ana şirket — kaldırılmaz).
      */
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
+    }
+
+    public function lastCompany(): BelongsTo
+    {
+        return $this->belongsTo(Company::class, 'last_company_id');
+    }
+
+    /**
+     * Çoktan-çoğa şirket membership (G1).
+     */
+    public function companies(): BelongsToMany
+    {
+        return $this->belongsToMany(Company::class, 'company_user')
+            ->withPivot(['role_id', 'is_default', 'created_at']);
+    }
+
+    public function companyMemberships(): HasMany
+    {
+        return $this->hasMany(CompanyUser::class);
     }
 
     /**

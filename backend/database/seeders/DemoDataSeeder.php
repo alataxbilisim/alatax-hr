@@ -914,11 +914,31 @@ class DemoDataSeeder extends Seeder
     }
 
     /**
-     * Faz G öncesi bağımsız kardeş firmalar (organizations henüz yok).
-     * Her birinde ~10 personel — cross-company izolasyon fikstürü.
+     * G1: kardeş oteller aynı organization altında; merkez İK üçüne membership.
+     * Merkez ofis = demo-firma altında şube.
      */
     private function seedSisterCompanies(): void
     {
+        $main = Company::query()->where('slug', 'demo-firma')->first();
+        if ($main === null) {
+            return;
+        }
+
+        app(\App\Services\CompanyContextService::class)->ensureOrganizationForCompany($main);
+        $main->refresh();
+        $orgId = $main->organization_id;
+
+        // Merkez ofis — demo-firma altında şube (İK home şirketi)
+        Branch::firstOrCreate(
+            ['company_id' => $main->id, 'code' => 'MRK'],
+            [
+                'name' => 'Merkez Ofis',
+                'city' => 'İstanbul',
+                'is_active' => true,
+                'is_headquarters' => false,
+            ]
+        );
+
         $defs = [
             [
                 'slug' => 'demo-otel-b',
@@ -936,15 +956,32 @@ class DemoDataSeeder extends Seeder
             ],
         ];
 
+        $sisterIds = [(int) $main->id];
         foreach ($defs as $def) {
-            $this->seedSisterCompany($def);
+            $sister = $this->seedSisterCompany($def);
+            if ($orgId !== null) {
+                $sister->forceFill(['organization_id' => $orgId])->saveQuietly();
+            }
+            $sisterIds[] = (int) $sister->id;
+        }
+
+        // Merkez İK: admin@demo.test + ik@demo.test → üç şirket membership
+        $ctx = app(\App\Services\CompanyContextService::class);
+        foreach (['admin@demo.test', 'ik@demo.test'] as $email) {
+            $user = $this->qaUsers[$email] ?? User::query()->where('email', $email)->first();
+            if ($user === null) {
+                continue;
+            }
+            foreach ($sisterIds as $i => $companyId) {
+                $ctx->ensureMembership($user, $companyId, $i === 0);
+            }
         }
     }
 
     /**
      * @param  array{slug: string, name: string, admin_email: string, admin_name: string, code_prefix: string}  $def
      */
-    private function seedSisterCompany(array $def): void
+    private function seedSisterCompany(array $def): Company
     {
         $company = Company::firstOrCreate(
             ['slug' => $def['slug']],
@@ -1031,6 +1068,8 @@ class DemoDataSeeder extends Seeder
                 ]
             );
         }
+
+        return $company;
     }
 
     private function upsertUser(int $companyId, string $email, string $name, string $roleName, UserType $type = UserType::User): User

@@ -76,6 +76,7 @@ class Company extends Model
     }
 
     protected $fillable = [
+        'organization_id',
         'name',
         'slug',
         'legal_name',
@@ -141,10 +142,33 @@ class Company extends Model
                 }
             }
         });
+
+        // G1: her firma bir organization'a bağlanır (1:1 backfill deseni)
+        static::created(function (Company $company): void {
+            if ($company->organization_id !== null) {
+                return;
+            }
+
+            app(\App\Services\CompanyContextService::class)->ensureOrganizationForCompany($company);
+        });
+    }
+
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class);
     }
 
     /**
-     * Firma kullanıcıları
+     * Membership kullanıcıları
+     */
+    public function memberUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'company_user')
+            ->withPivot(['role_id', 'is_default', 'created_at']);
+    }
+
+    /**
+     * Firma kullanıcıları (home company_id — legacy)
      */
     public function users(): HasMany
     {
