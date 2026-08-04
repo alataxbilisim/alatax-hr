@@ -30,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'company_admin' => \App\Http\Middleware\CompanyAdminOnly::class,
             'portal.access' => \App\Http\Middleware\PortalAccess::class,
             'deny.2fa.challenge' => \App\Http\Middleware\DenyTwoFactorChallengeToken::class,
+            'company.context' => \App\Http\Middleware\ResolveCompanyContext::class,
             'branch.context' => \App\Http\Middleware\ResolveBranchContext::class,
             'ability' => \Laravel\Sanctum\Http\Middleware\CheckForAnyAbility::class,
             'abilities' => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
@@ -40,6 +41,17 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Named limiter: AppServiceProvider → RateLimiter::for('api') = 120/dk
         $middleware->throttleApi('api');
+
+        // G1: Company/Branch bağlamı, route model binding'den ÖNCE bağlanmalı
+        // (aksi halde önceki istekten stale CompanyContext ile yanlış tenant resolve olur)
+        $middleware->prependToPriorityList(
+            before: \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            prepend: \App\Http\Middleware\ResolveCompanyContext::class,
+        );
+        $middleware->prependToPriorityList(
+            before: \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            prepend: \App\Http\Middleware\ResolveBranchContext::class,
+        );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // API exception handling

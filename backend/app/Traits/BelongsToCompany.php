@@ -4,68 +4,71 @@ namespace App\Traits;
 
 use App\Enums\UserType;
 use App\Models\Company;
+use App\Support\CompanyContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Multi-tenant modeller için trait
- * Bu trait'i kullanan modeller otomatik olarak company_id'ye göre filtrelenir
+ * Multi-tenant modeller için trait.
+ * Global scope hâlâ "= tek company_id"; kaynak = CompanyContext (yoksa user.company_id).
  */
 trait BelongsToCompany
 {
-    /**
-     * Boot method - Global scope ekler
-     */
     protected static function bootBelongsToCompany(): void
     {
-        // Yeni kayıt oluşturulurken otomatik company_id ata
         static::creating(function ($model) {
-            if (auth()->check() && ! $model->company_id) {
-                $user = auth()->user();
-                // SuperAdmin değilse company_id ata
-                if ($user->type !== UserType::SuperAdmin && $user->company_id) {
-                    $model->company_id = $user->company_id;
-                }
+            if ($model->company_id) {
+                return;
+            }
+
+            $companyId = static::resolveActiveCompanyId();
+            if ($companyId !== null) {
+                $model->company_id = $companyId;
             }
         });
 
-        // Global scope: SuperAdmin hariç her kullanıcı sadece kendi firmasının verilerini görür
         static::addGlobalScope('company', function (Builder $builder) {
-            if (auth()->check()) {
-                $user = auth()->user();
-
-                // SuperAdmin tüm verileri görebilir
-                if ($user->type === UserType::SuperAdmin) {
-                    return;
-                }
-
-                // Diğer kullanıcılar sadece kendi firmalarının verilerini görür
-                if ($user->company_id) {
-                    $builder->where($builder->getModel()->getTable().'.company_id', $user->company_id);
-                }
+            $companyId = static::resolveActiveCompanyId();
+            if ($companyId === null) {
+                return;
             }
+
+            $builder->where($builder->getModel()->getTable().'.company_id', $companyId);
         });
     }
 
     /**
-     * Firma ilişkisi
+     * Aktif operasyonel şirket: CompanyContext → auth user (SuperAdmin hariç).
+     * Auth yok + bağlam yok → null (scope uygulanmaz; job'lar CompanyContext::run kullanır).
      */
+    protected static function resolveActiveCompanyId(): ?int
+    {
+        if (CompanyContext::isBound()) {
+            return CompanyContext::id();
+        }
+
+        if (! auth()->check()) {
+            return null;
+        }
+
+        $user = auth()->user();
+        if ($user === null || $user->type === UserType::SuperAdmin) {
+            return null;
+        }
+
+        return $user->company_id ? (int) $user->company_id : null;
+    }
+
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
     }
 
-    /**
-     * Belirli bir firmaya ait kayıtları getir (SuperAdmin için)
-     */
     public function scopeForCompany(Builder $query, int $companyId): Builder
     {
         return $query->withoutGlobalScope('company')->where('company_id', $companyId);
     }
 
-    /**
-     * Global scope olmadan sorgula
-     */
     public function scopeWithoutCompanyScope(Builder $query): Builder
     {
         return $query->withoutGlobalScope('company');

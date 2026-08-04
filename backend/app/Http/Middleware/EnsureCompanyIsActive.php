@@ -4,12 +4,15 @@ namespace App\Http\Middleware;
 
 use App\Enums\CompanyStatus;
 use App\Enums\UserType;
+use App\Models\Company;
+use App\Support\CompanyContext;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Firmanın aktif olduğunu kontrol eden middleware
+ * Firmanın aktif olduğunu kontrol eden middleware.
+ * Aktif bağlam varsa onu; yoksa home company'yi kontrol eder.
  */
 class EnsureCompanyIsActive
 {
@@ -17,17 +20,21 @@ class EnsureCompanyIsActive
     {
         $user = $request->user();
 
-        // SuperAdmin kontrolden muaf
         if ($user && $user->type === UserType::SuperAdmin) {
             return $next($request);
         }
 
-        // Kullanıcının firması var mı ve aktif mi?
-        if ($user && $user->company) {
-            // active ve trial durumları izin verilen durumlar
+        $company = null;
+        if (CompanyContext::isBound()) {
+            $company = Company::query()->find(CompanyContext::id());
+        } elseif ($user) {
+            $company = $user->company;
+        }
+
+        if ($company) {
             $allowedStatuses = [CompanyStatus::Active, CompanyStatus::Trial];
 
-            if (! in_array($user->company->status, $allowedStatuses, true)) {
+            if (! in_array($company->status, $allowedStatuses, true)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Firma hesabınız aktif değil. Lütfen yöneticinizle iletişime geçin.',

@@ -8,6 +8,7 @@ use App\Models\Branch;
 use App\Models\Employee;
 use App\Models\User;
 use App\Support\BranchContext;
+use App\Support\CompanyContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -26,10 +27,31 @@ class BranchContextService
     ) {}
 
     /**
+     * Aktif şirket (CompanyContext) — Branch sorgularının tenant sınırı.
+     */
+    private function activeCompanyId(User $user): ?int
+    {
+        if (CompanyContext::isBound()) {
+            return CompanyContext::id();
+        }
+
+        return $user->company_id ? (int) $user->company_id : null;
+    }
+
+    /**
      * @return array{branches: list<array{id: int, name: string, code: ?string}>, can_select_all: bool, locked_branch_id: ?int}
      */
     public function availableFor(User $user): array
     {
+        $companyId = $this->activeCompanyId($user);
+        if ($companyId === null) {
+            return [
+                'branches' => [],
+                'can_select_all' => false,
+                'locked_branch_id' => null,
+            ];
+        }
+
         $scope = $this->dataScope->resolve($user);
         $locked = $this->lockedBranchId($user, $scope);
         $canSelectAll = $scope === DataScopeLevel::Company;
@@ -37,7 +59,7 @@ class BranchContextService
         // branch scope: yalnız kendi şubesi (DataScope tavanı)
         if ($scope === DataScopeLevel::Branch && $locked !== null) {
             $branches = Branch::query()
-                ->where('company_id', $user->company_id)
+                ->where('company_id', $companyId)
                 ->where('id', $locked)
                 ->where('is_active', true)
                 ->orderBy('name')
@@ -55,7 +77,7 @@ class BranchContextService
         }
 
         $branches = Branch::query()
-            ->where('company_id', $user->company_id)
+            ->where('company_id', $companyId)
             ->where('is_active', true)
             ->orderByDesc('is_headquarters')
             ->orderBy('name')
@@ -77,6 +99,11 @@ class BranchContextService
      */
     public function resolveFromRequest(Request $request, User $user): BranchContext
     {
+        $companyId = $this->activeCompanyId($user);
+        if ($companyId === null) {
+            return BranchContext::all(false);
+        }
+
         $scope = $this->dataScope->resolve($user);
         $locked = $this->lockedBranchId($user, $scope);
         $raw = $request->header(self::HEADER) ?? $request->query('branch_id');
@@ -113,7 +140,7 @@ class BranchContextService
 
         $branchId = (int) $raw;
         $exists = Branch::query()
-            ->where('company_id', $user->company_id)
+            ->where('company_id', $companyId)
             ->where('id', $branchId)
             ->where('is_active', true)
             ->exists();
@@ -124,7 +151,7 @@ class BranchContextService
                 $user,
                 "Geçersiz şube bağlamı: {$branchId}",
                 null,
-                ['requested' => $branchId],
+                ['requested' => $branchId, 'active_company_id' => $companyId],
                 false,
                 'branch_context_invalid'
             );
@@ -163,7 +190,7 @@ class BranchContextService
         }
 
         $employee = Employee::query()
-            ->where('company_id', $user->company_id)
+            ->where('company_id', $this->activeCompanyId($user) ?? $user->company_id)
             ->where('user_id', $user->id)
             ->where('status', 'active')
             ->first();

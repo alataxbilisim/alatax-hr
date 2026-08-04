@@ -32,9 +32,10 @@ Route::prefix('v1')->group(function () {
         ->middleware(['auth:sanctum', 'throttle:auth', 'ability:2fa-challenge']);
 
     // Protected routes (authentication required)
-    Route::middleware(['auth:sanctum', 'deny.2fa.challenge', 'company.active', 'branch.context'])->group(function () {
+    Route::middleware(['auth:sanctum', 'deny.2fa.challenge', 'company.context', 'company.active', 'branch.context'])->group(function () {
 
-        // Şube bağlam seçici (FAZ A6)
+        // Şirket bağlam seçici (G1) + şube (FAZ A6)
+        Route::get('/context/companies', [\App\Http\Controllers\Api\V1\CompanyContextController::class, 'companies']);
         Route::get('/context/branches', [\App\Http\Controllers\Api\V1\BranchContextController::class, 'branches']);
 
         // Auth endpoints
@@ -1430,7 +1431,7 @@ Route::prefix('v1')->group(function () {
     // ===========================================
     // PORTAL ROUTES (Personel Self-Servis)
     // ===========================================
-    Route::middleware(['auth:sanctum', 'company.active', 'portal.access'])->prefix('portal')->group(function () {
+    Route::middleware(['auth:sanctum', 'company.context', 'company.active', 'portal.access'])->prefix('portal')->group(function () {
         // Dashboard
         Route::get('/dashboard', [\App\Http\Controllers\Api\V1\Portal\PortalDashboardController::class, 'index']);
 
