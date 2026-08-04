@@ -4,16 +4,17 @@ namespace App\Policies;
 
 use App\Models\ApprovalWorkflow;
 use App\Models\User;
+use App\Support\CompanyContext;
 
 /**
- * Workflow yapılandırma — firma izolasyonu (company_id).
+ * Workflow yapılandırma — firma izolasyonu (aktif şirket bağlamı).
  * Permission middleware asıl kapı; Policy satır kapsamı.
  */
 class ApprovalWorkflowPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->company_id !== null;
+        return $this->activeCompanyId($user) !== null;
     }
 
     public function view(User $user, ApprovalWorkflow $workflow): bool
@@ -23,7 +24,7 @@ class ApprovalWorkflowPolicy
 
     public function create(User $user): bool
     {
-        return $user->company_id !== null;
+        return $this->activeCompanyId($user) !== null;
     }
 
     public function update(User $user, ApprovalWorkflow $workflow): bool
@@ -38,7 +39,18 @@ class ApprovalWorkflowPolicy
 
     protected function sameCompany(User $user, ApprovalWorkflow $workflow): bool
     {
-        return $user->company_id !== null
-            && (int) $user->company_id === (int) $workflow->company_id;
+        $active = $this->activeCompanyId($user);
+
+        return $active !== null
+            && (int) $active === (int) $workflow->company_id;
+    }
+
+    protected function activeCompanyId(User $user): ?int
+    {
+        if (CompanyContext::isBound()) {
+            return CompanyContext::id();
+        }
+
+        return $user->company_id ? (int) $user->company_id : null;
     }
 }

@@ -40,12 +40,16 @@ class ScanRetentionCommand extends Command
                 continue;
             }
 
-            $result = $engine->scan((int) $company->id);
+            $result = \App\Support\CompanyContext::run((int) $company->id, function () use ($engine, $company) {
+                return $engine->scan((int) $company->id);
+            });
             $totalCreated += $result['created'];
             $totalHold += $result['skipped_hold'];
             $this->info("Company {$company->id}: created={$result['created']} hold_skip={$result['skipped_hold']}");
 
-            $this->maybeRemindReview((int) $company->id, $notifications);
+            \App\Support\CompanyContext::run((int) $company->id, function () use ($company, $notifications) {
+                $this->maybeRemindReview((int) $company->id, $notifications);
+            });
         }
 
         $this->info("Toplam aday: {$totalCreated}, hold atlanan: {$totalHold}");

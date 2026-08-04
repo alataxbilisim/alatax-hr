@@ -33,14 +33,16 @@ class RunReportScheduleJob implements ShouldQueue
             return;
         }
 
-        try {
-            $schedules->runSchedule($schedule);
-        } catch (\Throwable $e) {
-            Log::error('report.schedule.job_failed', [
-                'schedule_id' => $this->scheduleId,
-                'error' => $e->getMessage(),
-            ]);
-            throw $e;
-        }
+        \App\Support\CompanyContext::run((int) $schedule->company_id, function () use ($schedules, $schedule): void {
+            try {
+                $schedules->runSchedule($schedule);
+            } catch (\Throwable $e) {
+                Log::error('report.schedule.job_failed', [
+                    'schedule_id' => $this->scheduleId,
+                    'error' => $e->getMessage(),
+                ]);
+                throw $e;
+            }
+        });
     }
 }

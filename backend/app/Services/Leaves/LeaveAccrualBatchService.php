@@ -5,6 +5,7 @@ namespace App\Services\Leaves;
 use App\Enums\CompanyStatus;
 use App\Models\Company;
 use App\Services\LeaveCalculationService;
+use App\Support\CompanyContext;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -83,7 +84,7 @@ class LeaveAccrualBatchService
             $companyId = (int) $company->id;
 
             try {
-                $result = $handler($companyId);
+                $result = CompanyContext::run($companyId, fn () => $handler($companyId));
                 $summary['processed']++;
                 $summary['companies'][] = [
                     'company_id' => $companyId,

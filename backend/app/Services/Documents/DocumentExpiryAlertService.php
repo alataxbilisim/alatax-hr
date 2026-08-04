@@ -9,6 +9,7 @@ use App\Models\DocumentExpiryAlert;
 use App\Models\EmployeeDocument;
 use App\Models\User;
 use App\Services\Notification\NotificationService;
+use App\Support\CompanyContext;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -46,7 +47,7 @@ class DocumentExpiryAlertService
 
         foreach ($companies as $companyId) {
             try {
-                $result = $this->processCompany((int) $companyId, $today);
+                $result = CompanyContext::run((int) $companyId, fn () => $this->processCompany((int) $companyId, $today));
                 $summary['checked'] += $result['checked'];
                 $summary['notified'] += $result['notified'];
                 $summary['skipped'] += $result['skipped'];
@@ -69,6 +70,13 @@ class DocumentExpiryAlertService
      */
     public function processCompany(int $companyId, ?Carbon $today = null): array
     {
+        CompanyContext::requireId();
+        if (CompanyContext::id() !== $companyId) {
+            throw new \App\Exceptions\CompanyContextMissingException(
+                "Company context mismatch: bound=".CompanyContext::id().", expected={$companyId}"
+            );
+        }
+
         $today ??= Carbon::today();
         $checked = 0;
         $notified = 0;

@@ -455,12 +455,12 @@ class ApprovalWorkflowMotorB4Test extends TestCase
         $service = app(ApprovalEscalationService::class);
         $today = Carbon::parse('2026-07-10');
 
-        $r1 = $service->processCompany($this->company->id, $today);
+        $r1 = \App\Support\CompanyContext::run($this->company->id, fn () => $service->processCompany($this->company->id, $today));
         $this->assertSame(1, $r1['reminded']);
 
         Notification::assertSentTo($this->approverA, CatalogNotification::class);
 
-        $r2 = $service->processCompany($this->company->id, $today);
+        $r2 = \App\Support\CompanyContext::run($this->company->id, fn () => $service->processCompany($this->company->id, $today));
         $this->assertSame(0, $r2['reminded']);
         $this->assertSame(1, ApprovalEscalationAlert::query()
             ->where('approval_record_id', $recA->id)
@@ -471,7 +471,7 @@ class ApprovalWorkflowMotorB4Test extends TestCase
         DB::table('approval_records')->where('id', $recA->id)->update([
             'created_at' => Carbon::parse('2026-07-05 10:00:00'),
         ]);
-        $r3 = $service->processCompany($this->company->id, $today);
+        $r3 = \App\Support\CompanyContext::run($this->company->id, fn () => $service->processCompany($this->company->id, $today));
         $this->assertSame(1, $r3['escalated']);
         Notification::assertSentTo($this->managerOfA, CatalogNotification::class);
 

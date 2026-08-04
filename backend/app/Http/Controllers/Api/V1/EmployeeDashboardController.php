@@ -26,7 +26,7 @@ class EmployeeDashboardController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = Auth::user();
-        $companyId = $user->company_id;
+        $companyId = (\App\Support\CompanyContext::id() ?? $user->company_id);
 
         $query = EmployeeDashboard::where('company_id', $companyId)
             ->accessibleBy($user->id)
@@ -53,7 +53,7 @@ class EmployeeDashboardController extends Controller
     {
         $user = Auth::user();
 
-        $dashboard = EmployeeDashboard::where('company_id', $user->company_id)
+        $dashboard = EmployeeDashboard::where('company_id', (\App\Support\CompanyContext::id() ?? $user->company_id))
             ->accessibleBy($user->id)
             ->findOrFail($id);
 
@@ -86,7 +86,7 @@ class EmployeeDashboardController extends Controller
         $user = Auth::user();
 
         $dashboard = EmployeeDashboard::create([
-            'company_id' => $user->company_id,
+            'company_id' => (\App\Support\CompanyContext::id() ?? $user->company_id),
             'user_id' => $user->id,
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
@@ -109,7 +109,7 @@ class EmployeeDashboardController extends Controller
     {
         $user = Auth::user();
 
-        $dashboard = EmployeeDashboard::where('company_id', $user->company_id)
+        $dashboard = EmployeeDashboard::where('company_id', (\App\Support\CompanyContext::id() ?? $user->company_id))
             ->where('user_id', $user->id)
             ->findOrFail($id);
 
@@ -137,7 +137,7 @@ class EmployeeDashboardController extends Controller
     {
         $user = Auth::user();
 
-        $dashboard = EmployeeDashboard::where('company_id', $user->company_id)
+        $dashboard = EmployeeDashboard::where('company_id', (\App\Support\CompanyContext::id() ?? $user->company_id))
             ->where('user_id', $user->id)
             ->findOrFail($id);
 
@@ -156,7 +156,7 @@ class EmployeeDashboardController extends Controller
     {
         $user = Auth::user();
 
-        $dashboard = EmployeeDashboard::where('company_id', $user->company_id)
+        $dashboard = EmployeeDashboard::where('company_id', (\App\Support\CompanyContext::id() ?? $user->company_id))
             ->accessibleBy($user->id)
             ->findOrFail($id);
 
@@ -196,7 +196,7 @@ class EmployeeDashboardController extends Controller
             ], 403);
         }
 
-        $query = Employee::where('company_id', $user->company_id);
+        $query = Employee::where('company_id', (\App\Support\CompanyContext::id() ?? $user->company_id));
 
         // Filtreleri uygula
         if (! empty($config['filters'])) {
@@ -237,7 +237,7 @@ class EmployeeDashboardController extends Controller
     {
         $user = Auth::user();
 
-        $dashboard = EmployeeDashboard::where('company_id', $user->company_id)
+        $dashboard = EmployeeDashboard::where('company_id', (\App\Support\CompanyContext::id() ?? $user->company_id))
             ->accessibleBy($user->id)
             ->findOrFail($id);
 
@@ -264,7 +264,7 @@ class EmployeeDashboardController extends Controller
                 continue;
             }
 
-            $query = Employee::where('company_id', $user->company_id);
+            $query = Employee::where('company_id', (\App\Support\CompanyContext::id() ?? $user->company_id));
 
             if ($widget['type'] === 'kpi') {
                 $data = $this->getKPIData($query, $config['measure']);

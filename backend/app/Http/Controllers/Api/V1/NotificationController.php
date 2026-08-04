@@ -8,36 +8,50 @@ use Illuminate\Http\Request;
 class NotificationController extends BaseController
 {
     /**
-     * Bildirim listesi (Laravel DatabaseNotification → FE şekli).
+     * Bildirim listesi — aktif şirket + null company_id.
+     * other_company_unread: diğer membership şirketlerindeki okunmamış (rozete).
      */
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
+        $activeCompanyId = $this->getCompanyId();
 
         $query = $user->notifications()->orderBy('created_at', 'desc');
 
-        if ($user->company_id !== null) {
-            $query->where(function ($q) use ($user): void {
-                $q->where('company_id', $user->company_id)
+        if ($activeCompanyId !== null) {
+            $query->where(function ($q) use ($activeCompanyId): void {
+                $q->where('company_id', $activeCompanyId)
                     ->orWhereNull('company_id');
             });
         }
 
         $notifications = $query->paginate($request->get('per_page', 20));
         $unreadCount = $user->unreadNotifications()
-            ->when($user->company_id !== null, function ($q) use ($user): void {
-                $q->where(function ($inner) use ($user): void {
-                    $inner->where('company_id', $user->company_id)
+            ->when($activeCompanyId !== null, function ($q) use ($activeCompanyId): void {
+                $q->where(function ($inner) use ($activeCompanyId): void {
+                    $inner->where('company_id', $activeCompanyId)
                         ->orWhereNull('company_id');
                 });
             })
             ->count();
+
+        $otherCompanyUnread = 0;
+        if ($activeCompanyId !== null) {
+            $accessible = app(\App\Services\CompanyContextService::class)->accessibleCompanyIds($user);
+            $otherIds = array_values(array_filter($accessible, fn (int $id) => $id !== $activeCompanyId));
+            if ($otherIds !== []) {
+                $otherCompanyUnread = $user->unreadNotifications()
+                    ->whereIn('company_id', $otherIds)
+                    ->count();
+            }
+        }
 
         $items = collect($notifications->items())->map(fn ($n) => $this->serialize($n))->all();
 
         return $this->success([
             'notifications' => $items,
             'unread_count' => $unreadCount,
+            'other_company_unread' => $otherCompanyUnread,
             'meta' => [
                 'current_page' => $notifications->currentPage(),
                 'last_page' => $notifications->lastPage(),
@@ -58,9 +72,10 @@ class NotificationController extends BaseController
             return $this->notFound('Bildirim bulunamadı');
         }
 
-        if ($request->user()->company_id !== null
+        $activeCompanyId = $this->getCompanyId();
+        if ($activeCompanyId !== null
             && $notification->company_id !== null
-            && (int) $notification->company_id !== (int) $request->user()->company_id) {
+            && (int) $notification->company_id !== (int) $activeCompanyId) {
             return $this->notFound('Bildirim bulunamadı');
         }
 
@@ -70,11 +85,21 @@ class NotificationController extends BaseController
     }
 
     /**
-     * Tüm bildirimleri okundu olarak işaretle
+     * Tüm bildirimleri okundu olarak işaretle (aktif şirket + null)
      */
     public function markAllAsRead(Request $request): JsonResponse
     {
-        $request->user()->unreadNotifications->markAsRead();
+        $user = $request->user();
+        $activeCompanyId = $this->getCompanyId();
+
+        $query = $user->unreadNotifications();
+        if ($activeCompanyId !== null) {
+            $query->where(function ($q) use ($activeCompanyId): void {
+                $q->where('company_id', $activeCompanyId)
+                    ->orWhereNull('company_id');
+            });
+        }
+        $query->get()->markAsRead();
 
         return $this->success(null, 'Tüm bildirimler okundu olarak işaretlendi');
     }

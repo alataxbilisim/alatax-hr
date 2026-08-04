@@ -25,6 +25,8 @@ class ExecuteDestructionApprovalJob implements ShouldQueue
         $approval = DestructionApproval::query()->find($this->approvalId);
         $engine->assertCanExecute($approval);
         /** @var DestructionApproval $approval */
-        $engine->executeApproved($approval);
+        \App\Support\CompanyContext::run((int) $approval->company_id, function () use ($engine, $approval): void {
+            $engine->executeApproved($approval);
+        });
     }
 }

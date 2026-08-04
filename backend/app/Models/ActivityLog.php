@@ -81,7 +81,7 @@ class ActivityLog extends Model
             }
         }
         if ($companyId === null) {
-            $companyId = $user?->company_id;
+            $companyId = \App\Support\CompanyContext::id() ?? $user?->company_id;
         }
 
         return static::create([

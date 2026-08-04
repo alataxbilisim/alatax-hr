@@ -799,10 +799,17 @@ class AuthController extends BaseController
             'roles' => $user->getRoleNames(),
         ];
 
-        if ($user->company) {
+        // Aktif / son şirket (G1) — FE şirket seçici ve giriş bağlamı
+        $company = null;
+        if ($user->last_company_id) {
+            $company = $user->relationLoaded('lastCompany')
+                ? $user->lastCompany
+                : \App\Models\Company::query()->find($user->last_company_id);
+        }
+        $company ??= $user->company;
+
+        if ($company) {
             if ($light) {
-                // fresh()/activeModules() yok — FE mevcut authz'ı korur
-                $company = $user->company;
                 $data['company'] = [
                     'id' => $company->id,
                     'name' => $company->name,
@@ -813,8 +820,6 @@ class AuthController extends BaseController
                     'active_modules' => [],
                 ];
             } else {
-                // company zaten load('company') ile gelir — fresh() ekstra SELECT yok
-                $company = $user->company;
                 $activeModules = $company->activeModules()->pluck('slug')->toArray();
                 $data['company'] = [
                     'id' => $company->id,

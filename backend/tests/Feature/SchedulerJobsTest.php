@@ -132,7 +132,7 @@ class SchedulerJobsTest extends TestCase
 
         $service = app(DocumentExpiryAlertService::class);
 
-        $first = $service->processCompany((int) $companyA->id, $today);
+        $first = \App\Support\CompanyContext::run((int) $companyA->id, fn () => $service->processCompany((int) $companyA->id, $today));
         $this->assertSame(1, $first['notified']);
         $this->assertSame(0, $first['skipped']);
 
@@ -153,7 +153,7 @@ class SchedulerJobsTest extends TestCase
             'company_id' => $companyA->id,
         ]);
 
-        $second = $service->processCompany((int) $companyA->id, $today);
+        $second = \App\Support\CompanyContext::run((int) $companyA->id, fn () => $service->processCompany((int) $companyA->id, $today));
         $this->assertSame(0, $second['notified']);
         $this->assertSame(1, $second['skipped']);
         $this->assertSame(1, DocumentExpiryAlert::query()->where('employee_document_id', $docA->id)->count());

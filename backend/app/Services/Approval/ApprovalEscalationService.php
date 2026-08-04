@@ -10,6 +10,7 @@ use App\Models\Company;
 use App\Models\Employee;
 use App\Models\User;
 use App\Services\Notification\NotificationService;
+use App\Support\CompanyContext;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -49,7 +50,7 @@ class ApprovalEscalationService
 
         foreach ($companies as $companyId) {
             try {
-                $result = $this->processCompany((int) $companyId, $today);
+                $result = CompanyContext::run((int) $companyId, fn () => $this->processCompany((int) $companyId, $today));
                 $summary['checked'] += $result['checked'];
                 $summary['reminded'] += $result['reminded'];
                 $summary['escalated'] += $result['escalated'];
@@ -73,6 +74,13 @@ class ApprovalEscalationService
      */
     public function processCompany(int $companyId, ?Carbon $today = null): array
     {
+        CompanyContext::requireId();
+        if (CompanyContext::id() !== $companyId) {
+            throw new \App\Exceptions\CompanyContextMissingException(
+                "Company context mismatch: bound=".CompanyContext::id().", expected={$companyId}"
+            );
+        }
+
         $today ??= Carbon::today();
         $checked = 0;
         $reminded = 0;
