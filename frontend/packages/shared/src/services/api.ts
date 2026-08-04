@@ -31,6 +31,11 @@ api.interceptors.request.use(
     if (branchId && !config.headers['X-Branch-Id']) {
       config.headers['X-Branch-Id'] = branchId;
     }
+    // Company panel şirket seçici (G1) — localStorage (Redux ile senkron)
+    const companyId = localStorage.getItem('alatax_company_id');
+    if (companyId && !config.headers['X-Company-Id']) {
+      config.headers['X-Company-Id'] = companyId;
+    }
     return config;
   },
   (error: AxiosError) => {

@@ -3,6 +3,7 @@ import authReducer from '@shared/store/slices/authSlice';
 import themeReducer from '@shared/store/slices/themeSlice';
 import notificationReducer from '@shared/store/slices/notificationSlice';
 import branchContextReducer from './store/branchContextSlice';
+import companyContextReducer from './store/companyContextSlice';
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ export const store = configureStore({
     theme: themeReducer,
     notifications: notificationReducer,
     branchContext: branchContextReducer,
+    companyContext: companyContextReducer,
   },
 });
 

@@ -17,6 +17,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ menuClassNam
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [otherCompanyUnread, setOtherCompanyUnread] = useState(0);
   const [loading, setLoading] = useState(false);
 
   const load = useCallback(async () => {
@@ -26,6 +27,8 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ menuClassNam
       const data = response.data.data;
       setItems(data.notifications ?? []);
       setUnreadCount(data.unread_count ?? 0);
+      const other = data.other_company_unread;
+      setOtherCompanyUnread(typeof other === 'number' ? other : 0);
     } catch {
       // sessiz — zil kırılmasın
     } finally {
@@ -100,6 +103,20 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ menuClassNam
         <BsBell size={18} />
         {unreadCount > 0 && (
           <span className="header-btn-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>
+        )}
+        {otherCompanyUnread > 0 && (
+          <span
+            className="header-btn-badge"
+            style={{
+              right: unreadCount > 0 ? '-0.35rem' : undefined,
+              top: unreadCount > 0 ? '1.1rem' : undefined,
+              background: 'var(--color-warning, #d97706)',
+              fontSize: '0.65rem',
+            }}
+            title={t('nav.otherCompanyNotifications', { count: otherCompanyUnread })}
+          >
+            {otherCompanyUnread > 99 ? '99+' : otherCompanyUnread}
+          </span>
         )}
       </button>
 

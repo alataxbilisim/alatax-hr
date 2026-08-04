@@ -148,6 +148,7 @@ const EmployeesPage: React.FC = () => {
   }, [search, statusFilter, departmentFilter, contractTypeFilter, currentPage]);
 
   const branchVersion = useSelector((state: RootState) => state.branchContext.version);
+  const companyVersion = useSelector((state: RootState) => state.companyContext.version);
 
   useEffect(() => {
     loadDepartments();
@@ -156,7 +157,7 @@ const EmployeesPage: React.FC = () => {
 
   useEffect(() => {
     loadEmployees();
-  }, [loadEmployees, branchVersion]);
+  }, [loadEmployees, branchVersion, companyVersion]);
 
   const handleDelete = async (id: number) => {
     if (!confirm('Bu personeli silmek istediğinizden emin misiniz?')) return;

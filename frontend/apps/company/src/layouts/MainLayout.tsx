@@ -32,6 +32,11 @@ import {
   resetBranchContext,
   setSelectedBranchId,
 } from '../store/branchContextSlice';
+import {
+  fetchCompanyContext,
+  resetCompanyContext,
+  setSelectedCompanyId,
+} from '../store/companyContextSlice';
 
 /** Mobil drawer — key={pathname} ile remount edilince kapalı initial state'e döner. */
 const CompanyMobileDrawer: React.FC<{
@@ -167,6 +172,7 @@ const MainLayout: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
   const { mode, sidebarOpen } = useSelector((state: RootState) => state.theme);
   const branchContext = useSelector((state: RootState) => state.branchContext);
+  const companyContext = useSelector((state: RootState) => state.companyContext);
 
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -194,15 +200,42 @@ const MainLayout: React.FC = () => {
     return opts;
   }, [branchContext.branches, branchContext.canSelectAll, t]);
 
+  const companyOptions = useMemo(
+    () =>
+      companyContext.companies.map((c) => ({
+        value: String(c.id),
+        label: c.name,
+      })),
+    [companyContext.companies]
+  );
+
+  const activeCompanyName = useMemo(() => {
+    const active = companyContext.companies.find(
+      (c) => String(c.id) === companyContext.selectedCompanyId
+    );
+    return active?.name ?? user?.company?.name;
+  }, [companyContext.companies, companyContext.selectedCompanyId, user?.company?.name]);
+
   useEffect(() => {
     setMobileToggleHost(mobileToggleHostRef.current);
   }, []);
 
   useEffect(() => {
     if (user) {
+      void dispatch(fetchCompanyContext());
       void dispatch(fetchBranchContext());
     }
   }, [dispatch, user]);
+
+  const handleCompanyChange = (value: string) => {
+    if (!value || value === companyContext.selectedCompanyId) return;
+    dispatch(setSelectedCompanyId(value));
+    // Şirket app'inde QueryClientProvider kurulu değil (yalnız Redux + version pattern);
+    // listeler branchContext.version / companyContext.version değişimiyle yeniden yüklenir.
+    dispatch(resetBranchContext());
+    void dispatch(fetchBranchContext());
+    navigate('/dashboard');
+  };
 
   const handleModuleClick = (moduleId: string) => {
     if (moduleId === activeModule) {
@@ -252,6 +285,7 @@ const MainLayout: React.FC = () => {
 
   const handleLogout = async () => {
     dispatch(resetBranchContext());
+    dispatch(resetCompanyContext());
     await dispatch(logout());
     navigate('/login');
   };
@@ -324,11 +358,23 @@ const MainLayout: React.FC = () => {
                   color: 'var(--text-secondary)',
                   whiteSpace: 'nowrap',
                 }}
-                title={user?.company?.name ?? t('nav.companyLabel')}
+                title={activeCompanyName ?? t('nav.companyLabel')}
               >
                 {t('nav.companyLabel')}
-                {user?.company?.name ? `: ${user.company.name}` : ''}
+                {activeCompanyName ? `: ${activeCompanyName}` : ''}
               </span>
+              {companyOptions.length > 1 && (
+                <div style={{ minWidth: '10rem' }}>
+                  <Select
+                    id="header-company-selector"
+                    value={companyContext.selectedCompanyId}
+                    onChange={handleCompanyChange}
+                    options={companyOptions}
+                    placeholder={t('nav.companySelector')}
+                    aria-label={t('nav.switchCompany')}
+                  />
+                </div>
+              )}
               {branchOptions.length > 0 && (
                 <div style={{ minWidth: '10rem' }}>
                   <Select
