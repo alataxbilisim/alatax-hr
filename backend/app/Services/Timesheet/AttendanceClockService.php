@@ -4,6 +4,7 @@ namespace App\Services\Timesheet;
 
 use App\Models\ActivityLog;
 use App\Models\AttendanceRecord;
+use App\Models\Employee;
 use App\Models\User;
 use App\Support\CompanyContext;
 use InvalidArgumentException;
@@ -24,10 +25,19 @@ class AttendanceClockService
     ) {}
 
     /**
-     * Operasyonel şirket: açık $companyId → CompanyContext → home company_id.
+     * Operasyonel şirket.
+     * Portal/QR: personel kaydının şirketi (panel last_company_id sızmaz).
+     * Diğer: açık $companyId → CompanyContext → home.
      */
-    protected function resolveCompanyId(User $user, ?int $companyId = null): int
+    protected function resolveCompanyId(User $user, ?int $companyId = null, ?string $source = null): int
     {
+        if (in_array($source, [self::SOURCE_PORTAL, self::SOURCE_QR], true)) {
+            $fromEmployee = $this->resolveEmployeeCompanyId($user);
+            if ($fromEmployee !== null) {
+                return $fromEmployee;
+            }
+        }
+
         if ($companyId !== null && $companyId > 0) {
             return $companyId;
         }
@@ -36,6 +46,25 @@ class AttendanceClockService
         }
 
         return (int) $user->company_id;
+    }
+
+    /**
+     * Aktif personel kaydının şirketi (global scope dışı).
+     */
+    protected function resolveEmployeeCompanyId(User $user): ?int
+    {
+        $q = Employee::withoutGlobalScopes()->where('user_id', $user->id)->where('status', 'active');
+
+        if ($user->company_id) {
+            $homeMatch = (clone $q)->where('company_id', $user->company_id)->value('company_id');
+            if ($homeMatch !== null) {
+                return (int) $homeMatch;
+            }
+        }
+
+        $any = $q->orderByDesc('id')->value('company_id');
+
+        return $any !== null ? (int) $any : null;
     }
 
     /**
@@ -52,7 +81,8 @@ class AttendanceClockService
      */
     public function clockIn(User $user, array $meta = [], ?int $companyId = null): array
     {
-        $companyId = $this->resolveCompanyId($user, $companyId);
+        $source = $meta['source'] ?? self::SOURCE_PORTAL;
+        $companyId = $this->resolveCompanyId($user, $companyId, $source);
         $today = now()->toDateString();
         $existing = AttendanceRecord::query()
             ->where('company_id', $companyId)
@@ -65,7 +95,6 @@ class AttendanceClockService
         }
 
         $method = $meta['method'] ?? 'mobile';
-        $source = $meta['source'] ?? self::SOURCE_PORTAL;
 
         $data = [
             'company_id' => $companyId,
@@ -112,7 +141,8 @@ class AttendanceClockService
      */
     public function clockOut(User $user, array $meta = [], ?int $companyId = null): array
     {
-        $companyId = $this->resolveCompanyId($user, $companyId);
+        $source = $meta['source'] ?? self::SOURCE_PORTAL;
+        $companyId = $this->resolveCompanyId($user, $companyId, $source);
         $today = now()->toDateString();
         $record = AttendanceRecord::query()
             ->where('company_id', $companyId)
@@ -164,7 +194,8 @@ class AttendanceClockService
      */
     public function punch(User $user, array $meta = [], ?int $companyId = null): array
     {
-        $companyId = $this->resolveCompanyId($user, $companyId);
+        $source = $meta['source'] ?? self::SOURCE_QR;
+        $companyId = $this->resolveCompanyId($user, $companyId, $source);
         $today = now()->toDateString();
         $existing = AttendanceRecord::query()
             ->where('company_id', $companyId)

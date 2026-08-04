@@ -44,7 +44,7 @@ final class PayslipsDataset extends AbstractDataset
         if ($svc->resolve($user) === DataScopeLevel::Company) {
             return;
         }
-        $empQ = Employee::query()->where('company_id', (int) $user->company_id);
+        $empQ = Employee::query()->where('company_id', $this->activeCompanyId($user));
         $svc->scopeForEmployee($empQ, $user);
         $query->whereIn('employee_id', $empQ->pluck('id'));
     }

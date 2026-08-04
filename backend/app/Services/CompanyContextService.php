@@ -93,7 +93,7 @@ class CompanyContextService
             throw new HttpException(403, 'SuperAdmin operasyonel şirket bağlamı kullanmaz.');
         }
 
-        // Portal: şirket seçici yok — header yok sayılır, home/fallback kullanılır
+        // Portal: şirket seçici yok — header yok sayılır; panel last_company_id sızmaz
         $isPortal = $request->is('api/v1/portal') || $request->is('api/v1/portal/*');
 
         $raw = $isPortal ? null : $request->header(self::HEADER);
@@ -132,8 +132,10 @@ class CompanyContextService
             return CompanyContext::bind($companyId);
         }
 
-        // Fallback: last_company_id → is_default membership → users.company_id
-        $candidate = $this->resolveFallbackCompanyId($user);
+        // Portal: home company (personel işvereni). Panel: last_company → default → home.
+        $candidate = $isPortal
+            ? $this->resolvePortalCompanyId($user)
+            : $this->resolveFallbackCompanyId($user);
         if ($candidate === null) {
             throw new HttpException(403, 'Erişilebilir şirket bulunamadı.');
         }
@@ -142,14 +144,40 @@ class CompanyContextService
             $this->ensureMembership($user, $candidate, true);
         }
 
-        $this->rememberLastCompany($user, $candidate);
+        // Portal last_company'yi panelle karıştırmaz
+        if (! $isPortal) {
+            $this->rememberLastCompany($user, $candidate);
+        }
 
         return CompanyContext::bind($candidate);
     }
 
-    public function resolveFallbackCompanyId(User $user): ?int
+    /**
+     * Portal operasyonel şirket: home / personel kaydı — last_company_id yok sayılır.
+     */
+    public function resolvePortalCompanyId(User $user): ?int
     {
-        if ($user->last_company_id !== null && $this->hasMembership($user, (int) $user->last_company_id)) {
+        if ($user->company_id !== null && $this->hasMembership($user, (int) $user->company_id)) {
+            return (int) $user->company_id;
+        }
+
+        $empCompanyId = \App\Models\Employee::withoutGlobalScopes()
+            ->where('user_id', $user->id)
+            ->where('status', 'active')
+            ->orderByDesc('id')
+            ->value('company_id');
+        if ($empCompanyId !== null && $this->hasMembership($user, (int) $empCompanyId)) {
+            return (int) $empCompanyId;
+        }
+
+        return $this->resolveFallbackCompanyId($user, ignoreLastCompany: true);
+    }
+
+    public function resolveFallbackCompanyId(User $user, bool $ignoreLastCompany = false): ?int
+    {
+        if (! $ignoreLastCompany
+            && $user->last_company_id !== null
+            && $this->hasMembership($user, (int) $user->last_company_id)) {
             return (int) $user->last_company_id;
         }
 

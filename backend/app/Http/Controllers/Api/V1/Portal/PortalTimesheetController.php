@@ -35,7 +35,7 @@ class PortalTimesheetController extends BaseController
                 'method' => 'mobile',
                 'source' => AttendanceClockService::SOURCE_PORTAL,
                 'device_info' => $request->userAgent(),
-            ], (int) $this->getCompanyId());
+            ]);
         } catch (InvalidArgumentException $e) {
             return $this->error($e->getMessage(), 422);
         }
@@ -67,7 +67,7 @@ class PortalTimesheetController extends BaseController
                 'method' => 'mobile',
                 'source' => AttendanceClockService::SOURCE_PORTAL,
                 'device_info' => $request->userAgent(),
-            ], (int) $this->getCompanyId());
+            ]);
         } catch (InvalidArgumentException $e) {
             return $this->error($e->getMessage(), 422);
         }

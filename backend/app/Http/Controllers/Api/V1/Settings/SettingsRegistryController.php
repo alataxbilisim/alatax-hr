@@ -87,7 +87,7 @@ class SettingsRegistryController extends BaseController
         $scope = [
             'scope_type' => $data['scope_type'],
             'scope_id' => $data['scope_id'] ?? null,
-            'company_id' => $data['company_id'] ?? $user->company_id,
+            'company_id' => $data['company_id'] ?? $this->getCompanyId(),
         ];
 
         $updated = [];
@@ -112,7 +112,7 @@ class SettingsRegistryController extends BaseController
         $this->writer->reset($user, $data['key'], [
             'scope_type' => $data['scope_type'],
             'scope_id' => $data['scope_id'] ?? null,
-            'company_id' => $data['company_id'] ?? $user->company_id,
+            'company_id' => $data['company_id'] ?? $this->getCompanyId(),
         ]);
 
         return $this->success(null, 'Ayar varsayılana sıfırlandı');
@@ -125,7 +125,7 @@ class SettingsRegistryController extends BaseController
         if (! $user->can('settings.values.view') && ! $user->isSuperAdmin()) {
             return $this->error('Yetkisiz', 403);
         }
-        $companyId = (int) ($request->query('company_id') ?? $user->company_id);
+        $companyId = (int) ($request->query('company_id') ?? $this->getCompanyId());
         $profile = $this->writer->exportProfile($user, $companyId);
 
         return $this->success($profile, 'Ayar profili');
@@ -136,7 +136,7 @@ class SettingsRegistryController extends BaseController
         /** @var User $user */
         $user = $request->user();
         $data = $request->validated();
-        $companyId = (int) ($data['company_id'] ?? $user->company_id);
+        $companyId = (int) ($data['company_id'] ?? $this->getCompanyId());
         $written = $this->writer->importProfile($user, $companyId, $data['values']);
 
         return $this->success(['written' => $written], 'Ayar profili içe aktarıldı');
@@ -147,10 +147,8 @@ class SettingsRegistryController extends BaseController
      */
     private function buildScope(Request $request, User $user): array
     {
-        $companyId = (int) ($request->query('company_id') ?? $user->company_id);
-        if ($user->company_id && (int) $user->company_id !== $companyId && ! $user->isSuperAdmin()) {
-            $companyId = (int) $user->company_id;
-        }
+        // Aktif CompanyContext (X-Company-Id); home company_id'ye zorlama yok
+        $companyId = (int) ($this->getCompanyId() ?? $user->company_id);
 
         $scope = ['company_id' => $companyId ?: null];
 

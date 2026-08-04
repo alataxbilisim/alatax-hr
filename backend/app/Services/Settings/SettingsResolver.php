@@ -242,12 +242,18 @@ class SettingsResolver
      */
     public function scopeFromUser(?User $user): array
     {
-        if (! $user || ! $user->company_id) {
+        if (! $user) {
+            return [];
+        }
+
+        // Aktif operasyonel şirket (CompanyContext); yoksa home
+        $companyId = \App\Support\CompanyContext::id() ?? $user->company_id;
+        if (! $companyId) {
             return [];
         }
 
         return [
-            'company_id' => (int) $user->company_id,
+            'company_id' => (int) $companyId,
             'user_id' => (int) $user->id,
         ];
     }

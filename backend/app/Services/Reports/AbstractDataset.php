@@ -213,6 +213,14 @@ abstract class AbstractDataset
     }
 
     /**
+     * Aktif operasyonel şirket — CompanyContext; yoksa home company_id.
+     */
+    protected function activeCompanyId(User $user): int
+    {
+        return (int) (\App\Support\CompanyContext::id() ?? $user->company_id);
+    }
+
+    /**
      * DISTINCT kişi sayısı için kolon (min hücre guard). null = guard uygulanmaz.
      */
     public function personDistinctColumn(): ?string

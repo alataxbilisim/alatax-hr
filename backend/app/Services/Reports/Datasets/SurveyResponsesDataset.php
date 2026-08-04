@@ -48,7 +48,7 @@ final class SurveyResponsesDataset extends AbstractDataset
 
     public function constrainQuery(\Illuminate\Database\Eloquent\Builder $query, \App\Models\User $user): void
     {
-        $companyId = (int) $user->company_id;
+        $companyId = $this->activeCompanyId($user);
         $query->whereExists(function ($q) use ($companyId) {
             $q->selectRaw('1')
                 ->from('survey_submissions')
