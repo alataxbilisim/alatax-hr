@@ -93,6 +93,11 @@ composer-setup.php
 coverage/
 .turbo/
 
+# Görsel kontrol 2FA secrets (asla commit etme)
+docs/gorsel-kontrol/**/.secrets.local
+**/.secrets.local
+backend/storage/app/gorsel-kontrol/
+
 # Faz1 local backup (not for commit)
 backend/database/migrations_backup_*/
 

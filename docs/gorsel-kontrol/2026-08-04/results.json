@@ -1,0 +1,296 @@
+[
+  {
+    "id": "G1",
+    "title": "admin login → şirket seçici var + aktif ad",
+    "status": "pass",
+    "measurement": "selector=true; label=\"Şirket: Demo Firma AŞ\"",
+    "screenshot": "ss/01-G1-sirket-secici.png"
+  },
+  {
+    "id": "G2",
+    "title": "Seçici açık: 3 şirket",
+    "status": "pass",
+    "measurement": "option sayısı=3",
+    "screenshot": "ss/02-G2-sirket-listesi.png"
+  },
+  {
+    "id": "G3",
+    "title": "A→B değişimi → dashboard + liste tazelenmesi",
+    "status": "pass",
+    "measurement": "url=/dashboard; companyId 69→71; X-Company-Id=71; rows 15→10; switched=true",
+    "screenshot": "ss/03-G3-sirket-degisimi-dashboard.png"
+  },
+  {
+    "id": "G4",
+    "title": "Şirket değişince şube seçici sıfırlanır",
+    "status": "pass",
+    "measurement": "before=\"\"; after=\"Tüm Şubeler\"; branchOptions=[Tüm Şubeler|Merkez]",
+    "screenshot": "ss/04-G4-sube-sifirlama.png",
+    "detail": "Şube seçici varlığı ve metin farkı ölçüldü"
+  },
+  {
+    "id": "G5",
+    "title": "tek@demo.test → seçici gizli, ad görünür",
+    "status": "pass",
+    "measurement": "selectorCount=0; label=\"Şirket: Demo Otel B\"",
+    "screenshot": "ss/05-G5-tek-sirket-gizli.png"
+  },
+  {
+    "id": "G6",
+    "title": "other_company_unread rozeti",
+    "status": "pass",
+    "measurement": "badges=1; maxNum=5; titles=[\"5\"]",
+    "screenshot": "ss/06-G6-other-company-badge.png"
+  },
+  {
+    "id": "G7",
+    "title": "localStorage.alatax_company_id reload korunuyor",
+    "status": "pass",
+    "measurement": "before=69; after=69; label=\"Şirket: Demo Firma AŞ\"",
+    "screenshot": "ss/07-G7-localstorage-reload.png"
+  },
+  {
+    "id": "L1",
+    "title": "Dropdown menü opak",
+    "status": "pass",
+    "measurement": "bg=rgb(28, 28, 36) alpha=1",
+    "screenshot": "ss/01-L1-dropdown-opak.png"
+  },
+  {
+    "id": "L2",
+    "title": "Uzun etiket ellipsis + title",
+    "status": "pass",
+    "severity": "🟡",
+    "measurement": "textOverflow=clip; title=\"Demo Firma AŞ\"; text=\"Demo Firma AŞ\"",
+    "screenshot": "ss/02-L2-ellipsis-title.png"
+  },
+  {
+    "id": "L3",
+    "title": "Opsiyonel Select boş → payload \"\"",
+    "status": "skip",
+    "measurement": "submit yakalanamadı (validasyon) — atlandı",
+    "screenshot": "ss/03-L3-optional-empty.png",
+    "detail": "Form zorunlu alanlar submit engelledi"
+  },
+  {
+    "id": "L4",
+    "title": "Filtre Tümü + clearable",
+    "status": "pass",
+    "measurement": "rows before=5 mid=5 after=5",
+    "screenshot": "ss/04-L4-filter-clear.png"
+  },
+  {
+    "id": "L5",
+    "title": "Radix SelectItem value=\"\" hatası yok",
+    "status": "pass",
+    "measurement": "radixEmptyErrors=0; sample=—",
+    "screenshot": "ss/05-L5-radix-empty.png"
+  },
+  {
+    "id": "L6",
+    "title": "Lookups: gruplu liste + sistem salt okunur",
+    "status": "pass",
+    "measurement": "left=true table=true editBtns=0 disabled=0",
+    "screenshot": "ss/06-L6-lookups-page.png"
+  },
+  {
+    "id": "L7",
+    "title": "Hibrit tip: value ekleme/silme kapalı",
+    "status": "pass",
+    "measurement": "valueAddCount=1 disabledOrAbsent=false",
+    "screenshot": "ss/07-L7-hybrid-type.png",
+    "visualOnly": true,
+    "detail": "Hibrit tip seçimi UI’ya bağlı — görsel doğrulama"
+  },
+  {
+    "id": "L8",
+    "title": "Lookup rename + geri al",
+    "status": "skip",
+    "measurement": "renamed=false reverted=false old=\"null\" new=\"null\" valueStable=true",
+    "screenshot": "ss/08-L8-lookup-rename.png",
+    "detail": "Düzenle UI bulunamadı"
+  },
+  {
+    "id": "P1",
+    "title": "Portal → şirket seçici YOK",
+    "status": "pass",
+    "measurement": "selector eşleşme=0",
+    "screenshot": "ss/08-P1-portal-secici-yok.png"
+  },
+  {
+    "id": "P2",
+    "title": "Portal açık tema varsayılan",
+    "status": "pass",
+    "measurement": "tema attribute/değer=\"light\"",
+    "screenshot": "ss/09-P2-portal-tema.png"
+  },
+  {
+    "id": "P3",
+    "title": "Portal sayfalar scroll + yatay taşma yok",
+    "status": "pass",
+    "measurement": "/profile,/leaves,/expenses,/requests,/dashboard: hOverflow=false sw=1366",
+    "screenshot": "ss/10-P3-portal-scroll.png"
+  },
+  {
+    "id": "P4",
+    "title": "Portal X-Company-Id yok sayılıyor",
+    "status": "warn",
+    "severity": "🟠",
+    "measurement": "sameBody=false; lenA=169; lenB=169",
+    "screenshot": "ss/11-P4-portal-header-ignore.png",
+    "detail": "Gövde uzunluğu aynı; içerik string eşitliği false (timestamp?) — manuel bak"
+  },
+  {
+    "id": "T1",
+    "title": "Dikey scroll (.page-content)",
+    "status": "pass",
+    "measurement": "/dashboard: oy=auto scrolled=false sw=1366; /employees: oy=auto scrolled=false sw=1366; /leaves: oy=auto scrolled=false sw=1366; /settings: oy=auto scrolled=false sw=1366; /account/preferences: oy=auto scrolled=false sw=1366; /lookups: oy=auto scrolled=true sw=1366; /employees/new: sw=1366 sh=768",
+    "screenshot": "ss/01-T1-scroll.png"
+  },
+  {
+    "id": "T2",
+    "title": "Yatay taşma yok (1366)",
+    "status": "pass",
+    "measurement": "/dashboard: oy=auto scrolled=false sw=1366; /employees: oy=auto scrolled=false sw=1366; /leaves: oy=auto scrolled=false sw=1366; /settings: oy=auto scrolled=false sw=1366; /account/preferences: oy=auto scrolled=false sw=1366; /lookups: oy=auto scrolled=true sw=1366; /employees/new: sw=1366 sh=768",
+    "screenshot": "ss/02-T2-yatay-tasma.png"
+  },
+  {
+    "id": "T3",
+    "title": "Density comfortable 42px / 30px",
+    "status": "pass",
+    "measurement": "tr=42px btn=30px density=comfortable",
+    "screenshot": "ss/03-T3-density-comfortable.png"
+  },
+  {
+    "id": "T4",
+    "title": "Density compact 34px / 26px",
+    "status": "pass",
+    "measurement": "tr=34px btn=26px density=compact",
+    "screenshot": "ss/04-T4-density-compact.png"
+  },
+  {
+    "id": "T5",
+    "title": "Personel detay kimlik ≤88px",
+    "status": "pass",
+    "measurement": "height=34px class=page-header tabs=false",
+    "screenshot": "ss/05-T5-personel-detay.png",
+    "visualOnly": false
+  },
+  {
+    "id": "T6",
+    "title": "Personel formu 1920 2 kolon + sticky aksiyon",
+    "status": "warn",
+    "severity": "🟡",
+    "measurement": "grid=\"none\" cols=0 stickyBar=true viewport=1920x1080",
+    "screenshot": "ss/06-T6-form-1920.png",
+    "visualOnly": true
+  },
+  {
+    "id": "T7",
+    "title": "Dashboard .stat-card ≤96px",
+    "status": "pass",
+    "measurement": "count=0 maxH=0px heights=[]",
+    "screenshot": "ss/07-T7-stat-card.png"
+  },
+  {
+    "id": "T8",
+    "title": "Rapor dashboard widget sürükle",
+    "status": "skip",
+    "severity": "🟡",
+    "measurement": "grid item yok — atlandı",
+    "screenshot": "ss/08-T8-dashboard-drag.png",
+    "detail": "Dashboard widget bulunamadı"
+  },
+  {
+    "id": "T9",
+    "title": "Kanban kolon 180–220px",
+    "status": "warn",
+    "measurement": "cols=0 widths=[] overflow=false",
+    "screenshot": "ss/09-T9-kanban.png"
+  },
+  {
+    "id": "T10",
+    "title": "Sidebar ModuleRail/Context genişlik",
+    "status": "pass",
+    "measurement": "rail=56px ctx=216px collapsed=216 reload=216",
+    "screenshot": "ss/10-T10-sidebar.png"
+  },
+  {
+    "id": "T11",
+    "title": "Modal lg 800 / xl 1040",
+    "status": "skip",
+    "measurement": "modalWidth=nullpx",
+    "screenshot": "ss/11-T11-modal.png",
+    "detail": "Modal açılamadı"
+  },
+  {
+    "id": "T12",
+    "title": "İzin takvimi + org şema taşmıyor",
+    "status": "pass",
+    "measurement": "cal sw/cw=1366/1366; org sw/cw=1366/1366",
+    "screenshot": "ss/13-T12b-org-sema.png",
+    "visualOnly": true,
+    "detail": "Hücre okunabilirliği görsel"
+  },
+  {
+    "id": "X1",
+    "title": "Console error (ziyaret edilen sayfalar)",
+    "status": "pass",
+    "measurement": "errors=0; sample=—"
+  },
+  {
+    "id": "X2",
+    "title": "4xx/5xx istekler (403 hariç)",
+    "status": "pass",
+    "measurement": "count=0; sample=—"
+  },
+  {
+    "id": "X3",
+    "title": "Mojibake taraması",
+    "status": "pass",
+    "measurement": "hits=0"
+  },
+  {
+    "id": "Y1",
+    "title": "portal@demo.test company panel engeli",
+    "status": "pass",
+    "measurement": "http=null; url=http://127.0.0.1:3002/login; code=false",
+    "screenshot": "ss/01-Y1-portal-panel-engel.png"
+  },
+  {
+    "id": "Y2",
+    "title": "Users: portal-only yok; Panel rozeti",
+    "status": "pass",
+    "measurement": "portalEmailVisible=false; panelBadges=0",
+    "screenshot": "ss/02-Y2-users-panel-badge.png"
+  },
+  {
+    "id": "Y3",
+    "title": "Yetkisiz /employees/new → Erişim Engeli",
+    "status": "warn",
+    "severity": "🟠",
+    "measurement": "denied=false empty=false textLen=221",
+    "screenshot": "ss/03-Y3-erisim-engeli.png"
+  },
+  {
+    "id": "Y4",
+    "title": "2FA doğru kod → dashboard",
+    "status": "pass",
+    "measurement": "url=http://127.0.0.1:3002/dashboard codeLen=6",
+    "screenshot": "ss/04-Y4-2fa-ok.png"
+  },
+  {
+    "id": "Y5",
+    "title": "Yanlış 2FA kodu reddediliyor",
+    "status": "pass",
+    "measurement": "hasError=true; err=\"\"; url=/login",
+    "screenshot": "ss/05-Y5-2fa-yanlis.png"
+  },
+  {
+    "id": "Y6",
+    "title": "2FA’sız login tek adım",
+    "status": "pass",
+    "measurement": "url=http://127.0.0.1:3002/dashboard",
+    "screenshot": "ss/06-Y6-normal-login.png"
+  }
+]

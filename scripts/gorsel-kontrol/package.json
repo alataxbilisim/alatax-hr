@@ -1,0 +1,15 @@
+{
+  "name": "alatax-gorsel-kontrol",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node run.mjs",
+    "gorsel-kontrol": "node run.mjs"
+  },
+  "dependencies": {
+    "otplib": "^12.0.1",
+    "playwright": "^1.49.0",
+    "pngquant-bin": "^9.0.0",
+    "sharp": "^0.33.5"
+  }
+}
