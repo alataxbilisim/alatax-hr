@@ -154,4 +154,5 @@ Yeni / genişleyen testler:
 
 ## Commit
 
-Commit yapılır; **push yok.**
+`96c4677` — `fix(faz6-prep): SPA build, ReportEngine GROUP BY, employees.position_id FK`  
+15 files, +911/−25 · **push yok.**
