@@ -67,6 +67,7 @@ final class AssetsDataset extends AbstractDataset
 
         return [
             $this->dim('id', "{$t}.id", 'number', 'ID'),
+            $this->dim('company_id', "{$t}.company_id", 'number', 'Şirket ID'),
             $this->dim('asset_code', "{$t}.asset_code", 'string', 'Varlık Kodu'),
             $this->dim('name', "{$t}.name", 'string', 'Ad'),
             $this->dim('status', "{$t}.status", 'string', 'Durum'),

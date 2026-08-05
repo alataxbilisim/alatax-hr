@@ -54,7 +54,30 @@ class ReportQueryBuilder
             throw new InvalidArgumentException('Geçersiz dataset');
         }
 
+        $reportScope = (string) ($config['scope'] ?? 'company');
+        if (! in_array($reportScope, ['company', 'group'], true)) {
+            throw new InvalidArgumentException('Geçersiz scope (company|group)');
+        }
+
+        $groupScope = app(\App\Services\GroupScopeService::class);
+        if (
+            $reportScope === 'group'
+            && isset($config['__company_ids'])
+            && is_array($config['__company_ids'])
+            && $config['__company_ids'] !== []
+        ) {
+            $groupScope->assertCanUseGroupScope($user);
+            $companyIds = array_values(array_unique(array_map(static fn ($id) => (int) $id, $config['__company_ids'])));
+            sort($companyIds);
+        } else {
+            $companyIds = $groupScope->resolveForReport($user, $companyId, $reportScope);
+        }
+        $config['scope'] = $reportScope;
+        $config['__company_ids'] = $companyIds;
+
         $dataset = $this->registry->get($datasetKey);
+        $dataset->setResolvedCompanyIds($companyIds);
+
         $allFields = $dataset->fieldsForCompany($companyId);
         $allFieldMap = [];
         foreach ($allFields as $f) {
@@ -69,6 +92,11 @@ class ReportQueryBuilder
         $requestedFields = $config['fields'] ?? array_map(fn (ReportField $f) => $f->key, $allowedFields);
         if (! is_array($requestedFields) || $requestedFields === []) {
             throw new InvalidArgumentException('En az bir alan seçilmelidir');
+        }
+
+        $forExportEarly = ($config['__export'] ?? false) === true;
+        if ($reportScope === 'group' && $forExportEarly && ! in_array('company_id', $requestedFields, true)) {
+            $requestedFields[] = 'company_id';
         }
 
         $hiddenFields = [];
@@ -105,6 +133,14 @@ class ReportQueryBuilder
         $query = $dataset->newQuery();
         $table = $dataset->table();
         $query->from($table);
+
+        if ($reportScope === 'group') {
+            $query->withoutGlobalScope('company');
+            $tenantCol = $dataset->tenantCompanyColumn();
+            if ($tenantCol !== null) {
+                $query->whereIn($tenantCol, $companyIds);
+            }
+        }
 
         $this->applyJoins($query, $dataset, $config['joins'] ?? [], $selectFields, $config);
         $this->applyDataScope($query, $dataset, $user);
@@ -218,6 +254,10 @@ class ReportQueryBuilder
             }
         }
 
+        if ($reportScope === 'group' && $forExport) {
+            $rows = $this->enrichExportCompanyNames($rows, $companyIds);
+        }
+
         $meta = [
             'dataset' => $datasetKey,
             'limit' => $limit,
@@ -225,11 +265,16 @@ class ReportQueryBuilder
             'count' => count($rows),
             'fields' => array_map(fn (ReportField $f) => $f->key, $selectFields),
             'data_scope' => $this->dataScope->resolve($user)->value,
+            'report_scope' => $reportScope,
+            'company_ids' => $companyIds,
             'hidden_fields' => $hiddenFields,
         ];
         if ($forExport) {
             $meta['truncated'] = $truncated;
             $meta['export_max'] = self::EXPORT_MAX_ROWS;
+            if ($reportScope === 'group') {
+                $meta['company_column'] = true;
+            }
             if ($hiddenFields !== []) {
                 $meta['export_note'] = 'Bazı sütunlar yetki veya gizlilik nedeniyle gizlendi: '
                     .implode(', ', array_map(fn ($h) => $h['label'], $hiddenFields));
@@ -240,6 +285,37 @@ class ReportQueryBuilder
             'rows' => $rows,
             'meta' => $meta,
         ];
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $rows
+     * @param  list<int>  $companyIds
+     * @return list<array<string, mixed>>
+     */
+    private function enrichExportCompanyNames(array $rows, array $companyIds): array
+    {
+        if ($rows === [] || $companyIds === []) {
+            return $rows;
+        }
+
+        $names = \App\Models\Company::query()
+            ->whereIn('id', $companyIds)
+            ->pluck('name', 'id')
+            ->mapWithKeys(fn ($name, $id) => [(int) $id => (string) $name])
+            ->all();
+
+        foreach ($rows as &$row) {
+            if (! array_key_exists('company_id', $row)) {
+                continue;
+            }
+            $cid = (int) $row['company_id'];
+            if (! array_key_exists('company_name', $row) || $row['company_name'] === null || $row['company_name'] === '') {
+                $row['company_name'] = $names[$cid] ?? null;
+            }
+        }
+        unset($row);
+
+        return $rows;
     }
 
     /**
@@ -362,7 +438,7 @@ class ReportQueryBuilder
         match ($mode) {
             'employee' => $this->dataScope->scopeForEmployee($query, $user),
             'user' => $this->dataScope->scopeForUser($query, $user, 'user_id'),
-            'assigned_to' => $scope === DataScopeLevel::Company
+            'assigned_to' => ($scope === DataScopeLevel::Company || $scope === DataScopeLevel::Group)
                 ? $query
                 : $this->dataScope->scopeForUser($query, $user, 'assigned_to'),
             default => $query,

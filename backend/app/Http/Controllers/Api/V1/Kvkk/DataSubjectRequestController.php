@@ -24,6 +24,8 @@ class DataSubjectRequestController extends BaseController
 
     public function index(Request $request): JsonResponse
     {
+        // G2: KVKK yollarında group kapsamı uygulanmaz — yalnız aktif şirket.
+        // scope=group query parametresi yok sayılır / genişletmez.
         $companyId = (int) $this->getCompanyId();
         $q = DataSubjectRequest::query()
             ->where('company_id', $companyId)

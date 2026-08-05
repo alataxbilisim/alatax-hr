@@ -48,14 +48,19 @@ final class SurveyResponsesDataset extends AbstractDataset
 
     public function constrainQuery(\Illuminate\Database\Eloquent\Builder $query, \App\Models\User $user): void
     {
-        $companyId = $this->activeCompanyId($user);
-        $query->whereExists(function ($q) use ($companyId) {
+        $companyIds = $this->resolvedCompanyIds($user);
+        $query->whereExists(function ($q) use ($companyIds) {
             $q->selectRaw('1')
                 ->from('survey_submissions')
                 ->join('surveys', 'survey_submissions.survey_id', '=', 'surveys.id')
                 ->whereColumn('survey_submissions.id', 'survey_responses.survey_submission_id')
-                ->where('surveys.company_id', $companyId);
+                ->whereIn('surveys.company_id', $companyIds);
         });
+    }
+
+    public function tenantCompanyColumn(): ?string
+    {
+        return null;
     }
 
     public function allowedJoins(): array
@@ -94,6 +99,7 @@ final class SurveyResponsesDataset extends AbstractDataset
 
         return [
             $this->dim('id', "{$t}.id", 'number', 'ID'),
+            $this->dim('company_id', 'surveys.company_id', 'number', 'Şirket ID'),
             $this->dim('survey_question_id', "{$t}.survey_question_id", 'number', 'Soru ID'),
             $this->dim('survey_id', 'surveys.id', 'number', 'Anket ID'),
             $this->dim('survey_title', 'surveys.title', 'string', 'Anket'),

@@ -12,6 +12,9 @@ use Illuminate\Database\Eloquent\Model;
  */
 abstract class AbstractDataset
 {
+    /** @var list<int>|null Rapor çalıştırması için çözülmüş şirket kümesi (G2). */
+    private ?array $resolvedCompanyIds = null;
+
     abstract public function key(): string;
 
     abstract public function label(): string;
@@ -210,6 +213,42 @@ abstract class AbstractDataset
     public function constrainQuery(Builder $query, User $user): void
     {
         // varsayılan: yok
+    }
+
+    /**
+     * Doğrudan ana tabloda company_id filtresi uygulanacak kolon.
+     * null = yalnız constrainQuery (survey/training gibi).
+     */
+    public function tenantCompanyColumn(): ?string
+    {
+        return $this->table().'.company_id';
+    }
+
+    /**
+     * @param  list<int>  $ids
+     */
+    public function setResolvedCompanyIds(array $ids): void
+    {
+        $normalized = array_values(array_unique(array_map(static fn ($id) => (int) $id, $ids)));
+        sort($normalized);
+        $this->resolvedCompanyIds = $normalized;
+    }
+
+    public function clearResolvedCompanyIds(): void
+    {
+        $this->resolvedCompanyIds = null;
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function resolvedCompanyIds(User $user): array
+    {
+        if ($this->resolvedCompanyIds !== null && $this->resolvedCompanyIds !== []) {
+            return $this->resolvedCompanyIds;
+        }
+
+        return [$this->activeCompanyId($user)];
     }
 
     /**

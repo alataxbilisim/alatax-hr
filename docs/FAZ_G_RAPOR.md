@@ -2,7 +2,7 @@
 
 **Tarih:** 4 Ağustos 2026 · **Branch:** `faz4-form-engine`  
 **Dalga:** G1 — kimlik + operasyonel şirket bağlamı  
-**Kod yazıldı.** Rapor/pano grup kapsamı **yok** (G2).
+**Kod yazıldı.** G1 = operasyonel bağlam; **G2 = rapor/pano grup kapsamı** (`docs/FAZ_G2_RAPOR.md`, `docs/FAZ_G2_KARAR.md`).
 
 ---
 
@@ -10,7 +10,8 @@
 
 Hibrit model (SEÇENEK 1): operasyonel ekranlarda tek aktif şirket; `BelongsToCompany` hâlâ `= tek company_id`. Kaynak artık `CompanyContext` (X-Company-Id + membership). Portal dokunulmadı (seçici yok; header yok sayılır).
 
-**G1 boşlukları (Tur2–Tur5’te kapatıldı):** G1 ilk dalgasında `DashboardController` ve KVKK / PDKS / Settings / Dataset dosyaları home `company_id` okumaya devam ediyordu; Tur2 (dashboard), Tur3 (KVKK+PDKS), Tur4 (Settings+4 dataset), Tur5 (SettingsWriter + dataset registry izolasyon + portal punch güvenlik) ile CompanyContext’e alındı. Rapor/pano grup kapsamı hâlâ **G2**.
+**G1 boşlukları (Tur2–Tur5’te kapatıldı):** Dashboard / KVKK / PDKS / Settings / Dataset → CompanyContext.  
+**G2 tamamlandı:** `scope=group` = organization ∩ membership + `reports.scope.group`; KVKK ve CRUD hariç.
 
 ---
 

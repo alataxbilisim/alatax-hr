@@ -35,14 +35,19 @@ final class TrainingParticipantsDataset extends AbstractDataset
 
     public function constrainQuery(\Illuminate\Database\Eloquent\Builder $query, \App\Models\User $user): void
     {
-        $companyId = $this->activeCompanyId($user);
-        $query->whereExists(function ($q) use ($companyId) {
+        $companyIds = $this->resolvedCompanyIds($user);
+        $query->whereExists(function ($q) use ($companyIds) {
             $q->selectRaw('1')
                 ->from('training_sessions')
                 ->join('trainings', 'training_sessions.training_id', '=', 'trainings.id')
                 ->whereColumn('training_sessions.id', 'training_participants.session_id')
-                ->where('trainings.company_id', $companyId);
+                ->whereIn('trainings.company_id', $companyIds);
         });
+    }
+
+    public function tenantCompanyColumn(): ?string
+    {
+        return null;
     }
 
     public function allowedJoins(): array
@@ -81,6 +86,7 @@ final class TrainingParticipantsDataset extends AbstractDataset
 
         return [
             $this->dim('id', "{$t}.id", 'number', 'ID'),
+            $this->dim('company_id', 'trainings.company_id', 'number', 'Şirket ID'),
             $this->dim('user_id', "{$t}.user_id", 'number', 'Kullanıcı ID'),
             $this->dim('status', "{$t}.status", 'string', 'Durum'),
             $this->measure('score', "{$t}.score", 'number', 'Puan'),

@@ -288,8 +288,9 @@ class ReportDefinitionService
 
     /**
      * @return array{rows: list<array<string, mixed>>, meta: array<string, mixed>}
+     * @param  array<string, mixed>  $overrides
      */
-    public function exportSaved(SavedReport $report, User $viewer, int $companyId): array
+    public function exportSaved(SavedReport $report, User $viewer, int $companyId, array $overrides = []): array
     {
         if (! $report->isAccessibleBy($viewer)) {
             throw ValidationException::withMessages(['id' => ['Bu rapora erişim yok']]);
@@ -299,6 +300,8 @@ class ReportDefinitionService
         }
 
         $config = is_array($report->config) ? $report->config : [];
+        $config['dataset'] = $report->dataset_key;
+        $config = array_merge($config, $overrides);
         $config['dataset'] = $report->dataset_key;
         $config['__export'] = true;
         $config['offset'] = 0;

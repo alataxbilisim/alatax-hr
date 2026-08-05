@@ -179,6 +179,36 @@ class ReportScheduleAndCacheTest extends TestCase
         $this->assertTrue($hidden->contains('gross_salary'));
     }
 
+    public function test_cache_isolation_by_report_scope_group(): void
+    {
+        Sanctum::actingAs($this->admin->fresh());
+        $report = $this->postJson('/api/v1/reports', [
+            'name' => 'G2 cache scope',
+            'dataset_key' => 'employees',
+            'config' => [
+                'dataset' => 'employees',
+                'fields' => ['employee_code'],
+            ],
+            'cache_ttl_seconds' => 300,
+        ])->assertCreated()->json('data');
+
+        $runCompany = $this->postJson('/api/v1/reports/'.$report['id'].'/run', [
+            'scope' => 'company',
+        ])->assertOk()->json('data');
+        $this->assertFalse($runCompany['meta']['cache_hit'] ?? true);
+
+        $runCompany2 = $this->postJson('/api/v1/reports/'.$report['id'].'/run', [
+            'scope' => 'company',
+        ])->assertOk()->json('data');
+        $this->assertTrue($runCompany2['meta']['cache_hit'] ?? false);
+
+        $runGroup = $this->postJson('/api/v1/reports/'.$report['id'].'/run', [
+            'scope' => 'group',
+        ])->assertOk()->json('data');
+        $this->assertFalse($runGroup['meta']['cache_hit'] ?? true);
+        $this->assertSame('group', $runGroup['meta']['report_scope'] ?? null);
+    }
+
     public function test_schedule_per_recipient_scope_and_skip_no_access(): void
     {
         Notification::fake();

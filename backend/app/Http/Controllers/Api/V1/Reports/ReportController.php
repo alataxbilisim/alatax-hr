@@ -159,6 +159,7 @@ class ReportController extends BaseController
             'limit' => 'sometimes|integer|min:1|max:1000',
             'offset' => 'sometimes|integer|min:0',
             'bypass_cache' => 'sometimes|boolean',
+            'scope' => 'sometimes|string|in:company,group',
         ]);
         if (! empty($overrides['bypass_cache'])) {
             $overrides['__bypass_cache'] = true;
@@ -189,6 +190,7 @@ class ReportController extends BaseController
             'joins' => 'nullable|array',
             'limit' => 'sometimes|integer|min:1|max:1000',
             'offset' => 'sometimes|integer|min:0',
+            'scope' => 'sometimes|string|in:company,group',
         ]);
 
         try {
@@ -215,6 +217,7 @@ class ReportController extends BaseController
             'sorts' => 'nullable|array',
             'joins' => 'nullable|array',
             'limit' => 'sometimes|integer|min:1|max:50000',
+            'scope' => 'sometimes|string|in:company,group',
         ]);
 
         try {
@@ -231,14 +234,25 @@ class ReportController extends BaseController
         $report = $this->findAccessible($request, $id);
         $validated = $request->validate([
             'async' => 'sometimes|boolean',
+            'scope' => 'sometimes|string|in:company,group',
         ]);
+
+        $scope = (string) ($validated['scope'] ?? 'company');
+        $companyId = (int) $this->getCompanyId();
+        $companyIds = null;
+        if ($scope === 'group') {
+            $companyIds = app(\App\Services\GroupScopeService::class)
+                ->resolveForReport($request->user(), $companyId, 'group');
+        }
 
         // Ağır export → kuyruk + bildirim (30sn timeout riski)
         if (! empty($validated['async'])) {
             \App\Jobs\ProcessHeavyReportExportJob::dispatch(
                 (int) $report->id,
                 (int) $request->user()->id,
-                (int) $this->getCompanyId(),
+                $companyId,
+                $scope,
+                $companyIds,
             );
 
             return $this->success(
@@ -249,7 +263,12 @@ class ReportController extends BaseController
         }
 
         try {
-            $result = $this->reports->exportSaved($report, $request->user(), (int) $this->getCompanyId());
+            $result = $this->reports->exportSaved(
+                $report,
+                $request->user(),
+                $companyId,
+                ['scope' => $scope],
+            );
         } catch (ValidationException $e) {
             throw $e;
         } catch (InvalidArgumentException $e) {

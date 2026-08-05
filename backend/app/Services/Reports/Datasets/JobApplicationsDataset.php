@@ -58,6 +58,7 @@ final class JobApplicationsDataset extends AbstractDataset
 
         return [
             $this->dim('id', "{$t}.id", 'number', 'ID'),
+            $this->dim('company_id', "{$t}.company_id", 'number', 'Şirket ID'),
             $this->dim('job_position_id', "{$t}.job_position_id", 'number', 'Pozisyon ID'),
             $this->dim('status', "{$t}.status", 'string', 'Durum'),
             $this->dim('source', "{$t}.source", 'string', 'Kaynak'),

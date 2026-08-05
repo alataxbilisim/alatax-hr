@@ -42,10 +42,11 @@ final class EmployeeDocumentsDataset extends AbstractDataset
     public function constrainQuery(Builder $query, User $user): void
     {
         $svc = app(DataScopeService::class);
-        if ($svc->resolve($user) === DataScopeLevel::Company) {
+        $level = $svc->resolve($user);
+        if ($level === DataScopeLevel::Company || $level === DataScopeLevel::Group) {
             return;
         }
-        $empQ = Employee::query()->where('company_id', $this->activeCompanyId($user));
+        $empQ = Employee::query()->whereIn('company_id', $this->resolvedCompanyIds($user));
         $svc->scopeForEmployee($empQ, $user);
         $query->whereIn('employee_id', $empQ->pluck('id'));
     }
@@ -64,6 +65,7 @@ final class EmployeeDocumentsDataset extends AbstractDataset
 
         return [
             $this->dim('id', "{$t}.id", 'number', 'ID'),
+            $this->dim('company_id', "{$t}.company_id", 'number', 'Şirket ID'),
             $this->dim('employee_id', "{$t}.employee_id", 'number', 'Personel ID'),
             $this->dim('title', "{$t}.title", 'string', 'Başlık'),
             $this->dim(

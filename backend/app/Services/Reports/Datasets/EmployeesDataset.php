@@ -91,6 +91,7 @@ final class EmployeesDataset extends AbstractDataset
 
         return [
             $this->dim('id', "{$t}.id", 'number', 'ID'),
+            $this->dim('company_id', "{$t}.company_id", 'number', 'Şirket ID'),
             $this->dim('employee_code', "{$t}.employee_code", 'string', 'Sicil No'),
             $this->dim('status', "{$t}.status", 'string', 'Durum'),
             $this->dim('department_id', "{$t}.department_id", 'number', 'Departman ID'),

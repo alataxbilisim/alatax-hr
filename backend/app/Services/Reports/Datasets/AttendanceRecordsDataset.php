@@ -47,6 +47,7 @@ final class AttendanceRecordsDataset extends AbstractDataset
 
         return [
             $this->dim('id', "{$t}.id", 'number', 'ID'),
+            $this->dim('company_id', "{$t}.company_id", 'number', 'Şirket ID'),
             $this->dim('user_id', "{$t}.user_id", 'number', 'Kullanıcı ID'),
             $this->dim('date', "{$t}.date", 'date', 'Tarih'),
             $this->dim('status', "{$t}.status", 'string', 'Durum'),

@@ -458,4 +458,113 @@ class GroupIsolationTest extends TestCase
             (int) $resB->json('data.stats.total_users')
         );
     }
+
+    public function test_17_report_scope_company_only_active(): void
+    {
+        Sanctum::actingAs($this->userA);
+
+        $ids = CompanyContext::run($this->companyA->id, function () {
+            $result = app(\App\Services\Reports\ReportQueryBuilder::class)->run(
+                $this->userA,
+                $this->companyA->id,
+                [
+                    'dataset' => 'employees',
+                    'fields' => ['id'],
+                    'scope' => 'company',
+                    'limit' => 200,
+                ]
+            );
+
+            return collect($result['rows'])->pluck('id')->map(fn ($id) => (int) $id)->all();
+        });
+
+        $this->assertContains($this->employeeA->id, $ids);
+        $this->assertNotContains($this->employeeB->id, $ids);
+        $this->assertNotContains($this->employeeC->id, $ids);
+    }
+
+    public function test_18_report_scope_group_a_and_b_excludes_c(): void
+    {
+        Sanctum::actingAs($this->userA);
+
+        $ids = CompanyContext::run($this->companyA->id, function () {
+            $result = app(\App\Services\Reports\ReportQueryBuilder::class)->run(
+                $this->userA,
+                $this->companyA->id,
+                [
+                    'dataset' => 'employees',
+                    'fields' => ['id'],
+                    'scope' => 'group',
+                    'limit' => 200,
+                ]
+            );
+
+            return collect($result['rows'])->pluck('id')->map(fn ($id) => (int) $id)->all();
+        });
+
+        $this->assertContains($this->employeeA->id, $ids);
+        $this->assertContains($this->employeeB->id, $ids);
+        $this->assertNotContains($this->employeeC->id, $ids);
+    }
+
+    public function test_19_cache_signature_differs_by_report_scope_and_company_ids(): void
+    {
+        Sanctum::actingAs($this->userA);
+        $sig = app(\App\Services\Reports\ReportScopeSignature::class);
+        $configCompany = ['dataset' => 'employees', 'fields' => ['id'], 'scope' => 'company'];
+        $configGroup = ['dataset' => 'employees', 'fields' => ['id'], 'scope' => 'group'];
+
+        $hashCompany = CompanyContext::run($this->companyA->id, fn () => $sig->build(
+            $this->userA,
+            $this->companyA->id,
+            $configCompany
+        ));
+        $hashGroup = CompanyContext::run($this->companyA->id, fn () => $sig->build(
+            $this->userA,
+            $this->companyA->id,
+            $configGroup
+        ));
+        $hashB = CompanyContext::run($this->companyB->id, fn () => $sig->build(
+            $this->userA,
+            $this->companyB->id,
+            $configCompany
+        ));
+
+        $this->assertNotSame($hashCompany, $hashGroup);
+        $this->assertNotSame($hashCompany, $hashB);
+    }
+
+    public function test_20_group_export_excludes_c_has_company_column_job_unbound_throws(): void
+    {
+        Sanctum::actingAs($this->userA);
+
+        $export = CompanyContext::run($this->companyA->id, function () {
+            return app(\App\Services\Reports\ReportQueryBuilder::class)->run(
+                $this->userA,
+                $this->companyA->id,
+                [
+                    'dataset' => 'employees',
+                    'fields' => ['id', 'company_id'],
+                    'scope' => 'group',
+                    '__export' => true,
+                    'limit' => 200,
+                ]
+            );
+        });
+
+        $this->assertTrue($export['meta']['company_column'] ?? false);
+        $companyIds = collect($export['rows'])->pluck('company_id')->map(fn ($id) => (int) $id)->unique()->all();
+        $this->assertContains($this->companyA->id, $companyIds);
+        $this->assertContains($this->companyB->id, $companyIds);
+        $this->assertNotContains($this->companyC->id, $companyIds);
+        $rowIds = collect($export['rows'])->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $this->assertNotContains($this->employeeC->id, $rowIds);
+
+        $this->expectException(CompanyContextMissingException::class);
+        $job = new \App\Jobs\ProcessHeavyReportExportJob(1, 1, 0, 'group', null);
+        $job->handle(
+            app(\App\Services\Reports\ReportDefinitionService::class),
+            app(\App\Services\Notification\NotificationService::class),
+        );
+    }
 }

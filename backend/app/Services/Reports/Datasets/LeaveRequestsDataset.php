@@ -72,6 +72,7 @@ final class LeaveRequestsDataset extends AbstractDataset
 
         return [
             $this->dim('id', "{$t}.id", 'number', 'ID'),
+            $this->dim('company_id', "{$t}.company_id", 'number', 'Şirket ID'),
             $this->dim('user_id', "{$t}.user_id", 'number', 'Kullanıcı ID'),
             $this->dim('leave_type_id', "{$t}.leave_type_id", 'number', 'İzin Türü ID'),
             $this->dim('leave_type_name', 'leave_types.name', 'string', 'İzin Türü'),

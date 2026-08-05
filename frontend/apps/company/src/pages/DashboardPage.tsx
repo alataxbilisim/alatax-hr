@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { RootState } from '../store';
 import { dashboardApi } from '@shared/services/api';
 import { useTranslation } from '@shared/i18n';
+import { usePermission } from '@shared/hooks';
 import toast from 'react-hot-toast';
 import {
   BsPeople,
@@ -51,15 +52,23 @@ interface DashboardData {
     causer?: { name: string };
     created_at: string;
   }>;
+  report_scope?: 'company' | 'group';
+  company_ids?: number[];
+  can_group_scope?: boolean;
 }
 
 const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation('common');
+  const { hasPermission } = usePermission();
   const { user } = useSelector((state: RootState) => state.auth);
   const companyVersion = useSelector((state: RootState) => state.companyContext.version);
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [groupScope, setGroupScope] = useState(false);
+  const [groupScopeVersion, setGroupScopeVersion] = useState(0);
+
+  const canGroupScope = hasPermission('reports', 'scope', 'group');
 
   const firstName = useMemo(() => {
     const name = (user?.name ?? '').trim();
@@ -75,7 +84,8 @@ const DashboardPage: React.FC = () => {
     const loadDashboard = async () => {
       setLoading(true);
       try {
-        const response = await dashboardApi.get();
+        const scope = groupScope && canGroupScope ? 'group' : 'company';
+        const response = await dashboardApi.get({ scope });
         const dashboardData = response.data.data;
 
         if (dashboardData.redirect_to_admin) {
@@ -99,7 +109,13 @@ const DashboardPage: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [companyVersion]);
+  }, [companyVersion, groupScopeVersion, groupScope, canGroupScope]);
+
+  const onToggleGroupScope = () => {
+    if (!canGroupScope) return;
+    setGroupScope((prev) => !prev);
+    setGroupScopeVersion((v) => v + 1);
+  };
 
   if (loading) {
     return (
@@ -143,13 +159,26 @@ const DashboardPage: React.FC = () => {
           <h1 className="page-title">{welcomeTitle}</h1>
           <span className="page-subtitle">{data.company.name}</span>
         </div>
-        
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
+          {canGroupScope && (
+            <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={groupScope}
+                onChange={onToggleGroupScope}
+                aria-label={t('dashboard.scopeToggle')}
+              />
+              <span>{groupScope ? t('dashboard.scopeGroup') : t('dashboard.scopeCompany')}</span>
+            </label>
+          )}
         {data.company.license_end_date && (
           <div className="badge badge-info">
             <BsClock style={{ marginRight: 4 }} />
             Lisans: {data.company.license_end_date}
           </div>
         )}
+        </div>
       </div>
 
       {/* Stats Grid */}

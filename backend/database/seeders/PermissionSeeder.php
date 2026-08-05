@@ -267,6 +267,8 @@ class PermissionSeeder extends Seeder
                 'measures' => ['view', 'edit'],
                 'dashboards' => ['view', 'create', 'edit', 'delete'],
                 'schedules' => ['view', 'create', 'edit', 'delete'],
+                // G2 — org∩membership grup kapsamı (CRUD değil)
+                'scope' => ['group'],
             ],
 
             // Puantaj Modülü

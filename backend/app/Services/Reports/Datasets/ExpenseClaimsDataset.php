@@ -53,6 +53,7 @@ final class ExpenseClaimsDataset extends AbstractDataset
 
         return [
             $this->dim('id', "{$t}.id", 'number', 'ID'),
+            $this->dim('company_id', "{$t}.company_id", 'number', 'Şirket ID'),
             $this->dim('user_id', "{$t}.user_id", 'number', 'Kullanıcı ID'),
             $this->dim('claim_number', "{$t}.claim_number", 'string', 'Talep No'),
             $this->dim('title', "{$t}.title", 'string', 'Başlık'),

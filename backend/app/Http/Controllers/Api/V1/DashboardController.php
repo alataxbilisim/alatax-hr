@@ -39,32 +39,58 @@ class DashboardController extends BaseController
                 'modules' => [],
                 'recent_activities' => [],
                 'quick_actions' => [],
+                'report_scope' => 'company',
+                'company_ids' => [],
             ]);
+        }
+
+        $scope = (string) $request->query('scope', 'company');
+        if (! in_array($scope, ['company', 'group'], true)) {
+            return $this->error('Geçersiz scope (company|group)', 422);
+        }
+
+        $companyIds = [(int) $company->id];
+        if ($scope === 'group') {
+            if (! $user->can('reports.scope.group')) {
+                return $this->error('Grup kapsamı için yetkiniz yok (reports.scope.group).', 403);
+            }
+            $companyIds = app(\App\Services\GroupScopeService::class)
+                ->reportableCompanyIds($user, (int) $company->id);
+            if ($companyIds === []) {
+                $companyIds = [(int) $company->id];
+            }
         }
 
         $activeModules = $company->activeModules()->pluck('slug')->toArray();
 
-        // Temel istatistikler — aktif şirket bağlamı
+        // Temel istatistikler — aktif şirket veya grup kümesi
         $stats = [
-            'total_users' => User::where('company_id', $company->id)->where('is_active', true)->count(),
+            'total_users' => User::query()
+                ->whereIn('company_id', $companyIds)
+                ->where('is_active', true)
+                ->count(),
             'active_modules' => count($activeModules),
         ];
 
         // Modüle göre ek istatistikler
         if (in_array('leave-management', $activeModules)) {
-            $stats['pending_leaves'] = LeaveRequest::where('company_id', $company->id)
+            $stats['pending_leaves'] = LeaveRequest::withoutGlobalScope('company')
+                ->whereIn('company_id', $companyIds)
                 ->where('status', 'pending')
                 ->count();
         }
 
         if (in_array('job-applications', $activeModules)) {
-            $stats['open_positions'] = JobPosition::where('company_id', $company->id)
+            $stats['open_positions'] = JobPosition::withoutGlobalScope('company')
+                ->whereIn('company_id', $companyIds)
                 ->where('status', JobPositionStatus::Active)
                 ->count();
         }
 
         if (in_array('document-management', $activeModules)) {
-            $stats['total_documents'] = Document::where('company_id', $company->id)->count();
+            $stats['total_documents'] = Document::withoutGlobalScope('company')
+                ->whereIn('company_id', $companyIds)
+                ->count();
         }
 
         $data = [
@@ -81,6 +107,9 @@ class DashboardController extends BaseController
             'modules' => $activeModules,
             'recent_activities' => [],
             'quick_actions' => $this->getQuickActions($activeModules, $user),
+            'report_scope' => $scope,
+            'company_ids' => $companyIds,
+            'can_group_scope' => $user->can('reports.scope.group'),
         ];
 
         return $this->success($data);

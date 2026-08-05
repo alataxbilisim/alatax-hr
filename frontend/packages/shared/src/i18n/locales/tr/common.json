@@ -10,7 +10,10 @@
   "success": "İşlem başarılı",
   "dashboard": {
     "welcome": "Hoş geldiniz",
-    "welcomeNamed": "Hoş geldiniz, {{name}}"
+    "welcomeNamed": "Hoş geldiniz, {{name}}",
+    "scopeCompany": "Bu şirket",
+    "scopeGroup": "Grup (üyelik)",
+    "scopeToggle": "Rapor kapsamı"
   },
   "actions": {
     "newEmployee": "Yeni Personel"

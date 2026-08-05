@@ -176,7 +176,7 @@ export const authApi = {
 
 // Dashboard API
 export const dashboardApi = {
-  get: () => api.get('/dashboard'),
+  get: (params?: { scope?: 'company' | 'group' }) => api.get('/dashboard', { params }),
 };
 
 // Users API

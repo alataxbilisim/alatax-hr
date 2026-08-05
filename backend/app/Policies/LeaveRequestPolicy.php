@@ -42,7 +42,7 @@ class LeaveRequestPolicy
             return true;
         }
 
-        return $this->dataScope->resolve($user) === DataScopeLevel::Company
+        return $this->dataScope->isCompanyWide($user)
             && $this->dataScope->allowsUserId($user, (int) $leaveRequest->user_id);
     }
 
@@ -92,7 +92,7 @@ class LeaveRequestPolicy
     {
         $scope = $this->dataScope->resolve($user);
 
-        if ($scope === DataScopeLevel::Company) {
+        if ($scope === DataScopeLevel::Company || $scope === DataScopeLevel::Group) {
             return true;
         }
 

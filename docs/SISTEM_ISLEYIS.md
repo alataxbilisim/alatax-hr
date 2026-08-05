@@ -47,8 +47,9 @@ Aşağıdaki bölümler kronolojik: firma kurulumu → çalışan yaşam döngü
 > **Kilit fikir:** Firma kod yazmadan, tamamen Ayarlar Stüdyosu'ndan kendine göre şekillenir. Akış mekanizması sabit, içerik firmaya özel.
 
 **Şirket bağlamı (CompanyContext):**
-- **Portal yolu:** bağlam = home / personelin kendi şirketi. `X-Company-Id` ve `last_company_id` yok sayılır; portal `last_company_id` yazmaz.
+- **Portal yolu:** bağlam = home / personelin kendi şirketi. `X-Company-Id` ve `last_company_id` yok sayılır; portal `last_company_id` yazmaz. **Tek personel kaydı / home varsayımı** (Tur5–6); portalda grup kapsamı yok.
 - **Panel/operasyonel yol:** bağlam = `CompanyContext` (`getCompanyId()` / `X-Company-Id` + membership). Yeni kod `$user->company_id` okumaz; istisnalar `BelongsToCompany:59`, `ApprovalWorkflowPolicy:54`, `BranchContextService:38` ve `*/Portal/*` ile sınırlıdır.
+- **Grup rapor/pano (G2):** varsayılan `scope=company` (aktif şirket). `scope=group` yalnız `reports.scope.group` + organization ∩ membership; **CRUD ve KVKK group kullanmaz**.
 
 **Membership = yetki:** Bir kullanıcı üye olduğu her şirkette kendi global rolüyle (Spatie) çalışır; şirkete özel rol bugün desteklenmiyor. Kanca: `company_user.role_id` (şu an NULL / kullanılmıyor). Çok şirketli müşteride şirkete özel yetki istenirse bu alan doldurulur.
 

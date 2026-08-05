@@ -92,6 +92,7 @@ class DashboardController extends BaseController
         $validated = $request->validate([
             'values' => 'nullable|array',
             'cross' => 'nullable|array',
+            'scope' => 'sometimes|string|in:company,group',
         ]);
 
         try {

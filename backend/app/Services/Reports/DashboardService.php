@@ -246,6 +246,10 @@ class DashboardService
 
         $ignoreCross = (bool) ($widget['ignore_cross_filter'] ?? false);
         $merged = $this->mergeFiltersForWidget($widget, $runtimeFilters, $ignoreCross, $companyId);
+        $merged['scope'] = (string) ($runtimeFilters['scope'] ?? 'company');
+        if (! in_array($merged['scope'], ['company', 'group'], true)) {
+            $merged['scope'] = 'company';
+        }
 
         // Kaynak: report_id (firma tanımı veya global sistem şablonu) veya inline config
         $reportId = $widget['report_id'] ?? null;
@@ -326,11 +330,13 @@ class DashboardService
         array $merged,
     ): array {
         $limit = min(max((int) ($widget['row_limit'] ?? 50), 1), 100);
+        $config['scope'] = (string) ($merged['scope'] ?? 'company');
 
         if ($type === 'pivot') {
             $pivotConfig = $config['pivot'] ?? $config;
             $pivotConfig['dataset'] = $config['dataset'] ?? $pivotConfig['dataset'] ?? null;
             $pivotConfig['filters'] = $config['filters'] ?? [];
+            $pivotConfig['scope'] = $config['scope'];
             $data = $this->pivot->pivot($viewer, $companyId, $pivotConfig);
 
             return [
