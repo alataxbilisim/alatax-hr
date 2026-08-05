@@ -39,14 +39,14 @@ class DepartmentManagersApiTest extends TestCase
         $this->companyB = Company::factory()->create(['status' => CompanyStatus::Active]);
 
         $this->adminA = User::factory()->create([
-            'company_id' => $this->companyA->id,
+            'home_company_id' => $this->companyA->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($this->adminA);
         $this->adminA = $this->adminA->fresh();
 
         $this->adminB = User::factory()->create([
-            'company_id' => $this->companyB->id,
+            'home_company_id' => $this->companyB->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($this->adminB);
@@ -67,7 +67,7 @@ class DepartmentManagersApiTest extends TestCase
     public function test_forbidden_without_departments_permission(): void
     {
         $user = User::factory()->create([
-            'company_id' => $this->companyA->id,
+            'home_company_id' => $this->companyA->id,
             'type' => UserType::User,
         ]);
         $role = \App\Models\Role::findOrCreate('viewer_no_dept', 'sanctum');

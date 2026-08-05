@@ -24,7 +24,7 @@ class PortalPrivacyController extends BaseController
     public function status(Request $request): JsonResponse
     {
         $user = $request->user();
-        $companyId = (int) $user->company_id;
+        $companyId = (int) $user->home_company_id;
         $notice = $this->notices->activeFor($companyId, 'employee');
 
         $ack = null;
@@ -69,7 +69,7 @@ class PortalPrivacyController extends BaseController
             'granted' => ['required', 'boolean'],
         ]);
         $user = $request->user();
-        $row = $this->consents->record((int) $user->company_id, [
+        $row = $this->consents->record((int) $user->home_company_id, [
             'subject_type' => 'employee',
             'subject_id' => $user->id,
             'notice_id' => $validated['notice_id'],
@@ -86,7 +86,7 @@ class PortalPrivacyController extends BaseController
     {
         $user = $request->user();
         try {
-            $row = $this->consents->withdrawOwn((int) $user->company_id, (int) $user->id, $id);
+            $row = $this->consents->withdrawOwn((int) $user->home_company_id, (int) $user->id, $id);
         } catch (ValidationException $e) {
             return $this->error($e->getMessage(), 422, $e->errors());
         }

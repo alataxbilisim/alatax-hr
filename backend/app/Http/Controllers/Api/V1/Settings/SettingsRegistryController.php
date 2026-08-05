@@ -148,7 +148,7 @@ class SettingsRegistryController extends BaseController
     private function buildScope(Request $request, User $user): array
     {
         // Aktif CompanyContext (X-Company-Id); home company_id'ye zorlama yok
-        $companyId = (int) ($this->getCompanyId() ?? $user->company_id);
+        $companyId = (int) ($this->getCompanyId() ?? $user->home_company_id);
 
         $scope = ['company_id' => $companyId ?: null];
 

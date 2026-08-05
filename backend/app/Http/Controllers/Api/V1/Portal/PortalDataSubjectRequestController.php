@@ -31,7 +31,7 @@ class PortalDataSubjectRequestController extends BaseController
         $subject = $this->requests->resolveSubjectFromPortalUser($user);
 
         $rows = DataSubjectRequest::query()
-            ->where('company_id', $user->company_id)
+            ->where('company_id', $user->home_company_id)
             ->where(function ($q) use ($subject, $user) {
                 $q->where(function ($q2) use ($subject) {
                     $q2->where('subject_type', $subject['subject_type'])
@@ -64,7 +64,7 @@ class PortalDataSubjectRequestController extends BaseController
             'description' => 'nullable|string|max:5000',
         ]);
         $subject = $this->requests->resolveSubjectFromPortalUser($user);
-        $row = $this->requests->create((int) $user->company_id, array_merge($validated, $subject, [
+        $row = $this->requests->create((int) $user->home_company_id, array_merge($validated, $subject, [
             'channel' => 'portal',
         ]), $user);
 
@@ -115,7 +115,7 @@ class PortalDataSubjectRequestController extends BaseController
         $subject = $this->requests->resolveSubjectFromPortalUser($user);
 
         return DataSubjectRequest::query()
-            ->where('company_id', $user->company_id)
+            ->where('company_id', $user->home_company_id)
             ->where('id', $id)
             ->where(function ($q) use ($subject, $user) {
                 $q->where(function ($q2) use ($subject) {

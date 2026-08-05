@@ -34,18 +34,24 @@ class DatasetGroupedQueryTest extends TestCase
 
         $this->company = Company::factory()->create(['status' => CompanyStatus::Active]);
         $this->admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
         ]);
         $this->assignSpatieAdminRole($this->admin->fresh());
 
+        $pos = \App\Models\Position::create([
+            'company_id' => $this->company->id,
+            'code' => 'UZM',
+            'name' => 'Uzman',
+            'is_active' => true,
+        ]);
         Employee::create([
             'company_id' => $this->company->id,
             'employee_code' => 'GRP-01',
             'full_name' => 'Grup Test',
             'status' => 'active',
-            'position' => 'Uzman',
+            'position_id' => $pos->id,
             'created_by' => $this->admin->id,
         ]);
     }
@@ -106,12 +112,13 @@ class DatasetGroupedQueryTest extends TestCase
 
     public function test_group_by_position_ignores_unsafe_default_sort_field(): void
     {
-        // Eski bug: group_by position + defaultSort employee_code → SQLSTATE 42803
+        // Eski bug: group_by + defaultSort employee_code → SQLSTATE 42803
+        // §4: string position kolon yok — position_name (join) SSOT
         $result = CompanyContext::run($this->company->id, function () {
             return app(ReportQueryBuilder::class)->run($this->admin->fresh(), $this->company->id, [
                 'dataset' => 'employees',
-                'fields' => ['position'],
-                'group_by' => ['position'],
+                'fields' => ['position_name'],
+                'group_by' => ['position_name'],
                 'aggregations' => [
                     ['fn' => 'count', 'field' => '*', 'alias' => 'adet'],
                 ],
@@ -124,6 +131,6 @@ class DatasetGroupedQueryTest extends TestCase
         });
 
         $this->assertNotEmpty($result['rows']);
-        $this->assertSame('Uzman', $result['rows'][0]['position'] ?? null);
+        $this->assertSame('Uzman', $result['rows'][0]['position_name'] ?? null);
     }
 }

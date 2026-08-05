@@ -73,7 +73,7 @@ class SchedulerJobsTest extends TestCase
         $companyB = Company::factory()->create(['status' => CompanyStatus::Active]);
 
         $hrA = User::factory()->create([
-            'company_id' => $companyA->id,
+            'home_company_id' => $companyA->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
             'email' => 'hr-a@example.com',
@@ -81,7 +81,7 @@ class SchedulerJobsTest extends TestCase
         $hrA->assignRole('hr_manager');
 
         $empUserA = User::factory()->create([
-            'company_id' => $companyA->id,
+            'home_company_id' => $companyA->id,
             'type' => UserType::User,
             'is_active' => true,
             'email' => 'emp-a@example.com',
@@ -104,13 +104,13 @@ class SchedulerJobsTest extends TestCase
         ]);
 
         $hrB = User::factory()->create([
-            'company_id' => $companyB->id,
+            'home_company_id' => $companyB->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
         ]);
         $hrB->assignRole('hr_manager');
         $empUserB = User::factory()->create([
-            'company_id' => $companyB->id,
+            'home_company_id' => $companyB->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);

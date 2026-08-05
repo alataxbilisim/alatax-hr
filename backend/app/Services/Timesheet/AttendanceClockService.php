@@ -45,7 +45,7 @@ class AttendanceClockService
             return (int) CompanyContext::id();
         }
 
-        return (int) $user->company_id;
+        return (int) $user->home_company_id;
     }
 
     /**
@@ -56,8 +56,8 @@ class AttendanceClockService
     {
         $q = Employee::withoutGlobalScopes()->where('user_id', $user->id)->where('status', 'active');
 
-        if ($user->company_id) {
-            $homeMatch = (clone $q)->where('company_id', $user->company_id)->value('company_id');
+        if ($user->home_company_id) {
+            $homeMatch = (clone $q)->where('company_id', $user->home_company_id)->value('company_id');
             if ($homeMatch !== null) {
                 return (int) $homeMatch;
             }

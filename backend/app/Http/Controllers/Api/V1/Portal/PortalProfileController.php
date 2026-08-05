@@ -44,7 +44,7 @@ class PortalProfileController extends BaseController
             ],
             'employee' => [
                 'employee_code' => $employee->employee_code,
-                'position' => $employee->position,
+                'position' => $employee->position?->name,
                 'title' => $employee->title,
                 'department' => $employee->department?->name,
                 'hire_date' => $employee->hire_date,
@@ -191,7 +191,7 @@ class PortalProfileController extends BaseController
             \Storage::disk('public')->delete($user->avatar);
         }
 
-        $path = $request->file('avatar')->store('avatars/'.$user->company_id, 'public');
+        $path = $request->file('avatar')->store('avatars/'.$user->home_company_id, 'public');
         $user->update(['avatar' => $path]);
 
         ActivityLog::log('update', $user, 'Avatar güncellendi');

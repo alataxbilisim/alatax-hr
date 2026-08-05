@@ -17,7 +17,7 @@ class StorePositionRequest extends FormRequest
      */
     public function rules(): array
     {
-        $companyId = auth()->user()?->company_id;
+        $companyId = auth()->user()?->home_company_id;
 
         return [
             'code' => [
@@ -28,7 +28,14 @@ class StorePositionRequest extends FormRequest
                     fn ($q) => $q->where('company_id', $companyId)->whereNull('deleted_at')
                 ),
             ],
-            'name' => ['required', 'string', 'max:255'],
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('positions', 'name')->where(
+                    fn ($q) => $q->where('company_id', $companyId)->whereNull('deleted_at')
+                ),
+            ],
             'department_id' => [
                 'nullable',
                 'integer',
@@ -51,6 +58,7 @@ class StorePositionRequest extends FormRequest
         return [
             'name.required' => 'Pozisyon adı zorunludur.',
             'code.unique' => 'Bu pozisyon kodu zaten kullanılıyor.',
+            'name.unique' => 'Bu pozisyon adı zaten kullanılıyor.',
             'department_id.exists' => 'Seçilen departman geçersiz.',
         ];
     }

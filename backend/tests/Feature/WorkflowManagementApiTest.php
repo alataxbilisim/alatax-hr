@@ -79,7 +79,7 @@ class WorkflowManagementApiTest extends TestCase
         ]);
 
         $this->admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
         ]);
@@ -102,7 +102,7 @@ class WorkflowManagementApiTest extends TestCase
     public function test_index_unauthorized_role_403(): void
     {
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);
@@ -117,12 +117,12 @@ class WorkflowManagementApiTest extends TestCase
         Sanctum::actingAs($this->admin);
 
         $manager = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);
         $gm = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);
@@ -212,7 +212,7 @@ class WorkflowManagementApiTest extends TestCase
         Sanctum::actingAs($this->admin);
 
         $approver = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);
@@ -313,23 +313,23 @@ class WorkflowManagementApiTest extends TestCase
         Sanctum::actingAs($this->admin);
 
         $manager = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);
         $manager->assignRole('manager');
         $peerA = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);
         $peerB = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);
         $requester = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);

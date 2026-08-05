@@ -51,7 +51,7 @@ class OrganizationChartTest extends TestCase
         $this->otherCompany = Company::factory()->create(['status' => CompanyStatus::Active]);
 
         $this->admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($this->admin);
@@ -67,7 +67,7 @@ class OrganizationChartTest extends TestCase
     public function test_unauthorized_role_gets_403(): void
     {
         $plain = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         $plain->assignRole('employee');
@@ -79,9 +79,9 @@ class OrganizationChartTest extends TestCase
 
     public function test_people_mode_builds_manager_tree(): void
     {
-        $ceoUser = User::factory()->create(['company_id' => $this->company->id, 'name' => 'CEO']);
-        $mgrUser = User::factory()->create(['company_id' => $this->company->id, 'name' => 'Manager']);
-        $empUser = User::factory()->create(['company_id' => $this->company->id, 'name' => 'Employee']);
+        $ceoUser = User::factory()->create(['home_company_id' => $this->company->id, 'name' => 'CEO']);
+        $mgrUser = User::factory()->create(['home_company_id' => $this->company->id, 'name' => 'Manager']);
+        $empUser = User::factory()->create(['home_company_id' => $this->company->id, 'name' => 'Employee']);
 
         $ceo = Employee::factory()->create([
             'company_id' => $this->company->id,
@@ -219,7 +219,7 @@ class OrganizationChartTest extends TestCase
     public function test_user_with_organization_view_permission_succeeds(): void
     {
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         $role = Role::findByName('hr_viewer', 'sanctum');

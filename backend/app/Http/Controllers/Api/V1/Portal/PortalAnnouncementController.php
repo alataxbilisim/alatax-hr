@@ -29,7 +29,7 @@ class PortalAnnouncementController extends BaseController
 
         $visibleIds = $this->publisher->visibleForEmployee($employee)->pluck('id');
 
-        $query = Announcement::where('company_id', $user->company_id)
+        $query = Announcement::where('company_id', $user->home_company_id)
             ->whereIn('id', $visibleIds)
             ->orderByPinned();
 
@@ -77,7 +77,7 @@ class PortalAnnouncementController extends BaseController
             return $this->error('Personel kaydı bulunamadı', null, 404);
         }
 
-        $announcement = Announcement::where('company_id', $user->company_id)
+        $announcement = Announcement::where('company_id', $user->home_company_id)
             ->where('id', $id)
             ->active()
             ->first();
@@ -129,7 +129,7 @@ class PortalAnnouncementController extends BaseController
             return $this->error('Personel kaydı bulunamadı', null, 404);
         }
 
-        $announcement = Announcement::where('company_id', $user->company_id)
+        $announcement = Announcement::where('company_id', $user->home_company_id)
             ->where('id', $id)
             ->active()
             ->first();

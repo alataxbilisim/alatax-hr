@@ -69,7 +69,7 @@ class PdksQrAttendanceTest extends TestCase
         ]);
 
         $this->adminA = User::factory()->create([
-            'company_id' => $this->companyA->id,
+            'home_company_id' => $this->companyA->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
         ]);
@@ -80,7 +80,7 @@ class PdksQrAttendanceTest extends TestCase
         ]);
 
         $this->employeeA = User::factory()->create([
-            'company_id' => $this->companyA->id,
+            'home_company_id' => $this->companyA->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);
@@ -91,7 +91,7 @@ class PdksQrAttendanceTest extends TestCase
         ]);
 
         $this->employeeB = User::factory()->create([
-            'company_id' => $this->companyB->id,
+            'home_company_id' => $this->companyB->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);

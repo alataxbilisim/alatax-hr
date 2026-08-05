@@ -51,7 +51,6 @@ class Employee extends Model
         'employee_code',
         'full_name',
         'title',
-        'position',
         'position_id',
         'manager_id',
         'birth_date',
@@ -126,11 +125,19 @@ class Employee extends Model
     }
 
     /**
-     * Pozisyon kataloğu (FK). Attribute `position` string kolon ile çakışmasın diye positionRef.
+     * Pozisyon kataloğu (FK). String kolon kaldırıldı — position_id SSOT (§4).
+     */
+    public function position(): BelongsTo
+    {
+        return $this->belongsTo(Position::class, 'position_id');
+    }
+
+    /**
+     * @deprecated Alias — eski kodlar positionRef kullanıyor; kademeli geçiş.
      */
     public function positionRef(): BelongsTo
     {
-        return $this->belongsTo(Position::class, 'position_id');
+        return $this->position();
     }
 
     /**

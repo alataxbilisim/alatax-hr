@@ -57,7 +57,7 @@ class Totp2faTest extends TestCase
     private function admin(): User
     {
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
             'password' => Hash::make('Password1!'),
             'is_active' => true,
@@ -70,7 +70,7 @@ class Totp2faTest extends TestCase
     private function regularUser(array $attrs = []): User
     {
         $user = User::factory()->create(array_merge([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'password' => Hash::make('Password1!'),
             'is_active' => true,

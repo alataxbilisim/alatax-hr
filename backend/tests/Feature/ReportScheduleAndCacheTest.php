@@ -57,7 +57,7 @@ class ReportScheduleAndCacheTest extends TestCase
             'is_active' => true,
         ]);
         $this->admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($this->admin);
@@ -93,7 +93,7 @@ class ReportScheduleAndCacheTest extends TestCase
         ])->assertCreated()->json('data');
 
         $companyUser = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         $companyRole = Role::findOrCreate('cache_company', 'sanctum');
@@ -107,7 +107,7 @@ class ReportScheduleAndCacheTest extends TestCase
         $companyUser->assignRole($companyRole);
 
         $deptUser = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         Employee::create([
@@ -152,7 +152,7 @@ class ReportScheduleAndCacheTest extends TestCase
 
         // Maaş yetkisi olmayan kullanıcı farklı cache (hidden field)
         $noSalary = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         $nsRole = Role::findOrCreate('cache_nosal', 'sanctum');
@@ -220,7 +220,7 @@ class ReportScheduleAndCacheTest extends TestCase
             'config' => ['dataset' => 'employees', 'fields' => ['employee_code']],
         ])->assertCreated()->json('data');
 
-        $userA = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $userA = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
         Employee::create([
             'company_id' => $this->company->id,
             'user_id' => $userA->id,
@@ -233,7 +233,7 @@ class ReportScheduleAndCacheTest extends TestCase
         $roleA->givePermissionTo(['reports.definitions.view', 'reports.definitions.run', 'employees.list.view']);
         $userA->assignRole($roleA);
 
-        $userB = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $userB = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
         Employee::create([
             'company_id' => $this->company->id,
             'user_id' => $userB->id,
@@ -246,7 +246,7 @@ class ReportScheduleAndCacheTest extends TestCase
         $roleB->givePermissionTo(['reports.definitions.view', 'reports.definitions.run', 'employees.list.view']);
         $userB->assignRole($roleB);
 
-        $noAccess = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $noAccess = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
         $roleN = Role::findOrCreate('sched_n', 'sanctum');
         $roleN->givePermissionTo(['reports.definitions.view', 'reports.definitions.run', 'employees.list.view']);
         $noAccess->assignRole($roleN);
@@ -306,7 +306,7 @@ class ReportScheduleAndCacheTest extends TestCase
 
         $recipients = [];
         for ($i = 0; $i < 51; $i++) {
-            $u = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+            $u = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
             $recipients[] = ['user_id' => $u->id];
         }
 

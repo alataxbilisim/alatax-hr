@@ -154,7 +154,7 @@ class ApprovalStep extends Model
 
     protected function resolveHrManagerFallback(int $companyId): ?User
     {
-        return User::where('company_id', $companyId)
+        return User::where('home_company_id', $companyId)
             ->whereHas('roles', fn ($q) => $q->where('name', 'hr_manager'))
             ->orderBy('id')
             ->first();
@@ -196,19 +196,19 @@ class ApprovalStep extends Model
                 self::APPROVER_SPECIFIC_USER => $this->specificUser,
 
                 self::APPROVER_ROLE,
-                self::APPROVER_SPECIFIC_ROLE => User::where('company_id', $approvable->company_id)
+                self::APPROVER_SPECIFIC_ROLE => User::where('home_company_id', $approvable->company_id)
                     ->whereHas('roles', fn ($q) => $q->where('name', $this->specific_role))
                     ->first(),
 
-                self::APPROVER_HR => User::where('company_id', $approvable->company_id)
+                self::APPROVER_HR => User::where('home_company_id', $approvable->company_id)
                     ->whereHas('roles', fn ($q) => $q->where('name', 'hr_manager'))
                     ->first(),
 
-                self::APPROVER_CFO => User::where('company_id', $approvable->company_id)
+                self::APPROVER_CFO => User::where('home_company_id', $approvable->company_id)
                     ->whereHas('roles', fn ($q) => $q->where('name', 'cfo'))
                     ->first(),
 
-                self::APPROVER_CEO => User::where('company_id', $approvable->company_id)
+                self::APPROVER_CEO => User::where('home_company_id', $approvable->company_id)
                     ->whereHas('roles', fn ($q) => $q->where('name', 'ceo'))
                     ->first(),
 

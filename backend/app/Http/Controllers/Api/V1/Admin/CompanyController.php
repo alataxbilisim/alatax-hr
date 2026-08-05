@@ -13,6 +13,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -112,7 +113,7 @@ class CompanyController extends BaseController
             'trial_ends_at' => 'nullable|date',
             // Admin kullanıcı bilgileri
             'admin_name' => 'required|string|max:255',
-            'admin_email' => 'required|email|max:255|unique:users,email',
+            'admin_email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->whereNull('deleted_at')],
             'admin_password' => 'required|string|min:8',
             'admin_phone' => 'nullable|string|max:20',
         ]);
@@ -186,7 +187,7 @@ class CompanyController extends BaseController
 
             // Admin kullanıcısını oluştur
             $admin = User::create([
-                'company_id' => $company->id,
+                'home_company_id' => $company->id,
                 'name' => $validated['admin_name'],
                 'email' => $validated['admin_email'],
                 'password' => Hash::make($validated['admin_password']),

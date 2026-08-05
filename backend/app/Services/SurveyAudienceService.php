@@ -20,7 +20,7 @@ class SurveyAudienceService
         }
 
         $employee = Employee::where('user_id', $user->id)
-            ->where('company_id', $user->company_id)
+            ->where('company_id', $user->home_company_id)
             ->first();
 
         if (! $employee) {
@@ -62,7 +62,20 @@ class SurveyAudienceService
         }
         $codes = array_map('strval', $codes);
 
-        return $employee->position !== null && in_array((string) $employee->position, $codes, true);
+        $employee->loadMissing('position');
+        $haystack = array_filter([
+            $employee->position?->code,
+            $employee->position?->name,
+            $employee->position_id !== null ? (string) $employee->position_id : null,
+        ]);
+
+        foreach ($haystack as $value) {
+            if (in_array((string) $value, $codes, true)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

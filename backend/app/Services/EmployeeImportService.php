@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Department;
 use App\Models\Employee;
+use App\Models\Position;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -23,11 +24,15 @@ class EmployeeImportService
 
     protected array $departments = [];
 
+    /** @var array<string, int> name → id */
+    protected array $positions = [];
+
     public function __construct(int $companyId, int $userId)
     {
         $this->companyId = $companyId;
         $this->userId = $userId;
         $this->loadDepartments();
+        $this->loadPositions();
     }
 
     /**
@@ -36,6 +41,14 @@ class EmployeeImportService
     protected function loadDepartments(): void
     {
         $this->departments = Department::where('company_id', $this->companyId)
+            ->pluck('id', 'name')
+            ->toArray();
+    }
+
+    protected function loadPositions(): void
+    {
+        $this->positions = Position::where('company_id', $this->companyId)
+            ->whereNull('deleted_at')
             ->pluck('id', 'name')
             ->toArray();
     }
@@ -276,7 +289,7 @@ class EmployeeImportService
             'name' => 'required|string|max:255',
             'personal_email' => 'nullable|email|max:255',
             'personal_phone' => 'nullable|string|max:20',
-            'position' => 'nullable|string|max:100',
+            'position' => 'nullable|string|max:100', // mapped to position_id
             'title' => 'nullable|string|max:100',
             'hire_date' => 'nullable|date',
             'birth_date' => 'nullable|date',
@@ -337,6 +350,12 @@ class EmployeeImportService
         $gender = $row['gender'] ?? null;
         $gender = $gender ? ($genderMap[mb_strtolower($gender)] ?? $gender) : null;
 
+        // Resolve position name → position_id
+        $positionId = null;
+        if (! empty($row['position'])) {
+            $positionId = $this->positions[$row['position']] ?? null;
+        }
+
         DB::beginTransaction();
         try {
             if ($existingEmployee) {
@@ -344,7 +363,7 @@ class EmployeeImportService
                 $existingEmployee->update([
                     'department_id' => $departmentId,
                     'title' => $row['title'] ?? $existingEmployee->title,
-                    'position' => $row['position'] ?? $existingEmployee->position,
+                    'position_id' => $positionId ?? $existingEmployee->position_id,
                     'birth_date' => $birthDate ?? $existingEmployee->birth_date,
                     'national_id' => $row['national_id'] ?? $existingEmployee->national_id,
                     'gender' => $gender ?? $existingEmployee->gender,
@@ -377,7 +396,7 @@ class EmployeeImportService
                     'employee_code' => $row['employee_code'],
                     'department_id' => $departmentId,
                     'title' => $row['title'] ?? null,
-                    'position' => $row['position'] ?? null,
+                    'position_id' => $positionId,
                     'birth_date' => $birthDate,
                     'national_id' => $row['national_id'] ?? null,
                     'gender' => $gender,

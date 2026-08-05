@@ -34,7 +34,7 @@ final class EmployeeProfileCollector implements PersonalDataCollector
             return [];
         }
 
-        $user = User::query()->where('company_id', $companyId)->where('id', $userId)->first();
+        $user = User::query()->where('home_company_id', $companyId)->where('id', $userId)->first();
         $employee = Employee::query()->where('company_id', $companyId)->where('user_id', $userId)->first();
 
         $records = [];
@@ -95,7 +95,7 @@ final class EmployeeProfileCollector implements PersonalDataCollector
         $rows = 0;
 
         $user = $userId
-            ? User::query()->where('company_id', $companyId)->where('id', $userId)->first()
+            ? User::query()->where('home_company_id', $companyId)->where('id', $userId)->first()
             : null;
         $employee = $employeeId
             ? Employee::query()->where('company_id', $companyId)->where('id', $employeeId)->first()

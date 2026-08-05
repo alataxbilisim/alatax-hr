@@ -43,7 +43,7 @@ class AnnouncementPublishService
             ->where('company_id', $announcement->company_id)
             ->where('status', 'active')
             ->whereNotNull('user_id')
-            ->with('user:id,name,email,company_id,preferences')
+            ->with('user:id,name,email,home_company_id,preferences')
             ->get();
 
         $count = 0;
@@ -55,7 +55,7 @@ class AnnouncementPublishService
             if (! $user instanceof User) {
                 continue;
             }
-            if ((int) $user->company_id !== (int) $announcement->company_id) {
+            if ((int) $user->home_company_id !== (int) $announcement->company_id) {
                 continue;
             }
 

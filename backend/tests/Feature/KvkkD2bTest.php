@@ -48,7 +48,7 @@ class KvkkD2bTest extends TestCase
             'slug' => 'd2b-firma-b',
         ]);
         $this->admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($this->admin);
@@ -63,7 +63,7 @@ class KvkkD2bTest extends TestCase
     public function test_unauthorized_gets_403(): void
     {
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         Sanctum::actingAs($user);
@@ -75,7 +75,7 @@ class KvkkD2bTest extends TestCase
         Sanctum::actingAs($this->admin->fresh());
         $emp = Employee::factory()->create([
             'company_id' => $this->company->id,
-            'user_id' => User::factory()->create(['company_id' => $this->company->id])->id,
+            'user_id' => User::factory()->create(['home_company_id' => $this->company->id])->id,
         ]);
 
         $res = $this->postJson('/api/v1/kvkk/data-subject-requests', [
@@ -98,8 +98,8 @@ class KvkkD2bTest extends TestCase
     {
         Sanctum::actingAs($this->admin->fresh());
 
-        $userA = User::factory()->create(['company_id' => $this->company->id, 'name' => 'Alice']);
-        $userB = User::factory()->create(['company_id' => $this->company->id, 'name' => 'Bob']);
+        $userA = User::factory()->create(['home_company_id' => $this->company->id, 'name' => 'Alice']);
+        $userB = User::factory()->create(['home_company_id' => $this->company->id, 'name' => 'Bob']);
         $empA = Employee::factory()->create(['company_id' => $this->company->id, 'user_id' => $userA->id]);
         $empB = Employee::factory()->create(['company_id' => $this->company->id, 'user_id' => $userB->id]);
 
@@ -162,7 +162,7 @@ class KvkkD2bTest extends TestCase
 
         $emp = Employee::factory()->create([
             'company_id' => $this->company->id,
-            'user_id' => User::factory()->create(['company_id' => $this->company->id])->id,
+            'user_id' => User::factory()->create(['home_company_id' => $this->company->id])->id,
         ]);
         $res = $this->postJson('/api/v1/kvkk/data-subject-requests', [
             'subject_type' => 'employee',
@@ -184,7 +184,7 @@ class KvkkD2bTest extends TestCase
         Sanctum::actingAs($this->admin->fresh());
         $emp = Employee::factory()->create([
             'company_id' => $this->company->id,
-            'user_id' => User::factory()->create(['company_id' => $this->company->id])->id,
+            'user_id' => User::factory()->create(['home_company_id' => $this->company->id])->id,
         ]);
         $create = $this->postJson('/api/v1/kvkk/data-subject-requests', [
             'subject_type' => 'employee',
@@ -202,7 +202,7 @@ class KvkkD2bTest extends TestCase
         $uuid = $export->json('data.package.uuid');
 
         $stranger = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         Sanctum::actingAs($stranger);
@@ -223,7 +223,7 @@ class KvkkD2bTest extends TestCase
     public function test_silme_approve_sets_destruction_pending_without_deleting_data(): void
     {
         Sanctum::actingAs($this->admin->fresh());
-        $user = User::factory()->create(['company_id' => $this->company->id]);
+        $user = User::factory()->create(['home_company_id' => $this->company->id]);
         $emp = Employee::factory()->create(['company_id' => $this->company->id, 'user_id' => $user->id]);
 
         $create = $this->postJson('/api/v1/kvkk/data-subject-requests', [
@@ -255,7 +255,7 @@ class KvkkD2bTest extends TestCase
         Sanctum::actingAs($this->admin->fresh());
         $emp = Employee::factory()->create([
             'company_id' => $this->company->id,
-            'user_id' => User::factory()->create(['company_id' => $this->company->id])->id,
+            'user_id' => User::factory()->create(['home_company_id' => $this->company->id])->id,
         ]);
         $create = $this->postJson('/api/v1/kvkk/data-subject-requests', [
             'subject_type' => 'employee',
@@ -270,7 +270,7 @@ class KvkkD2bTest extends TestCase
         $id = (int) $create->json('data.id');
 
         $otherAdmin = User::factory()->create([
-            'company_id' => $this->otherCompany->id,
+            'home_company_id' => $this->otherCompany->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($otherAdmin);
@@ -281,7 +281,7 @@ class KvkkD2bTest extends TestCase
     public function test_portal_creates_verified_request(): void
     {
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         Employee::factory()->create(['company_id' => $this->company->id, 'user_id' => $user->id]);

@@ -28,7 +28,7 @@ class PortalAttendanceQrController extends BaseController
         ]);
 
         $user = $request->user();
-        if (! $user || ! $user->company_id) {
+        if (! $user || ! $user->home_company_id) {
             return $this->error('Oturum gerekli', 401);
         }
 

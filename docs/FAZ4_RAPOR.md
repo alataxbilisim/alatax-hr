@@ -913,7 +913,7 @@ Validasyon: HTML `required`; zod/RHF yok; `validation_rules` kullanılmıyor.
 | 2 | İzin türleri | DB `leave_types` + LeaveTypeSeeder (firma başına 8 tür) | **Evet** | **Evet** — Leaves → Türler |
 | 3 | Kanban aşamaları (8 kolon) | **FE hardcoded** `ApplicationsPage.statusColumns` + PHP `JobApplicationStatus` | N/A | **Hayır** — isim/sıra/renk değiştirilemez |
 | 4a | Departman | DB `departments` | Evet | Evet — DepartmentsPage |
-| 4b | Pozisyon (personel) | Serbest metin `employees.position` | — | Hayır (input); `job_positions` = ilan, master değil |
+| 4b | Pozisyon (personel) | DB `positions` kataloğu → `employees.position_id` FK (SSOT); string kolon kaldırıldı (`2026_08_06_010000`) | Evet | Evet — `/employees/positions`; `job_positions` = ilan, master değil |
 | 4c | Masraf kategorisi | DB `expense_categories` | Evet | **Hayır** (Company UI yok; Portal okur) |
 | 4d | Doküman kategorisi | DB `document_categories` | Evet | Evet — Documents |
 | 4e | Talep tipi | DB `request_types` | Evet | **Hayır** (Company UI yok; Portal okur) |
@@ -983,7 +983,7 @@ Sidebar: Yönetim → Ayarlar. Header kullanıcı menüsü de buraya gider — *
 
 **Belirsizlik (strateji oturumunda netleştirilecek):**
 - Kanban aşamaları: yeniden adlandırma yeterli mi, yoksa aşama ekle/sil/sırala da mı?
-- Personel “pozisyon”: serbest metin mi kalacak, lookup mu olacak?
+- Personel “pozisyon”: **kapatıldı** — `employees.position_id` FK → `positions.id` (Tur8 code yazımı + Faz 6 öncesi backfill; string kolon drop `2026_08_06_010000`). Detay: `FAZ6_ONCESI_KAPATMA.md` §3.
 - Picklist v1 kapsamı: yalnızca “zaten DB’de olanlar” mı, yoksa status enum’ları da mı?
 
 ---

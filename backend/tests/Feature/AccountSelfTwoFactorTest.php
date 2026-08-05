@@ -51,7 +51,7 @@ class AccountSelfTwoFactorTest extends TestCase
     private function regularUser(array $attrs = []): User
     {
         return User::factory()->create(array_merge([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'password' => Hash::make('Password1!'),
             'is_active' => true,

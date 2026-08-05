@@ -76,7 +76,7 @@ class PortalQrHomeEmployeeMismatchTest extends TestCase
         ]);
 
         $this->adminB = User::factory()->create([
-            'company_id' => $this->companyB->id,
+            'home_company_id' => $this->companyB->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
         ]);
@@ -84,7 +84,7 @@ class PortalQrHomeEmployeeMismatchTest extends TestCase
         $this->adminB->givePermissionTo(['timesheet.kiosk.view', 'timesheet.attendance.view']);
 
         $this->mismatchUser = User::factory()->create([
-            'company_id' => $this->companyA->id,
+            'home_company_id' => $this->companyA->id,
             'last_company_id' => $this->companyA->id,
             'type' => UserType::User,
             'is_active' => true,
@@ -102,7 +102,7 @@ class PortalQrHomeEmployeeMismatchTest extends TestCase
 
     public function test_portal_qr_punch_uses_employee_company_when_home_differs(): void
     {
-        $this->assertSame($this->companyA->id, (int) $this->mismatchUser->company_id);
+        $this->assertSame($this->companyA->id, (int) $this->mismatchUser->home_company_id);
         $portalCompany = app(CompanyContextService::class)->resolvePortalCompanyId($this->mismatchUser);
         $this->assertSame($this->companyB->id, $portalCompany);
 

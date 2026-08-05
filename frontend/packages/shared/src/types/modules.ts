@@ -23,7 +23,7 @@ export type CustomFieldValue = string | number | boolean | string[] | null;
 // ============================================
 
 export interface User extends BaseEntity {
-  company_id: number | null;
+  home_company_id: number | null;
   name: string;
   email: string;
   phone?: string | null;

@@ -62,7 +62,7 @@ class OffboardingFlowTest extends TestCase
         app(DefaultOffboardingTemplateService::class)->ensureForCompany($this->company);
 
         $this->admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
         ]);
@@ -76,7 +76,7 @@ class OffboardingFlowTest extends TestCase
         ]);
 
         $this->employeeUser = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'is_active' => true,
             'name' => 'Çıkış Adayı',
@@ -244,7 +244,7 @@ class OffboardingFlowTest extends TestCase
     public function test_terminate_permission_required(): void
     {
         $viewer = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         $viewer->givePermissionTo(['employees.list.view']);
@@ -260,7 +260,7 @@ class OffboardingFlowTest extends TestCase
     {
         $other = Company::factory()->create(['status' => CompanyStatus::Active]);
         $otherAdmin = User::factory()->create([
-            'company_id' => $other->id,
+            'home_company_id' => $other->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $otherAdmin->givePermissionTo(['employees.terminate.create']);

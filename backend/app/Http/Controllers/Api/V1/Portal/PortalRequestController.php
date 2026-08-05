@@ -29,7 +29,7 @@ class PortalRequestController extends BaseController
     {
         $user = $request->user();
 
-        $requestTypes = RequestType::where('company_id', $user->company_id)
+        $requestTypes = RequestType::where('company_id', $user->home_company_id)
             ->active()
             ->ordered()
             ->get(['id', 'name', 'slug', 'description', 'icon', 'color', 'requires_attachment', 'form_fields']);
@@ -136,7 +136,7 @@ class PortalRequestController extends BaseController
 
         // Talep türünü kontrol et
         $requestType = RequestType::where('id', $validated['request_type_id'])
-            ->where('company_id', $user->company_id)
+            ->where('company_id', $user->home_company_id)
             ->where('is_active', true)
             ->first();
 
@@ -159,7 +159,7 @@ class PortalRequestController extends BaseController
             $attachments = [];
             if ($request->hasFile('attachments')) {
                 foreach ($request->file('attachments') as $file) {
-                    $path = $file->store('request_attachments/'.$user->company_id, 'public');
+                    $path = $file->store('request_attachments/'.$user->home_company_id, 'public');
                     $attachments[] = [
                         'path' => $path,
                         'name' => $file->getClientOriginalName(),
@@ -172,7 +172,7 @@ class PortalRequestController extends BaseController
             $requiresApproval = (bool) $requestType->requires_approval;
 
             $employeeRequest = EmployeeRequest::create([
-                'company_id' => $user->company_id,
+                'company_id' => $user->home_company_id,
                 'employee_id' => $employee->id,
                 'request_type_id' => $validated['request_type_id'],
                 'title' => $validated['title'],

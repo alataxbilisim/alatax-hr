@@ -57,7 +57,7 @@ class ReportEngineSecurityTest extends TestCase
         ]);
 
         $this->admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($this->admin);
@@ -76,7 +76,7 @@ class ReportEngineSecurityTest extends TestCase
         ]);
 
         $viewer = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         $role = Role::findOrCreate('report_viewer', 'sanctum');
@@ -118,7 +118,7 @@ class ReportEngineSecurityTest extends TestCase
         ]);
 
         $viewer = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         $role = Role::findOrCreate('report_viewer2', 'sanctum');
@@ -140,7 +140,7 @@ class ReportEngineSecurityTest extends TestCase
     public function test_department_scope_hides_other_department_rows(): void
     {
         $mgrUser = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         Employee::create([
@@ -327,7 +327,7 @@ class ReportEngineSecurityTest extends TestCase
         ]);
 
         $viewer = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         $role = Role::findOrCreate('report_export_viewer', 'sanctum');
@@ -357,7 +357,7 @@ class ReportEngineSecurityTest extends TestCase
     public function test_export_respects_department_scope(): void
     {
         $mgrUser = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         Employee::create([

@@ -101,7 +101,7 @@ class ApprovalWorkflowMotorB0Test extends TestCase
     private function userWithRole(string $role): User
     {
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         $user->assignRole($role);
@@ -305,7 +305,7 @@ class ApprovalWorkflowMotorB0Test extends TestCase
         app(DefaultLeaveApprovalWorkflowService::class)->ensureForCompany($this->otherCompany);
 
         $otherUser = User::factory()->create([
-            'company_id' => $this->otherCompany->id,
+            'home_company_id' => $this->otherCompany->id,
             'type' => UserType::User,
         ]);
         Employee::factory()->forUser($otherUser)->create();

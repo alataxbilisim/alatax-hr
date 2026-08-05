@@ -91,7 +91,7 @@ class PortalTimesheetController extends BaseController
         $user = auth()->user();
         $today = now()->toDateString();
 
-        $record = AttendanceRecord::where('company_id', $user->company_id)
+        $record = AttendanceRecord::where('company_id', $user->home_company_id)
             ->where('user_id', $user->id)
             ->whereDate('date', $today)
             ->first();
@@ -124,7 +124,7 @@ class PortalTimesheetController extends BaseController
         $user = auth()->user();
         $today = now()->toDateString();
 
-        $record = AttendanceRecord::where('company_id', $user->company_id)
+        $record = AttendanceRecord::where('company_id', $user->home_company_id)
             ->where('user_id', $user->id)
             ->whereDate('date', $today)
             ->first();
@@ -157,7 +157,7 @@ class PortalTimesheetController extends BaseController
         $user = auth()->user();
         $today = now()->toDateString();
 
-        $record = AttendanceRecord::where('company_id', $user->company_id)
+        $record = AttendanceRecord::where('company_id', $user->home_company_id)
             ->where('user_id', $user->id)
             ->whereDate('date', $today)
             ->first();
@@ -210,7 +210,7 @@ class PortalTimesheetController extends BaseController
         $startOfWeek = Carbon::parse($request->get('week_start', now()->startOfWeek()))->startOfWeek();
         $endOfWeek = $startOfWeek->copy()->endOfWeek();
 
-        $records = AttendanceRecord::where('company_id', $user->company_id)
+        $records = AttendanceRecord::where('company_id', $user->home_company_id)
             ->where('user_id', $user->id)
             ->whereBetween('date', [$startOfWeek, $endOfWeek])
             ->orderBy('date')
@@ -248,7 +248,7 @@ class PortalTimesheetController extends BaseController
         $startOfMonth = Carbon::create($year, $month, 1)->startOfMonth();
         $endOfMonth = $startOfMonth->copy()->endOfMonth();
 
-        $records = AttendanceRecord::where('company_id', $user->company_id)
+        $records = AttendanceRecord::where('company_id', $user->home_company_id)
             ->where('user_id', $user->id)
             ->whereBetween('date', [$startOfMonth, $endOfMonth])
             ->orderBy('date')
@@ -281,7 +281,7 @@ class PortalTimesheetController extends BaseController
         $startOfWeek = Carbon::parse($request->get('week_start', now()->startOfWeek()))->startOfWeek();
         $endOfWeek = $startOfWeek->copy()->endOfWeek();
 
-        $shifts = EmployeeShift::where('company_id', $user->company_id)
+        $shifts = EmployeeShift::where('company_id', $user->home_company_id)
             ->where('user_id', $user->id)
             ->whereBetween('date', [$startOfWeek, $endOfWeek])
             ->with('shift:id,name,start_time,end_time,color')

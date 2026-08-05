@@ -150,7 +150,7 @@ class ReportDefinitionService
             abort(403, 'Sahiplik devri yetkiniz yok');
         }
         $newOwner = User::query()
-            ->where('company_id', $report->company_id)
+            ->where('home_company_id', $report->company_id)
             ->whereKey($newOwnerId)
             ->first();
         if (! $newOwner) {
@@ -398,7 +398,7 @@ class ReportDefinitionService
         $datasetKey = $result['meta']['dataset'] ?? null;
         $selected = $result['meta']['fields'] ?? [];
         if (is_string($datasetKey) && $this->registry->has($datasetKey) && is_array($selected)) {
-            $companyId = (int) (request()?->user()?->company_id ?? 0);
+            $companyId = (int) (request()?->user()?->home_company_id ?? 0);
             foreach ($this->registry->get($datasetKey)->fieldsForCompany($companyId) as $f) {
                 if (in_array($f->key, $selected, true) && $f->isClassifiedSensitive()) {
                     $keys[] = $f->key;

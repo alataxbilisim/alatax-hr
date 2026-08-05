@@ -79,7 +79,7 @@ class LeaveFlowRepairTest extends TestCase
     private function makeAdmin(): User
     {
         $admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
         ]);
@@ -96,7 +96,7 @@ class LeaveFlowRepairTest extends TestCase
     private function makeEmployeeUser(Branch $branch, string $role = 'employee'): User
     {
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);
@@ -181,7 +181,7 @@ class LeaveFlowRepairTest extends TestCase
         $otherCompany = Company::factory()->create(['status' => CompanyStatus::Active]);
         $this->enableLeaveModule($otherCompany);
         $otherUser = User::factory()->create([
-            'company_id' => $otherCompany->id,
+            'home_company_id' => $otherCompany->id,
             'type' => UserType::User,
         ]);
         $otherType = LeaveType::create([

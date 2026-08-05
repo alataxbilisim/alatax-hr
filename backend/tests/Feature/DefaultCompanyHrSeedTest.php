@@ -91,7 +91,7 @@ class DefaultCompanyHrSeedTest extends TestCase
         ]);
 
         $admin = User::factory()->create([
-            'company_id' => $company->id,
+            'home_company_id' => $company->id,
             'type' => \App\Enums\UserType::CompanyAdmin,
             'is_active' => true,
         ]);
@@ -148,7 +148,7 @@ class DefaultCompanyHrSeedTest extends TestCase
         $service->ensureForCompany($b);
 
         $adminA = User::factory()->create([
-            'company_id' => $a->id,
+            'home_company_id' => $a->id,
             'type' => \App\Enums\UserType::CompanyAdmin,
             'is_active' => true,
         ]);

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Models\ActivityLog;
+use App\Models\ApprovalStep;
 use App\Models\Role;
 use App\Services\Auth\UserPermissionCache;
 use Illuminate\Http\JsonResponse;
@@ -202,6 +203,16 @@ class RoleController extends BaseController
 
         if ($usersCount > 0) {
             return $this->error('Bu role sahip kullanıcılar var. Önce kullanıcıların rollerini değiştirin.', 400);
+        }
+
+        // §6: Onay adımlarında kullanılan rol silinemez.
+        // specific_role string Spatie role name saklar (FK yerine guard — Spatie role.id
+        // soft-delete modeliyle uyumsuz olduğu ve string-based lookup tasarımı korunduğu için).
+        if (ApprovalStep::where('specific_role', $role->name)->exists()) {
+            return $this->error(
+                'Bu rol bir veya daha fazla onay akışı adımında kullanılıyor. Önce onay akışlarından kaldırın.',
+                422
+            );
         }
 
         UserPermissionCache::forgetForRole($role);

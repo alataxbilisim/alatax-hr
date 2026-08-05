@@ -67,7 +67,7 @@ class GroupScopeIntersectionTest extends TestCase
         ]);
 
         $this->admin = User::factory()->create([
-            'company_id' => $this->companyA->id,
+            'home_company_id' => $this->companyA->id,
             'last_company_id' => $this->companyA->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
@@ -135,16 +135,16 @@ class GroupScopeIntersectionTest extends TestCase
     public function test_dashboard_group_kpi_excludes_non_member_org_company(): void
     {
         User::factory()->create([
-            'company_id' => $this->companyD->id,
+            'home_company_id' => $this->companyD->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);
 
         Sanctum::actingAs($this->admin);
 
-        $countA = User::query()->where('company_id', $this->companyA->id)->where('is_active', true)->count();
-        $countB = User::query()->where('company_id', $this->companyB->id)->where('is_active', true)->count();
-        $countD = User::query()->where('company_id', $this->companyD->id)->where('is_active', true)->count();
+        $countA = User::query()->where('home_company_id', $this->companyA->id)->where('is_active', true)->count();
+        $countB = User::query()->where('home_company_id', $this->companyB->id)->where('is_active', true)->count();
+        $countD = User::query()->where('home_company_id', $this->companyD->id)->where('is_active', true)->count();
         $this->assertGreaterThan(0, $countD);
 
         $res = $this->getJson(

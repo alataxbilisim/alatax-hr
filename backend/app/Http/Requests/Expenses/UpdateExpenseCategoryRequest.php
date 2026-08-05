@@ -17,7 +17,7 @@ class UpdateExpenseCategoryRequest extends FormRequest
      */
     public function rules(): array
     {
-        $companyId = auth()->user()?->company_id;
+        $companyId = auth()->user()?->home_company_id;
         $categoryId = $this->route('expense_category')?->id
             ?? $this->route('id');
 

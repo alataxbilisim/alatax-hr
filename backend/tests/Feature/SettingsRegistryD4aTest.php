@@ -46,7 +46,7 @@ class SettingsRegistryD4aTest extends TestCase
     private function makeAdmin(Company $company): User
     {
         $user = User::factory()->create([
-            'company_id' => $company->id,
+            'home_company_id' => $company->id,
             'type' => UserType::CompanyAdmin,
         ]);
 
@@ -56,7 +56,7 @@ class SettingsRegistryD4aTest extends TestCase
     private function makePlainUser(Company $company): User
     {
         return User::factory()->create([
-            'company_id' => $company->id,
+            'home_company_id' => $company->id,
             'type' => UserType::User,
         ]);
     }
@@ -92,7 +92,7 @@ class SettingsRegistryD4aTest extends TestCase
         $branchId = $branch->id;
 
         $target = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         Employee::factory()->create([

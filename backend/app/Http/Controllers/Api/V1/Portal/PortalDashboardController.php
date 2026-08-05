@@ -62,7 +62,7 @@ class PortalDashboardController extends BaseController
             'employee' => [
                 'id' => $employee->id,
                 'name' => $user->name,
-                'position' => $employee->position,
+                'position' => $employee->position?->name,
                 'department' => $employee->department?->name,
                 'hire_date' => $employee->hire_date?->format('d.m.Y'),
                 'seniority_years' => $employee->seniority_years,

@@ -45,7 +45,7 @@ class PdksAttendanceCalcTest extends TestCase
         ]);
 
         $this->user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         Employee::factory()->forUser($this->user)->create([

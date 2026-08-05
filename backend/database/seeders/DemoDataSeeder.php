@@ -178,13 +178,25 @@ class DemoDataSeeder extends Seeder
             );
         }
 
+        // Katalog (YAZ_GEL vb.) aynı adı zaten seed ettiyse DEMO_POS ile çift oluşturma —
+        // (company_id, name) partial unique (§4). Aynı ada bağlan; yoksa oluştur.
         $posNames = [
             'İK Uzmanı', 'Yazılım Geliştirici', 'Satış Temsilcisi', 'Operasyon Uzmanı',
             'Mali İşler Uzmanı', 'Pazarlama Uzmanı', 'Kıdemli Yazılım Geliştirici',
-            'Departman Müdürü', 'Genel Müdür', 'Sistem Yöneticisi', 'Müşteri Hizmetleri', 'Lojistik Uzmanı',
+            'Departman Müdürü', 'Üst Yönetici', 'Sistem Yöneticisi', 'Müşteri Hizmetleri', 'Lojistik Uzmanı',
         ];
         foreach ($posNames as $i => $name) {
             $code = sprintf('DEMO_POS_%02d', $i + 1);
+            $existing = Position::query()
+                ->where('company_id', $company->id)
+                ->where('name', $name)
+                ->whereNull('deleted_at')
+                ->first();
+            if ($existing) {
+                $this->positions[$code] = $existing;
+
+                continue;
+            }
             $this->positions[$code] = Position::firstOrCreate(
                 ['company_id' => $company->id, 'code' => $code],
                 ['name' => $name, 'is_active' => true, 'sort_order' => $i + 1]
@@ -1019,7 +1031,7 @@ class DemoDataSeeder extends Seeder
                 'department_id' => $dept->id,
                 'branch_id' => $hq->id,
                 'title' => 'Genel Müdür',
-                'position' => $pos->name,
+                'position_id' => $pos->id,
                 'hire_date' => '2020-01-01',
                 'contract_type' => 'permanent',
                 'work_type' => 'full_time',
@@ -1045,7 +1057,7 @@ class DemoDataSeeder extends Seeder
                     'department_id' => $dept->id,
                     'branch_id' => $hq->id,
                     'title' => $pos->name,
-                    'position' => $pos->name,
+                    'position_id' => $pos->id,
                     'hire_date' => sprintf('2022-%02d-15', min(12, $i)),
                     'contract_type' => 'permanent',
                     'work_type' => 'full_time',
@@ -1064,7 +1076,7 @@ class DemoDataSeeder extends Seeder
         $user = User::updateOrCreate(
             ['email' => $email],
             [
-                'company_id' => $companyId, 'name' => $name, 'password' => Hash::make(self::PASSWORD),
+                'home_company_id' => $companyId, 'name' => $name, 'password' => Hash::make(self::PASSWORD),
                 'type' => $type, 'is_active' => true, 'must_change_password' => false,
                 'preferences' => ['theme' => 'dark', 'locale' => 'tr'],
             ]
@@ -1098,7 +1110,7 @@ class DemoDataSeeder extends Seeder
             'department_id' => $this->departments[$deptCode]->id,
             'branch_id' => $this->branches[$branchCode]->id,
             'title' => $position?->name ?? $posCode,
-            'position' => $position?->name ?? $posCode,
+            'position_id' => $position?->id,
             'manager_id' => $managerId,
             'hire_date' => $hireDate,
             'contract_type' => 'permanent',

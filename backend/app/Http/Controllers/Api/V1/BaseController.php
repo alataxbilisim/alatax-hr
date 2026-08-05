@@ -25,7 +25,7 @@ class BaseController extends Controller
             return CompanyContext::id();
         }
 
-        return auth()->user()?->company_id;
+        return auth()->user()?->home_company_id;
     }
 
     /**

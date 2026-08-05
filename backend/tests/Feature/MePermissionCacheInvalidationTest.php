@@ -51,7 +51,7 @@ class MePermissionCacheInvalidationTest extends TestCase
 
         $user = User::factory()->create([
             'type' => UserType::User,
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'is_active' => true,
         ]);
         $user->assignRole($role);
@@ -65,7 +65,7 @@ class MePermissionCacheInvalidationTest extends TestCase
 
         $admin = User::factory()->create([
             'type' => UserType::CompanyAdmin,
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'is_active' => true,
         ]);
         $this->assignSpatieAdminRole($admin);
@@ -100,7 +100,7 @@ class MePermissionCacheInvalidationTest extends TestCase
     {
         $user = User::factory()->create([
             'type' => UserType::User,
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'is_active' => true,
         ]);
         $user->givePermissionTo('leaves.requests.view');

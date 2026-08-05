@@ -70,7 +70,7 @@ class ExpenseAttendanceHrFaceTest extends TestCase
     private function makeAdmin(): User
     {
         $admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
         ]);
@@ -87,7 +87,7 @@ class ExpenseAttendanceHrFaceTest extends TestCase
     private function userWithRole(string $role, array $extraPerms = []): User
     {
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);
@@ -150,7 +150,7 @@ class ExpenseAttendanceHrFaceTest extends TestCase
     public function test_expense_claims_unauthorized_403(): void
     {
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         Sanctum::actingAs($user);
@@ -162,7 +162,7 @@ class ExpenseAttendanceHrFaceTest extends TestCase
     {
         $hr = $this->userWithRole('hr_manager');
         Employee::factory()->forUser($hr)->create(['branch_id' => $this->branchA->id]);
-        $employee = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $employee = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
         Employee::factory()->forUser($employee)->create(['branch_id' => $this->branchA->id]);
         $claim = $this->makeClaim($employee);
 
@@ -178,7 +178,7 @@ class ExpenseAttendanceHrFaceTest extends TestCase
         Employee::factory()->forUser($hr)->create(['branch_id' => $this->branchA->id]);
 
         $otherUser = User::factory()->create([
-            'company_id' => $this->otherCompany->id,
+            'home_company_id' => $this->otherCompany->id,
             'type' => UserType::User,
         ]);
         $otherClaim = ExpenseClaim::factory()->create([
@@ -199,9 +199,9 @@ class ExpenseAttendanceHrFaceTest extends TestCase
         $bm = $this->userWithRole('branch_manager');
         Employee::factory()->forUser($bm)->create(['branch_id' => $this->branchA->id]);
 
-        $inBranch = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $inBranch = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
         Employee::factory()->forUser($inBranch)->create(['branch_id' => $this->branchA->id]);
-        $outBranch = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $outBranch = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
         Employee::factory()->forUser($outBranch)->create(['branch_id' => $this->branchB->id]);
 
         $own = $this->makeClaim($inBranch);
@@ -220,7 +220,7 @@ class ExpenseAttendanceHrFaceTest extends TestCase
     public function test_expense_approve_then_mark_paid_legacy(): void
     {
         $admin = $this->makeAdmin();
-        $employee = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $employee = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
         Employee::factory()->forUser($employee)->create(['branch_id' => $this->branchA->id]);
         $claim = $this->makeClaim($employee);
 
@@ -242,7 +242,7 @@ class ExpenseAttendanceHrFaceTest extends TestCase
 
     public function test_expense_submit_without_workflow_stays_submitted(): void
     {
-        $employee = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $employee = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
         Employee::factory()->forUser($employee)->create(['branch_id' => $this->branchA->id]);
 
         $claim = ExpenseClaim::factory()->create([
@@ -275,7 +275,7 @@ class ExpenseAttendanceHrFaceTest extends TestCase
         Employee::factory()->forUser($hr)->create(['branch_id' => $this->branchA->id]);
         $this->createExpenseWorkflow($hr);
 
-        $employee = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $employee = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
         Employee::factory()->forUser($employee)->create(['branch_id' => $this->branchA->id]);
 
         $claim = ExpenseClaim::factory()->create([
@@ -318,7 +318,7 @@ class ExpenseAttendanceHrFaceTest extends TestCase
     public function test_expense_category_crud_happy_and_permission(): void
     {
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         Sanctum::actingAs($user);
@@ -367,7 +367,7 @@ class ExpenseAttendanceHrFaceTest extends TestCase
         $hr = $this->userWithRole('hr_manager');
         Employee::factory()->forUser($hr)->create(['branch_id' => $this->branchA->id]);
 
-        $employee = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $employee = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
         Employee::factory()->forUser($employee)->create(['branch_id' => $this->branchA->id]);
 
         $record = AttendanceRecord::factory()->create([
@@ -404,9 +404,9 @@ class ExpenseAttendanceHrFaceTest extends TestCase
         $bm = $this->userWithRole('branch_manager');
         Employee::factory()->forUser($bm)->create(['branch_id' => $this->branchA->id]);
 
-        $in = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $in = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
         Employee::factory()->forUser($in)->create(['branch_id' => $this->branchA->id]);
-        $out = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $out = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
         Employee::factory()->forUser($out)->create(['branch_id' => $this->branchB->id]);
 
         $own = AttendanceRecord::factory()->create([
@@ -433,7 +433,7 @@ class ExpenseAttendanceHrFaceTest extends TestCase
     public function test_attendance_unauthorized_403(): void
     {
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         Sanctum::actingAs($user);

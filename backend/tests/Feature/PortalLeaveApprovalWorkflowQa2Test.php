@@ -72,7 +72,7 @@ class PortalLeaveApprovalWorkflowQa2Test extends TestCase
         ]);
 
         $this->manager = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);
@@ -80,7 +80,7 @@ class PortalLeaveApprovalWorkflowQa2Test extends TestCase
         $this->manager->givePermissionTo(['leaves.requests.view', 'leaves.requests.approve']);
 
         $this->employee = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);

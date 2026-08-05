@@ -34,7 +34,7 @@ class SalaryBandTest extends TestCase
 
         $this->company = Company::factory()->create(['status' => CompanyStatus::Active]);
         $this->hr = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
         ]);
         Role::findByName('admin', 'sanctum')->forceFill(['data_scope' => 'company'])->save();
@@ -66,7 +66,7 @@ class SalaryBandTest extends TestCase
 
         $emp = Employee::factory()->create([
             'company_id' => $this->company->id,
-            'position' => 'Yazılım Geliştirici',
+            'position_id' => $this->position->id,
             'gross_salary' => 50000,
             'status' => 'active',
         ]);
@@ -77,7 +77,8 @@ class SalaryBandTest extends TestCase
 
         $noPos = Employee::factory()->create([
             'company_id' => $this->company->id,
-            'position' => null,
+            'position_id' => null,
+
             'gross_salary' => 50000,
             'status' => 'active',
         ]);
@@ -89,7 +90,7 @@ class SalaryBandTest extends TestCase
     public function test_without_salary_view_403(): void
     {
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         Sanctum::actingAs($user);

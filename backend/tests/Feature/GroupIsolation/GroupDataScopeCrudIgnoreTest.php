@@ -56,7 +56,7 @@ class GroupDataScopeCrudIgnoreTest extends TestCase
         ]);
 
         $this->user = User::factory()->create([
-            'company_id' => $this->companyA->id,
+            'home_company_id' => $this->companyA->id,
             'last_company_id' => $this->companyA->id,
             'type' => UserType::User,
             'is_active' => true,

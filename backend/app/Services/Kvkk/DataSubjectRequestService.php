@@ -216,7 +216,7 @@ class DataSubjectRequestService
     public function resolveSubjectFromPortalUser(User $user): array
     {
         $emp = Employee::query()
-            ->where('company_id', $user->company_id)
+            ->where('company_id', $user->home_company_id)
             ->where('user_id', $user->id)
             ->first();
 

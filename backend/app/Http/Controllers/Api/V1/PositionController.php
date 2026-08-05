@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Requests\StorePositionRequest;
 use App\Http\Requests\UpdatePositionRequest;
+use App\Models\Employee;
 use App\Models\Position;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -100,6 +101,14 @@ class PositionController extends BaseController
 
         if ($position->is_system) {
             return $this->error('Sistem pozisyonları silinemez. Pasife alabilirsiniz.', 422);
+        }
+
+        $usageCount = Employee::where('position_id', $position->id)->count();
+        if ($usageCount > 0) {
+            return $this->error(
+                "Bu pozisyon {$usageCount} personel tarafından kullanılıyor. Önce personellerin pozisyonunu değiştirin.",
+                422
+            );
         }
 
         $position->delete();

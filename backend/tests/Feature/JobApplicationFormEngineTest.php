@@ -130,7 +130,7 @@ class JobApplicationFormEngineTest extends TestCase
     private function makeAdmin(Company $company): User
     {
         $admin = User::factory()->create([
-            'company_id' => $company->id,
+            'home_company_id' => $company->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
         ]);
@@ -166,7 +166,7 @@ class JobApplicationFormEngineTest extends TestCase
         $this->getJson('/api/v1/form-definitions/job_application')->assertStatus(401);
 
         $noPerm = User::factory()->create([
-            'company_id' => $this->companyA->id,
+            'home_company_id' => $this->companyA->id,
             'type' => UserType::User,
         ]);
         Sanctum::actingAs($noPerm);

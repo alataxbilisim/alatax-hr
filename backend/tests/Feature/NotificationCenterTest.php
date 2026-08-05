@@ -94,7 +94,7 @@ class NotificationCenterTest extends TestCase
     private function startLeaveWorkflow(): array
     {
         $manager = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'email' => 'mgr4c1@example.com',
         ]);
@@ -109,7 +109,7 @@ class NotificationCenterTest extends TestCase
         ]);
 
         $requester = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'email' => 'req4c1@example.com',
         ]);
@@ -222,7 +222,7 @@ class NotificationCenterTest extends TestCase
         $requester = $ctx['requester'];
 
         $delegate = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'email' => 'delegate4c1@example.com',
         ]);
@@ -263,8 +263,7 @@ class NotificationCenterTest extends TestCase
 
     public function test_email_preference_off_skips_mail_keeps_in_app(): void
     {
-        $manager = User::factory()->create([
-            'company_id' => $this->company->id,
+        $manager = User::factory()->create(['home_company_id' => $this->company->id,
             'type' => UserType::User,
             'email' => 'pref4c1@example.com',
             'preferences' => [
@@ -293,7 +292,7 @@ class NotificationCenterTest extends TestCase
     public function test_tenant_mismatch_does_not_notify(): void
     {
         $foreign = User::factory()->create([
-            'company_id' => $this->otherCompany->id,
+            'home_company_id' => $this->otherCompany->id,
             'type' => UserType::User,
         ]);
 
@@ -341,7 +340,7 @@ class NotificationCenterTest extends TestCase
         $notifId = $manager->notifications()->first()->id;
 
         $otherAdmin = User::factory()->create([
-            'company_id' => $this->otherCompany->id,
+            'home_company_id' => $this->otherCompany->id,
             'type' => UserType::CompanyAdmin,
         ]);
         Sanctum::actingAs($otherAdmin);

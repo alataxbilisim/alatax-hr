@@ -9,6 +9,8 @@ use App\Models\LeaveBalance;
 use App\Models\LeaveType;
 use App\Models\User;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class LeaveCalculationService
 {
@@ -195,19 +197,16 @@ class LeaveCalculationService
                     continue;
                 }
 
-                // Kıdem hesapla
                 $yearsOfService = $user->hire_date
                     ? Carbon::parse($user->hire_date)->diffInYears(now())
                     : 0;
 
-                // Aylık birikim miktarı
                 $accrualAmount = $policy->getMonthlyAccrual($yearsOfService);
 
                 if ($accrualAmount <= 0) {
                     continue;
                 }
 
-                // Maksimum bakiye kontrolü
                 $newBalance = $balance->total_days + $accrualAmount;
                 if ($policy->max_balance && $newBalance > $policy->max_balance) {
                     $accrualAmount = max(0, $policy->max_balance - $balance->total_days);
@@ -217,31 +216,41 @@ class LeaveCalculationService
                     continue;
                 }
 
-                // Bakiyeyi güncelle
-                $oldBalance = $balance->total_days;
-                $balance->total_days += $accrualAmount;
-                $balance->accrued += $accrualAmount;
-                $balance->save();
+                // §7: per-employee transaction — hata bu çalışanı geri alır, diğerlerini etkilemez
+                try {
+                    DB::transaction(function () use ($balance, $accrualAmount, $companyId, $user, $leaveType, $policy, $month, $year, &$results) {
+                        $oldBalance = $balance->total_days;
+                        $balance->total_days += $accrualAmount;
+                        $balance->accrued += $accrualAmount;
+                        $balance->save();
 
-                // Log kaydı
-                AccrualLog::createLog(
-                    $companyId,
-                    $user->id,
-                    $leaveType->id,
-                    AccrualLog::TYPE_ACCRUAL,
-                    $accrualAmount,
-                    $oldBalance,
-                    "Aylık hakediş ({$month}/{$year})",
-                    $balance,
-                    $policy->id,
-                    $balance->id
-                );
+                        AccrualLog::createLog(
+                            $companyId,
+                            $user->id,
+                            $leaveType->id,
+                            AccrualLog::TYPE_ACCRUAL,
+                            $accrualAmount,
+                            $oldBalance,
+                            "Aylık hakediş ({$month}/{$year})",
+                            $balance,
+                            $policy->id,
+                            $balance->id
+                        );
 
-                $results[] = [
-                    'user_id' => $user->id,
-                    'leave_type_id' => $leaveType->id,
-                    'accrued' => $accrualAmount,
-                ];
+                        $results[] = [
+                            'user_id' => $user->id,
+                            'leave_type_id' => $leaveType->id,
+                            'accrued' => $accrualAmount,
+                        ];
+                    });
+                } catch (\Throwable $e) {
+                    Log::error('accrual.monthly.user_failed', [
+                        'user_id' => $user->id,
+                        'company_id' => $companyId,
+                        'leave_type_id' => $leaveType->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
             }
         }
 

@@ -45,7 +45,7 @@ class OffboardingTemplateSeedTest extends TestCase
         ]);
 
         $this->admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->admin->givePermissionTo([

@@ -256,7 +256,7 @@ abstract class AbstractDataset
      */
     protected function activeCompanyId(User $user): int
     {
-        return (int) (\App\Support\CompanyContext::id() ?? $user->company_id);
+        return (int) (\App\Support\CompanyContext::id() ?? $user->home_company_id);
     }
 
     /**

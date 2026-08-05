@@ -21,12 +21,12 @@ class PortalTrainingController extends BaseController
         $query = TrainingParticipant::where('user_id', $user->id)
             ->with([
                 'session.training' => function ($q) use ($user) {
-                    $q->where('company_id', $user->company_id);
+                    $q->where('company_id', $user->home_company_id);
                 },
                 'certificate',
             ])
             ->whereHas('session.training', function ($q) use ($user) {
-                $q->where('company_id', $user->company_id);
+                $q->where('company_id', $user->home_company_id);
             });
 
         // Durum filtresi
@@ -99,12 +99,12 @@ class PortalTrainingController extends BaseController
             ->where('id', $id)
             ->with([
                 'session.training' => function ($q) use ($user) {
-                    $q->where('company_id', $user->company_id);
+                    $q->where('company_id', $user->home_company_id);
                 },
                 'certificate',
             ])
             ->whereHas('session.training', function ($q) use ($user) {
-                $q->where('company_id', $user->company_id);
+                $q->where('company_id', $user->home_company_id);
             })
             ->first();
 
@@ -165,7 +165,7 @@ class PortalTrainingController extends BaseController
             ->pluck('session_id');
 
         $query = TrainingSession::whereHas('training', function ($q) use ($user) {
-            $q->where('company_id', $user->company_id)
+            $q->where('company_id', $user->home_company_id)
                 ->where('is_active', true);
         })
             ->whereNotIn('id', $registeredSessionIds)
@@ -189,12 +189,12 @@ class PortalTrainingController extends BaseController
         $query = TrainingCertificate::whereHas('participant', function ($q) use ($user) {
             $q->where('user_id', $user->id)
                 ->whereHas('session.training', function ($q2) use ($user) {
-                    $q2->where('company_id', $user->company_id);
+                    $q2->where('company_id', $user->home_company_id);
                 });
         })
             ->with([
                 'participant.session.training' => function ($q) use ($user) {
-                    $q->where('company_id', $user->company_id)
+                    $q->where('company_id', $user->home_company_id)
                         ->select('id', 'title', 'category');
                 },
             ]);
@@ -216,12 +216,12 @@ class PortalTrainingController extends BaseController
             ->whereHas('participant', function ($q) use ($user) {
                 $q->where('user_id', $user->id)
                     ->whereHas('session.training', function ($q2) use ($user) {
-                        $q2->where('company_id', $user->company_id);
+                        $q2->where('company_id', $user->home_company_id);
                     });
             })
             ->with([
                 'participant.session.training' => function ($q) use ($user) {
-                    $q->where('company_id', $user->company_id);
+                    $q->where('company_id', $user->home_company_id);
                 },
             ])
             ->first();

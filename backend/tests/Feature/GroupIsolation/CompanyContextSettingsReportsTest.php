@@ -67,7 +67,7 @@ class CompanyContextSettingsReportsTest extends TestCase
         ]);
 
         $this->userA = User::factory()->create([
-            'company_id' => $this->companyA->id,
+            'home_company_id' => $this->companyA->id,
             'last_company_id' => $this->companyA->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
@@ -277,8 +277,8 @@ class CompanyContextSettingsReportsTest extends TestCase
             ]);
         };
 
-        $userPartA = User::factory()->create(['company_id' => $this->companyA->id, 'type' => UserType::User]);
-        $userPartB = User::factory()->create(['company_id' => $this->companyB->id, 'type' => UserType::User]);
+        $userPartA = User::factory()->create(['home_company_id' => $this->companyA->id, 'type' => UserType::User]);
+        $userPartB = User::factory()->create(['home_company_id' => $this->companyB->id, 'type' => UserType::User]);
 
         return [$make($this->companyA, $userPartA), $make($this->companyB, $userPartB)];
     }

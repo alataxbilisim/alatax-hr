@@ -162,8 +162,8 @@ class CompanyContextService
             ->where('user_id', $user->id)
             ->where('status', 'active');
 
-        if ($user->company_id !== null && $this->hasMembership($user, (int) $user->company_id)) {
-            $homeEmpCompany = (clone $empQ)->where('company_id', $user->company_id)->value('company_id');
+        if ($user->home_company_id !== null && $this->hasMembership($user, (int) $user->home_company_id)) {
+            $homeEmpCompany = (clone $empQ)->where('company_id', $user->home_company_id)->value('company_id');
             if ($homeEmpCompany !== null) {
                 return (int) $homeEmpCompany;
             }
@@ -174,8 +174,8 @@ class CompanyContextService
             return (int) $empCompanyId;
         }
 
-        if ($user->company_id !== null && $this->hasMembership($user, (int) $user->company_id)) {
-            return (int) $user->company_id;
+        if ($user->home_company_id !== null && $this->hasMembership($user, (int) $user->home_company_id)) {
+            return (int) $user->home_company_id;
         }
 
         return $this->resolveFallbackCompanyId($user, ignoreLastCompany: true);
@@ -207,7 +207,7 @@ class CompanyContextService
             return (int) $any;
         }
 
-        return $user->company_id !== null ? (int) $user->company_id : null;
+        return $user->home_company_id !== null ? (int) $user->home_company_id : null;
     }
 
     public function rememberLastCompany(User $user, int $companyId): void
@@ -254,11 +254,11 @@ class CompanyContextService
      */
     public function syncHomeMembership(User $user): void
     {
-        if ($user->type === UserType::SuperAdmin || $user->company_id === null) {
+        if ($user->type === UserType::SuperAdmin || $user->home_company_id === null) {
             return;
         }
 
-        $companyId = (int) $user->company_id;
+        $companyId = (int) $user->home_company_id;
         $this->ensureMembership($user, $companyId, true);
 
         if ($user->last_company_id === null) {

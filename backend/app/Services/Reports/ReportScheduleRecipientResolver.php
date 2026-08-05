@@ -34,7 +34,7 @@ final class ReportScheduleRecipientResolver
             }
 
             if ($userId) {
-                $u = User::query()->where('company_id', $companyId)->whereKey($userId)->first();
+                $u = User::query()->where('home_company_id', $companyId)->whereKey($userId)->first();
                 if ($u) {
                     $users->push($u);
                 }
@@ -48,7 +48,7 @@ final class ReportScheduleRecipientResolver
                     continue;
                 }
                 $roleUsers = User::query()
-                    ->where('company_id', $companyId)
+                    ->where('home_company_id', $companyId)
                     ->role($role->name)
                     ->get();
                 foreach ($roleUsers as $u) {
@@ -65,7 +65,7 @@ final class ReportScheduleRecipientResolver
                     ->whereNotNull('user_id')
                     ->pluck('user_id');
                 $deptUsers = User::query()
-                    ->where('company_id', $companyId)
+                    ->where('home_company_id', $companyId)
                     ->whereIn('id', $empUserIds)
                     ->get();
                 foreach ($deptUsers as $u) {

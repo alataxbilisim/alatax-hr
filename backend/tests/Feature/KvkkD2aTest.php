@@ -46,7 +46,7 @@ class KvkkD2aTest extends TestCase
             'slug' => 'kvkk-firma-b',
         ]);
         $this->admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($this->admin);
@@ -63,7 +63,7 @@ class KvkkD2aTest extends TestCase
     public function test_unauthorized_role_gets_403(): void
     {
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         Sanctum::actingAs($user);
@@ -109,7 +109,7 @@ class KvkkD2aTest extends TestCase
         );
 
         $otherAdmin = User::factory()->create([
-            'company_id' => $this->otherCompany->id,
+            'home_company_id' => $this->otherCompany->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($otherAdmin);
@@ -219,7 +219,7 @@ class KvkkD2aTest extends TestCase
         $this->postJson('/api/v1/kvkk/notices/'.$notice['id'].'/publish')->assertOk();
 
         $portalUser = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         Employee::factory()->forUser($portalUser)->create([

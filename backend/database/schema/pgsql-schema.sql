@@ -2,7 +2,6 @@
 -- PostgreSQL database dump
 --
 
-\restrict W7iGejLafux0LWBg0sLpgf8N7VbAkEtkUM09lUFxLuYJkyOS4qPjHMw4ev0v6Go
 
 -- Dumped from database version 16.14
 -- Dumped by pg_dump version 16.14
@@ -42,9 +41,9 @@ CREATE TABLE public.accrual_logs (
     reference_type character varying(255) NOT NULL,
     reference_id bigint NOT NULL,
     created_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    CONSTRAINT accrual_logs_type_check CHECK (((type)::text = ANY ((ARRAY['accrual'::character varying, 'usage'::character varying, 'adjustment'::character varying, 'carryover'::character varying, 'expiry'::character varying, 'encashment'::character varying, 'initial_grant'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    CONSTRAINT accrual_logs_type_check CHECK (((type)::text = ANY (ARRAY[('accrual'::character varying)::text, ('usage'::character varying)::text, ('adjustment'::character varying)::text, ('carryover'::character varying)::text, ('expiry'::character varying)::text, ('encashment'::character varying)::text, ('initial_grant'::character varying)::text])))
 );
 
 
@@ -93,10 +92,10 @@ CREATE TABLE public.accrual_policies (
     is_active boolean DEFAULT true NOT NULL,
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
-    CONSTRAINT accrual_policies_accrual_type_check CHECK (((accrual_type)::text = ANY ((ARRAY['annual'::character varying, 'monthly'::character varying, 'per_pay_period'::character varying, 'hourly'::character varying, 'custom'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
+    CONSTRAINT accrual_policies_accrual_type_check CHECK (((accrual_type)::text = ANY (ARRAY[('annual'::character varying)::text, ('monthly'::character varying)::text, ('per_pay_period'::character varying)::text, ('hourly'::character varying)::text, ('custom'::character varying)::text])))
 );
 
 
@@ -140,7 +139,7 @@ CREATE TABLE public.activity_logs (
     method character varying(10),
     is_successful boolean DEFAULT true NOT NULL,
     error_message text,
-    created_at timestamp(0) without time zone
+    created_at timestamp with time zone
 );
 
 
@@ -171,9 +170,9 @@ CREATE TABLE public.announcement_reads (
     id bigint NOT NULL,
     announcement_id bigint NOT NULL,
     employee_id bigint NOT NULL,
-    read_at timestamp(0) without time zone NOT NULL,
+    read_at timestamp with time zone NOT NULL,
     acknowledged boolean DEFAULT false NOT NULL,
-    acknowledged_at timestamp(0) without time zone,
+    acknowledged_at timestamp with time zone,
     user_id bigint
 );
 
@@ -216,17 +215,17 @@ CREATE TABLE public.announcements (
     image_path character varying(255),
     attachments jsonb,
     is_published boolean DEFAULT false NOT NULL,
-    published_at timestamp(0) without time zone,
-    expires_at timestamp(0) without time zone,
+    published_at timestamp with time zone,
+    expires_at timestamp with time zone,
     is_pinned boolean DEFAULT false NOT NULL,
     pin_order integer DEFAULT 0 NOT NULL,
     view_count integer DEFAULT 0 NOT NULL,
     requires_acknowledgment boolean DEFAULT false NOT NULL,
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
     target_branches jsonb
 );
 
@@ -261,13 +260,13 @@ CREATE TABLE public.api_keys (
     key character varying(64) NOT NULL,
     description text,
     permissions jsonb,
-    last_used_at timestamp(0) without time zone,
-    expires_at timestamp(0) without time zone,
+    last_used_at timestamp with time zone,
+    expires_at timestamp with time zone,
     is_active boolean DEFAULT true NOT NULL,
     created_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone
 );
 
 
@@ -304,9 +303,9 @@ CREATE TABLE public.application_forms (
     is_active boolean DEFAULT true NOT NULL,
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone
 );
 
 
@@ -341,9 +340,9 @@ CREATE TABLE public.application_sources (
     type character varying(64) DEFAULT 'other'::character varying NOT NULL,
     cost_per_application numeric(10,2),
     is_active boolean DEFAULT true NOT NULL,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    CONSTRAINT application_sources_type_check CHECK (((type)::text = ANY ((ARRAY['job_board'::character varying, 'social'::character varying, 'referral'::character varying, 'career_site'::character varying, 'agency'::character varying, 'other'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    CONSTRAINT application_sources_type_check CHECK (((type)::text = ANY (ARRAY[('job_board'::character varying)::text, ('social'::character varying)::text, ('referral'::character varying)::text, ('career_site'::character varying)::text, ('agency'::character varying)::text, ('other'::character varying)::text])))
 );
 
 
@@ -377,8 +376,8 @@ CREATE TABLE public.application_status_logs (
     to_status character varying(255) NOT NULL,
     note text,
     changed_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -416,8 +415,8 @@ CREATE TABLE public.approval_delegations (
     is_active boolean DEFAULT true NOT NULL,
     reason text,
     created_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -449,7 +448,7 @@ CREATE TABLE public.approval_escalation_alerts (
     company_id bigint NOT NULL,
     approval_record_id bigint NOT NULL,
     alert_level character varying(32) NOT NULL,
-    notified_at timestamp(0) without time zone NOT NULL
+    notified_at timestamp with time zone NOT NULL
 );
 
 
@@ -484,11 +483,11 @@ CREATE TABLE public.approval_instances (
     approvable_id bigint NOT NULL,
     current_step integer DEFAULT 1 NOT NULL,
     status character varying(32) DEFAULT 'pending'::character varying NOT NULL,
-    started_at timestamp(0) without time zone,
-    completed_at timestamp(0) without time zone,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    CONSTRAINT approval_instances_status_check CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'in_progress'::character varying, 'approved'::character varying, 'rejected'::character varying, 'cancelled'::character varying])::text[])))
+    started_at timestamp with time zone,
+    completed_at timestamp with time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    CONSTRAINT approval_instances_status_check CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('in_progress'::character varying)::text, ('approved'::character varying)::text, ('rejected'::character varying)::text, ('cancelled'::character varying)::text])))
 );
 
 
@@ -525,15 +524,15 @@ CREATE TABLE public.approval_records (
     approver_id bigint,
     status character varying(64) DEFAULT 'pending'::character varying NOT NULL,
     comment text,
-    decided_at timestamp(0) without time zone,
+    decided_at timestamp with time zone,
     step_order integer NOT NULL,
     is_current boolean DEFAULT false NOT NULL,
-    escalated_at timestamp(0) without time zone,
+    escalated_at timestamp with time zone,
     escalated_to bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
     approval_instance_id bigint,
-    CONSTRAINT approval_records_status_check CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'approved'::character varying, 'rejected'::character varying, 'skipped'::character varying, 'escalated'::character varying])::text[])))
+    CONSTRAINT approval_records_status_check CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('approved'::character varying)::text, ('rejected'::character varying)::text, ('skipped'::character varying)::text, ('escalated'::character varying)::text])))
 );
 
 
@@ -572,15 +571,15 @@ CREATE TABLE public.approval_steps (
     can_skip boolean DEFAULT false NOT NULL,
     timeout_hours integer,
     timeout_action character varying(64),
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
     condition jsonb,
     parallel_group integer,
     completion_policy character varying(16) DEFAULT 'all'::character varying,
     escalation_days smallint,
-    CONSTRAINT approval_steps_approver_type_check CHECK (((approver_type)::text = ANY ((ARRAY['direct_manager'::character varying, 'department_head'::character varying, 'specific_user'::character varying, 'specific_role'::character varying, 'hr'::character varying, 'cfo'::character varying, 'ceo'::character varying, 'dynamic_manager'::character varying, 'dynamic_skip_manager'::character varying, 'role'::character varying, 'user'::character varying])::text[]))),
-    CONSTRAINT approval_steps_completion_policy_check CHECK (((completion_policy)::text = ANY ((ARRAY['all'::character varying, 'any'::character varying])::text[]))),
-    CONSTRAINT approval_steps_timeout_action_check CHECK (((timeout_action)::text = ANY ((ARRAY['escalate'::character varying, 'auto_approve'::character varying, 'auto_reject'::character varying])::text[])))
+    CONSTRAINT approval_steps_approver_type_check CHECK (((approver_type)::text = ANY (ARRAY[('direct_manager'::character varying)::text, ('department_head'::character varying)::text, ('specific_user'::character varying)::text, ('specific_role'::character varying)::text, ('hr'::character varying)::text, ('cfo'::character varying)::text, ('ceo'::character varying)::text, ('dynamic_manager'::character varying)::text, ('dynamic_skip_manager'::character varying)::text, ('role'::character varying)::text, ('user'::character varying)::text]))),
+    CONSTRAINT approval_steps_completion_policy_check CHECK (((completion_policy)::text = ANY (ARRAY[('all'::character varying)::text, ('any'::character varying)::text]))),
+    CONSTRAINT approval_steps_timeout_action_check CHECK (((timeout_action)::text = ANY (ARRAY[('escalate'::character varying)::text, ('auto_approve'::character varying)::text, ('auto_reject'::character varying)::text])))
 );
 
 
@@ -618,9 +617,9 @@ CREATE TABLE public.approval_workflows (
     conditions jsonb,
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
     escalation_days smallint
 );
 
@@ -659,10 +658,10 @@ CREATE TABLE public.asset_assignments (
     condition_at_return character varying(64),
     assigned_by bigint,
     returned_to bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    CONSTRAINT asset_assignments_condition_at_assignment_check CHECK (((condition_at_assignment)::text = ANY ((ARRAY['new'::character varying, 'good'::character varying, 'fair'::character varying, 'poor'::character varying])::text[]))),
-    CONSTRAINT asset_assignments_condition_at_return_check CHECK (((condition_at_return)::text = ANY ((ARRAY['good'::character varying, 'fair'::character varying, 'poor'::character varying, 'broken'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    CONSTRAINT asset_assignments_condition_at_assignment_check CHECK (((condition_at_assignment)::text = ANY (ARRAY[('new'::character varying)::text, ('good'::character varying)::text, ('fair'::character varying)::text, ('poor'::character varying)::text]))),
+    CONSTRAINT asset_assignments_condition_at_return_check CHECK (((condition_at_return)::text = ANY (ARRAY[('good'::character varying)::text, ('fair'::character varying)::text, ('poor'::character varying)::text, ('broken'::character varying)::text])))
 );
 
 
@@ -697,8 +696,8 @@ CREATE TABLE public.asset_categories (
     icon character varying(255),
     is_active boolean DEFAULT true NOT NULL,
     sort_order integer DEFAULT 0 NOT NULL,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -738,10 +737,10 @@ CREATE TABLE public.asset_maintenance (
     status character varying(64) DEFAULT 'scheduled'::character varying NOT NULL,
     resolution text,
     created_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    CONSTRAINT asset_maintenance_status_check CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'in_progress'::character varying, 'completed'::character varying, 'cancelled'::character varying])::text[]))),
-    CONSTRAINT asset_maintenance_type_check CHECK (((type)::text = ANY ((ARRAY['preventive'::character varying, 'corrective'::character varying, 'upgrade'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    CONSTRAINT asset_maintenance_status_check CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('in_progress'::character varying)::text, ('completed'::character varying)::text, ('cancelled'::character varying)::text]))),
+    CONSTRAINT asset_maintenance_type_check CHECK (((type)::text = ANY (ARRAY[('preventive'::character varying)::text, ('corrective'::character varying)::text, ('upgrade'::character varying)::text])))
 );
 
 
@@ -781,15 +780,15 @@ CREATE TABLE public.asset_requests (
     status character varying(64) DEFAULT 'pending'::character varying NOT NULL,
     approval_notes text,
     approved_by bigint,
-    approved_at timestamp(0) without time zone,
+    approved_at timestamp with time zone,
     fulfilled_with_asset_id bigint,
     approval_workflow_id bigint,
     current_step integer,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
-    CONSTRAINT asset_requests_status_check CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'approved'::character varying, 'rejected'::character varying, 'fulfilled'::character varying, 'cancelled'::character varying])::text[]))),
-    CONSTRAINT asset_requests_urgency_check CHECK (((urgency)::text = ANY ((ARRAY['low'::character varying, 'medium'::character varying, 'high'::character varying, 'critical'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
+    CONSTRAINT asset_requests_status_check CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('approved'::character varying)::text, ('rejected'::character varying)::text, ('fulfilled'::character varying)::text, ('cancelled'::character varying)::text]))),
+    CONSTRAINT asset_requests_urgency_check CHECK (((urgency)::text = ANY (ARRAY[('low'::character varying)::text, ('medium'::character varying)::text, ('high'::character varying)::text, ('critical'::character varying)::text])))
 );
 
 
@@ -834,8 +833,8 @@ CREATE TABLE public.assets (
     location character varying(255),
     specifications jsonb,
     created_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
     depreciation_method character varying(64) DEFAULT 'none'::character varying NOT NULL,
     useful_life_years integer,
     residual_value numeric(15,2),
@@ -847,10 +846,10 @@ CREATE TABLE public.assets (
     disposed_at date,
     disposal_notes text,
     custom_fields jsonb,
-    CONSTRAINT assets_condition_check CHECK (((condition)::text = ANY ((ARRAY['new'::character varying, 'good'::character varying, 'fair'::character varying, 'poor'::character varying, 'broken'::character varying])::text[]))),
-    CONSTRAINT assets_depreciation_method_check CHECK (((depreciation_method)::text = ANY ((ARRAY['none'::character varying, 'straight_line'::character varying, 'declining_balance'::character varying])::text[]))),
-    CONSTRAINT assets_lifecycle_stage_check CHECK (((lifecycle_stage)::text = ANY ((ARRAY['new'::character varying, 'active'::character varying, 'maintenance'::character varying, 'retired'::character varying, 'disposed'::character varying])::text[]))),
-    CONSTRAINT assets_status_check CHECK (((status)::text = ANY ((ARRAY['available'::character varying, 'assigned'::character varying, 'maintenance'::character varying, 'disposed'::character varying])::text[])))
+    CONSTRAINT assets_condition_check CHECK (((condition)::text = ANY (ARRAY[('new'::character varying)::text, ('good'::character varying)::text, ('fair'::character varying)::text, ('poor'::character varying)::text, ('broken'::character varying)::text]))),
+    CONSTRAINT assets_depreciation_method_check CHECK (((depreciation_method)::text = ANY (ARRAY[('none'::character varying)::text, ('straight_line'::character varying)::text, ('declining_balance'::character varying)::text]))),
+    CONSTRAINT assets_lifecycle_stage_check CHECK (((lifecycle_stage)::text = ANY (ARRAY[('new'::character varying)::text, ('active'::character varying)::text, ('maintenance'::character varying)::text, ('retired'::character varying)::text, ('disposed'::character varying)::text]))),
+    CONSTRAINT assets_status_check CHECK (((status)::text = ANY (ARRAY[('available'::character varying)::text, ('assigned'::character varying)::text, ('maintenance'::character varying)::text, ('disposed'::character varying)::text])))
 );
 
 
@@ -883,11 +882,11 @@ CREATE TABLE public.attendance_kiosk_tokens (
     branch_id bigint,
     jti uuid NOT NULL,
     token_hash character varying(64) NOT NULL,
-    expires_at timestamp(0) without time zone NOT NULL,
-    used_at timestamp(0) without time zone,
+    expires_at timestamp with time zone NOT NULL,
+    used_at timestamp with time zone,
     used_by_user_id bigint,
     created_by bigint,
-    created_at timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 
@@ -937,9 +936,9 @@ CREATE TABLE public.attendance_records (
     notes text,
     is_approved boolean DEFAULT false NOT NULL,
     approved_by bigint,
-    approved_at timestamp(0) without time zone,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
+    approved_at timestamp with time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
     source character varying(32),
     branch_id bigint,
     device_info character varying(255),
@@ -991,9 +990,9 @@ CREATE TABLE public.branches (
     longitude numeric(11,8),
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone
 );
 
 
@@ -1031,9 +1030,9 @@ CREATE TABLE public.buddy_assignments (
     status character varying(64) DEFAULT 'active'::character varying NOT NULL,
     notes text,
     assigned_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    CONSTRAINT buddy_assignments_status_check CHECK (((status)::text = ANY ((ARRAY['active'::character varying, 'completed'::character varying, 'cancelled'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    CONSTRAINT buddy_assignments_status_check CHECK (((status)::text = ANY (ARRAY[('active'::character varying)::text, ('completed'::character varying)::text, ('cancelled'::character varying)::text])))
 );
 
 
@@ -1068,8 +1067,8 @@ CREATE TABLE public.buddy_pool (
     current_mentees integer DEFAULT 0 NOT NULL,
     expertise_areas jsonb,
     is_available boolean DEFAULT true NOT NULL,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -1128,8 +1127,8 @@ CREATE TABLE public.candidate_scores (
     education_score jsonb,
     keyword_matches jsonb,
     summary text,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -1181,17 +1180,18 @@ CREATE TABLE public.companies (
     license_start_date date,
     license_end_date date,
     status character varying(64) DEFAULT 'trial'::character varying NOT NULL,
-    trial_ends_at timestamp(0) without time zone,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
+    trial_ends_at timestamp with time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
     license_package_id bigint,
     location_count integer DEFAULT 1 NOT NULL,
     location_limit integer DEFAULT 1 NOT NULL,
     employee_limit integer DEFAULT 50 NOT NULL,
     current_balance numeric(12,2) DEFAULT '0'::numeric NOT NULL,
-    CONSTRAINT companies_package_type_check CHECK (((package_type)::text = ANY ((ARRAY['starter'::character varying, 'professional'::character varying, 'enterprise'::character varying])::text[]))),
-    CONSTRAINT companies_status_check CHECK (((status)::text = ANY ((ARRAY['active'::character varying, 'suspended'::character varying, 'cancelled'::character varying, 'trial'::character varying])::text[])))
+    organization_id bigint,
+    CONSTRAINT companies_package_type_check CHECK (((package_type)::text = ANY (ARRAY[('starter'::character varying)::text, ('professional'::character varying)::text, ('enterprise'::character varying)::text]))),
+    CONSTRAINT companies_status_check CHECK (((status)::text = ANY (ARRAY[('active'::character varying)::text, ('suspended'::character varying)::text, ('cancelled'::character varying)::text, ('trial'::character varying)::text])))
 );
 
 
@@ -1234,9 +1234,9 @@ CREATE TABLE public.company_ledger (
     due_date date,
     notes text,
     created_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    CONSTRAINT company_ledger_type_check CHECK (((type)::text = ANY ((ARRAY['debit'::character varying, 'credit'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    CONSTRAINT company_ledger_type_check CHECK (((type)::text = ANY (ARRAY[('debit'::character varying)::text, ('credit'::character varying)::text])))
 );
 
 
@@ -1271,8 +1271,8 @@ CREATE TABLE public.company_modules (
     activated_at date,
     expires_at date,
     settings jsonb,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -1296,6 +1296,39 @@ ALTER SEQUENCE public.company_modules_id_seq OWNED BY public.company_modules.id;
 
 
 --
+-- Name: company_user; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.company_user (
+    id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    role_id bigint,
+    is_default boolean DEFAULT false NOT NULL,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+--
+-- Name: company_user_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.company_user_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: company_user_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.company_user_id_seq OWNED BY public.company_user.id;
+
+
+--
 -- Name: competencies; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1310,9 +1343,9 @@ CREATE TABLE public.competencies (
     is_active boolean DEFAULT true NOT NULL,
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone
 );
 
 
@@ -1347,17 +1380,17 @@ CREATE TABLE public.consent_records (
     notice_id bigint,
     consent_type character varying(64) NOT NULL,
     granted boolean NOT NULL,
-    granted_at timestamp(0) without time zone,
-    withdrawn_at timestamp(0) without time zone,
+    granted_at timestamp with time zone,
+    withdrawn_at timestamp with time zone,
     source character varying(32) NOT NULL,
     ip character varying(45),
     user_agent character varying(512),
     evidence jsonb,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    CONSTRAINT consent_records_consent_type_check CHECK (((consent_type)::text = ANY ((ARRAY['aydinlatma_okundu'::character varying, 'acik_riza_ozel_nitelikli'::character varying, 'acik_riza_yurtdisi'::character varying, 'ticari_elektronik_ileti'::character varying, 'diger'::character varying])::text[]))),
-    CONSTRAINT consent_records_source_check CHECK (((source)::text = ANY ((ARRAY['portal'::character varying, 'public_form'::character varying, 'admin'::character varying, 'import'::character varying])::text[]))),
-    CONSTRAINT consent_records_subject_type_check CHECK (((subject_type)::text = ANY ((ARRAY['employee'::character varying, 'candidate'::character varying, 'visitor'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    CONSTRAINT consent_records_consent_type_check CHECK (((consent_type)::text = ANY (ARRAY[('aydinlatma_okundu'::character varying)::text, ('acik_riza_ozel_nitelikli'::character varying)::text, ('acik_riza_yurtdisi'::character varying)::text, ('ticari_elektronik_ileti'::character varying)::text, ('diger'::character varying)::text]))),
+    CONSTRAINT consent_records_source_check CHECK (((source)::text = ANY (ARRAY[('portal'::character varying)::text, ('public_form'::character varying)::text, ('admin'::character varying)::text, ('import'::character varying)::text]))),
+    CONSTRAINT consent_records_subject_type_check CHECK (((subject_type)::text = ANY (ARRAY[('employee'::character varying)::text, ('candidate'::character varying)::text, ('visitor'::character varying)::text])))
 );
 
 
@@ -1397,10 +1430,10 @@ CREATE TABLE public.continuous_feedbacks (
     related_type character varying(255) NOT NULL,
     related_id bigint NOT NULL,
     created_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
-    CONSTRAINT continuous_feedbacks_type_check CHECK (((type)::text = ANY ((ARRAY['praise'::character varying, 'suggestion'::character varying, 'concern'::character varying, 'coaching'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
+    CONSTRAINT continuous_feedbacks_type_check CHECK (((type)::text = ANY (ARRAY[('praise'::character varying)::text, ('suggestion'::character varying)::text, ('concern'::character varying)::text, ('coaching'::character varying)::text])))
 );
 
 
@@ -1444,16 +1477,16 @@ CREATE TABLE public.custom_field_definitions (
     default_value character varying(255),
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
     is_system boolean DEFAULT false NOT NULL,
     system_key character varying(100),
     label_override character varying(255),
     is_hidden boolean DEFAULT false NOT NULL,
     is_required_override boolean,
     field_permission character varying(32),
-    CONSTRAINT custom_field_definitions_field_permission_check CHECK (((field_permission)::text = ANY ((ARRAY['readonly'::character varying, 'hidden'::character varying])::text[])))
+    CONSTRAINT custom_field_definitions_field_permission_check CHECK (((field_permission)::text = ANY (ARRAY[('readonly'::character varying)::text, ('hidden'::character varying)::text])))
 );
 
 
@@ -1487,10 +1520,10 @@ CREATE TABLE public.dashboard_shares (
     user_id bigint,
     role_id bigint,
     level character varying(16) DEFAULT 'viewer'::character varying NOT NULL,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
     department_id bigint,
-    CONSTRAINT dashboard_shares_level_check CHECK (((level)::text = ANY ((ARRAY['viewer'::character varying, 'editor'::character varying])::text[]))),
+    CONSTRAINT dashboard_shares_level_check CHECK (((level)::text = ANY (ARRAY[('viewer'::character varying)::text, ('editor'::character varying)::text]))),
     CONSTRAINT dashboard_shares_target_check CHECK ((((user_id IS NOT NULL) AND (role_id IS NULL) AND (department_id IS NULL)) OR ((user_id IS NULL) AND (role_id IS NOT NULL) AND (department_id IS NULL)) OR ((user_id IS NULL) AND (role_id IS NULL) AND (department_id IS NOT NULL))))
 );
 
@@ -1528,9 +1561,9 @@ CREATE TABLE public.dashboards (
     global_filters jsonb,
     is_system boolean DEFAULT false NOT NULL,
     created_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
     folder_id bigint,
     cache_ttl_seconds integer,
     module_key character varying(64),
@@ -1564,8 +1597,8 @@ ALTER SEQUENCE public.dashboards_id_seq OWNED BY public.dashboards.id;
 CREATE TABLE public.data_breaches (
     id bigint NOT NULL,
     company_id bigint NOT NULL,
-    detected_at timestamp(0) without time zone NOT NULL,
-    occurred_at timestamp(0) without time zone,
+    detected_at timestamp with time zone NOT NULL,
+    occurred_at timestamp with time zone,
     description text NOT NULL,
     affected_categories jsonb,
     affected_subject_count integer DEFAULT 0 NOT NULL,
@@ -1573,18 +1606,18 @@ CREATE TABLE public.data_breaches (
     root_cause text,
     containment_actions text,
     notified_kvkk boolean DEFAULT false NOT NULL,
-    notified_kvkk_at timestamp(0) without time zone,
+    notified_kvkk_at timestamp with time zone,
     notified_subjects boolean DEFAULT false NOT NULL,
-    notified_subjects_at timestamp(0) without time zone,
+    notified_subjects_at timestamp with time zone,
     notified_subjects_method character varying(255),
     status character varying(32) DEFAULT 'open'::character varying NOT NULL,
-    closed_at timestamp(0) without time zone,
+    closed_at timestamp with time zone,
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
-    CONSTRAINT data_breaches_severity_check CHECK (((severity)::text = ANY ((ARRAY['low'::character varying, 'medium'::character varying, 'high'::character varying, 'critical'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
+    CONSTRAINT data_breaches_severity_check CHECK (((severity)::text = ANY (ARRAY[('low'::character varying)::text, ('medium'::character varying)::text, ('high'::character varying)::text, ('critical'::character varying)::text])))
 );
 
 
@@ -1626,11 +1659,11 @@ CREATE TABLE public.data_processing_activities (
     transfer_abroad_note text,
     security_measures text,
     is_system boolean DEFAULT false NOT NULL,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
-    CONSTRAINT data_processing_activities_legal_basis_check CHECK (((legal_basis)::text = ANY ((ARRAY['explicit_consent'::character varying, 'contract'::character varying, 'legal_obligation'::character varying, 'legitimate_interest'::character varying, 'legal_provision'::character varying])::text[]))),
-    CONSTRAINT data_processing_activities_subject_group_check CHECK (((data_subject_group)::text = ANY ((ARRAY['employee'::character varying, 'candidate'::character varying, 'visitor'::character varying, 'contractor'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
+    CONSTRAINT data_processing_activities_legal_basis_check CHECK (((legal_basis)::text = ANY (ARRAY[('explicit_consent'::character varying)::text, ('contract'::character varying)::text, ('legal_obligation'::character varying)::text, ('legitimate_interest'::character varying)::text, ('legal_provision'::character varying)::text]))),
+    CONSTRAINT data_processing_activities_subject_group_check CHECK (((data_subject_group)::text = ANY (ARRAY[('employee'::character varying)::text, ('candidate'::character varying)::text, ('visitor'::character varying)::text, ('contractor'::character varying)::text])))
 );
 
 
@@ -1665,7 +1698,7 @@ CREATE TABLE public.data_subject_export_access_logs (
     action character varying(32) NOT NULL,
     ip_address character varying(45),
     user_agent text,
-    created_at timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 
@@ -1702,11 +1735,11 @@ CREATE TABLE public.data_subject_export_packages (
     json_path character varying(255),
     human_path character varying(255),
     error_message text,
-    expires_at timestamp(0) without time zone,
-    purged_at timestamp(0) without time zone,
+    expires_at timestamp with time zone,
+    purged_at timestamp with time zone,
     created_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -1746,10 +1779,10 @@ CREATE TABLE public.data_subject_requests (
     identity_verified boolean DEFAULT false NOT NULL,
     verification_method character varying(64),
     verified_by bigint,
-    verified_at timestamp(0) without time zone,
+    verified_at timestamp with time zone,
     status character varying(32) DEFAULT 'new'::character varying NOT NULL,
     due_date date NOT NULL,
-    responded_at timestamp(0) without time zone,
+    responded_at timestamp with time zone,
     response_body text,
     response_file_path character varying(255),
     response_template character varying(32),
@@ -1758,15 +1791,15 @@ CREATE TABLE public.data_subject_requests (
     destruction_pending boolean DEFAULT false NOT NULL,
     destruction_scope jsonb,
     email_verify_token character varying(64),
-    email_verified_at timestamp(0) without time zone,
+    email_verified_at timestamp with time zone,
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
-    CONSTRAINT data_subject_requests_channel_check CHECK (((channel)::text = ANY ((ARRAY['portal'::character varying, 'public_form'::character varying, 'email'::character varying, 'written'::character varying, 'kep'::character varying])::text[]))),
-    CONSTRAINT data_subject_requests_status_check CHECK (((status)::text = ANY ((ARRAY['new'::character varying, 'identity_pending'::character varying, 'in_review'::character varying, 'awaiting_info'::character varying, 'approved'::character varying, 'partially_approved'::character varying, 'rejected'::character varying, 'completed'::character varying])::text[]))),
-    CONSTRAINT data_subject_requests_subject_type_check CHECK (((subject_type)::text = ANY ((ARRAY['employee'::character varying, 'candidate'::character varying, 'former_employee'::character varying, 'visitor'::character varying, 'other'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
+    CONSTRAINT data_subject_requests_channel_check CHECK (((channel)::text = ANY (ARRAY[('portal'::character varying)::text, ('public_form'::character varying)::text, ('email'::character varying)::text, ('written'::character varying)::text, ('kep'::character varying)::text]))),
+    CONSTRAINT data_subject_requests_status_check CHECK (((status)::text = ANY (ARRAY[('new'::character varying)::text, ('identity_pending'::character varying)::text, ('in_review'::character varying)::text, ('awaiting_info'::character varying)::text, ('approved'::character varying)::text, ('partially_approved'::character varying)::text, ('rejected'::character varying)::text, ('completed'::character varying)::text]))),
+    CONSTRAINT data_subject_requests_subject_type_check CHECK (((subject_type)::text = ANY (ARRAY[('employee'::character varying)::text, ('candidate'::character varying)::text, ('former_employee'::character varying)::text, ('visitor'::character varying)::text, ('other'::character varying)::text])))
 );
 
 
@@ -1805,9 +1838,9 @@ CREATE TABLE public.departments (
     sort_order integer DEFAULT 0 NOT NULL,
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone
 );
 
 
@@ -1838,13 +1871,13 @@ CREATE TABLE public.destruction_approvals (
     id bigint NOT NULL,
     company_id bigint NOT NULL,
     approved_by bigint NOT NULL,
-    approved_at timestamp(0) without time zone NOT NULL,
+    approved_at timestamp with time zone NOT NULL,
     candidate_ids jsonb NOT NULL,
     dry_run_confirmed boolean DEFAULT false NOT NULL,
     status character varying(32) DEFAULT 'approved'::character varying NOT NULL,
     note text,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -1879,16 +1912,16 @@ CREATE TABLE public.destruction_candidates (
     subject_id bigint NOT NULL,
     data_category character varying(64) NOT NULL,
     record_count integer DEFAULT 0 NOT NULL,
-    due_since timestamp(0) without time zone,
+    due_since timestamp with time zone,
     status character varying(32) DEFAULT 'pending'::character varying NOT NULL,
     strategy character varying(32) DEFAULT 'anonymize'::character varying NOT NULL,
     preview_snapshot jsonb,
     approval_id bigint,
     skip_reason text,
-    deferred_until timestamp(0) without time zone,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    CONSTRAINT destruction_candidates_status_check CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'deferred'::character varying, 'excluded'::character varying, 'skipped_legal_hold'::character varying, 'approved'::character varying, 'processing'::character varying, 'completed'::character varying, 'failed'::character varying])::text[])))
+    deferred_until timestamp with time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    CONSTRAINT destruction_candidates_status_check CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('deferred'::character varying)::text, ('excluded'::character varying)::text, ('skipped_legal_hold'::character varying)::text, ('approved'::character varying)::text, ('processing'::character varying)::text, ('completed'::character varying)::text, ('failed'::character varying)::text])))
 );
 
 
@@ -1933,7 +1966,7 @@ CREATE TABLE public.destruction_logs (
     dry_run boolean DEFAULT false NOT NULL,
     outcome character varying(32) DEFAULT 'success'::character varying NOT NULL,
     error_message text,
-    created_at timestamp(0) without time zone NOT NULL
+    created_at timestamp with time zone NOT NULL
 );
 
 
@@ -1966,10 +1999,10 @@ CREATE TABLE public.document_approvals (
     approver_id bigint NOT NULL,
     status character varying(64) DEFAULT 'pending'::character varying NOT NULL,
     comment text,
-    decided_at timestamp(0) without time zone,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    CONSTRAINT document_approvals_status_check CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'approved'::character varying, 'rejected'::character varying])::text[])))
+    decided_at timestamp with time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    CONSTRAINT document_approvals_status_check CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('approved'::character varying)::text, ('rejected'::character varying)::text])))
 );
 
 
@@ -2007,9 +2040,9 @@ CREATE TABLE public.document_categories (
     is_active boolean DEFAULT true NOT NULL,
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone
 );
 
 
@@ -2041,7 +2074,7 @@ CREATE TABLE public.document_expiry_alerts (
     company_id bigint NOT NULL,
     employee_document_id bigint NOT NULL,
     threshold_days smallint NOT NULL,
-    notified_at timestamp(0) without time zone NOT NULL
+    notified_at timestamp with time zone NOT NULL
 );
 
 
@@ -2079,8 +2112,8 @@ CREATE TABLE public.document_versions (
     hash character varying(255),
     change_notes text,
     uploaded_by bigint NOT NULL,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -2122,14 +2155,14 @@ CREATE TABLE public.documents (
     metadata jsonb,
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
     current_version integer DEFAULT 1 NOT NULL,
     validity_date date,
     approval_status character varying(64) DEFAULT 'approved'::character varying NOT NULL,
     requires_approval boolean DEFAULT false NOT NULL,
-    CONSTRAINT documents_approval_status_check CHECK (((approval_status)::text = ANY ((ARRAY['draft'::character varying, 'pending'::character varying, 'approved'::character varying, 'rejected'::character varying])::text[])))
+    CONSTRAINT documents_approval_status_check CHECK (((approval_status)::text = ANY (ARRAY[('draft'::character varying)::text, ('pending'::character varying)::text, ('approved'::character varying)::text, ('rejected'::character varying)::text])))
 );
 
 
@@ -2167,8 +2200,8 @@ CREATE TABLE public.employee_dashboards (
     is_favorite boolean DEFAULT false NOT NULL,
     is_shared boolean DEFAULT false NOT NULL,
     sort_order integer DEFAULT 0 NOT NULL,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -2215,9 +2248,9 @@ CREATE TABLE public.employee_documents (
     uploaded_by bigint,
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone
 );
 
 
@@ -2251,8 +2284,8 @@ CREATE TABLE public.employee_request_history (
     new_status character varying(255) NOT NULL,
     comment text,
     changed_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -2291,7 +2324,7 @@ CREATE TABLE public.employee_requests (
     rejection_reason text,
     attachments jsonb,
     approved_by bigint,
-    approved_at timestamp(0) without time zone,
+    approved_at timestamp with time zone,
     priority character varying(255) DEFAULT 'normal'::character varying NOT NULL,
     effective_date date,
     due_date date,
@@ -2299,9 +2332,9 @@ CREATE TABLE public.employee_requests (
     admin_notes text,
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone
 );
 
 
@@ -2335,8 +2368,8 @@ CREATE TABLE public.employee_shifts (
     shift_id bigint NOT NULL,
     date date NOT NULL,
     notes text,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -2406,10 +2439,12 @@ CREATE TABLE public.employees (
     custom_fields jsonb,
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
-    branch_id bigint
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
+    branch_id bigint,
+    full_name character varying(255),
+    position_id bigint
 );
 
 
@@ -2446,8 +2481,8 @@ CREATE TABLE public.enps_records (
     detractors integer DEFAULT 0 NOT NULL,
     total_responses integer DEFAULT 0 NOT NULL,
     enps_score numeric(5,2),
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -2483,8 +2518,8 @@ CREATE TABLE public.expense_categories (
     max_amount numeric(12,2),
     requires_receipt boolean DEFAULT true NOT NULL,
     is_active boolean DEFAULT true NOT NULL,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -2524,15 +2559,15 @@ CREATE TABLE public.expense_claims (
     status character varying(255) DEFAULT 'draft'::character varying NOT NULL,
     rejection_reason text,
     submitted_by bigint,
-    submitted_at timestamp(0) without time zone,
+    submitted_at timestamp with time zone,
     approved_by bigint,
-    approved_at timestamp(0) without time zone,
+    approved_at timestamp with time zone,
     paid_by bigint,
-    paid_at timestamp(0) without time zone,
+    paid_at timestamp with time zone,
     payment_method character varying(255),
     payment_reference character varying(255),
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
     custom_fields jsonb
 );
 
@@ -2572,8 +2607,8 @@ CREATE TABLE public.expense_items (
     receipt_number character varying(255),
     vendor_name character varying(255),
     notes text,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -2607,7 +2642,7 @@ CREATE TABLE public.failed_jobs (
     queue text NOT NULL,
     payload text NOT NULL,
     exception text NOT NULL,
-    failed_at timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+    failed_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 
@@ -2640,15 +2675,15 @@ CREATE TABLE public.feedback_providers (
     provider_id bigint NOT NULL,
     relationship character varying(64) NOT NULL,
     status character varying(64) DEFAULT 'pending'::character varying NOT NULL,
-    invited_at timestamp(0) without time zone,
-    submitted_at timestamp(0) without time zone,
-    deadline timestamp(0) without time zone,
+    invited_at timestamp with time zone,
+    submitted_at timestamp with time zone,
+    deadline timestamp with time zone,
     decline_reason text,
     is_anonymous boolean DEFAULT true NOT NULL,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    CONSTRAINT feedback_providers_relationship_check CHECK (((relationship)::text = ANY ((ARRAY['self'::character varying, 'manager'::character varying, 'peer'::character varying, 'direct_report'::character varying, 'external'::character varying])::text[]))),
-    CONSTRAINT feedback_providers_status_check CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'in_progress'::character varying, 'submitted'::character varying, 'declined'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    CONSTRAINT feedback_providers_relationship_check CHECK (((relationship)::text = ANY (ARRAY[('self'::character varying)::text, ('manager'::character varying)::text, ('peer'::character varying)::text, ('direct_report'::character varying)::text, ('external'::character varying)::text]))),
+    CONSTRAINT feedback_providers_status_check CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('in_progress'::character varying)::text, ('submitted'::character varying)::text, ('declined'::character varying)::text])))
 );
 
 
@@ -2681,8 +2716,8 @@ CREATE TABLE public.feedback_responses (
     performance_criteria_id bigint NOT NULL,
     score integer,
     comment text,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -2718,9 +2753,9 @@ CREATE TABLE public.form_definitions (
     layout jsonb NOT NULL,
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone
 );
 
 
@@ -2761,10 +2796,10 @@ CREATE TABLE public.holidays (
     is_active boolean DEFAULT true NOT NULL,
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
-    CONSTRAINT holidays_type_check CHECK (((type)::text = ANY ((ARRAY['national'::character varying, 'religious'::character varying, 'company'::character varying, 'regional'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
+    CONSTRAINT holidays_type_check CHECK (((type)::text = ANY (ARRAY[('national'::character varying)::text, ('religious'::character varying)::text, ('company'::character varying)::text, ('regional'::character varying)::text])))
 );
 
 
@@ -2797,8 +2832,8 @@ CREATE TABLE public.interview_scorecards (
     criteria_name character varying(255) NOT NULL,
     score integer,
     notes text,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -2832,7 +2867,7 @@ CREATE TABLE public.interviews (
     job_position_id bigint NOT NULL,
     title character varying(255) NOT NULL,
     type character varying(64) DEFAULT 'onsite'::character varying NOT NULL,
-    scheduled_at timestamp(0) without time zone NOT NULL,
+    scheduled_at timestamp with time zone NOT NULL,
     duration_minutes integer DEFAULT 60 NOT NULL,
     location character varying(255),
     meeting_link character varying(255),
@@ -2843,12 +2878,12 @@ CREATE TABLE public.interviews (
     feedback text,
     interviewer_id bigint NOT NULL,
     created_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
-    CONSTRAINT interviews_recommendation_check CHECK (((recommendation)::text = ANY ((ARRAY['strong_hire'::character varying, 'hire'::character varying, 'no_decision'::character varying, 'no_hire'::character varying, 'strong_no_hire'::character varying])::text[]))),
-    CONSTRAINT interviews_status_check CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'completed'::character varying, 'cancelled'::character varying, 'no_show'::character varying, 'rescheduled'::character varying])::text[]))),
-    CONSTRAINT interviews_type_check CHECK (((type)::text = ANY ((ARRAY['phone'::character varying, 'video'::character varying, 'onsite'::character varying, 'technical'::character varying, 'hr'::character varying, 'panel'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
+    CONSTRAINT interviews_recommendation_check CHECK (((recommendation)::text = ANY (ARRAY[('strong_hire'::character varying)::text, ('hire'::character varying)::text, ('no_decision'::character varying)::text, ('no_hire'::character varying)::text, ('strong_no_hire'::character varying)::text]))),
+    CONSTRAINT interviews_status_check CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('completed'::character varying)::text, ('cancelled'::character varying)::text, ('no_show'::character varying)::text, ('rescheduled'::character varying)::text]))),
+    CONSTRAINT interviews_type_check CHECK (((type)::text = ANY (ARRAY[('phone'::character varying)::text, ('video'::character varying)::text, ('onsite'::character varying)::text, ('technical'::character varying)::text, ('hr'::character varying)::text, ('panel'::character varying)::text])))
 );
 
 
@@ -2896,17 +2931,17 @@ CREATE TABLE public.job_applications (
     ip_address character varying(255),
     user_agent character varying(255),
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
     source_id bigint,
     match_score numeric(5,2),
     parsed_cv_data jsonb,
-    last_contacted_at timestamp(0) without time zone,
+    last_contacted_at timestamp with time zone,
     consent_kvkk boolean DEFAULT false NOT NULL,
-    consent_at timestamp(0) without time zone,
+    consent_at timestamp with time zone,
     converted_employee_id bigint,
-    CONSTRAINT job_applications_status_check CHECK (((status)::text = ANY ((ARRAY['new'::character varying, 'reviewing'::character varying, 'shortlisted'::character varying, 'interview_scheduled'::character varying, 'interviewed'::character varying, 'offer_sent'::character varying, 'hired'::character varying, 'rejected'::character varying, 'withdrawn'::character varying])::text[])))
+    CONSTRAINT job_applications_status_check CHECK (((status)::text = ANY (ARRAY[('new'::character varying)::text, ('reviewing'::character varying)::text, ('shortlisted'::character varying)::text, ('interview_scheduled'::character varying)::text, ('interviewed'::character varying)::text, ('offer_sent'::character varying)::text, ('hired'::character varying)::text, ('rejected'::character varying)::text, ('withdrawn'::character varying)::text])))
 );
 
 
@@ -2964,15 +2999,15 @@ CREATE TABLE public.job_offers (
     additional_terms text,
     document_path character varying(255),
     status character varying(64) DEFAULT 'draft'::character varying NOT NULL,
-    sent_at timestamp(0) without time zone,
-    responded_at timestamp(0) without time zone,
+    sent_at timestamp with time zone,
+    responded_at timestamp with time zone,
     rejection_reason text,
     created_by bigint,
     approved_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
-    CONSTRAINT job_offers_status_check CHECK (((status)::text = ANY ((ARRAY['draft'::character varying, 'sent'::character varying, 'accepted'::character varying, 'rejected'::character varying, 'expired'::character varying, 'withdrawn'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
+    CONSTRAINT job_offers_status_check CHECK (((status)::text = ANY (ARRAY[('draft'::character varying)::text, ('sent'::character varying)::text, ('accepted'::character varying)::text, ('rejected'::character varying)::text, ('expired'::character varying)::text, ('withdrawn'::character varying)::text])))
 );
 
 
@@ -3018,15 +3053,15 @@ CREATE TABLE public.job_positions (
     status character varying(64) DEFAULT 'draft'::character varying NOT NULL,
     positions_count integer DEFAULT 1 NOT NULL,
     application_deadline date,
-    published_at timestamp(0) without time zone,
+    published_at timestamp with time zone,
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
     form_definition_id bigint,
-    CONSTRAINT job_positions_experience_level_check CHECK (((experience_level)::text = ANY ((ARRAY['entry'::character varying, 'mid'::character varying, 'senior'::character varying, 'lead'::character varying, 'manager'::character varying])::text[]))),
-    CONSTRAINT job_positions_status_check CHECK (((status)::text = ANY ((ARRAY['draft'::character varying, 'active'::character varying, 'paused'::character varying, 'closed'::character varying])::text[])))
+    CONSTRAINT job_positions_experience_level_check CHECK (((experience_level)::text = ANY (ARRAY[('entry'::character varying)::text, ('mid'::character varying)::text, ('senior'::character varying)::text, ('lead'::character varying)::text, ('manager'::character varying)::text]))),
+    CONSTRAINT job_positions_status_check CHECK (((status)::text = ANY (ARRAY[('draft'::character varying)::text, ('active'::character varying)::text, ('paused'::character varying)::text, ('closed'::character varying)::text])))
 );
 
 
@@ -3095,9 +3130,9 @@ CREATE TABLE public.key_result_updates (
     new_value numeric(15,2) NOT NULL,
     note text,
     confidence character varying(64) DEFAULT 'medium'::character varying NOT NULL,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    CONSTRAINT key_result_updates_confidence_check CHECK (((confidence)::text = ANY ((ARRAY['low'::character varying, 'medium'::character varying, 'high'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    CONSTRAINT key_result_updates_confidence_check CHECK (((confidence)::text = ANY (ARRAY[('low'::character varying)::text, ('medium'::character varying)::text, ('high'::character varying)::text])))
 );
 
 
@@ -3140,11 +3175,11 @@ CREATE TABLE public.key_results (
     due_date date,
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
-    CONSTRAINT key_results_metric_type_check CHECK (((metric_type)::text = ANY ((ARRAY['number'::character varying, 'percentage'::character varying, 'currency'::character varying, 'boolean'::character varying, 'milestone'::character varying])::text[]))),
-    CONSTRAINT key_results_status_check CHECK (((status)::text = ANY ((ARRAY['not_started'::character varying, 'on_track'::character varying, 'at_risk'::character varying, 'behind'::character varying, 'completed'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
+    CONSTRAINT key_results_metric_type_check CHECK (((metric_type)::text = ANY (ARRAY[('number'::character varying)::text, ('percentage'::character varying)::text, ('currency'::character varying)::text, ('boolean'::character varying)::text, ('milestone'::character varying)::text]))),
+    CONSTRAINT key_results_status_check CHECK (((status)::text = ANY (ARRAY[('not_started'::character varying)::text, ('on_track'::character varying)::text, ('at_risk'::character varying)::text, ('behind'::character varying)::text, ('completed'::character varying)::text])))
 );
 
 
@@ -3178,8 +3213,8 @@ CREATE TABLE public.learning_path_items (
     order_number integer NOT NULL,
     is_required boolean DEFAULT true NOT NULL,
     prerequisite_item_id bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -3218,10 +3253,10 @@ CREATE TABLE public.learning_paths (
     is_active boolean DEFAULT true NOT NULL,
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
-    CONSTRAINT learning_paths_level_check CHECK (((level)::text = ANY ((ARRAY['beginner'::character varying, 'intermediate'::character varying, 'advanced'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
+    CONSTRAINT learning_paths_level_check CHECK (((level)::text = ANY (ARRAY[('beginner'::character varying)::text, ('intermediate'::character varying)::text, ('advanced'::character varying)::text])))
 );
 
 
@@ -3260,8 +3295,8 @@ CREATE TABLE public.leave_balances (
     carried_over numeric(5,2) DEFAULT '0'::numeric NOT NULL,
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
     accrued numeric(8,2) DEFAULT '0'::numeric NOT NULL,
     encashed numeric(8,2) DEFAULT '0'::numeric NOT NULL,
     expired numeric(8,2) DEFAULT '0'::numeric NOT NULL,
@@ -3305,22 +3340,22 @@ CREATE TABLE public.leave_requests (
     document_path character varying(255),
     document_name character varying(255),
     approved_by bigint,
-    approved_at timestamp(0) without time zone,
+    approved_at timestamp with time zone,
     approval_note text,
     rejected_by bigint,
-    rejected_at timestamp(0) without time zone,
+    rejected_at timestamp with time zone,
     rejection_reason text,
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
     approval_workflow_id bigint,
     current_step integer,
     workflow_status character varying(64) DEFAULT 'pending'::character varying NOT NULL,
     custom_fields jsonb,
-    CONSTRAINT leave_requests_status_check CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'approved'::character varying, 'rejected'::character varying, 'cancelled'::character varying])::text[]))),
-    CONSTRAINT leave_requests_workflow_status_check CHECK (((workflow_status)::text = ANY ((ARRAY['pending'::character varying, 'in_progress'::character varying, 'completed'::character varying, 'rejected'::character varying])::text[])))
+    CONSTRAINT leave_requests_status_check CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('approved'::character varying)::text, ('rejected'::character varying)::text, ('cancelled'::character varying)::text]))),
+    CONSTRAINT leave_requests_workflow_status_check CHECK (((workflow_status)::text = ANY (ARRAY[('pending'::character varying)::text, ('in_progress'::character varying)::text, ('completed'::character varying)::text, ('rejected'::character varying)::text])))
 );
 
 
@@ -3363,15 +3398,15 @@ CREATE TABLE public.leave_types (
     approval_flow jsonb,
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
     approval_workflow_id bigint,
     accrual_policy_id bigint,
     system_code character varying(64),
     is_system boolean DEFAULT false NOT NULL,
     deducts_from_annual boolean DEFAULT false NOT NULL,
-    CONSTRAINT leave_types_gender_restriction_check CHECK (((gender_restriction)::text = ANY ((ARRAY['all'::character varying, 'male'::character varying, 'female'::character varying])::text[])))
+    CONSTRAINT leave_types_gender_restriction_check CHECK (((gender_restriction)::text = ANY (ARRAY[('all'::character varying)::text, ('male'::character varying)::text, ('female'::character varying)::text])))
 );
 
 
@@ -3406,12 +3441,12 @@ CREATE TABLE public.legal_holds (
     reason text NOT NULL,
     case_reference character varying(255),
     placed_by bigint NOT NULL,
-    placed_at timestamp(0) without time zone NOT NULL,
-    released_at timestamp(0) without time zone,
+    placed_at timestamp with time zone NOT NULL,
+    released_at timestamp with time zone,
     released_by bigint,
     active boolean DEFAULT true NOT NULL,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -3444,8 +3479,8 @@ CREATE TABLE public.license_package_modules (
     module_id bigint NOT NULL,
     is_included boolean DEFAULT true NOT NULL,
     additional_price numeric(10,2) DEFAULT '0'::numeric NOT NULL,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -3491,9 +3526,9 @@ CREATE TABLE public.license_packages (
     features jsonb,
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone
 );
 
 
@@ -3532,9 +3567,9 @@ CREATE TABLE public.lookups (
     is_system boolean DEFAULT false NOT NULL,
     parent_lookup_id bigint,
     meta jsonb,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone
 );
 
 
@@ -3571,9 +3606,9 @@ CREATE TABLE public.mandatory_trainings (
     recertification_months integer,
     is_active boolean DEFAULT true NOT NULL,
     created_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    CONSTRAINT mandatory_trainings_scope_check CHECK (((scope)::text = ANY ((ARRAY['all'::character varying, 'department'::character varying, 'position'::character varying, 'new_hires'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    CONSTRAINT mandatory_trainings_scope_check CHECK (((scope)::text = ANY (ARRAY[('all'::character varying)::text, ('department'::character varying)::text, ('position'::character varying)::text, ('new_hires'::character varying)::text])))
 );
 
 
@@ -3638,16 +3673,16 @@ CREATE TABLE public.milestone_completions (
     user_id bigint NOT NULL,
     status character varying(64) DEFAULT 'pending'::character varying NOT NULL,
     due_date date NOT NULL,
-    completed_at timestamp(0) without time zone,
+    completed_at timestamp with time zone,
     checklist_responses jsonb,
     evaluation_scores jsonb,
     employee_feedback text,
     manager_feedback text,
     overall_rating integer,
     completed_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    CONSTRAINT milestone_completions_status_check CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'scheduled'::character varying, 'completed'::character varying, 'skipped'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    CONSTRAINT milestone_completions_status_check CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('scheduled'::character varying)::text, ('completed'::character varying)::text, ('skipped'::character varying)::text])))
 );
 
 
@@ -3707,8 +3742,8 @@ CREATE TABLE public.modules (
     price_yearly numeric(10,2) DEFAULT '0'::numeric NOT NULL,
     sort_order integer DEFAULT 0 NOT NULL,
     is_active boolean DEFAULT true NOT NULL,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -3743,9 +3778,9 @@ CREATE TABLE public.notification_templates (
     body text NOT NULL,
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone
 );
 
 
@@ -3779,9 +3814,9 @@ CREATE TABLE public.notifications (
     notifiable_type character varying(255) NOT NULL,
     notifiable_id bigint NOT NULL,
     data text NOT NULL,
-    read_at timestamp(0) without time zone,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    read_at timestamp with time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -3806,11 +3841,11 @@ CREATE TABLE public.objectives (
     weight numeric(5,2) DEFAULT '100'::numeric NOT NULL,
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
-    CONSTRAINT objectives_level_check CHECK (((level)::text = ANY ((ARRAY['company'::character varying, 'department'::character varying, 'team'::character varying, 'individual'::character varying])::text[]))),
-    CONSTRAINT objectives_status_check CHECK (((status)::text = ANY ((ARRAY['draft'::character varying, 'active'::character varying, 'completed'::character varying, 'cancelled'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
+    CONSTRAINT objectives_level_check CHECK (((level)::text = ANY (ARRAY[('company'::character varying)::text, ('department'::character varying)::text, ('team'::character varying)::text, ('individual'::character varying)::text]))),
+    CONSTRAINT objectives_status_check CHECK (((status)::text = ANY (ARRAY[('draft'::character varying)::text, ('active'::character varying)::text, ('completed'::character varying)::text, ('cancelled'::character varying)::text])))
 );
 
 
@@ -3850,8 +3885,8 @@ CREATE TABLE public.onboarding_milestones (
     requires_feedback boolean DEFAULT true NOT NULL,
     is_active boolean DEFAULT true NOT NULL,
     created_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -3893,12 +3928,12 @@ CREATE TABLE public.onboarding_processes (
     assigned_to bigint,
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
     is_preboarding_enabled boolean DEFAULT false NOT NULL,
-    preboarding_started_at timestamp(0) without time zone,
-    first_day timestamp(0) without time zone,
+    preboarding_started_at timestamp with time zone,
+    first_day timestamp with time zone,
     buddy_id bigint,
     process_type character varying(32) DEFAULT 'onboarding'::character varying NOT NULL,
     termination_reason_code character varying(10),
@@ -3906,8 +3941,8 @@ CREATE TABLE public.onboarding_processes (
     exit_notes text,
     remaining_leave_days numeric(8,2),
     employee_id bigint,
-    CONSTRAINT onboarding_processes_process_type_check CHECK (((process_type)::text = ANY ((ARRAY['onboarding'::character varying, 'offboarding'::character varying])::text[]))),
-    CONSTRAINT onboarding_processes_status_check CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'in_progress'::character varying, 'completed'::character varying, 'cancelled'::character varying])::text[])))
+    CONSTRAINT onboarding_processes_process_type_check CHECK (((process_type)::text = ANY (ARRAY[('onboarding'::character varying)::text, ('offboarding'::character varying)::text]))),
+    CONSTRAINT onboarding_processes_status_check CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('in_progress'::character varying)::text, ('completed'::character varying)::text, ('cancelled'::character varying)::text])))
 );
 
 
@@ -3943,11 +3978,11 @@ CREATE TABLE public.onboarding_surveys (
     nps_score integer,
     responses jsonb,
     additional_comments text,
-    sent_at timestamp(0) without time zone,
-    completed_at timestamp(0) without time zone,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    CONSTRAINT onboarding_surveys_survey_type_check CHECK (((survey_type)::text = ANY ((ARRAY['week_1'::character varying, 'week_4'::character varying, 'month_3'::character varying, 'exit'::character varying])::text[])))
+    sent_at timestamp with time zone,
+    completed_at timestamp with time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    CONSTRAINT onboarding_surveys_survey_type_check CHECK (((survey_type)::text = ANY (ARRAY[('week_1'::character varying)::text, ('week_4'::character varying)::text, ('month_3'::character varying)::text, ('exit'::character varying)::text])))
 );
 
 
@@ -3985,18 +4020,18 @@ CREATE TABLE public.onboarding_tasks (
     is_required boolean DEFAULT true NOT NULL,
     due_date date,
     status character varying(64) DEFAULT 'pending'::character varying NOT NULL,
-    completed_at timestamp(0) without time zone,
+    completed_at timestamp with time zone,
     completed_by bigint,
     data jsonb,
     notes text,
     assigned_to bigint,
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
-    CONSTRAINT onboarding_tasks_status_check CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'in_progress'::character varying, 'completed'::character varying, 'skipped'::character varying])::text[]))),
-    CONSTRAINT onboarding_tasks_type_check CHECK (((type)::text = ANY ((ARRAY['document_upload'::character varying, 'document_fill'::character varying, 'training'::character varying, 'meeting'::character varying, 'system_setup'::character varying, 'quiz'::character varying, 'custom'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
+    CONSTRAINT onboarding_tasks_status_check CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('in_progress'::character varying)::text, ('completed'::character varying)::text, ('skipped'::character varying)::text]))),
+    CONSTRAINT onboarding_tasks_type_check CHECK (((type)::text = ANY (ARRAY[('document_upload'::character varying)::text, ('document_fill'::character varying)::text, ('training'::character varying)::text, ('meeting'::character varying)::text, ('system_setup'::character varying)::text, ('quiz'::character varying)::text, ('custom'::character varying)::text])))
 );
 
 
@@ -4034,11 +4069,11 @@ CREATE TABLE public.onboarding_templates (
     is_default boolean DEFAULT false NOT NULL,
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
     process_type character varying(32) DEFAULT 'onboarding'::character varying NOT NULL,
-    CONSTRAINT onboarding_templates_process_type_check CHECK (((process_type)::text = ANY ((ARRAY['onboarding'::character varying, 'offboarding'::character varying])::text[])))
+    CONSTRAINT onboarding_templates_process_type_check CHECK (((process_type)::text = ANY (ARRAY[('onboarding'::character varying)::text, ('offboarding'::character varying)::text])))
 );
 
 
@@ -4070,8 +4105,8 @@ CREATE TABLE public.one_on_one_meetings (
     company_id bigint NOT NULL,
     manager_id bigint NOT NULL,
     employee_id bigint NOT NULL,
-    scheduled_at timestamp(0) without time zone NOT NULL,
-    completed_at timestamp(0) without time zone,
+    scheduled_at timestamp with time zone NOT NULL,
+    completed_at timestamp with time zone,
     duration_minutes integer,
     location character varying(255),
     meeting_link character varying(255),
@@ -4082,11 +4117,11 @@ CREATE TABLE public.one_on_one_meetings (
     talking_points jsonb,
     mood character varying(64),
     created_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
-    CONSTRAINT one_on_one_meetings_mood_check CHECK (((mood)::text = ANY ((ARRAY['very_negative'::character varying, 'negative'::character varying, 'neutral'::character varying, 'positive'::character varying, 'very_positive'::character varying])::text[]))),
-    CONSTRAINT one_on_one_meetings_status_check CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'completed'::character varying, 'cancelled'::character varying, 'rescheduled'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
+    CONSTRAINT one_on_one_meetings_mood_check CHECK (((mood)::text = ANY (ARRAY[('very_negative'::character varying)::text, ('negative'::character varying)::text, ('neutral'::character varying)::text, ('positive'::character varying)::text, ('very_positive'::character varying)::text]))),
+    CONSTRAINT one_on_one_meetings_status_check CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('completed'::character varying)::text, ('cancelled'::character varying)::text, ('rescheduled'::character varying)::text])))
 );
 
 
@@ -4110,13 +4145,46 @@ ALTER SEQUENCE public.one_on_one_meetings_id_seq OWNED BY public.one_on_one_meet
 
 
 --
+-- Name: organizations; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.organizations (
+    id bigint NOT NULL,
+    name character varying(255) NOT NULL,
+    slug character varying(255) NOT NULL,
+    settings jsonb,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: organizations_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.organizations_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: organizations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.organizations_id_seq OWNED BY public.organizations.id;
+
+
+--
 -- Name: password_reset_tokens; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.password_reset_tokens (
     email character varying(255) NOT NULL,
     token character varying(255) NOT NULL,
-    created_at timestamp(0) without time zone
+    created_at timestamp with time zone
 );
 
 
@@ -4141,16 +4209,16 @@ CREATE TABLE public.payslips (
     overtime_hours numeric(8,2),
     file_path character varying(255),
     is_published boolean DEFAULT false NOT NULL,
-    published_at timestamp(0) without time zone,
+    published_at timestamp with time zone,
     published_by bigint,
     is_viewed boolean DEFAULT false NOT NULL,
-    viewed_at timestamp(0) without time zone,
+    viewed_at timestamp with time zone,
     notes text,
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone
 );
 
 
@@ -4187,8 +4255,8 @@ CREATE TABLE public.performance_criteria (
     is_active boolean DEFAULT true NOT NULL,
     sort_order integer DEFAULT 0 NOT NULL,
     created_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -4224,9 +4292,9 @@ CREATE TABLE public.performance_periods (
     status character varying(64) DEFAULT 'draft'::character varying NOT NULL,
     description text,
     created_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    CONSTRAINT performance_periods_status_check CHECK (((status)::text = ANY ((ARRAY['draft'::character varying, 'active'::character varying, 'closed'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    CONSTRAINT performance_periods_status_check CHECK (((status)::text = ANY (ARRAY[('draft'::character varying)::text, ('active'::character varying)::text, ('closed'::character varying)::text])))
 );
 
 
@@ -4266,18 +4334,18 @@ CREATE TABLE public.performance_reviews (
     goals text,
     reviewer_comments text,
     employee_comments text,
-    submitted_at timestamp(0) without time zone,
-    approved_at timestamp(0) without time zone,
+    submitted_at timestamp with time zone,
+    approved_at timestamp with time zone,
     approved_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
     is_360_enabled boolean DEFAULT false NOT NULL,
     self_score numeric(5,2),
     manager_score numeric(5,2),
     peer_score numeric(5,2),
     report_score numeric(5,2),
     final_score numeric(5,2),
-    CONSTRAINT performance_reviews_status_check CHECK (((status)::text = ANY ((ARRAY['draft'::character varying, 'submitted'::character varying, 'approved'::character varying, 'rejected'::character varying])::text[])))
+    CONSTRAINT performance_reviews_status_check CHECK (((status)::text = ANY (ARRAY[('draft'::character varying)::text, ('submitted'::character varying)::text, ('approved'::character varying)::text, ('rejected'::character varying)::text])))
 );
 
 
@@ -4310,8 +4378,8 @@ CREATE TABLE public.performance_scores (
     criteria_id bigint NOT NULL,
     score integer NOT NULL,
     comment text,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -4342,8 +4410,8 @@ CREATE TABLE public.permissions (
     id bigint NOT NULL,
     name character varying(255) NOT NULL,
     guard_name character varying(255) NOT NULL,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -4377,10 +4445,10 @@ CREATE TABLE public.personal_access_tokens (
     name text NOT NULL,
     token character varying(64) NOT NULL,
     abilities text,
-    last_used_at timestamp(0) without time zone,
-    expires_at timestamp(0) without time zone,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    last_used_at timestamp with time zone,
+    expires_at timestamp with time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -4415,8 +4483,8 @@ CREATE TABLE public.position_competencies (
     expected_level integer NOT NULL,
     weight numeric(5,2) DEFAULT '100'::numeric NOT NULL,
     is_required boolean DEFAULT true NOT NULL,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -4456,9 +4524,9 @@ CREATE TABLE public.positions (
     sort_order integer DEFAULT 0 NOT NULL,
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone
 );
 
 
@@ -4493,11 +4561,11 @@ CREATE TABLE public.preboarding_tokens (
     token character varying(64) NOT NULL,
     email character varying(255) NOT NULL,
     name character varying(255) NOT NULL,
-    expires_at timestamp(0) without time zone NOT NULL,
-    used_at timestamp(0) without time zone,
+    expires_at timestamp with time zone NOT NULL,
+    used_at timestamp with time zone,
     is_active boolean DEFAULT true NOT NULL,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -4531,14 +4599,14 @@ CREATE TABLE public.privacy_notices (
     version integer NOT NULL,
     title character varying(255) NOT NULL,
     body text NOT NULL,
-    effective_from timestamp(0) without time zone,
+    effective_from timestamp with time zone,
     is_active boolean DEFAULT false NOT NULL,
-    published_at timestamp(0) without time zone,
+    published_at timestamp with time zone,
     published_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
-    CONSTRAINT privacy_notices_audience_check CHECK (((audience)::text = ANY ((ARRAY['employee'::character varying, 'candidate'::character varying, 'visitor'::character varying, 'contractor'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
+    CONSTRAINT privacy_notices_audience_check CHECK (((audience)::text = ANY (ARRAY[('employee'::character varying)::text, ('candidate'::character varying)::text, ('visitor'::character varying)::text, ('contractor'::character varying)::text])))
 );
 
 
@@ -4581,8 +4649,8 @@ CREATE TABLE public.report_access_logs (
     duration_ms integer,
     ip character varying(45),
     user_agent text,
-    created_at timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    CONSTRAINT report_access_logs_action_check CHECK (((action)::text = ANY ((ARRAY['run'::character varying, 'preview'::character varying, 'export'::character varying, 'drill_details'::character varying, 'scheduled'::character varying])::text[]))),
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    CONSTRAINT report_access_logs_action_check CHECK (((action)::text = ANY (ARRAY[('run'::character varying)::text, ('preview'::character varying)::text, ('export'::character varying)::text, ('drill_details'::character varying)::text, ('scheduled'::character varying)::text]))),
     CONSTRAINT report_access_logs_target_check CHECK ((((report_id IS NOT NULL) AND (dashboard_id IS NULL)) OR ((report_id IS NULL) AND (dashboard_id IS NOT NULL)) OR ((report_id IS NULL) AND (dashboard_id IS NULL))))
 );
 
@@ -4616,8 +4684,8 @@ CREATE TABLE public.report_folders (
     name character varying(255) NOT NULL,
     parent_id bigint,
     sort_order integer DEFAULT 0 NOT NULL,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -4653,10 +4721,10 @@ CREATE TABLE public.report_measures (
     expression text NOT NULL,
     format character varying(32) DEFAULT 'number'::character varying NOT NULL,
     decimals smallint DEFAULT '2'::smallint NOT NULL,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
-    CONSTRAINT report_measures_format_check CHECK (((format)::text = ANY ((ARRAY['number'::character varying, 'money'::character varying, 'percent'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
+    CONSTRAINT report_measures_format_check CHECK (((format)::text = ANY (ARRAY[('number'::character varying)::text, ('money'::character varying)::text, ('percent'::character varying)::text])))
 );
 
 
@@ -4705,11 +4773,11 @@ CREATE TABLE public.report_schedules (
     last_status character varying(32),
     failure_count integer DEFAULT 0 NOT NULL,
     next_run_at timestamp(0) with time zone,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
-    CONSTRAINT report_schedules_cadence_check CHECK (((cadence)::text = ANY ((ARRAY['daily'::character varying, 'weekly'::character varying, 'monthly'::character varying, 'cron'::character varying])::text[]))),
-    CONSTRAINT report_schedules_format_check CHECK (((format)::text = ANY ((ARRAY['link'::character varying, 'excel'::character varying, 'pdf'::character varying])::text[]))),
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
+    CONSTRAINT report_schedules_cadence_check CHECK (((cadence)::text = ANY (ARRAY[('daily'::character varying)::text, ('weekly'::character varying)::text, ('monthly'::character varying)::text, ('cron'::character varying)::text]))),
+    CONSTRAINT report_schedules_format_check CHECK (((format)::text = ANY (ARRAY[('link'::character varying)::text, ('excel'::character varying)::text, ('pdf'::character varying)::text]))),
     CONSTRAINT report_schedules_target_check CHECK ((((report_id IS NOT NULL) AND (dashboard_id IS NULL)) OR ((report_id IS NULL) AND (dashboard_id IS NOT NULL))))
 );
 
@@ -4745,9 +4813,9 @@ CREATE TABLE public.report_shares (
     role_id bigint,
     department_id bigint,
     level character varying(16) DEFAULT 'viewer'::character varying NOT NULL,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    CONSTRAINT report_shares_level_check CHECK (((level)::text = ANY ((ARRAY['viewer'::character varying, 'editor'::character varying])::text[]))),
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    CONSTRAINT report_shares_level_check CHECK (((level)::text = ANY (ARRAY[('viewer'::character varying)::text, ('editor'::character varying)::text]))),
     CONSTRAINT report_shares_target_check CHECK ((((user_id IS NOT NULL) AND (role_id IS NULL) AND (department_id IS NULL)) OR ((user_id IS NULL) AND (role_id IS NOT NULL) AND (department_id IS NULL)) OR ((user_id IS NULL) AND (role_id IS NULL) AND (department_id IS NOT NULL))))
 );
 
@@ -4790,9 +4858,9 @@ CREATE TABLE public.request_types (
     is_active boolean DEFAULT true NOT NULL,
     sort_order integer DEFAULT 0 NOT NULL,
     created_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone
 );
 
 
@@ -4832,10 +4900,10 @@ CREATE TABLE public.required_documents (
     reminder_days_before integer DEFAULT 30 NOT NULL,
     is_active boolean DEFAULT true NOT NULL,
     created_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
-    CONSTRAINT required_documents_scope_check CHECK (((scope)::text = ANY ((ARRAY['all'::character varying, 'department'::character varying, 'position'::character varying, 'employee_type'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
+    CONSTRAINT required_documents_scope_check CHECK (((scope)::text = ANY (ARRAY[('all'::character varying)::text, ('department'::character varying)::text, ('position'::character varying)::text, ('employee_type'::character varying)::text])))
 );
 
 
@@ -4872,8 +4940,8 @@ CREATE TABLE public.retention_decisions (
     reason text NOT NULL,
     defer_until date,
     decided_by bigint NOT NULL,
-    created_at timestamp(0) without time zone NOT NULL,
-    CONSTRAINT retention_decisions_decision_check CHECK (((decision)::text = ANY ((ARRAY['destroy'::character varying, 'defer'::character varying, 'exclude'::character varying])::text[])))
+    created_at timestamp with time zone NOT NULL,
+    CONSTRAINT retention_decisions_decision_check CHECK (((decision)::text = ANY (ARRAY[('destroy'::character varying)::text, ('defer'::character varying)::text, ('exclude'::character varying)::text])))
 );
 
 
@@ -4915,11 +4983,11 @@ CREATE TABLE public.retention_policies (
     name character varying(255) NOT NULL,
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
-    CONSTRAINT retention_policies_strategy_check CHECK (((strategy)::text = ANY ((ARRAY['anonymize'::character varying, 'pseudonymize'::character varying, 'hard_delete'::character varying, 'archive'::character varying])::text[]))),
-    CONSTRAINT retention_policies_trigger_check CHECK (((trigger_event)::text = ANY ((ARRAY['ise_giris'::character varying, 'isten_ayrilma'::character varying, 'basvuru_reddi'::character varying, 'kayit_tarihi'::character varying, 'belge_tarihi'::character varying, 'son_islem_tarihi'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
+    CONSTRAINT retention_policies_strategy_check CHECK (((strategy)::text = ANY (ARRAY[('anonymize'::character varying)::text, ('pseudonymize'::character varying)::text, ('hard_delete'::character varying)::text, ('archive'::character varying)::text]))),
+    CONSTRAINT retention_policies_trigger_check CHECK (((trigger_event)::text = ANY (ARRAY[('ise_giris'::character varying)::text, ('isten_ayrilma'::character varying)::text, ('basvuru_reddi'::character varying)::text, ('kayit_tarihi'::character varying)::text, ('belge_tarihi'::character varying)::text, ('son_islem_tarihi'::character varying)::text])))
 );
 
 
@@ -4950,8 +5018,8 @@ CREATE TABLE public.role_default_dashboards (
     id bigint NOT NULL,
     role_key character varying(64) NOT NULL,
     dashboard_system_key character varying(128) NOT NULL,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -4992,10 +5060,11 @@ CREATE TABLE public.roles (
     id bigint NOT NULL,
     name character varying(255) NOT NULL,
     guard_name character varying(255) NOT NULL,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
     data_scope character varying(32),
-    CONSTRAINT roles_data_scope_check CHECK (((data_scope)::text = ANY ((ARRAY['own'::character varying, 'team'::character varying, 'department'::character varying, 'branch'::character varying, 'company'::character varying])::text[])))
+    panel_access boolean DEFAULT true NOT NULL,
+    CONSTRAINT roles_data_scope_check CHECK (((data_scope)::text = ANY (ARRAY[('own'::character varying)::text, ('team'::character varying)::text, ('department'::character varying)::text, ('branch'::character varying)::text, ('company'::character varying)::text])))
 );
 
 
@@ -5033,9 +5102,9 @@ CREATE TABLE public.salary_bands (
     is_active boolean DEFAULT true NOT NULL,
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
     CONSTRAINT salary_bands_order_check CHECK (((min_amount <= mid_amount) AND (mid_amount <= max_amount)))
 );
 
@@ -5073,9 +5142,9 @@ CREATE TABLE public.salary_records (
     change_reason character varying(64) NOT NULL,
     note text,
     created_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
     updated_by bigint,
     CONSTRAINT salary_records_amount_positive CHECK ((amount >= (0)::numeric))
 );
@@ -5115,8 +5184,8 @@ CREATE TABLE public.salary_review_items (
     currency character varying(3) DEFAULT 'TRY'::character varying NOT NULL,
     change_reason character varying(64) DEFAULT 'annual_raise'::character varying NOT NULL,
     note text,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -5155,15 +5224,15 @@ CREATE TABLE public.salary_review_periods (
     created_by bigint,
     updated_by bigint,
     submitted_by bigint,
-    submitted_at timestamp(0) without time zone,
+    submitted_at timestamp with time zone,
     approved_by bigint,
-    approved_at timestamp(0) without time zone,
+    approved_at timestamp with time zone,
     rejection_reason text,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
-    CONSTRAINT salary_review_periods_scope_check CHECK (((scope_type)::text = ANY ((ARRAY['company'::character varying, 'department'::character varying, 'branch'::character varying])::text[]))),
-    CONSTRAINT salary_review_periods_status_check CHECK (((status)::text = ANY ((ARRAY['draft'::character varying, 'pending_approval'::character varying, 'approved'::character varying, 'rejected'::character varying, 'cancelled'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
+    CONSTRAINT salary_review_periods_scope_check CHECK (((scope_type)::text = ANY (ARRAY[('company'::character varying)::text, ('department'::character varying)::text, ('branch'::character varying)::text]))),
+    CONSTRAINT salary_review_periods_status_check CHECK (((status)::text = ANY (ARRAY[('draft'::character varying)::text, ('pending_approval'::character varying)::text, ('approved'::character varying)::text, ('rejected'::character varying)::text, ('cancelled'::character varying)::text])))
 );
 
 
@@ -5200,8 +5269,8 @@ CREATE TABLE public.saved_reports (
     is_favorite boolean DEFAULT false NOT NULL,
     is_shared boolean DEFAULT false NOT NULL,
     sort_order integer DEFAULT 0 NOT NULL,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
     dataset_key character varying(64),
     share_user_ids jsonb,
     share_role_ids jsonb,
@@ -5258,9 +5327,9 @@ CREATE TABLE public.setting_values (
     key character varying(191) NOT NULL,
     value jsonb NOT NULL,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone
 );
 
 
@@ -5300,8 +5369,8 @@ CREATE TABLE public.shifts (
     color character varying(255) DEFAULT '#3b82f6'::character varying NOT NULL,
     is_night_shift boolean DEFAULT false NOT NULL,
     is_active boolean DEFAULT true NOT NULL,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -5336,8 +5405,8 @@ CREATE TABLE public.software_license_assignments (
     revoked_at date,
     is_active boolean DEFAULT true NOT NULL,
     assigned_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -5383,10 +5452,10 @@ CREATE TABLE public.software_licenses (
     is_active boolean DEFAULT true NOT NULL,
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
-    CONSTRAINT software_licenses_license_type_check CHECK (((license_type)::text = ANY ((ARRAY['perpetual'::character varying, 'subscription'::character varying, 'per_seat'::character varying, 'concurrent'::character varying, 'site'::character varying, 'open_source'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
+    CONSTRAINT software_licenses_license_type_check CHECK (((license_type)::text = ANY (ARRAY[('perpetual'::character varying)::text, ('subscription'::character varying)::text, ('per_seat'::character varying)::text, ('concurrent'::character varying)::text, ('site'::character varying)::text, ('open_source'::character varying)::text])))
 );
 
 
@@ -5424,9 +5493,9 @@ CREATE TABLE public.survey_questions (
     max_value integer,
     is_required boolean DEFAULT true NOT NULL,
     category character varying(255),
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    CONSTRAINT survey_questions_question_type_check CHECK (((question_type)::text = ANY ((ARRAY['single_choice'::character varying, 'multiple_choice'::character varying, 'rating'::character varying, 'nps'::character varying, 'text'::character varying, 'scale'::character varying, 'matrix'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    CONSTRAINT survey_questions_question_type_check CHECK (((question_type)::text = ANY (ARRAY[('single_choice'::character varying)::text, ('multiple_choice'::character varying)::text, ('rating'::character varying)::text, ('nps'::character varying)::text, ('text'::character varying)::text, ('scale'::character varying)::text, ('matrix'::character varying)::text])))
 );
 
 
@@ -5460,8 +5529,8 @@ CREATE TABLE public.survey_responses (
     answer_text text,
     answer_numeric integer,
     answer_array jsonb,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -5494,13 +5563,13 @@ CREATE TABLE public.survey_submissions (
     user_id bigint,
     anonymous_id character varying(255),
     status character varying(64) DEFAULT 'started'::character varying NOT NULL,
-    started_at timestamp(0) without time zone NOT NULL,
-    completed_at timestamp(0) without time zone,
+    started_at timestamp with time zone NOT NULL,
+    completed_at timestamp with time zone,
     ip_address character varying(255),
     user_agent character varying(255),
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    CONSTRAINT survey_submissions_status_check CHECK (((status)::text = ANY ((ARRAY['started'::character varying, 'completed'::character varying, 'abandoned'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    CONSTRAINT survey_submissions_status_check CHECK (((status)::text = ANY (ARRAY[('started'::character varying)::text, ('completed'::character varying)::text, ('abandoned'::character varying)::text])))
 );
 
 
@@ -5535,19 +5604,19 @@ CREATE TABLE public.surveys (
     type character varying(64) DEFAULT 'custom'::character varying NOT NULL,
     is_anonymous boolean DEFAULT true NOT NULL,
     is_active boolean DEFAULT true NOT NULL,
-    start_date timestamp(0) without time zone,
-    end_date timestamp(0) without time zone,
+    start_date timestamp with time zone,
+    end_date timestamp with time zone,
     recurrence character varying(64) DEFAULT 'none'::character varying NOT NULL,
     audience character varying(64) DEFAULT 'all'::character varying NOT NULL,
     audience_filter jsonb,
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
-    CONSTRAINT surveys_audience_check CHECK (((audience)::text = ANY ((ARRAY['all'::character varying, 'department'::character varying, 'position'::character varying, 'custom'::character varying])::text[]))),
-    CONSTRAINT surveys_recurrence_check CHECK (((recurrence)::text = ANY ((ARRAY['none'::character varying, 'weekly'::character varying, 'monthly'::character varying, 'quarterly'::character varying, 'yearly'::character varying])::text[]))),
-    CONSTRAINT surveys_type_check CHECK (((type)::text = ANY ((ARRAY['engagement'::character varying, 'satisfaction'::character varying, 'pulse'::character varying, 'enps'::character varying, 'onboarding'::character varying, 'exit'::character varying, 'custom'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
+    CONSTRAINT surveys_audience_check CHECK (((audience)::text = ANY (ARRAY[('all'::character varying)::text, ('department'::character varying)::text, ('position'::character varying)::text, ('custom'::character varying)::text]))),
+    CONSTRAINT surveys_recurrence_check CHECK (((recurrence)::text = ANY (ARRAY[('none'::character varying)::text, ('weekly'::character varying)::text, ('monthly'::character varying)::text, ('quarterly'::character varying)::text, ('yearly'::character varying)::text]))),
+    CONSTRAINT surveys_type_check CHECK (((type)::text = ANY (ARRAY[('engagement'::character varying)::text, ('satisfaction'::character varying)::text, ('pulse'::character varying)::text, ('enps'::character varying)::text, ('onboarding'::character varying)::text, ('exit'::character varying)::text, ('custom'::character varying)::text])))
 );
 
 
@@ -5582,7 +5651,7 @@ CREATE TABLE public.telescope_entries (
     should_display_on_index boolean DEFAULT true NOT NULL,
     type character varying(20) NOT NULL,
     content text NOT NULL,
-    created_at timestamp(0) without time zone
+    created_at timestamp with time zone
 );
 
 
@@ -5646,11 +5715,11 @@ CREATE TABLE public.timesheets (
     employee_notes text,
     manager_notes text,
     submitted_by bigint,
-    submitted_at timestamp(0) without time zone,
+    submitted_at timestamp with time zone,
     approved_by bigint,
-    approved_at timestamp(0) without time zone,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    approved_at timestamp with time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -5685,8 +5754,8 @@ CREATE TABLE public.training_certificates (
     expiry_date date,
     file_path character varying(255),
     issued_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
     is_valid boolean DEFAULT true NOT NULL,
     last_reminded_at date,
     external_certificate_id character varying(255),
@@ -5725,11 +5794,11 @@ CREATE TABLE public.training_participants (
     score integer,
     passed boolean,
     feedback text,
-    registered_at timestamp(0) without time zone,
-    completed_at timestamp(0) without time zone,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    CONSTRAINT training_participants_status_check CHECK (((status)::text = ANY ((ARRAY['registered'::character varying, 'attended'::character varying, 'absent'::character varying, 'excused'::character varying])::text[])))
+    registered_at timestamp with time zone,
+    completed_at timestamp with time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    CONSTRAINT training_participants_status_check CHECK (((status)::text = ANY (ARRAY[('registered'::character varying)::text, ('attended'::character varying)::text, ('absent'::character varying)::text, ('excused'::character varying)::text])))
 );
 
 
@@ -5769,11 +5838,11 @@ CREATE TABLE public.training_requests (
     status character varying(64) DEFAULT 'pending'::character varying NOT NULL,
     approval_notes text,
     approved_by bigint,
-    approved_at timestamp(0) without time zone,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
-    CONSTRAINT training_requests_status_check CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'approved'::character varying, 'rejected'::character varying, 'completed'::character varying])::text[])))
+    approved_at timestamp with time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
+    CONSTRAINT training_requests_status_check CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('approved'::character varying)::text, ('rejected'::character varying)::text, ('completed'::character varying)::text])))
 );
 
 
@@ -5803,16 +5872,16 @@ ALTER SEQUENCE public.training_requests_id_seq OWNED BY public.training_requests
 CREATE TABLE public.training_sessions (
     id bigint NOT NULL,
     training_id bigint NOT NULL,
-    start_date timestamp(0) without time zone NOT NULL,
-    end_date timestamp(0) without time zone NOT NULL,
+    start_date timestamp with time zone NOT NULL,
+    end_date timestamp with time zone NOT NULL,
     location character varying(255),
     instructor character varying(255),
     status character varying(64) DEFAULT 'scheduled'::character varying NOT NULL,
     notes text,
     created_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    CONSTRAINT training_sessions_status_check CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'in_progress'::character varying, 'completed'::character varying, 'cancelled'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    CONSTRAINT training_sessions_status_check CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('in_progress'::character varying)::text, ('completed'::character varying)::text, ('cancelled'::character varying)::text])))
 );
 
 
@@ -5854,9 +5923,9 @@ CREATE TABLE public.trainings (
     is_mandatory boolean DEFAULT false NOT NULL,
     is_active boolean DEFAULT true NOT NULL,
     created_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    CONSTRAINT trainings_type_check CHECK (((type)::text = ANY ((ARRAY['online'::character varying, 'classroom'::character varying, 'hybrid'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    CONSTRAINT trainings_type_check CHECK (((type)::text = ANY (ARRAY[('online'::character varying)::text, ('classroom'::character varying)::text, ('hybrid'::character varying)::text])))
 );
 
 
@@ -5893,8 +5962,8 @@ CREATE TABLE public.user_competencies (
     assessed_at date NOT NULL,
     assessed_by bigint,
     notes text,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -5932,10 +6001,10 @@ CREATE TABLE public.user_document_status (
     last_reminded_at date,
     rejection_reason text,
     reviewed_by bigint,
-    reviewed_at timestamp(0) without time zone,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    CONSTRAINT user_document_status_status_check CHECK (((status)::text = ANY ((ARRAY['missing'::character varying, 'pending'::character varying, 'approved'::character varying, 'rejected'::character varying, 'expired'::character varying])::text[])))
+    reviewed_at timestamp with time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    CONSTRAINT user_document_status_status_check CHECK (((status)::text = ANY (ARRAY[('missing'::character varying)::text, ('pending'::character varying)::text, ('approved'::character varying)::text, ('rejected'::character varying)::text, ('expired'::character varying)::text])))
 );
 
 
@@ -5969,12 +6038,12 @@ CREATE TABLE public.user_learning_paths (
     learning_path_id bigint NOT NULL,
     status character varying(64) DEFAULT 'not_started'::character varying NOT NULL,
     progress numeric(5,2) DEFAULT '0'::numeric NOT NULL,
-    started_at timestamp(0) without time zone,
-    completed_at timestamp(0) without time zone,
+    started_at timestamp with time zone,
+    completed_at timestamp with time zone,
     due_date date,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    CONSTRAINT user_learning_paths_status_check CHECK (((status)::text = ANY ((ARRAY['not_started'::character varying, 'in_progress'::character varying, 'completed'::character varying])::text[])))
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    CONSTRAINT user_learning_paths_status_check CHECK (((status)::text = ANY (ARRAY[('not_started'::character varying)::text, ('in_progress'::character varying)::text, ('completed'::character varying)::text])))
 );
 
 
@@ -6011,26 +6080,27 @@ CREATE TABLE public.users (
     title character varying(255),
     department character varying(255),
     type character varying(64) DEFAULT 'user'::character varying NOT NULL,
-    email_verified_at timestamp(0) without time zone,
+    email_verified_at timestamp with time zone,
     password character varying(255) NOT NULL,
     remember_token character varying(100),
     two_factor_enabled boolean DEFAULT false NOT NULL,
     two_factor_secret text,
     two_factor_recovery_codes text,
     is_active boolean DEFAULT true NOT NULL,
-    last_login_at timestamp(0) without time zone,
+    last_login_at timestamp with time zone,
     last_login_ip character varying(255),
     preferences jsonb,
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
     invitation_token character varying(255),
-    invited_at timestamp(0) without time zone,
-    invitation_accepted_at timestamp(0) without time zone,
+    invited_at timestamp with time zone,
+    invitation_accepted_at timestamp with time zone,
     must_change_password boolean DEFAULT false NOT NULL,
-    CONSTRAINT users_type_check CHECK (((type)::text = ANY ((ARRAY['super_admin'::character varying, 'company_admin'::character varying, 'user'::character varying])::text[])))
+    last_company_id bigint,
+    CONSTRAINT users_type_check CHECK (((type)::text = ANY (ARRAY[('super_admin'::character varying)::text, ('company_admin'::character varying)::text, ('user'::character varying)::text])))
 );
 
 
@@ -6066,9 +6136,9 @@ CREATE TABLE public.webhook_logs (
     response text,
     error_message text,
     is_successful boolean DEFAULT false NOT NULL,
-    triggered_at timestamp(0) without time zone NOT NULL,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    triggered_at timestamp with time zone NOT NULL,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -6105,14 +6175,14 @@ CREATE TABLE public.webhooks (
     is_active boolean DEFAULT true NOT NULL,
     timeout integer DEFAULT 30 NOT NULL,
     retry_count integer DEFAULT 3 NOT NULL,
-    last_triggered_at timestamp(0) without time zone,
+    last_triggered_at timestamp with time zone,
     success_count integer DEFAULT 0 NOT NULL,
     failure_count integer DEFAULT 0 NOT NULL,
     created_by bigint,
     updated_by bigint,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone,
-    deleted_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone
 );
 
 
@@ -6154,8 +6224,8 @@ CREATE TABLE public.work_schedules (
     weekly_hours numeric(5,2) DEFAULT '40'::numeric NOT NULL,
     is_default boolean DEFAULT false NOT NULL,
     is_active boolean DEFAULT true NOT NULL,
-    created_at timestamp(0) without time zone,
-    updated_at timestamp(0) without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -6379,6 +6449,13 @@ ALTER TABLE ONLY public.company_ledger ALTER COLUMN id SET DEFAULT nextval('publ
 --
 
 ALTER TABLE ONLY public.company_modules ALTER COLUMN id SET DEFAULT nextval('public.company_modules_id_seq'::regclass);
+
+
+--
+-- Name: company_user id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.company_user ALTER COLUMN id SET DEFAULT nextval('public.company_user_id_seq'::regclass);
 
 
 --
@@ -6827,6 +6904,13 @@ ALTER TABLE ONLY public.onboarding_templates ALTER COLUMN id SET DEFAULT nextval
 --
 
 ALTER TABLE ONLY public.one_on_one_meetings ALTER COLUMN id SET DEFAULT nextval('public.one_on_one_meetings_id_seq'::regclass);
+
+
+--
+-- Name: organizations id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.organizations ALTER COLUMN id SET DEFAULT nextval('public.organizations_id_seq'::regclass);
 
 
 --
@@ -7522,6 +7606,22 @@ ALTER TABLE ONLY public.company_modules
 
 ALTER TABLE ONLY public.company_modules
     ADD CONSTRAINT company_modules_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: company_user company_user_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.company_user
+    ADD CONSTRAINT company_user_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: company_user company_user_user_id_company_id_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.company_user
+    ADD CONSTRAINT company_user_user_id_company_id_unique UNIQUE (user_id, company_id);
 
 
 --
@@ -8242,6 +8342,22 @@ ALTER TABLE ONLY public.onboarding_templates
 
 ALTER TABLE ONLY public.one_on_one_meetings
     ADD CONSTRAINT one_on_one_meetings_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: organizations organizations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.organizations
+    ADD CONSTRAINT organizations_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: organizations organizations_slug_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.organizations
+    ADD CONSTRAINT organizations_slug_unique UNIQUE (slug);
 
 
 --
@@ -9057,6 +9173,13 @@ CREATE INDEX attendance_kiosk_tokens_company_id_used_at_index ON public.attendan
 
 
 --
+-- Name: attendance_records_company_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX attendance_records_company_date_idx ON public.attendance_records USING btree (company_id, date);
+
+
+--
 -- Name: attendance_records_company_id_branch_id_date_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -9068,6 +9191,13 @@ CREATE INDEX attendance_records_company_id_branch_id_date_index ON public.attend
 --
 
 CREATE INDEX attendance_records_company_id_source_index ON public.attendance_records USING btree (company_id, source);
+
+
+--
+-- Name: attendance_records_company_status_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX attendance_records_company_status_date_idx ON public.attendance_records USING btree (company_id, status, date);
 
 
 --
@@ -9113,6 +9243,13 @@ CREATE UNIQUE INDEX cfd_system_entity_field_key_unique ON public.custom_field_de
 
 
 --
+-- Name: companies_organization_id_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX companies_organization_id_index ON public.companies USING btree (organization_id);
+
+
+--
 -- Name: companies_package_type_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -9152,6 +9289,20 @@ CREATE INDEX company_ledger_reference_type_reference_id_index ON public.company_
 --
 
 CREATE INDEX company_ledger_type_index ON public.company_ledger USING btree (type);
+
+
+--
+-- Name: company_user_company_id_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX company_user_company_id_index ON public.company_user USING btree (company_id);
+
+
+--
+-- Name: company_user_user_id_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX company_user_user_id_index ON public.company_user USING btree (user_id);
 
 
 --
@@ -9446,6 +9597,13 @@ CREATE INDEX employees_company_id_branch_id_index ON public.employees USING btre
 --
 
 CREATE INDEX employees_company_id_department_id_index ON public.employees USING btree (company_id, department_id);
+
+
+--
+-- Name: employees_company_id_position_id_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX employees_company_id_position_id_index ON public.employees USING btree (company_id, position_id);
 
 
 --
@@ -9957,6 +10115,20 @@ CREATE INDEX saved_reports_is_favorite_index ON public.saved_reports USING btree
 --
 
 CREATE INDEX saved_reports_module_key_is_system_index ON public.saved_reports USING btree (module_key, is_system);
+
+
+--
+-- Name: saved_reports_share_role_ids_gin; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX saved_reports_share_role_ids_gin ON public.saved_reports USING gin (share_role_ids jsonb_path_ops);
+
+
+--
+-- Name: saved_reports_share_user_ids_gin; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX saved_reports_share_user_ids_gin ON public.saved_reports USING gin (share_user_ids jsonb_path_ops);
 
 
 --
@@ -10792,6 +10964,14 @@ ALTER TABLE ONLY public.companies
 
 
 --
+-- Name: companies companies_organization_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.companies
+    ADD CONSTRAINT companies_organization_id_foreign FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE SET NULL;
+
+
+--
 -- Name: company_ledger company_ledger_company_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -10813,6 +10993,30 @@ ALTER TABLE ONLY public.company_modules
 
 ALTER TABLE ONLY public.company_modules
     ADD CONSTRAINT company_modules_module_id_foreign FOREIGN KEY (module_id) REFERENCES public.modules(id) ON DELETE CASCADE;
+
+
+--
+-- Name: company_user company_user_company_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.company_user
+    ADD CONSTRAINT company_user_company_id_foreign FOREIGN KEY (company_id) REFERENCES public.companies(id) ON DELETE CASCADE;
+
+
+--
+-- Name: company_user company_user_role_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.company_user
+    ADD CONSTRAINT company_user_role_id_foreign FOREIGN KEY (role_id) REFERENCES public.roles(id) ON DELETE SET NULL;
+
+
+--
+-- Name: company_user company_user_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.company_user
+    ADD CONSTRAINT company_user_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
 --
@@ -11501,6 +11705,14 @@ ALTER TABLE ONLY public.employees
 
 ALTER TABLE ONLY public.employees
     ADD CONSTRAINT employees_manager_id_foreign FOREIGN KEY (manager_id) REFERENCES public.employees(id) ON DELETE SET NULL;
+
+
+--
+-- Name: employees employees_position_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.employees
+    ADD CONSTRAINT employees_position_id_foreign FOREIGN KEY (position_id) REFERENCES public.positions(id) ON DELETE SET NULL;
 
 
 --
@@ -13480,6 +13692,14 @@ ALTER TABLE ONLY public.users
 
 
 --
+-- Name: users users_last_company_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_last_company_id_foreign FOREIGN KEY (last_company_id) REFERENCES public.companies(id) ON DELETE SET NULL;
+
+
+--
 -- Name: users users_updated_by_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -13531,13 +13751,12 @@ ALTER TABLE ONLY public.work_schedules
 -- PostgreSQL database dump complete
 --
 
-\unrestrict W7iGejLafux0LWBg0sLpgf8N7VbAkEtkUM09lUFxLuYJkyOS4qPjHMw4ev0v6Go
+
 
 --
 -- PostgreSQL database dump
 --
 
-\restrict CW5Mbi17Q2GfZ217Mn92wiICB4a8RmH0nlQsmeH0czzIf9r2Q9RDywL6VSJOogS
 
 -- Dumped from database version 16.14
 -- Dumped by pg_dump version 16.14
@@ -13658,6 +13877,13 @@ COPY public.migrations (id, migration, batch) FROM stdin;
 98	2026_07_30_100000_d4a_create_setting_values_table	17
 99	2026_07_30_120000_d2b_data_subject_requests	17
 100	2026_07_30_140000_d2c_retention_destruction_breaches	17
+101	2026_07_30_160000_d3_jsonb_gin_indexes	18
+102	2026_07_31_150000_add_attendance_records_company_date_indexes	18
+103	2026_08_04_120000_g1_organizations_and_company_context	18
+104	2026_08_05_140000_add_full_name_to_employees_table	18
+105	2026_08_05_153000_add_panel_access_to_roles_table	18
+106	2026_08_05_220000_add_position_id_to_employees_table	18
+107	2026_08_05_230000_convert_absolute_timestamps_to_timestamptz	18
 \.
 
 
@@ -13665,12 +13891,11 @@ COPY public.migrations (id, migration, batch) FROM stdin;
 -- Name: migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.migrations_id_seq', 100, true);
+SELECT pg_catalog.setval('public.migrations_id_seq', 107, true);
 
 
 --
 -- PostgreSQL database dump complete
 --
 
-\unrestrict CW5Mbi17Q2GfZ217Mn92wiICB4a8RmH0nlQsmeH0czzIf9r2Q9RDywL6VSJOogS
 

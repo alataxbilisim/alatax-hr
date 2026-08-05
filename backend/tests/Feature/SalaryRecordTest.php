@@ -43,7 +43,7 @@ class SalaryRecordTest extends TestCase
         $this->company = Company::factory()->create(['status' => CompanyStatus::Active]);
 
         $this->hr = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $adminRole = \Spatie\Permission\Models\Role::findByName('admin', 'sanctum');
@@ -57,7 +57,7 @@ class SalaryRecordTest extends TestCase
         $this->hr = $this->hr->fresh();
 
         $this->noSalary = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         $specialist = \Spatie\Permission\Models\Role::findByName('hr_specialist', 'sanctum');
@@ -67,7 +67,7 @@ class SalaryRecordTest extends TestCase
         $this->noSalary = $this->noSalary->fresh();
 
         $this->portalUser = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);
@@ -154,7 +154,7 @@ class SalaryRecordTest extends TestCase
     {
         $otherCo = Company::factory()->create(['status' => CompanyStatus::Active]);
         $otherHr = User::factory()->create([
-            'company_id' => $otherCo->id,
+            'home_company_id' => $otherCo->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $otherHr->givePermissionTo(['employees.salary.view', 'employees.salary.edit']);

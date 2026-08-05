@@ -22,7 +22,7 @@ class EmployeeReportController extends BaseController
      */
     private array $dimensions = [
         'department' => ['field' => 'department_id', 'label' => 'Departman'],
-        'position' => ['field' => 'position', 'label' => 'Pozisyon'],
+        'position' => ['field' => 'position_id', 'label' => 'Pozisyon'],
         'contract_type' => ['field' => 'contract_type', 'label' => 'Sözleşme Tipi'],
         'work_type' => ['field' => 'work_type', 'label' => 'Çalışma Tipi'],
         'gender' => ['field' => 'gender', 'label' => 'Cinsiyet'],
@@ -61,10 +61,12 @@ class EmployeeReportController extends BaseController
             ->get();
 
         $positions = Employee::where('company_id', $this->getCompanyId())
-            ->whereNotNull('position')
-            ->distinct()
-            ->pluck('position')
+            ->whereNotNull('position_id')
+            ->with('position:id,name')
+            ->get()
+            ->pluck('position.name')
             ->filter()
+            ->unique()
             ->values();
 
         $cities = Employee::where('company_id', $this->getCompanyId())
@@ -360,7 +362,8 @@ class EmployeeReportController extends BaseController
         }
 
         if (! empty($filters['position'])) {
-            $query->whereIn('position', $filters['position']);
+            $names = is_array($filters['position']) ? $filters['position'] : [$filters['position']];
+            $query->whereHas('position', fn ($q) => $q->whereIn('name', $names));
         }
 
         if (! empty($filters['city'])) {

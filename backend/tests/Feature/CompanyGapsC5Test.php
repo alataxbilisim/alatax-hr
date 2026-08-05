@@ -39,7 +39,7 @@ class CompanyGapsC5Test extends TestCase
         $this->otherCompany = Company::factory()->create(['status' => CompanyStatus::Active]);
 
         $this->admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($this->admin);
@@ -61,7 +61,7 @@ class CompanyGapsC5Test extends TestCase
         ]);
 
         $userIn = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'email' => 'in-aud@example.com',
         ]);
@@ -74,7 +74,7 @@ class CompanyGapsC5Test extends TestCase
         ]);
 
         $userOut = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'email' => 'out-aud@example.com',
         ]);
@@ -89,7 +89,7 @@ class CompanyGapsC5Test extends TestCase
         $this->getJson('/api/v1/announcements')->assertUnauthorized();
 
         $viewer = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         Sanctum::actingAs($viewer);
@@ -131,7 +131,7 @@ class CompanyGapsC5Test extends TestCase
         $this->assertFalse($idsOut->contains($id));
 
         $otherAdmin = User::factory()->create([
-            'company_id' => $this->otherCompany->id,
+            'home_company_id' => $this->otherCompany->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($otherAdmin);
@@ -144,7 +144,7 @@ class CompanyGapsC5Test extends TestCase
         Storage::fake('private');
 
         $owner = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'email' => 'owner-pay@example.com',
         ]);
@@ -156,7 +156,7 @@ class CompanyGapsC5Test extends TestCase
         ]);
 
         $other = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'email' => 'other-pay@example.com',
         ]);
@@ -213,7 +213,7 @@ class CompanyGapsC5Test extends TestCase
     public function test_shift_assignment_visible_on_portal(): void
     {
         $employeeUser = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'email' => 'shift-portal@example.com',
         ]);

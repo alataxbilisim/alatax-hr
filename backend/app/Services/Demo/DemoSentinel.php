@@ -59,8 +59,8 @@ final class DemoSentinel
             $failures[] = 'type company_admin değil ('.$checks['user_type'].')';
         }
 
-        $company = $user->company_id
-            ? Company::query()->find($user->company_id)
+        $company = $user->home_company_id
+            ? Company::query()->find($user->home_company_id)
             : null;
         $checks['company_slug'] = $company?->slug;
         $checks['company_id'] = $company?->id;
@@ -88,7 +88,7 @@ final class DemoSentinel
         }
 
         $emp = Employee::query()
-            ->where('company_id', $user->company_id)
+            ->where('company_id', $user->home_company_id)
             ->where('user_id', $user->id)
             ->first();
         $checks['employee_code'] = $emp?->employee_code;

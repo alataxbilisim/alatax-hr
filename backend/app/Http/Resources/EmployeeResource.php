@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Models\Position;
 use App\Services\EmployeeSensitiveFieldService;
 use App\Services\LookupService;
 use Illuminate\Http\Request;
@@ -36,8 +35,6 @@ class EmployeeResource extends JsonResource
             'full_name' => $this->full_name,
             'name' => $this->display_name,
             'title' => $this->title,
-            // position = katalog kodu (legacy dual-write); kimlik = position_id
-            'position' => $this->position,
             'position_id' => $this->position_id,
             'position_label' => $this->resolvePositionLabel(),
             'manager_id' => $this->manager_id,
@@ -106,31 +103,16 @@ class EmployeeResource extends JsonResource
 
     private function resolvePositionLabel(): ?string
     {
-        if ($this->position_id) {
-            $pos = $this->relationLoaded('positionRef')
-                ? $this->positionRef
-                : Position::query()
-                    ->where('company_id', $this->company_id)
-                    ->whereKey($this->position_id)
-                    ->first();
-
-            if ($pos !== null) {
-                return $pos->name;
-            }
-        }
-
-        $raw = is_string($this->position) ? trim($this->position) : '';
-        if ($raw === '') {
+        if (! $this->position_id) {
             return null;
         }
 
-        $pos = Position::query()
-            ->where('company_id', $this->company_id)
-            ->where(function ($q) use ($raw) {
-                $q->where('code', $raw)->orWhere('name', $raw);
-            })
-            ->first();
+        $pos = $this->relationLoaded('positionRef')
+            ? $this->positionRef
+            : ($this->relationLoaded('position')
+                ? $this->position
+                : $this->positionRef);
 
-        return $pos?->name ?? $raw;
+        return $pos?->name;
     }
 }

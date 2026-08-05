@@ -50,7 +50,7 @@ class SettingsWriterActiveContextTest extends TestCase
         ]);
 
         $this->userA = User::factory()->create([
-            'company_id' => $this->companyA->id,
+            'home_company_id' => $this->companyA->id,
             'last_company_id' => $this->companyA->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,

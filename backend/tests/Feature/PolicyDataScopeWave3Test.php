@@ -84,7 +84,7 @@ class PolicyDataScopeWave3Test extends TestCase
     private function userWithRole(string $role, array $permissions = []): User
     {
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         $user->assignRole($role);
@@ -100,7 +100,7 @@ class PolicyDataScopeWave3Test extends TestCase
     public function test_employee_sees_own_visible_document_not_hidden_or_others(): void
     {
         $owner = $this->userWithRole('employee', ['employees.list.view', 'employees.documents.view']);
-        $other = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $other = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
 
         $ownerEmp = Employee::factory()->forUser($owner)->create();
         $otherEmp = Employee::factory()->forUser($other)->create();
@@ -170,7 +170,7 @@ class PolicyDataScopeWave3Test extends TestCase
             'employees.documents.view',
             'employees.documents.edit',
         ]);
-        $employee = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $employee = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
         $emp = Employee::factory()->forUser($employee)->create();
 
         $hidden = EmployeeDocument::create([
@@ -198,7 +198,7 @@ class PolicyDataScopeWave3Test extends TestCase
     public function test_document_company_scope_lists_and_tenant_isolation(): void
     {
         $hr = $this->userWithRole('hr_manager', ['documents.list.view', 'documents.list.edit']);
-        $uploader = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $uploader = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
 
         $ownDoc = Document::create([
             'company_id' => $this->company->id,
@@ -239,7 +239,7 @@ class PolicyDataScopeWave3Test extends TestCase
         Employee::factory()->forUser($approver)->create();
         Employee::factory()->forUser($stranger)->create();
 
-        $requester = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $requester = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
         $leaveType = LeaveType::create([
             'company_id' => $this->company->id,
             'name' => 'Annual',
@@ -286,7 +286,7 @@ class PolicyDataScopeWave3Test extends TestCase
             'created_by' => $delegator->id,
         ]);
 
-        $requester = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $requester = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
         $leaveType = LeaveType::create([
             'company_id' => $this->company->id,
             'name' => 'Annual2',
@@ -314,13 +314,13 @@ class PolicyDataScopeWave3Test extends TestCase
     public function test_company_admin_with_admin_role_approvals(): void
     {
         $admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($admin);
-        $approver = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $approver = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
 
-        $requester = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $requester = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
         $leaveType = LeaveType::create([
             'company_id' => $this->company->id,
             'name' => 'Annual3',

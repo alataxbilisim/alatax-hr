@@ -183,7 +183,7 @@ class LeaveRequestCancelService
                 continue;
             }
             $approver = User::query()->find($approverId);
-            if ($approver && (int) $approver->company_id === $companyId) {
+            if ($approver && (int) $approver->home_company_id === $companyId) {
                 $this->notifications->notify($approver, 'leave.cancelled', [
                     ...$payload,
                     'panel' => 'company',
@@ -192,7 +192,7 @@ class LeaveRequestCancelService
         }
 
         $owner = $leaveRequest->user;
-        if ($owner && (int) $owner->id !== (int) $actor->id && (int) $owner->company_id === $companyId) {
+        if ($owner && (int) $owner->id !== (int) $actor->id && (int) $owner->home_company_id === $companyId) {
             $this->notifications->notify($owner, 'leave.cancelled', [
                 ...$payload,
                 'panel' => 'portal',

@@ -44,7 +44,7 @@ class SalaryReviewFlowTest extends TestCase
         Role::findByName('admin', 'sanctum')->forceFill(['data_scope' => 'company'])->save();
 
         $this->hr = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->hr->assignRole('admin');
@@ -52,7 +52,7 @@ class SalaryReviewFlowTest extends TestCase
         $this->hr = $this->hr->fresh();
 
         $this->approver = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         $this->approver->givePermissionTo(['employees.salary.view', 'employees.salary.edit']);

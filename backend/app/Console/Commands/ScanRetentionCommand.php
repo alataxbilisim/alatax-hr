@@ -77,7 +77,7 @@ class ScanRetentionCommand extends Command
         }
 
         $admins = User::query()
-            ->where('company_id', $companyId)
+            ->where('home_company_id', $companyId)
             ->where('type', \App\Enums\UserType::CompanyAdmin)
             ->limit(5)
             ->get();

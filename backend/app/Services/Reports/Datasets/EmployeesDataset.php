@@ -104,7 +104,6 @@ final class EmployeesDataset extends AbstractDataset
             $this->dim('status', "{$t}.status", 'string', 'Durum'),
             $this->dim('department_id', "{$t}.department_id", 'number', 'Departman ID'),
             $this->dim('branch_id', "{$t}.branch_id", 'number', 'Şube ID'),
-            $this->dim('position', "{$t}.position", 'string', 'Pozisyon (kod/legacy)'),
             $this->dim('position_id', "{$t}.position_id", 'number', 'Pozisyon ID'),
             $this->dim('position_name', 'positions.name', 'string', 'Pozisyon Adı'),
             $this->dim('title', "{$t}.title", 'string', 'Unvan'),

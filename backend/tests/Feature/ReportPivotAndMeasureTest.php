@@ -52,7 +52,7 @@ class ReportPivotAndMeasureTest extends TestCase
             'is_active' => true,
         ]);
         $this->admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($this->admin);
@@ -65,7 +65,8 @@ class ReportPivotAndMeasureTest extends TestCase
             'department_id' => $this->deptA->id,
             'hire_date' => '2024-01-15',
             'gross_salary' => 10000,
-            'position' => 'Dev',
+            // position string dropped
+
         ]);
         Employee::create([
             'company_id' => $this->company->id,
@@ -74,7 +75,8 @@ class ReportPivotAndMeasureTest extends TestCase
             'department_id' => $this->deptA->id,
             'hire_date' => '2024-02-20',
             'gross_salary' => 20000,
-            'position' => 'QA',
+            // position string dropped
+
         ]);
         Employee::create([
             'company_id' => $this->company->id,
@@ -83,7 +85,8 @@ class ReportPivotAndMeasureTest extends TestCase
             'department_id' => $this->deptB->id,
             'hire_date' => '2023-06-01',
             'gross_salary' => 15000,
-            'position' => 'Dev',
+            // position string dropped
+
         ]);
     }
 
@@ -145,7 +148,7 @@ class ReportPivotAndMeasureTest extends TestCase
     public function test_drill_details_drops_salary_without_permission(): void
     {
         $viewer = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         $role = Role::findOrCreate('pivot_viewer', 'sanctum');
@@ -171,7 +174,7 @@ class ReportPivotAndMeasureTest extends TestCase
     public function test_drill_details_respects_department_scope(): void
     {
         $mgr = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         Employee::create([
@@ -219,7 +222,7 @@ class ReportPivotAndMeasureTest extends TestCase
 
         // Diğer tenant erişemez
         $otherAdmin = User::factory()->create([
-            'company_id' => $this->otherCompany->id,
+            'home_company_id' => $this->otherCompany->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($otherAdmin);
@@ -245,7 +248,7 @@ class ReportPivotAndMeasureTest extends TestCase
         ])->assertStatus(422);
 
         $viewer = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         $role = Role::findOrCreate('expr_viewer', 'sanctum');

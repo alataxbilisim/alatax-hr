@@ -35,12 +35,12 @@ class BackfillCompanyContextCommand extends Command
             });
 
             User::query()
-                ->whereNotNull('company_id')
+                ->whereNotNull('home_company_id')
                 ->orderBy('id')
                 ->each(function (User $user) use ($service, &$membershipCreated, &$lastUpdated): void {
                     $had = CompanyUser::query()
                         ->where('user_id', $user->id)
-                        ->where('company_id', $user->company_id)
+                        ->where('company_id', $user->home_company_id)
                         ->exists();
 
                     $service->syncHomeMembership($user);
@@ -50,8 +50,8 @@ class BackfillCompanyContextCommand extends Command
                     }
 
                     $fresh = $user->fresh();
-                    if ($fresh && $fresh->last_company_id === null && $fresh->company_id !== null) {
-                        $fresh->forceFill(['last_company_id' => $fresh->company_id])->saveQuietly();
+                    if ($fresh && $fresh->last_company_id === null && $fresh->home_company_id !== null) {
+                        $fresh->forceFill(['last_company_id' => $fresh->home_company_id])->saveQuietly();
                         $lastUpdated++;
                     }
                 });

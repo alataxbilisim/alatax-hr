@@ -69,7 +69,7 @@ class ApprovalEntityIsolationTest extends TestCase
         ]);
 
         $this->userA = User::factory()->create([
-            'company_id' => $this->companyA->id,
+            'home_company_id' => $this->companyA->id,
             'last_company_id' => $this->companyA->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
@@ -79,7 +79,7 @@ class ApprovalEntityIsolationTest extends TestCase
         app(CompanyContextService::class)->ensureMembership($this->userA, (int) $this->companyB->id, false);
 
         $this->userB = User::factory()->create([
-            'company_id' => $this->companyB->id,
+            'home_company_id' => $this->companyB->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
         ]);

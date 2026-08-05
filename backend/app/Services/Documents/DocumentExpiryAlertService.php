@@ -151,7 +151,7 @@ class DocumentExpiryAlertService
             // Personel (portal)
             $employeeUser = $document->employee?->user;
             if ($employeeUser instanceof User
-                && (int) $employeeUser->company_id === (int) $document->company_id
+                && (int) $employeeUser->home_company_id === (int) $document->company_id
                 && $document->is_visible_to_employee) {
                 $this->notifications->notify($employeeUser, 'document.expiring', array_merge($payloadBase, [
                     'panel' => 'portal',
@@ -181,7 +181,7 @@ class DocumentExpiryAlertService
     protected function resolveHrRecipients(int $companyId): array
     {
         return User::query()
-            ->where('company_id', $companyId)
+            ->where('home_company_id', $companyId)
             ->where('is_active', true)
             ->where(function ($q): void {
                 $q->where('type', UserType::CompanyAdmin)

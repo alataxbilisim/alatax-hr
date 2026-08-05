@@ -59,18 +59,18 @@ class NotificationService
         $catalog = $events[$eventKey];
 
         $expectedCompanyId = isset($payload['company_id']) ? (int) $payload['company_id'] : null;
-        if ($expectedCompanyId !== null && (int) $user->company_id !== $expectedCompanyId) {
+        if ($expectedCompanyId !== null && (int) $user->home_company_id !== $expectedCompanyId) {
             Log::warning('notification.tenant_mismatch', [
                 'event' => $eventKey,
                 'user_id' => $user->id,
-                'user_company_id' => $user->company_id,
+                'user_company_id' => $user->home_company_id,
                 'payload_company_id' => $expectedCompanyId,
             ]);
 
             return;
         }
 
-        $companyId = $expectedCompanyId ?? (int) $user->company_id;
+        $companyId = $expectedCompanyId ?? (int) $user->home_company_id;
         $replacements = $this->buildReplacements($user, $payload);
         $rendered = $this->templates->render($eventKey, $companyId, $replacements, $catalog);
         $title = $rendered['title'];
@@ -138,7 +138,7 @@ class NotificationService
         }
 
         foreach ($targets as $target) {
-            if ((int) $target->company_id !== (int) $record->company_id) {
+            if ((int) $target->home_company_id !== (int) $record->company_id) {
                 continue;
             }
             $this->notify($target, 'approval.requested', $payload);
@@ -159,8 +159,8 @@ class NotificationService
             return;
         }
 
-        $companyId = (int) ($approvable->getAttribute('company_id') ?? $requester->company_id);
-        if ((int) $requester->company_id !== $companyId) {
+        $companyId = (int) ($approvable->getAttribute('company_id') ?? $requester->home_company_id);
+        if ((int) $requester->home_company_id !== $companyId) {
             return;
         }
 
@@ -196,7 +196,7 @@ class NotificationService
             return;
         }
 
-        if ((int) $assignee->company_id !== (int) $task->company_id) {
+        if ((int) $assignee->home_company_id !== (int) $task->company_id) {
             return;
         }
 
@@ -217,7 +217,7 @@ class NotificationService
      */
     public function notifyAssetAssigned(Asset $asset, User $assignee): void
     {
-        if ((int) $assignee->company_id !== (int) $asset->company_id) {
+        if ((int) $assignee->home_company_id !== (int) $asset->company_id) {
             return;
         }
 
@@ -240,7 +240,7 @@ class NotificationService
     public function notifySecurity(User $user, string $eventKey): void
     {
         $this->notify($user, $eventKey, [
-            'company_id' => (int) $user->company_id,
+            'company_id' => (int) $user->home_company_id,
             'user' => $user->name,
             'date' => now()->toDateString(),
             'panel' => 'company',

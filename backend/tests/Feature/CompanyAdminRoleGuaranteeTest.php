@@ -39,7 +39,7 @@ class CompanyAdminRoleGuaranteeTest extends TestCase
     private function companyAdminWithAdminRole(): User
     {
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
         ]);
@@ -97,7 +97,7 @@ class CompanyAdminRoleGuaranteeTest extends TestCase
 
         // Type tek başına yetmez — rol yoksa Gate false
         $rolsuz = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
         ]);
@@ -134,7 +134,7 @@ class CompanyAdminRoleGuaranteeTest extends TestCase
     {
         $admin = $this->companyAdminWithAdminRole();
         $otherUser = User::factory()->create([
-            'company_id' => $this->otherCompany->id,
+            'home_company_id' => $this->otherCompany->id,
             'type' => UserType::User,
         ]);
         $otherEmployee = Employee::factory()->forUser($otherUser)->create([

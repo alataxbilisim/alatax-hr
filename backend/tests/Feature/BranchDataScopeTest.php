@@ -52,7 +52,7 @@ class BranchDataScopeTest extends TestCase
     private function makeBranchManager(Branch $branch): User
     {
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);
@@ -129,7 +129,7 @@ class BranchDataScopeTest extends TestCase
         ]);
 
         $admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
         ]);
@@ -172,7 +172,7 @@ class BranchDataScopeTest extends TestCase
         $this->assertSame('branch', $role->data_scope);
 
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         $user->assignRole('branch_manager');

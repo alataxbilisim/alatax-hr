@@ -76,7 +76,7 @@ class PortalPdksCompanyRegressionTest extends TestCase
         ]);
 
         $this->adminA = User::factory()->create([
-            'company_id' => $this->companyA->id,
+            'home_company_id' => $this->companyA->id,
             'last_company_id' => $this->companyA->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
@@ -86,7 +86,7 @@ class PortalPdksCompanyRegressionTest extends TestCase
 
         // Panel + portal: home A, membership B, personel kaydı yalnız A
         $this->dualUser = User::factory()->create([
-            'company_id' => $this->companyA->id,
+            'home_company_id' => $this->companyA->id,
             'last_company_id' => $this->companyA->id,
             'type' => UserType::User,
             'is_active' => true,
@@ -107,7 +107,7 @@ class PortalPdksCompanyRegressionTest extends TestCase
         // Panel şirket değişimi simülasyonu — last_company_id = B
         app(CompanyContextService::class)->rememberLastCompany($this->dualUser, (int) $this->companyB->id);
         $this->assertSame($this->companyB->id, (int) $this->dualUser->fresh()->last_company_id);
-        $this->assertSame($this->companyA->id, (int) $this->dualUser->fresh()->company_id);
+        $this->assertSame($this->companyA->id, (int) $this->dualUser->fresh()->home_company_id);
 
         Sanctum::actingAs($this->dualUser->fresh());
         $this->postJson('/api/v1/portal/timesheet/clock-in', [

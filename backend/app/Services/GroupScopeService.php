@@ -25,7 +25,7 @@ class GroupScopeService
     {
         $activeId = $activeCompanyId
             ?? CompanyContext::id()
-            ?? ($user->company_id ? (int) $user->company_id : null);
+            ?? ($user->home_company_id ? (int) $user->home_company_id : null);
 
         if ($activeId === null || $activeId < 1) {
             return [];

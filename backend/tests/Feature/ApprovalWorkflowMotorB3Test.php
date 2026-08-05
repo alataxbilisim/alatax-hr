@@ -120,7 +120,7 @@ class ApprovalWorkflowMotorB3Test extends TestCase
     private function userWithRole(string $role): User
     {
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         $user->assignRole($role);

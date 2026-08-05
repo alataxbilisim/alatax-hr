@@ -12,7 +12,6 @@ use App\Models\Employee;
 use App\Models\LeaveBalance;
 use App\Models\LeaveRequest;
 use App\Models\PerformanceReview;
-use App\Models\Position;
 use App\Models\TrainingCertificate;
 use App\Models\TrainingParticipant;
 use App\Models\User;
@@ -62,11 +61,14 @@ class EmployeeController extends BaseController
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('employee_code', 'like', "%{$search}%")
-                    ->orWhere('position', 'like', "%{$search}%")
                     ->orWhere('title', 'like', "%{$search}%")
                     ->orWhereHas('user', function ($uq) use ($search) {
                         $uq->where('name', 'like', "%{$search}%")
                             ->orWhere('email', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('position', function ($pq) use ($search) {
+                        $pq->where('name', 'like', "%{$search}%")
+                            ->orWhere('code', 'like', "%{$search}%");
                     });
             });
         }
@@ -86,8 +88,6 @@ class EmployeeController extends BaseController
 
         if ($request->filled('position_id')) {
             $query->where('position_id', (int) $request->position_id);
-        } elseif ($request->filled('position')) {
-            $query->where('position', 'like', "%{$request->position}%");
         }
 
         // Sıralama
@@ -250,13 +250,12 @@ class EmployeeController extends BaseController
                 'max:50',
                 Rule::unique('employees')->where(function ($query) {
                     return $query->where('company_id', $this->getCompanyId());
-                }),
+                })->whereNull('deleted_at'),
             ],
             'name' => 'required|string|max:255',
             'department_id' => 'nullable|exists:departments,id',
             'branch_id' => 'nullable|exists:branches,id',
             'title' => 'nullable|string|max:100',
-            'position' => 'nullable|string|max:100',
             'position_id' => [
                 'nullable',
                 'integer',
@@ -312,7 +311,12 @@ class EmployeeController extends BaseController
 
             // Portal erişimi
             'create_portal_access' => 'boolean',
-            'portal_email' => 'nullable|required_if:create_portal_access,true|email|unique:users,email',
+            'portal_email' => [
+                'nullable',
+                'required_if:create_portal_access,true',
+                'email',
+                Rule::unique('users', 'email')->whereNull('deleted_at'),
+            ],
             'portal_access_mode' => 'nullable|in:invite,set_password',
             'portal_password' => [
                 'nullable',
@@ -352,8 +356,6 @@ class EmployeeController extends BaseController
             $validated['custom_fields'] ?? null
         );
 
-        $validated = $this->syncPositionFields($validated, $companyId);
-
         DB::beginTransaction();
         try {
             // Personel kaydı oluştur
@@ -364,7 +366,6 @@ class EmployeeController extends BaseController
                 'department_id' => $validated['department_id'] ?? null,
                 'branch_id' => $validated['branch_id'] ?? null,
                 'title' => $validated['title'] ?? null,
-                'position' => $validated['position'] ?? null,
                 'position_id' => $validated['position_id'] ?? null,
                 'manager_id' => $validated['manager_id'] ?? null,
                 'birth_date' => $validated['birth_date'] ?? null,
@@ -444,13 +445,12 @@ class EmployeeController extends BaseController
                 'max:50',
                 Rule::unique('employees')->where(function ($query) {
                     return $query->where('company_id', $this->getCompanyId());
-                })->ignore($employee->id),
+                })->whereNull('deleted_at')->ignore($employee->id),
             ],
             'name' => 'sometimes|string|max:255',
             'department_id' => 'nullable|exists:departments,id',
             'branch_id' => 'nullable|exists:branches,id',
             'title' => 'nullable|string|max:100',
-            'position' => 'nullable|string|max:100',
             'position_id' => [
                 'nullable',
                 'integer',
@@ -533,10 +533,6 @@ class EmployeeController extends BaseController
             $validated['full_name'] = $name;
         }
 
-        if (array_key_exists('position_id', $validated) || array_key_exists('position', $validated)) {
-            $validated = $this->syncPositionFields($validated, $companyId);
-        }
-
         $employee->update(array_merge($validated, [
             'updated_by' => auth()->id(),
         ]));
@@ -580,7 +576,7 @@ class EmployeeController extends BaseController
         }
 
         $validated = $request->validate([
-            'email' => 'required|email|unique:users,email',
+            'email' => ['required', 'email', Rule::unique('users', 'email')->whereNull('deleted_at')],
             'name' => 'required|string|max:255',
             'access_mode' => 'nullable|in:invite,set_password',
             'password' => [
@@ -634,7 +630,7 @@ class EmployeeController extends BaseController
     ): User {
         if ($mode === 'set_password') {
             $user = User::create([
-                'company_id' => $this->getCompanyId(),
+                'home_company_id' => $this->getCompanyId(),
                 'name' => $name,
                 'email' => $email,
                 'password' => Hash::make((string) $password),
@@ -651,7 +647,7 @@ class EmployeeController extends BaseController
         $issue = $this->invitations->issue();
 
         $user = User::create([
-            'company_id' => $this->getCompanyId(),
+            'home_company_id' => $this->getCompanyId(),
             'name' => $name,
             'email' => $email,
             'password' => Hash::make(Str::random(32)),
@@ -735,7 +731,7 @@ class EmployeeController extends BaseController
             $query->where('status', $request->status);
         }
 
-        $employees = $query->get();
+        $employees = $query->load('position')->get();
 
         // CSV oluştur
         $filename = 'personel_listesi_'.date('Y-m-d_His').'.csv';
@@ -770,7 +766,7 @@ class EmployeeController extends BaseController
                     $employee->user?->name ?? '-',
                     $employee->user?->email ?? $employee->personal_email ?? '-',
                     $employee->department?->name ?? '-',
-                    $employee->position ?? '-',
+                    $employee->position?->name ?? '-',
                     $employee->title ?? '-',
                     $employee->hire_date?->format('d.m.Y') ?? '-',
                     $employee->status,
@@ -934,7 +930,7 @@ class EmployeeController extends BaseController
             ->where('status', 'active')
             ->with('user:id,name')
             ->orderBy('employee_code')
-            ->get(['id', 'employee_code', 'user_id', 'position', 'title']);
+            ->get(['id', 'employee_code', 'user_id', 'position_id', 'title']);
 
         return $this->success($managers);
     }
@@ -1246,101 +1242,5 @@ class EmployeeController extends BaseController
         }
     }
 
-    /**
-     * position_id SSOT; string position dual-write (katalog kodu). Belirsiz ad eşleşmesinde FK tahmin edilmez.
-     *
-     * @param  array<string, mixed>  $validated
-     * @return array<string, mixed>
-     */
-    private function syncPositionFields(array $validated, int $companyId): array
-    {
-        $hasId = array_key_exists('position_id', $validated);
-        $positionId = $hasId && $validated['position_id'] !== null && $validated['position_id'] !== ''
-            ? (int) $validated['position_id']
-            : null;
-        $raw = array_key_exists('position', $validated)
-            ? trim((string) ($validated['position'] ?? ''))
-            : null;
-
-        if ($positionId) {
-            $pos = Position::query()
-                ->where('company_id', $companyId)
-                ->whereKey($positionId)
-                ->first();
-            if ($pos === null) {
-                $validated['position_id'] = null;
-                $validated['position'] = $raw !== null && $raw !== '' ? $raw : null;
-
-                return $validated;
-            }
-            $validated['position_id'] = $pos->id;
-            $validated['position'] = $pos->code;
-
-            return $validated;
-        }
-
-        if ($hasId && ($validated['position_id'] === null || $validated['position_id'] === '')) {
-            $validated['position_id'] = null;
-            if ($raw === null || $raw === '') {
-                $validated['position'] = null;
-            }
-
-            return $validated;
-        }
-
-        if ($raw === null) {
-            return $validated;
-        }
-
-        if ($raw === '') {
-            $validated['position_id'] = null;
-            $validated['position'] = null;
-
-            return $validated;
-        }
-
-        // FormEngine: Select value = position id (sayısal string)
-        if (ctype_digit($raw)) {
-            $byId = Position::query()
-                ->where('company_id', $companyId)
-                ->whereKey((int) $raw)
-                ->first();
-            if ($byId !== null) {
-                $validated['position_id'] = $byId->id;
-                $validated['position'] = $byId->code;
-
-                return $validated;
-            }
-        }
-
-        $byCode = Position::query()
-            ->where('company_id', $companyId)
-            ->where('code', $raw)
-            ->get(['id', 'code']);
-        if ($byCode->count() === 1) {
-            $pos = $byCode->first();
-            $validated['position_id'] = $pos->id;
-            $validated['position'] = $pos->code;
-
-            return $validated;
-        }
-
-        $byName = Position::query()
-            ->where('company_id', $companyId)
-            ->where('name', $raw)
-            ->get(['id', 'code']);
-        if ($byName->count() === 1) {
-            $pos = $byName->first();
-            $validated['position_id'] = $pos->id;
-            $validated['position'] = $pos->code;
-
-            return $validated;
-        }
-
-        // Belirsiz / eşleşmeyen: string korunur, FK tahmin edilmez
-        $validated['position_id'] = null;
-        $validated['position'] = $raw;
-
-        return $validated;
-    }
+    // §4: syncPositionFields kaldırıldı — position_id SSOT, string dual-write yok.
 }

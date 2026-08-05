@@ -51,7 +51,7 @@ class KvkkGroupScopeIgnoredTest extends TestCase
         ]);
 
         $this->admin = User::factory()->create([
-            'company_id' => $this->companyA->id,
+            'home_company_id' => $this->companyA->id,
             'last_company_id' => $this->companyA->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,

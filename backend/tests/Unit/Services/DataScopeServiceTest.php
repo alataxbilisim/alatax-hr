@@ -43,7 +43,7 @@ class DataScopeServiceTest extends TestCase
         }
 
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         $user->assignRole($role);
@@ -78,7 +78,7 @@ class DataScopeServiceTest extends TestCase
     public function test_resolve_without_roles_defaults_to_own(): void
     {
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
 
@@ -88,7 +88,7 @@ class DataScopeServiceTest extends TestCase
     public function test_scope_for_user_own_filters_to_self(): void
     {
         $actor = $this->makeUserWithRole('employee');
-        $other = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $other = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
         $leaveType = $this->leaveType();
 
         $own = $this->leave($actor, $leaveType);
@@ -103,8 +103,8 @@ class DataScopeServiceTest extends TestCase
     public function test_scope_for_user_team_includes_subordinates(): void
     {
         $managerUser = $this->makeUserWithRole('manager');
-        $subUser = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
-        $otherUser = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $subUser = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
+        $otherUser = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
 
         $managerEmp = Employee::factory()->forUser($managerUser)->create();
         Employee::factory()->forUser($subUser)->create(['manager_id' => $managerEmp->id]);
@@ -138,8 +138,8 @@ class DataScopeServiceTest extends TestCase
         ]);
 
         $specialist = $this->makeUserWithRole('hr_specialist');
-        $sameDept = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
-        $otherDept = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $sameDept = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
+        $otherDept = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
 
         Employee::factory()->forUser($specialist)->create(['department_id' => $deptA->id]);
         Employee::factory()->forUser($sameDept)->create(['department_id' => $deptA->id]);
@@ -158,8 +158,8 @@ class DataScopeServiceTest extends TestCase
     public function test_scope_for_user_company_has_no_extra_filter(): void
     {
         $hr = $this->makeUserWithRole('hr_manager');
-        $a = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
-        $b = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $a = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
+        $b = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
         $leaveType = $this->leaveType();
 
         $la = $this->leave($a, $leaveType);
@@ -174,8 +174,8 @@ class DataScopeServiceTest extends TestCase
     public function test_scope_for_employee_team_includes_self_and_subordinates(): void
     {
         $managerUser = $this->makeUserWithRole('manager');
-        $subUser = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
-        $otherUser = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $subUser = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
+        $otherUser = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
 
         $managerEmp = Employee::factory()->forUser($managerUser)->create();
         $subEmp = Employee::factory()->forUser($subUser)->create(['manager_id' => $managerEmp->id]);
@@ -207,7 +207,7 @@ class DataScopeServiceTest extends TestCase
         $role->forceFill(['data_scope' => 'branch'])->save();
 
         $actorUser = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         $actorUser->assignRole($role);
@@ -232,7 +232,7 @@ class DataScopeServiceTest extends TestCase
     public function test_company_admin_resolves_to_company_scope(): void
     {
         $admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
         ]);
 

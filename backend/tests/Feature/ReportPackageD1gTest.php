@@ -57,7 +57,7 @@ class ReportPackageD1gTest extends TestCase
             'is_active' => true,
         ]);
         $this->admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($this->admin);
@@ -148,7 +148,7 @@ class ReportPackageD1gTest extends TestCase
         ]);
         AttendanceRecord::factory()->create([
             'company_id' => $this->otherCompany->id,
-            'user_id' => User::factory()->create(['company_id' => $this->otherCompany->id])->id,
+            'user_id' => User::factory()->create(['home_company_id' => $this->otherCompany->id])->id,
             'date' => '2026-07-01',
             'status' => 'present',
         ]);
@@ -171,7 +171,7 @@ class ReportPackageD1gTest extends TestCase
 
         // payslips hassas alan — izinsiz kullanıcıda gizlenir
         $viewer = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         $role = Role::findOrCreate('d1g_no_salary', 'sanctum');
@@ -234,7 +234,7 @@ class ReportPackageD1gTest extends TestCase
         $this->seed(SystemReportPackageSeeder::class);
 
         $mgrUser = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         Employee::create([

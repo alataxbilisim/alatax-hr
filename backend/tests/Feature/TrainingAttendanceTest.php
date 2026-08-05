@@ -59,14 +59,14 @@ class TrainingAttendanceTest extends TestCase
         ]);
 
         $this->admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
         ]);
         $this->assignSpatieAdminRole($this->admin);
 
         $this->noPermUser = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);
@@ -75,7 +75,7 @@ class TrainingAttendanceTest extends TestCase
         ]);
 
         $this->participantUser = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         Employee::factory()->forUser($this->participantUser)->create([
@@ -155,7 +155,7 @@ class TrainingAttendanceTest extends TestCase
     public function test_cannot_update_other_company_session_attendance(): void
     {
         $otherAdmin = User::factory()->create([
-            'company_id' => $this->otherCompany->id,
+            'home_company_id' => $this->otherCompany->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
         ]);

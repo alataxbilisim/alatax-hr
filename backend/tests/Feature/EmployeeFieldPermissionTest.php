@@ -60,7 +60,7 @@ class EmployeeFieldPermissionTest extends TestCase
     private function userWithRole(string $role, array $permissions = [], ?UserType $type = null): User
     {
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => $type ?? UserType::User,
         ]);
         $spatieRole = Role::findByName($role, 'sanctum');

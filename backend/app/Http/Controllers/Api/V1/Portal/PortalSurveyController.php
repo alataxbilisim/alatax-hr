@@ -24,7 +24,7 @@ class PortalSurveyController extends BaseController
     {
         $user = $request->user();
 
-        $query = Survey::where('company_id', $user->company_id)
+        $query = Survey::where('company_id', $user->home_company_id)
             ->where('is_active', true)
             ->open()
             ->with(['questions:id,survey_id,question_text,question_type,order_number'])
@@ -88,7 +88,7 @@ class PortalSurveyController extends BaseController
     {
         $user = $request->user();
 
-        $survey = Survey::where('company_id', $user->company_id)
+        $survey = Survey::where('company_id', $user->home_company_id)
             ->where('id', $id)
             ->where('is_active', true)
             ->with(['questions' => function ($q) {
@@ -170,7 +170,7 @@ class PortalSurveyController extends BaseController
     {
         $user = $request->user();
 
-        $survey = Survey::where('company_id', $user->company_id)
+        $survey = Survey::where('company_id', $user->home_company_id)
             ->where('id', $id)
             ->where('is_active', true)
             ->first();
@@ -302,7 +302,7 @@ class PortalSurveyController extends BaseController
         $query = SurveySubmission::where('user_id', $user->id)
             ->where('status', 'completed')
             ->whereHas('survey', function ($q) use ($user) {
-                $q->where('company_id', $user->company_id);
+                $q->where('company_id', $user->home_company_id);
             })
             ->with('survey:id,title,description,type')
             ->orderByDesc('completed_at');

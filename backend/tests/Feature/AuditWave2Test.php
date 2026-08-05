@@ -110,7 +110,7 @@ class AuditWave2Test extends TestCase
     private function companyAdmin(): User
     {
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $user->givePermissionTo([
@@ -127,7 +127,7 @@ class AuditWave2Test extends TestCase
     private function hrManager(): User
     {
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         $user->assignRole('hr_manager');
@@ -149,7 +149,7 @@ class AuditWave2Test extends TestCase
     {
         $admin = $this->companyAdmin();
         $target = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'name' => 'Eski Ad',
             'type' => UserType::User,
         ]);
@@ -176,7 +176,7 @@ class AuditWave2Test extends TestCase
     {
         $admin = $this->companyAdmin();
         $target = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
 
@@ -252,7 +252,7 @@ class AuditWave2Test extends TestCase
     {
         $hr = $this->hrManager();
         $owner = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
 
@@ -300,7 +300,7 @@ class AuditWave2Test extends TestCase
     {
         $hr = $this->hrManager();
         $owner = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
 
@@ -357,7 +357,7 @@ class AuditWave2Test extends TestCase
     {
         $admin = $this->companyAdmin();
         $target = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         $role = Role::findOrCreate('manager', 'sanctum');

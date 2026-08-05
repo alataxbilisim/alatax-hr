@@ -36,7 +36,7 @@ class ReportEngineApiTest extends TestCase
         $this->otherCompany = Company::factory()->create(['status' => CompanyStatus::Active]);
 
         $this->admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($this->admin);
@@ -53,7 +53,7 @@ class ReportEngineApiTest extends TestCase
     public function test_unauthorized_role_gets_403(): void
     {
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         Sanctum::actingAs($user);
@@ -112,7 +112,7 @@ class ReportEngineApiTest extends TestCase
 
         // Paylaşılan raporu başka kullanıcı kendi kapsamıyla görür
         $peer = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         $role = Role::findOrCreate('shared_runner', 'sanctum');
@@ -144,7 +144,7 @@ class ReportEngineApiTest extends TestCase
         ])->assertCreated()->json('data.id');
 
         $otherAdmin = User::factory()->create([
-            'company_id' => $this->otherCompany->id,
+            'home_company_id' => $this->otherCompany->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($otherAdmin);

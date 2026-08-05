@@ -59,7 +59,7 @@ class RouteComprehensiveTest extends TestCase
             'email' => 'admin@company.com',
             'password' => 'password',
             'type' => UserType::CompanyAdmin,
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'is_active' => true,
         ]);
         $this->assignSpatieAdminRole($this->companyAdmin);
@@ -70,7 +70,7 @@ class RouteComprehensiveTest extends TestCase
             'email' => 'employee@company.com',
             'password' => 'password',
             'type' => UserType::User,
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'is_active' => true,
         ]);
         Employee::factory()->forUser($this->employee)->create();

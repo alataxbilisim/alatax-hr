@@ -68,7 +68,7 @@ class SurveyAudienceTest extends TestCase
         ]);
 
         $this->userInAudience = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         Employee::factory()->forUser($this->userInAudience)->create([
@@ -77,7 +77,7 @@ class SurveyAudienceTest extends TestCase
         ]);
 
         $this->userOutside = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         Employee::factory()->forUser($this->userOutside)->create([

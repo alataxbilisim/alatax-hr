@@ -101,3 +101,14 @@ backend/storage/app/gorsel-kontrol/
 # Faz1 local backup (not for commit)
 backend/database/migrations_backup_*/
 
+# --- Docs artifacts (kişisel veri / büyük binary — commit etme) ---
+docs/backups/
+docs/**/*.log
+docs/**/*.dump
+docs/qa/**
+docs/e2e/**
+docs/**/KANIT.html
+docs/denetim-raw.json
+docs/**/*-raw.json
+frontend/_archive_old_app/
+

@@ -58,7 +58,7 @@ class AuditWave1Test extends TestCase
     private function hrManager(): User
     {
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         $user->assignRole('hr_manager');
@@ -73,7 +73,8 @@ class AuditWave1Test extends TestCase
         $emp = Employee::factory()->create([
             'company_id' => $this->company->id,
             'title' => 'Eski',
-            'position' => 'Dev',
+            // position string dropped
+
             'status' => 'active',
         ]);
 
@@ -209,7 +210,7 @@ class AuditWave1Test extends TestCase
     public function test_payslip_show_creates_sensitive_view_log(): void
     {
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         $user->assignRole('employee');
@@ -274,7 +275,7 @@ class AuditWave1Test extends TestCase
     public function test_show_without_salary_permission_does_not_log_salary_view(): void
     {
         $specialist = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         $specialist->assignRole('hr_specialist');

@@ -66,21 +66,21 @@ class FormEngineExpansionC3Test extends TestCase
         }
 
         $this->adminA = User::factory()->create([
-            'company_id' => $this->companyA->id,
+            'home_company_id' => $this->companyA->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($this->adminA);
         $this->adminA = $this->adminA->fresh();
 
         $this->adminB = User::factory()->create([
-            'company_id' => $this->companyB->id,
+            'home_company_id' => $this->companyB->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($this->adminB);
         $this->adminB = $this->adminB->fresh();
 
         $this->portalUser = User::factory()->create([
-            'company_id' => $this->companyA->id,
+            'home_company_id' => $this->companyA->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);
@@ -163,7 +163,7 @@ class FormEngineExpansionC3Test extends TestCase
         $this->getJson('/api/v1/form-definitions/expense')->assertStatus(401);
 
         $viewer = User::factory()->create([
-            'company_id' => $this->companyA->id,
+            'home_company_id' => $this->companyA->id,
             'type' => UserType::User,
         ]);
         $role = \App\Models\Role::findOrCreate('viewer_no_forms_c3', 'sanctum');

@@ -29,7 +29,7 @@ class PortalExpenseController extends BaseController
      */
     public function categories(): JsonResponse
     {
-        $categories = ExpenseCategory::where('company_id', auth()->user()->company_id)
+        $categories = ExpenseCategory::where('company_id', auth()->user()->home_company_id)
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name', 'code', 'max_amount', 'requires_receipt']);
@@ -106,14 +106,14 @@ class PortalExpenseController extends BaseController
 
         $claim = ExpenseClaim::withoutAuditing(function () use ($user, $validated, $customFields) {
             $claim = ExpenseClaim::create([
-                'company_id' => $user->company_id,
+                'company_id' => $user->home_company_id,
                 'user_id' => $user->id,
                 'title' => $validated['title'],
                 'description' => $validated['description'] ?? null,
                 'custom_fields' => $customFields,
                 'expense_date' => $validated['expense_date'],
                 'currency' => $validated['currency'] ?? 'TRY',
-                'claim_number' => ExpenseClaim::generateClaimNumber($user->company_id),
+                'claim_number' => ExpenseClaim::generateClaimNumber($user->home_company_id),
                 'total_amount' => 0,
                 'status' => ExpenseClaim::STATUS_DRAFT,
             ]);
@@ -242,7 +242,7 @@ class PortalExpenseController extends BaseController
         ]);
 
         $path = $request->file('receipt')->store(
-            'expenses/'.auth()->user()->company_id.'/'.date('Y-m'),
+            'expenses/'.auth()->user()->home_company_id.'/'.date('Y-m'),
             'public'
         );
 

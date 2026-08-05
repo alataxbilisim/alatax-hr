@@ -50,7 +50,7 @@ class BranchContextTest extends TestCase
     private function makeBranchManager(Branch $branch): User
     {
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);
@@ -67,7 +67,7 @@ class BranchContextTest extends TestCase
     private function makeAdmin(): User
     {
         $admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
         ]);
@@ -214,7 +214,7 @@ class BranchContextTest extends TestCase
     public function test_hr_manager_has_cross_branch_permission(): void
     {
         $hr = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);

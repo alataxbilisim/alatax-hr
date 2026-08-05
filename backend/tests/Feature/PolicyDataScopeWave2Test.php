@@ -80,7 +80,7 @@ class PolicyDataScopeWave2Test extends TestCase
     private function userWithRole(string $role, array $permissions = []): User
     {
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         $user->assignRole($role);
@@ -106,7 +106,7 @@ class PolicyDataScopeWave2Test extends TestCase
     public function test_employee_own_sees_self_not_others(): void
     {
         $actor = $this->userWithRole('employee', ['employees.list.view']);
-        $other = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $other = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
 
         $ownEmp = Employee::factory()->forUser($actor)->create();
         $otherEmp = Employee::factory()->forUser($other)->create();
@@ -125,8 +125,8 @@ class PolicyDataScopeWave2Test extends TestCase
     public function test_employee_manager_sees_team_not_other_team(): void
     {
         $manager = $this->userWithRole('manager', ['employees.list.view', 'employees.list.edit']);
-        $sub = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
-        $other = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $sub = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
+        $other = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
 
         $managerEmp = Employee::factory()->forUser($manager)->create();
         $subEmp = Employee::factory()->forUser($sub)->create(['manager_id' => $managerEmp->id]);
@@ -153,7 +153,7 @@ class PolicyDataScopeWave2Test extends TestCase
             'employees.list.view',
             'employees.list.edit',
         ]);
-        $a = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $a = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
         $emp = Employee::factory()->forUser($a)->create();
 
         Sanctum::actingAs($hr);
@@ -165,7 +165,7 @@ class PolicyDataScopeWave2Test extends TestCase
     public function test_employee_tenant_isolation(): void
     {
         $hr = $this->userWithRole('hr_manager', ['employees.list.view']);
-        $otherUser = User::factory()->create(['company_id' => $this->otherCompany->id, 'type' => UserType::User]);
+        $otherUser = User::factory()->create(['home_company_id' => $this->otherCompany->id, 'type' => UserType::User]);
         $otherEmp = Employee::factory()->forUser($otherUser)->create();
 
         Sanctum::actingAs($hr);
@@ -183,8 +183,8 @@ class PolicyDataScopeWave2Test extends TestCase
             'expenses.claims.view',
             'expenses.claims.approve',
         ]);
-        $sub = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
-        $other = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $sub = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
+        $other = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
 
         $managerEmp = Employee::factory()->forUser($manager)->create();
         Employee::factory()->forUser($sub)->create(['manager_id' => $managerEmp->id]);
@@ -220,7 +220,7 @@ class PolicyDataScopeWave2Test extends TestCase
             'expenses.claims.view',
             'expenses.claims.approve',
         ]);
-        $employee = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $employee = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
         $claim = ExpenseClaim::factory()->create([
             'company_id' => $this->company->id,
             'user_id' => $employee->id,
@@ -235,12 +235,12 @@ class PolicyDataScopeWave2Test extends TestCase
     public function test_expense_permission_alone_cannot_approve_legacy_closed(): void
     {
         $approver = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         $approver->givePermissionTo(['expenses.claims.view', 'expenses.claims.approve']);
 
-        $employee = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $employee = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
         $claim = ExpenseClaim::factory()->create([
             'company_id' => $this->company->id,
             'user_id' => $employee->id,
@@ -255,7 +255,7 @@ class PolicyDataScopeWave2Test extends TestCase
     public function test_expense_owner_cannot_update_approved(): void
     {
         $owner = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         Employee::factory()->forUser($owner)->create();
@@ -275,7 +275,7 @@ class PolicyDataScopeWave2Test extends TestCase
     {
         $hr = $this->userWithRole('hr_manager', ['expenses.claims.view']);
         $otherUser = User::factory()->create([
-            'company_id' => $this->otherCompany->id,
+            'home_company_id' => $this->otherCompany->id,
             'type' => UserType::User,
         ]);
         $otherClaim = ExpenseClaim::factory()->create([
@@ -299,7 +299,7 @@ class PolicyDataScopeWave2Test extends TestCase
             'performance.reviews.view',
             'performance.reviews.edit',
         ]);
-        $reviewee = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $reviewee = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
         $stranger = $this->userWithRole('employee', ['performance.reviews.view']);
 
         Employee::factory()->forUser($reviewer)->create();
@@ -347,7 +347,7 @@ class PolicyDataScopeWave2Test extends TestCase
             'performance.reviews.view',
             'performance.reviews.approve',
         ]);
-        $subB = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $subB = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
 
         Employee::factory()->forUser($managerA)->create();
         $empB = Employee::factory()->forUser($managerB)->create();
@@ -385,8 +385,8 @@ class PolicyDataScopeWave2Test extends TestCase
             'performance.reviews.view',
             'performance.reviews.approve',
         ]);
-        $reviewee = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
-        $reviewer = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $reviewee = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
+        $reviewer = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
 
         $period = PerformancePeriod::create([
             'company_id' => $this->company->id,
@@ -413,12 +413,12 @@ class PolicyDataScopeWave2Test extends TestCase
     public function test_performance_company_admin_with_admin_role(): void
     {
         $admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($admin);
-        $reviewee = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
-        $reviewer = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $reviewee = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
+        $reviewer = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
 
         $period = PerformancePeriod::create([
             'company_id' => $this->company->id,

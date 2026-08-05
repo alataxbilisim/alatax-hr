@@ -20,7 +20,7 @@ class PortalSalaryController extends BaseController
     {
         $user = auth()->user();
         $employee = Employee::query()
-            ->where('company_id', $user->company_id)
+            ->where('company_id', $user->home_company_id)
             ->where('user_id', $user->id)
             ->first();
 
@@ -50,7 +50,7 @@ class PortalSalaryController extends BaseController
     {
         $user = auth()->user();
         $own = Employee::query()
-            ->where('company_id', $user->company_id)
+            ->where('company_id', $user->home_company_id)
             ->where('user_id', $user->id)
             ->first();
 

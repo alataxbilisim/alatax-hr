@@ -71,13 +71,13 @@ class ConvertApplicationToEmployeeService
             $code = $options['employee_code'] ?? $this->generateEmployeeCode((int) $application->company_id);
 
             $user = User::query()
-                ->where('company_id', $application->company_id)
+                ->where('home_company_id', $application->company_id)
                 ->where('email', $application->email)
                 ->first();
 
             if ($user === null) {
                 $user = User::create([
-                    'company_id' => $application->company_id,
+                    'home_company_id' => $application->company_id,
                     'name' => $fullName !== '' ? $fullName : $application->email,
                     'email' => $application->email,
                     'password' => Hash::make(Str::random(40)),
@@ -97,7 +97,7 @@ class ConvertApplicationToEmployeeService
                 'employee_code' => $code,
                 'branch_id' => $options['branch_id'] ?? null,
                 'department_id' => $options['department_id'] ?? null,
-                'position' => $application->jobPosition?->title,
+                'title' => $application->jobPosition?->title,
                 'personal_email' => $application->email,
                 'personal_phone' => $application->phone,
                 'hire_date' => $options['hire_date'] ?? now()->toDateString(),

@@ -52,7 +52,7 @@ class DashboardV2Test extends TestCase
             'is_active' => true,
         ]);
         $this->admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($this->admin);
@@ -160,7 +160,7 @@ class DashboardV2Test extends TestCase
         ])->assertCreated()->json('data');
 
         $mgr = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         Employee::create([
@@ -200,7 +200,7 @@ class DashboardV2Test extends TestCase
     public function test_salary_kpi_hidden_without_permission(): void
     {
         $viewer = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         $role = Role::findOrCreate('dash_nosal', 'sanctum');
@@ -295,7 +295,7 @@ class DashboardV2Test extends TestCase
     public function test_unauthorized_403(): void
     {
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         Sanctum::actingAs($user);
@@ -348,7 +348,7 @@ class DashboardV2Test extends TestCase
         $this->assertSame(2, $fresh->widgets()[0]['layout']['x'] ?? null);
 
         $other = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);

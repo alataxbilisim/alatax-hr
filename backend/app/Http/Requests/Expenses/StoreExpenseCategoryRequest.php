@@ -17,7 +17,7 @@ class StoreExpenseCategoryRequest extends FormRequest
      */
     public function rules(): array
     {
-        $companyId = auth()->user()?->company_id;
+        $companyId = auth()->user()?->home_company_id;
 
         return [
             'name' => ['required', 'string', 'max:255'],

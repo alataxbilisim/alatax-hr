@@ -7,6 +7,7 @@ use App\Enums\UserType;
 use App\Models\Company;
 use App\Models\Department;
 use App\Models\Employee;
+use App\Models\Position;
 use App\Models\User;
 use Database\Seeders\PermissionSeeder;
 use Laravel\Sanctum\Sanctum;
@@ -34,15 +35,21 @@ class PortalProfileContractTest extends TestCase
             'is_active' => true,
         ]);
         $user = User::factory()->create([
-            'company_id' => $company->id,
+            'home_company_id' => $company->id,
             'type' => UserType::User,
             'name' => 'Portal Profil',
         ]);
         $user->assignRole('employee');
+        $pos = Position::create([
+            'company_id' => $company->id,
+            'code' => 'UZM',
+            'name' => 'Uzman',
+            'is_active' => true,
+        ]);
         Employee::factory()->forUser($user)->create([
             'company_id' => $company->id,
             'department_id' => $dept->id,
-            'position' => 'Uzman',
+            'position_id' => $pos->id,
             'status' => 'active',
         ]);
 

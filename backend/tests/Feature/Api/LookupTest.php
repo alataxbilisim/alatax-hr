@@ -41,14 +41,14 @@ class LookupTest extends TestCase
         $this->otherCompany = Company::factory()->create(['status' => CompanyStatus::Active]);
 
         $this->adminUser = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($this->adminUser);
         $this->adminUser = $this->adminUser->fresh();
 
         $this->plainUser = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
 
@@ -279,7 +279,7 @@ class LookupTest extends TestCase
         ])->assertOk();
 
         $otherAdmin = User::factory()->create([
-            'company_id' => $this->otherCompany->id,
+            'home_company_id' => $this->otherCompany->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($otherAdmin);
@@ -296,7 +296,7 @@ class LookupTest extends TestCase
     {
         // company_admin type ama lookups permission yok
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
         ]);
         // Rol yok / permission yok

@@ -28,7 +28,7 @@ class TimesheetTest extends TestCase
             'status' => CompanyStatus::Active,
         ]);
         $this->user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         Employee::factory()->forUser($this->user)->create();

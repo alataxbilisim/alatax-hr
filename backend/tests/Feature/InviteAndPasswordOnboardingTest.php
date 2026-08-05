@@ -45,7 +45,7 @@ class InviteAndPasswordOnboardingTest extends TestCase
             'status' => CompanyStatus::Active,
         ]);
         $this->admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
             'password' => Hash::make('Password1!'),
@@ -239,14 +239,14 @@ class InviteAndPasswordOnboardingTest extends TestCase
 
         $other = Company::factory()->create(['status' => CompanyStatus::Active]);
         $otherAdmin = User::factory()->create([
-            'company_id' => $other->id,
+            'home_company_id' => $other->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
         ]);
         $this->assignSpatieAdminRole($otherAdmin);
 
         $noPerm = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);
@@ -265,14 +265,14 @@ class InviteAndPasswordOnboardingTest extends TestCase
         ])->assertOk();
 
         $u = User::where('email', 'other.invite@test.local')->firstOrFail();
-        $this->assertSame($other->id, $u->company_id);
-        $this->assertNotSame($this->company->id, $u->company_id);
+        $this->assertSame($other->id, $u->home_company_id);
+        $this->assertNotSame($this->company->id, $u->home_company_id);
     }
 
     public function test_forgot_password_flow_still_works(): void
     {
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'email' => 'forgot@test.local',
             'password' => Hash::make('OldPass1!'),
             'is_active' => true,

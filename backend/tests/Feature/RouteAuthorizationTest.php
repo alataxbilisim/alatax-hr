@@ -60,7 +60,7 @@ class RouteAuthorizationTest extends TestCase
             'email' => 'admin@company.com',
             'password' => 'password',
             'type' => UserType::CompanyAdmin,
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'is_active' => true,
         ]);
         $this->assignSpatieAdminRole($this->companyAdmin);
@@ -72,7 +72,7 @@ class RouteAuthorizationTest extends TestCase
             'email' => 'employee@company.com',
             'password' => 'password',
             'type' => UserType::User,
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'is_active' => true,
         ]);
         Employee::factory()->forUser($this->employee)->create();
@@ -250,7 +250,7 @@ class RouteAuthorizationTest extends TestCase
             'email' => 'nomodule@company.com',
             'password' => 'password',
             'type' => UserType::CompanyAdmin,
-            'company_id' => $this->companyWithoutModule->id,
+            'home_company_id' => $this->companyWithoutModule->id,
             'is_active' => true,
         ]);
         $this->assignSpatieAdminRole($userWithoutModule);
@@ -477,7 +477,7 @@ class RouteAuthorizationTest extends TestCase
             'email' => 'inactive@user.com',
             'password' => 'password',
             'type' => UserType::CompanyAdmin,
-            'company_id' => $inactiveCompany->id,
+            'home_company_id' => $inactiveCompany->id,
             'is_active' => true,
         ]);
 

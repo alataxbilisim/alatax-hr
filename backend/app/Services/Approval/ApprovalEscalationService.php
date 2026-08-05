@@ -106,8 +106,10 @@ class ApprovalEscalationService
                 continue;
             }
 
-            $openedAt = $record->created_at ?? $today;
-            $pendingDays = $openedAt->copy()->startOfDay()->diffInDays($today->copy()->startOfDay());
+            // İş günü farkı uygulama TZ (TR duvar takvimi) ile — timestamptz UTC okunsa bile
+            $tz = (string) config('app.timezone');
+            $openedAt = ($record->created_at ?? $today)->copy()->timezone($tz);
+            $pendingDays = (int) $openedAt->startOfDay()->diffInDays($today->copy()->timezone($tz)->startOfDay());
 
             if ($pendingDays >= $threshold + self::ESCALATE_AFTER_EXTRA_DAYS) {
                 if ($this->sendOnce($record, ApprovalEscalationAlert::LEVEL_ESCALATED, $pendingDays)) {
@@ -225,7 +227,7 @@ class ApprovalEscalationService
         if ($approver instanceof User) {
             $managerUser = $this->resolveManagerOfUser($approver);
             if ($managerUser
-                && (int) $managerUser->company_id === (int) $record->company_id
+                && (int) $managerUser->home_company_id === (int) $record->company_id
                 && (int) $managerUser->id !== (int) $approver->id) {
                 $targets[] = $managerUser;
                 $seen[$managerUser->id] = true;
@@ -271,7 +273,7 @@ class ApprovalEscalationService
     protected function resolveCompanyAdmins(int $companyId): array
     {
         return User::query()
-            ->where('company_id', $companyId)
+            ->where('home_company_id', $companyId)
             ->where('is_active', true)
             ->where(function ($q): void {
                 $q->where('type', UserType::CompanyAdmin)

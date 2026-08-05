@@ -91,7 +91,7 @@ class DatasetRegistryIsolationTest extends TestCase
         ]);
 
         $this->userA = User::factory()->create([
-            'company_id' => $this->companyA->id,
+            'home_company_id' => $this->companyA->id,
             'last_company_id' => $this->companyA->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
@@ -101,14 +101,14 @@ class DatasetRegistryIsolationTest extends TestCase
         app(CompanyContextService::class)->ensureMembership($this->userA, (int) $this->companyB->id, false);
 
         $this->userB = User::factory()->create([
-            'company_id' => $this->companyB->id,
+            'home_company_id' => $this->companyB->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
         ]);
         $this->assignSpatieAdminRole($this->userB->fresh());
 
         $this->userC = User::factory()->create([
-            'company_id' => $this->companyC->id,
+            'home_company_id' => $this->companyC->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
         ]);
@@ -235,7 +235,7 @@ class DatasetRegistryIsolationTest extends TestCase
             'employees.list.view',
         ]);
         $user = User::factory()->create([
-            'company_id' => $this->companyA->id,
+            'home_company_id' => $this->companyA->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);

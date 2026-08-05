@@ -123,7 +123,7 @@ class GroupIsolationTest extends TestCase
     private function makeAdmin(Company $company): User
     {
         $user = User::factory()->create([
-            'company_id' => $company->id,
+            'home_company_id' => $company->id,
             'last_company_id' => $company->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
@@ -308,7 +308,7 @@ class GroupIsolationTest extends TestCase
     public function test_08_portal_uc_cannot_see_a_and_no_company_selector_route_needed(): void
     {
         $portalUser = User::factory()->create([
-            'company_id' => $this->companyC->id,
+            'home_company_id' => $this->companyC->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);
@@ -425,7 +425,7 @@ class GroupIsolationTest extends TestCase
     {
         // B'de ekstra aktif kullanıcı — sayılar A'dan farklı olsun
         User::factory()->create([
-            'company_id' => $this->companyB->id,
+            'home_company_id' => $this->companyB->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);
@@ -433,11 +433,11 @@ class GroupIsolationTest extends TestCase
         Sanctum::actingAs($this->userA);
 
         $countA = User::query()
-            ->where('company_id', $this->companyA->id)
+            ->where('home_company_id', $this->companyA->id)
             ->where('is_active', true)
             ->count();
         $countB = User::query()
-            ->where('company_id', $this->companyB->id)
+            ->where('home_company_id', $this->companyB->id)
             ->where('is_active', true)
             ->count();
         $this->assertNotSame($countA, $countB);

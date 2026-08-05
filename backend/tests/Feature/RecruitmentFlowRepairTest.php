@@ -68,7 +68,7 @@ class RecruitmentFlowRepairTest extends TestCase
     private function makeAdmin(): User
     {
         $admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
         ]);
@@ -186,7 +186,7 @@ class RecruitmentFlowRepairTest extends TestCase
     public function test_hr_manual_store_unauthorized_403(): void
     {
         $employee = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);

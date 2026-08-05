@@ -45,7 +45,7 @@ class SettingsWriter
 
         $companyId = $scopeType === SettingScopeType::System
             ? null
-            : (int) ($scope['company_id'] ?? $actor->company_id);
+            : (int) ($scope['company_id'] ?? $actor->home_company_id);
 
         if ($scopeType !== SettingScopeType::System && ! $companyId) {
             throw ValidationException::withMessages([
@@ -111,7 +111,7 @@ class SettingsWriter
         $scopeType = SettingScopeType::from($scope['scope_type']);
         $companyId = $scopeType === SettingScopeType::System
             ? null
-            : (int) ($scope['company_id'] ?? $actor->company_id);
+            : (int) ($scope['company_id'] ?? $actor->home_company_id);
         $scopeId = $scopeType === SettingScopeType::Company || $scopeType === SettingScopeType::System
             ? null
             : (isset($scope['scope_id']) ? (int) $scope['scope_id'] : null);
@@ -271,7 +271,7 @@ class SettingsWriter
             return;
         }
 
-        if ((int) $actor->company_id === $companyId) {
+        if ((int) $actor->home_company_id === $companyId) {
             return;
         }
 

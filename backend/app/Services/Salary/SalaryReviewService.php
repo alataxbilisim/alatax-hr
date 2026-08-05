@@ -202,7 +202,7 @@ class SalaryReviewService
             'employee_id' => $item->employee_id,
             'employee_name' => $employee?->user?->name,
             'employee_code' => $employee?->employee_code,
-            'position' => $employee?->position,
+            'position' => $employee?->position?->name,
             'current_amount' => $item->current_amount,
             'proposed_amount' => $item->proposed_amount,
             'increase_percent' => $item->increase_percent,

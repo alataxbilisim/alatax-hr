@@ -40,13 +40,13 @@ class PortalRequestFormFieldsTest extends TestCase
         $this->companyB = Company::factory()->create(['status' => CompanyStatus::Active]);
 
         $this->userA = User::factory()->create([
-            'company_id' => $this->companyA->id,
+            'home_company_id' => $this->companyA->id,
             'type' => UserType::User,
         ]);
         Employee::factory()->forUser($this->userA)->create(['company_id' => $this->companyA->id]);
 
         $this->userB = User::factory()->create([
-            'company_id' => $this->companyB->id,
+            'home_company_id' => $this->companyB->id,
             'type' => UserType::User,
         ]);
         Employee::factory()->forUser($this->userB)->create(['company_id' => $this->companyB->id]);

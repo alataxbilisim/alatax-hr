@@ -34,7 +34,7 @@ class ResolveCompanyContext
 
         // Portal: şirket seçici yok — home company ile bağla (header yoksa fallback)
         // Membership zorunlu; sahte header yine 403.
-        if ($user->company_id === null
+        if ($user->home_company_id === null
             && empty($this->companyContext->accessibleCompanyIds($user))) {
             return $next($request);
         }

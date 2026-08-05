@@ -40,7 +40,7 @@ class PortalRouteApiSmokeTest extends TestCase
             'is_active' => true,
         ]);
         $this->user = User::factory()->create([
-            'company_id' => $company->id,
+            'home_company_id' => $company->id,
             'type' => UserType::User,
         ]);
         $this->user->assignRole('employee');

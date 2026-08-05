@@ -38,13 +38,13 @@ class SurveyTest extends TestCase
             'status' => CompanyStatus::Active,
         ]);
         $this->adminUser = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($this->adminUser);
         $this->adminUser = $this->adminUser->fresh();
         $this->portalUser = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         Employee::factory()->forUser($this->portalUser)->create();

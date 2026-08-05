@@ -112,7 +112,7 @@ class PayslipService
         if (! $user instanceof User) {
             return;
         }
-        if ((int) $user->company_id !== (int) $payslip->company_id) {
+        if ((int) $user->home_company_id !== (int) $payslip->company_id) {
             return;
         }
 

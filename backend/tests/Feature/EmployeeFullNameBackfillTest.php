@@ -27,13 +27,13 @@ class EmployeeFullNameBackfillTest extends TestCase
 
         $company = Company::factory()->create(['status' => CompanyStatus::Active]);
         $admin = User::factory()->create([
-            'company_id' => $company->id,
+            'home_company_id' => $company->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($admin->fresh());
 
         $linked = User::factory()->create([
-            'company_id' => $company->id,
+            'home_company_id' => $company->id,
             'name' => 'Backfill Adı',
             'type' => UserType::User,
         ]);

@@ -27,11 +27,11 @@ class SystemDashboardReadonlyTest extends TestCase
         $company = Company::factory()->create(['status' => CompanyStatus::Active]);
 
         $userA = User::factory()->create([
-            'company_id' => $company->id,
+            'home_company_id' => $company->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $userB = User::factory()->create([
-            'company_id' => $company->id,
+            'home_company_id' => $company->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($userA->fresh());

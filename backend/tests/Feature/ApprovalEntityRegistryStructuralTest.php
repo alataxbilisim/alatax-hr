@@ -72,7 +72,7 @@ class ApprovalEntityRegistryStructuralTest extends TestCase
         Role::findByName('admin', 'sanctum')->forceFill(['data_scope' => 'company'])->save();
 
         $this->admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
         ]);
@@ -87,7 +87,7 @@ class ApprovalEntityRegistryStructuralTest extends TestCase
         ]);
 
         $this->approver = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);
@@ -101,7 +101,7 @@ class ApprovalEntityRegistryStructuralTest extends TestCase
         ]);
 
         $this->employeeUser = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);

@@ -63,7 +63,7 @@ class CompanyContextKvkkPdksTest extends TestCase
         ]);
 
         $this->userA = User::factory()->create([
-            'company_id' => $this->companyA->id,
+            'home_company_id' => $this->companyA->id,
             'last_company_id' => $this->companyA->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
@@ -234,7 +234,7 @@ class CompanyContextKvkkPdksTest extends TestCase
     {
         // Home A; personel kaydı B'de. contact ≠ email → yalnız employee eşleşmesi yolu.
         $portalUser = User::factory()->create([
-            'company_id' => $this->companyA->id,
+            'home_company_id' => $this->companyA->id,
             'type' => UserType::User,
             'is_active' => true,
             'email' => 'portal-kv@example.com',
@@ -276,7 +276,7 @@ class CompanyContextKvkkPdksTest extends TestCase
     public function test_p2_attendance_clock_writes_to_active_company_context(): void
     {
         $this->assertNotSame($this->companyA->id, $this->companyB->id);
-        $this->assertSame($this->companyA->id, (int) $this->userA->company_id);
+        $this->assertSame($this->companyA->id, (int) $this->userA->home_company_id);
 
         CompanyContext::run($this->companyB->id, function () {
             $clock = app(AttendanceClockService::class);

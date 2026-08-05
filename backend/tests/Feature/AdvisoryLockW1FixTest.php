@@ -111,12 +111,12 @@ class AdvisoryLockW1FixTest extends TestCase
         ]);
 
         $approver = User::factory()->create([
-            'company_id' => $company->id,
+            'home_company_id' => $company->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);
         $requester = User::factory()->create([
-            'company_id' => $company->id,
+            'home_company_id' => $company->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);

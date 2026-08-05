@@ -104,7 +104,7 @@ class ApprovalWorkflowMotorB4Test extends TestCase
     private function userWithPerms(string $role): User
     {
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         $user->assignRole($role);
@@ -375,6 +375,9 @@ class ApprovalWorkflowMotorB4Test extends TestCase
         Notification::fake();
         Mail::fake();
 
+        // TR takvim günü — timestamptz + APP_TIMEZONE=Europe/Istanbul ile tutarlı
+        Carbon::setTestNow(Carbon::parse('2026-07-10 12:00:00', 'Europe/Istanbul'));
+
         [, $leave] = $this->startParallelLeave(ApprovalStep::COMPLETION_ALL);
 
         $recA = ApprovalRecord::query()
@@ -384,13 +387,13 @@ class ApprovalWorkflowMotorB4Test extends TestCase
 
         // created_at 3 gün önce → hatırlatma eşiği
         DB::table('approval_records')->where('id', $recA->id)->update([
-            'created_at' => Carbon::parse('2026-07-07 10:00:00'),
-            'updated_at' => Carbon::parse('2026-07-07 10:00:00'),
+            'created_at' => Carbon::parse('2026-07-07 10:00:00', 'Europe/Istanbul'),
+            'updated_at' => Carbon::parse('2026-07-07 10:00:00', 'Europe/Istanbul'),
         ]);
 
         $otherCompany = Company::factory()->create(['status' => CompanyStatus::Active]);
         $foreignApprover = User::factory()->create([
-            'company_id' => $otherCompany->id,
+            'home_company_id' => $otherCompany->id,
             'type' => UserType::User,
         ]);
         $foreignApprover->assignRole('manager');
@@ -449,11 +452,11 @@ class ApprovalWorkflowMotorB4Test extends TestCase
             'is_current' => true,
         ]);
         DB::table('approval_records')->where('id', $foreignRec->id)->update([
-            'created_at' => Carbon::parse('2026-07-01 10:00:00'),
+            'created_at' => Carbon::parse('2026-07-01 10:00:00', 'Europe/Istanbul'),
         ]);
 
         $service = app(ApprovalEscalationService::class);
-        $today = Carbon::parse('2026-07-10');
+        $today = Carbon::parse('2026-07-10', 'Europe/Istanbul')->startOfDay();
 
         $r1 = \App\Support\CompanyContext::run($this->company->id, fn () => $service->processCompany($this->company->id, $today));
         $this->assertSame(1, $r1['reminded']);
@@ -469,7 +472,7 @@ class ApprovalWorkflowMotorB4Test extends TestCase
 
         // Eşik+2 → eskalasyon (üst yönetici)
         DB::table('approval_records')->where('id', $recA->id)->update([
-            'created_at' => Carbon::parse('2026-07-05 10:00:00'),
+            'created_at' => Carbon::parse('2026-07-05 10:00:00', 'Europe/Istanbul'),
         ]);
         $r3 = \App\Support\CompanyContext::run($this->company->id, fn () => $service->processCompany($this->company->id, $today));
         $this->assertSame(1, $r3['escalated']);
@@ -484,5 +487,7 @@ class ApprovalWorkflowMotorB4Test extends TestCase
         $this->assertSame(0, ApprovalEscalationAlert::query()
             ->where('approval_record_id', $foreignRec->id)
             ->count());
+
+        Carbon::setTestNow();
     }
 }

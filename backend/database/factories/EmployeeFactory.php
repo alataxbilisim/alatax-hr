@@ -21,7 +21,7 @@ class EmployeeFactory extends Factory
             'user_id' => null,
             'employee_code' => 'EMP-'.fake()->unique()->numerify('####'),
             'title' => fake()->optional()->jobTitle(),
-            'position' => fake()->optional()->jobTitle(),
+            'position_id' => null,
             'hire_date' => fake()->dateTimeBetween('-5 years', 'now')->format('Y-m-d'),
             'contract_type' => 'permanent',
             'work_type' => 'full_time',
@@ -36,7 +36,7 @@ class EmployeeFactory extends Factory
     public function forUser(User $user): static
     {
         return $this->state(fn (array $attributes) => [
-            'company_id' => $user->company_id,
+            'company_id' => $user->home_company_id,
             'user_id' => $user->id,
             'status' => 'active',
         ]);

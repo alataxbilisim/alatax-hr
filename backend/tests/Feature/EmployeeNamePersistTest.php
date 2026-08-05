@@ -33,7 +33,7 @@ class EmployeeNamePersistTest extends TestCase
 
         $this->company = Company::factory()->create(['status' => CompanyStatus::Active]);
         $this->admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
         ]);
@@ -98,7 +98,7 @@ class EmployeeNamePersistTest extends TestCase
         Sanctum::actingAs($this->admin->fresh());
 
         $linked = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'name' => 'Eski User',
             'type' => UserType::User,
         ]);

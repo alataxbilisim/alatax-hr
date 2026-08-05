@@ -88,7 +88,7 @@ class LeaveRequestPolicyDataScopeTest extends TestCase
     private function userWithRole(string $role, ?Company $company = null): User
     {
         $user = User::factory()->create([
-            'company_id' => ($company ?? $this->company)->id,
+            'home_company_id' => ($company ?? $this->company)->id,
             'type' => UserType::User,
         ]);
         $user->assignRole($role);
@@ -125,7 +125,7 @@ class LeaveRequestPolicyDataScopeTest extends TestCase
     public function test_manager_sees_and_approves_team_leave(): void
     {
         $manager = $this->userWithRole('manager');
-        $sub = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $sub = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
 
         $managerEmp = Employee::factory()->forUser($manager)->create();
         Employee::factory()->forUser($sub)->create(['manager_id' => $managerEmp->id]);
@@ -147,7 +147,7 @@ class LeaveRequestPolicyDataScopeTest extends TestCase
     {
         $managerA = $this->userWithRole('manager');
         $managerB = $this->userWithRole('manager');
-        $subB = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $subB = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
 
         Employee::factory()->forUser($managerA)->create();
         $empB = Employee::factory()->forUser($managerB)->create();
@@ -169,8 +169,8 @@ class LeaveRequestPolicyDataScopeTest extends TestCase
     public function test_hr_manager_sees_and_approves_all_company_leaves(): void
     {
         $hr = $this->userWithRole('hr_manager');
-        $a = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
-        $b = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $a = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
+        $b = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
 
         $leaveA = $this->leaveFor($a);
         $leaveB = $this->leaveFor($b);
@@ -189,7 +189,7 @@ class LeaveRequestPolicyDataScopeTest extends TestCase
     public function test_employee_sees_own_but_not_others(): void
     {
         $employee = $this->userWithRole('employee');
-        $other = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $other = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
 
         $own = $this->leaveFor($employee);
         $theirs = $this->leaveFor($other);
@@ -208,11 +208,11 @@ class LeaveRequestPolicyDataScopeTest extends TestCase
     public function test_company_admin_with_admin_role_sees_and_approves_all(): void
     {
         $admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($admin);
-        $employee = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $employee = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
         $leave = $this->leaveFor($employee);
 
         Sanctum::actingAs($admin->fresh());
@@ -225,7 +225,7 @@ class LeaveRequestPolicyDataScopeTest extends TestCase
     {
         $hr = $this->userWithRole('hr_manager');
         $otherUser = User::factory()->create([
-            'company_id' => $this->otherCompany->id,
+            'home_company_id' => $this->otherCompany->id,
             'type' => UserType::User,
         ]);
         $otherLeave = $this->leaveFor($otherUser, $this->otherCompany);
@@ -244,12 +244,12 @@ class LeaveRequestPolicyDataScopeTest extends TestCase
     {
         // Rol yok → own scope; approve permission olsa bile başkasını onaylayamaz
         $approver = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         $approver->givePermissionTo(['leaves.requests.view', 'leaves.requests.approve']);
 
-        $employee = User::factory()->create(['company_id' => $this->company->id, 'type' => UserType::User]);
+        $employee = User::factory()->create(['home_company_id' => $this->company->id, 'type' => UserType::User]);
         $leave = $this->leaveFor($employee);
 
         Sanctum::actingAs($approver);

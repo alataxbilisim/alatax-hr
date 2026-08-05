@@ -17,7 +17,7 @@ class ConvertApplicationToEmployeeRequest extends FormRequest
      */
     public function rules(): array
     {
-        $companyId = $this->user()?->company_id;
+        $companyId = $this->user()?->home_company_id;
 
         return [
             'employee_code' => [

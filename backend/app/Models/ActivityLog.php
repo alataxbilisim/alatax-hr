@@ -68,10 +68,11 @@ class ActivityLog extends Model
         $user = auth()->user();
         $request = request();
 
-        // company_id öncelik: 1) Company modeli → id, 2) model.company_id attribute, 3) auth user
+        // company_id öncelik: 1) Company modeli → id (force-delete → null), 2) model.company_id, 3) auth user
         $companyId = null;
         if ($model instanceof Company) {
-            $companyId = $model->id;
+            // §6: force-deleting Company → company_id null (FK 23503 koruması)
+            $companyId = $model->isForceDeleting() ? null : $model->id;
         } elseif ($model !== null) {
             $attrs = $model->getAttributes();
             if (array_key_exists('company_id', $attrs) && $attrs['company_id'] !== null) {

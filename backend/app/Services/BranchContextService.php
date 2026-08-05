@@ -35,7 +35,7 @@ class BranchContextService
             return CompanyContext::id();
         }
 
-        return $user->company_id ? (int) $user->company_id : null;
+        return $user->home_company_id ? (int) $user->home_company_id : null;
     }
 
     /**
@@ -190,7 +190,7 @@ class BranchContextService
         }
 
         $employee = Employee::query()
-            ->where('company_id', $this->activeCompanyId($user) ?? $user->company_id)
+            ->where('company_id', $this->activeCompanyId($user) ?? $user->home_company_id)
             ->where('user_id', $user->id)
             ->where('status', 'active')
             ->first();

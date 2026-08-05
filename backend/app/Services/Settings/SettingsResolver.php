@@ -247,7 +247,7 @@ class SettingsResolver
         }
 
         // Aktif operasyonel şirket (CompanyContext); yoksa home
-        $companyId = \App\Support\CompanyContext::id() ?? $user->company_id;
+        $companyId = \App\Support\CompanyContext::id() ?? $user->home_company_id;
         if (! $companyId) {
             return [];
         }

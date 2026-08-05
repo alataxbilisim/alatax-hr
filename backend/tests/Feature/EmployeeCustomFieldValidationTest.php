@@ -35,7 +35,7 @@ class EmployeeCustomFieldValidationTest extends TestCase
 
         $this->company = Company::factory()->create(['status' => CompanyStatus::Active]);
         $this->admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($this->admin);

@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Laravel\Sanctum\PersonalAccessToken;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -34,7 +35,7 @@ class UserController extends BaseController
      */
     public function index(Request $request): JsonResponse
     {
-        $query = User::where('company_id', $this->getCompanyId())
+        $query = User::where('home_company_id', $this->getCompanyId())
             ->with(['roles', 'employee:id,user_id,employee_code']);
 
         // Karar B: yalnızca panel erişimli kullanıcılar (portal-only personel hariç)
@@ -84,7 +85,7 @@ class UserController extends BaseController
      */
     public function portalCandidates(Request $request): JsonResponse
     {
-        $query = User::where('company_id', $this->getCompanyId())
+        $query = User::where('home_company_id', $this->getCompanyId())
             ->with(['roles', 'employee']);
 
         PanelAccess::constrainPortalOnlyQuery($query);
@@ -109,7 +110,7 @@ class UserController extends BaseController
      */
     public function grantPanelAccess(Request $request, User $user): JsonResponse
     {
-        if ($user->company_id !== $this->getCompanyId()) {
+        if ($user->home_company_id !== $this->getCompanyId()) {
             return $this->forbidden('Bu kullanıcıya erişim yetkiniz yok');
         }
 
@@ -171,7 +172,7 @@ class UserController extends BaseController
      */
     public function revokePanelAccess(User $user): JsonResponse
     {
-        if ($user->company_id !== $this->getCompanyId()) {
+        if ($user->home_company_id !== $this->getCompanyId()) {
             return $this->forbidden('Bu kullanıcıya erişim yetkiniz yok');
         }
 
@@ -224,7 +225,7 @@ class UserController extends BaseController
     public function show(User $user): JsonResponse
     {
         // Firma kontrolü
-        if ($user->company_id !== $this->getCompanyId()) {
+        if ($user->home_company_id !== $this->getCompanyId()) {
             return $this->forbidden('Bu kullanıcıya erişim yetkiniz yok');
         }
 
@@ -269,7 +270,7 @@ class UserController extends BaseController
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
+            'email' => ['required', 'email', Rule::unique('users', 'email')->whereNull('deleted_at')],
             'password' => [
                 'required',
                 Password::min(8)->mixedCase()->numbers(),
@@ -297,7 +298,7 @@ class UserController extends BaseController
         ]);
 
         $user = User::create([
-            'company_id' => $this->getCompanyId(),
+            'home_company_id' => $this->getCompanyId(),
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
@@ -341,13 +342,13 @@ class UserController extends BaseController
     public function update(Request $request, User $user): JsonResponse
     {
         // Firma kontrolü
-        if ($user->company_id !== $this->getCompanyId()) {
+        if ($user->home_company_id !== $this->getCompanyId()) {
             return $this->forbidden('Bu kullanıcıyı düzenleme yetkiniz yok');
         }
 
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|email|unique:users,email,'.$user->id,
+            'email' => ['sometimes', 'email', Rule::unique('users', 'email')->whereNull('deleted_at')->ignore($user->id)],
             'password' => [
                 'sometimes',
                 'nullable',
@@ -409,7 +410,7 @@ class UserController extends BaseController
     public function destroy(User $user): JsonResponse
     {
         // Firma kontrolü
-        if ($user->company_id !== $this->getCompanyId()) {
+        if ($user->home_company_id !== $this->getCompanyId()) {
             return $this->forbidden('Bu kullanıcıyı silme yetkiniz yok');
         }
 
@@ -430,7 +431,7 @@ class UserController extends BaseController
     public function toggleStatus(User $user): JsonResponse
     {
         // Firma kontrolü
-        if ($user->company_id !== $this->getCompanyId()) {
+        if ($user->home_company_id !== $this->getCompanyId()) {
             return $this->forbidden('Bu kullanıcının durumunu değiştirme yetkiniz yok');
         }
 
@@ -455,7 +456,7 @@ class UserController extends BaseController
     public function uploadAvatar(Request $request, User $user): JsonResponse
     {
         // Firma kontrolü
-        if ($user->company_id !== $this->getCompanyId()) {
+        if ($user->home_company_id !== $this->getCompanyId()) {
             return $this->forbidden('Bu kullanıcıya erişim yetkiniz yok');
         }
 
@@ -487,7 +488,7 @@ class UserController extends BaseController
     public function deleteAvatar(User $user): JsonResponse
     {
         // Firma kontrolü
-        if ($user->company_id !== $this->getCompanyId()) {
+        if ($user->home_company_id !== $this->getCompanyId()) {
             return $this->forbidden('Bu kullanıcıya erişim yetkiniz yok');
         }
 
@@ -514,7 +515,7 @@ class UserController extends BaseController
         }
 
         $validated = $request->validate([
-            'email' => 'required|email|unique:users,email',
+            'email' => ['required', 'email', Rule::unique('users', 'email')->whereNull('deleted_at')],
             'name' => 'required|string|max:255',
             'roles' => 'nullable|array',
             'roles.*' => 'exists:roles,id',
@@ -527,8 +528,8 @@ class UserController extends BaseController
         // Kullanıcı oluştur (henüz aktif değil, şifre yok) — invite özel log; CRUD observer kapalı
         $user = User::withoutAuditing(function () use ($company, $validated, $issue) {
             return User::create([
-                'company_id' => $company->id,
-                'name' => $validated['name'],
+                'home_company_id' => $company->id,
+                    'name' => $validated['name'],
                 'email' => $validated['email'],
                 'password' => Hash::make(Str::random(32)), // Geçici şifre (giriş kapalı)
                 'type' => 'user',
@@ -579,7 +580,7 @@ class UserController extends BaseController
     public function resetPassword(Request $request, User $user): JsonResponse
     {
         // Firma kontrolü
-        if ($user->company_id !== $this->getCompanyId()) {
+        if ($user->home_company_id !== $this->getCompanyId()) {
             return $this->forbidden('Bu kullanıcıya erişim yetkiniz yok');
         }
 
@@ -611,7 +612,7 @@ class UserController extends BaseController
      */
     public function export(Request $request): StreamedResponse
     {
-        $query = User::where('company_id', $this->getCompanyId())
+        $query = User::where('home_company_id', $this->getCompanyId())
             ->with(['roles']);
 
         // Filtreler
@@ -685,7 +686,7 @@ class UserController extends BaseController
         $userIds = $validated['user_ids'];
         $action = $validated['action'];
         $users = User::whereIn('id', $userIds)
-            ->where('company_id', $this->getCompanyId())
+            ->where('home_company_id', $this->getCompanyId())
             ->get();
 
         if ($users->isEmpty()) {
@@ -828,7 +829,7 @@ class UserController extends BaseController
             }
 
             // Kullanıcı zaten var mı kontrol et
-            $existingUser = User::where('company_id', $company->id)
+            $existingUser = User::where('home_company_id', $company->id)
                 ->where('email', $email)
                 ->first();
 
@@ -842,7 +843,7 @@ class UserController extends BaseController
             try {
                 // Kullanıcı oluştur
                 $user = User::create([
-                    'company_id' => $company->id,
+                    'home_company_id' => $company->id,
                     'name' => trim($data['name']),
                     'email' => $email,
                     'phone' => trim($data['phone'] ?? ''),
@@ -884,7 +885,7 @@ class UserController extends BaseController
      */
     public function enable2FA(Request $request, User $user): JsonResponse
     {
-        if ($user->company_id !== $this->getCompanyId()) {
+        if ($user->home_company_id !== $this->getCompanyId()) {
             return $this->error('Yetkisiz erişim', 403);
         }
 
@@ -923,7 +924,7 @@ class UserController extends BaseController
             'code' => 'required|string|size:6',
         ]);
 
-        if ($user->company_id !== $this->getCompanyId()) {
+        if ($user->home_company_id !== $this->getCompanyId()) {
             return $this->error('Yetkisiz erişim', 403);
         }
 
@@ -967,7 +968,7 @@ class UserController extends BaseController
      */
     public function disable2FA(Request $request, User $user): JsonResponse
     {
-        if ($user->company_id !== $this->getCompanyId()) {
+        if ($user->home_company_id !== $this->getCompanyId()) {
             return $this->error('Yetkisiz erişim', 403);
         }
 
@@ -1016,7 +1017,7 @@ class UserController extends BaseController
      */
     public function getRecoveryCodes(User $user): JsonResponse
     {
-        if ($user->company_id !== $this->getCompanyId()) {
+        if ($user->home_company_id !== $this->getCompanyId()) {
             return $this->error('Yetkisiz erişim', 403);
         }
 
@@ -1037,7 +1038,7 @@ class UserController extends BaseController
      */
     public function regenerateRecoveryCodes(Request $request, User $user): JsonResponse
     {
-        if ($user->company_id !== $this->getCompanyId()) {
+        if ($user->home_company_id !== $this->getCompanyId()) {
             return $this->error('Yetkisiz erişim', 403);
         }
 
@@ -1083,7 +1084,7 @@ class UserController extends BaseController
      */
     public function sessions(User $user): JsonResponse
     {
-        if ($user->company_id !== $this->getCompanyId()) {
+        if ($user->home_company_id !== $this->getCompanyId()) {
             return $this->error('Yetkisiz erişim', 403);
         }
 
@@ -1109,7 +1110,7 @@ class UserController extends BaseController
      */
     public function revokeSession(User $user, $tokenId): JsonResponse
     {
-        if ($user->company_id !== $this->getCompanyId()) {
+        if ($user->home_company_id !== $this->getCompanyId()) {
             return $this->error('Yetkisiz erişim', 403);
         }
 
@@ -1134,7 +1135,7 @@ class UserController extends BaseController
      */
     public function revokeAllSessions(User $user): JsonResponse
     {
-        if ($user->company_id !== $this->getCompanyId()) {
+        if ($user->home_company_id !== $this->getCompanyId()) {
             return $this->error('Yetkisiz erişim', 403);
         }
 

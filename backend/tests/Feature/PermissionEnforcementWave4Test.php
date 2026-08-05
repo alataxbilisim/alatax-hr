@@ -75,7 +75,7 @@ class PermissionEnforcementWave4Test extends TestCase
     {
         $user = User::factory()->create([
             'type' => $type,
-            'company_id' => $type === UserType::SuperAdmin ? null : ($company ?? $this->company)->id,
+            'home_company_id' => $type === UserType::SuperAdmin ? null : ($company ?? $this->company)->id,
             'is_active' => true,
         ]);
 
@@ -91,7 +91,7 @@ class PermissionEnforcementWave4Test extends TestCase
     {
         return User::factory()->create([
             'type' => UserType::CompanyAdmin,
-            'company_id' => ($company ?? $this->company)->id,
+            'home_company_id' => ($company ?? $this->company)->id,
             'is_active' => true,
         ]);
     }

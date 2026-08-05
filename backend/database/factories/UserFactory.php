@@ -24,7 +24,7 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_id' => null,
+            'home_company_id' => null,
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
@@ -47,7 +47,7 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'type' => UserType::SuperAdmin,
-            'company_id' => null,
+            'home_company_id' => null,
         ]);
     }
 
@@ -55,7 +55,7 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'type' => UserType::CompanyAdmin,
-            'company_id' => $company?->id ?? Company::factory(),
+            'home_company_id' => $company?->id ?? Company::factory(),
         ]);
     }
 
@@ -66,7 +66,7 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'type' => UserType::User,
-            'company_id' => $company?->id ?? Company::factory(),
+            'home_company_id' => $company?->id ?? Company::factory(),
         ]);
     }
 

@@ -185,7 +185,7 @@ class OrganizationChartService
             'employee' => [
                 'id' => $employee->id,
                 'employee_code' => $employee->employee_code,
-                'position' => $employee->position,
+                'position' => $employee->position?->name,
                 'title' => $employee->title,
                 'user' => $employee->user,
                 'department' => $employee->department,

@@ -51,6 +51,12 @@ Aşağıdaki bölümler kronolojik: firma kurulumu → çalışan yaşam döngü
 - **Panel/operasyonel yol:** bağlam = `CompanyContext` (`getCompanyId()` / `X-Company-Id` + membership). Yeni kod `$user->company_id` okumaz; istisnalar `BelongsToCompany:59`, `ApprovalWorkflowPolicy:54`, `BranchContextService:38` ve `*/Portal/*` ile sınırlıdır.
 - **Grup rapor/pano (G2):** varsayılan `scope=company` (aktif şirket). `scope=group` yalnız `reports.scope.group` + organization ∩ membership; **CRUD ve KVKK group kullanmaz**.
 
+**Portal / PDKS bağlam önceliği (Tur5):** QR ve portal punch'ta personel **yalnızca auth `user_id`** ile çözülür; istekten `employee_id` okunmaz. Önce home (`users.company_id`) ile eşleşen aktif personel şirketi; yoksa kullanıcının personel kaydının şirketi kazanır. QR token payload'ında employee_id yok.
+
+**Settings yazma (Tur5):** `SettingsWriter` aktif operasyonel bağlama yazar (`CompanyContext` / membership); home şirketine sessiz düşmez.
+
+**Sistem panosu düzeni (Tur8):** Sistem panosu (`dashboards.is_system = true`) tek paylaşımlı satırdır; `layout` JSON'u tüm kullanıcılar için ortaktır — kullanıcı başına saklanmaz. Bu yüzden sistem panosu **salt okunur**dur: widget taşıma/kaydetme API'de 403. Özelleştirme yolu: **Kopyala** → firma panosu (`is_system=false`, sahip = kopyalayan); düzen yalnızca o kopyada saklanır.
+
 **Membership = yetki:** Bir kullanıcı üye olduğu her şirkette kendi global rolüyle (Spatie) çalışır; şirkete özel rol bugün desteklenmiyor. Kanca: `company_user.role_id` (şu an NULL / kullanılmıyor). Çok şirketli müşteride şirkete özel yetki istenirse bu alan doldurulur.
 
 ---
@@ -176,3 +182,31 @@ Bu yaşam döngüsü **hepsi birden** çalışmaz; ROADMAP fazlarıyla parça pa
 - En son on-prem paketleme + lisans (Faz 7)
 
 Yani bu belge **hedef resmi**; ROADMAP o resme **nasıl ulaşılacağını** söyler.
+
+---
+
+## SOFT-DELETE VE İLİŞKİ YÖNETİM POLİTİKASI (TEMEL SAĞLAMLAŞTIRMA §6)
+
+### Kural
+
+Soft-delete (`deleted_at IS NOT NULL`) yapılan bir kayıt, veritabanı FK kaskadı veya SET NULL tetiklemez. Laravel SoftDeletes bir UPDATE (`deleted_at = now()`) çalıştırır; `ON DELETE CASCADE / SET NULL` yalnızca gerçek `DELETE` (force delete) için devreye girer.
+
+### Sonuç
+
+İlişkili kayıt politikası **modül bazında açıkça tanımlanmalı**:
+
+| Silinen kayıt | İlişkili kayıt | Politika |
+|---|---|---|
+| Position (soft) | Employee.position_id | Guard: pozisyona bağlı personel varsa silme 422 |
+| Role (Spatie hard) | model_has_roles | Guard: kullanıcısı varsa silme 400; ApprovalStep.specific_role varsa 422 |
+| User (soft) | model_has_roles, personal_access_tokens | Otomatik: deleted event'ında role detach + token revoke |
+| Company (force) | ActivityLog.company_id | Özel: force-delete sırasında audit log company_id=null |
+| Employee (soft) | LeaveBalance, LeaveRequest vb. | Mevcut: FK ile bağlı; soft-delete ilişkiyi kopartmaz |
+| Department (soft) | Employee.department_id | Mevcut: Henüz guard yok (backlog) |
+| Branch (soft) | Employee.branch_id | Mevcut: Henüz guard yok (backlog) |
+
+### Genel prensip
+
+1. Soft-delete yapılırken, ilişkili aktif kayıt varsa **guard** (silmeyi reddet) tercih edilir.
+2. Kaskad temizlik gerekiyorsa **model event**'ında (deleting/deleted) açıkça yapılır.
+3. Force-delete yalnızca SuperAdmin + seed/test senaryolarında kullanılır; üretimde soft-delete standart.

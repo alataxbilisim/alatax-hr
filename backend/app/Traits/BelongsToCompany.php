@@ -56,7 +56,7 @@ trait BelongsToCompany
             return null;
         }
 
-        return $user->company_id ? (int) $user->company_id : null;
+        return $user->home_company_id ? (int) $user->home_company_id : null;
     }
 
     public function company(): BelongsTo

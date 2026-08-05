@@ -184,7 +184,7 @@ class DepartmentController extends BaseController
             ->where('status', 'active')
             ->with('user:id,name')
             ->orderBy('employee_code')
-            ->get(['id', 'employee_code', 'user_id', 'position', 'title']);
+            ->get(['id', 'employee_code', 'user_id', 'position_id', 'title']);
 
         return $this->success($managers);
     }

@@ -20,7 +20,7 @@ class SuperAdminSeeder extends Seeder
                 'email' => 'admin@alataxbilisim.com',
                 'password' => Hash::make('Admin123!'),
                 'type' => 'super_admin',
-                'company_id' => null,
+                'home_company_id' => null,
                 'is_active' => true,
                 'email_verified_at' => now(),
                 'preferences' => [

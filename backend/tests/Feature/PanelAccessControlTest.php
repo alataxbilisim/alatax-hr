@@ -36,7 +36,7 @@ class PanelAccessControlTest extends TestCase
     private function portalOnlyEmployee(): User
     {
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'is_active' => true,
             'email' => 'portal.only@test.local',
@@ -51,7 +51,7 @@ class PanelAccessControlTest extends TestCase
     private function hrWithPortal(): User
     {
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'is_active' => true,
             'email' => 'hr.dual@test.local',
@@ -68,7 +68,7 @@ class PanelAccessControlTest extends TestCase
         $portal = $this->portalOnlyEmployee();
         $hr = $this->hrWithPortal();
         $admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
         ]);
@@ -115,7 +115,7 @@ class PanelAccessControlTest extends TestCase
             ->assertJsonPath('success', true);
 
         $admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
             'email' => 'admin.panel@test.local',
@@ -134,7 +134,7 @@ class PanelAccessControlTest extends TestCase
         $portal = $this->portalOnlyEmployee();
         $hr = $this->hrWithPortal();
         $admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
             'email' => 'list.admin@test.local',
@@ -158,7 +158,7 @@ class PanelAccessControlTest extends TestCase
         $portal = $this->portalOnlyEmployee();
         $hr = $this->hrWithPortal();
         $admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
         ]);
@@ -176,7 +176,7 @@ class PanelAccessControlTest extends TestCase
     {
         $portal = $this->portalOnlyEmployee();
         $admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
         ]);
@@ -209,7 +209,7 @@ class PanelAccessControlTest extends TestCase
     {
         $hr = $this->hrWithPortal();
         $admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
             'email' => 'admin.revoke@test.local',
@@ -235,7 +235,7 @@ class PanelAccessControlTest extends TestCase
     {
         $portal = $this->portalOnlyEmployee();
         $viewer = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);
@@ -259,7 +259,7 @@ class PanelAccessControlTest extends TestCase
         $role->syncPermissions([$perm]);
 
         $limited = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'is_active' => true,
             'email' => 'limited.panel@test.local',
@@ -271,7 +271,7 @@ class PanelAccessControlTest extends TestCase
         $this->assertTrue(PanelAccess::has($limited->fresh()));
 
         $admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
         ]);
@@ -310,7 +310,7 @@ class PanelAccessControlTest extends TestCase
         $role->syncPermissions([$perm]);
 
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'is_active' => true,
             'email' => 'otel.personel@test.local',
@@ -322,7 +322,7 @@ class PanelAccessControlTest extends TestCase
         $this->assertFalse(PanelAccess::has($user->fresh()));
 
         $admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
         ]);

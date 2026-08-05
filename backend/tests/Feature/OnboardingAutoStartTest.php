@@ -71,7 +71,7 @@ class OnboardingAutoStartTest extends TestCase
     {
         $company ??= $this->company;
         $admin = User::factory()->create([
-            'company_id' => $company->id,
+            'home_company_id' => $company->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
         ]);
@@ -132,7 +132,7 @@ class OnboardingAutoStartTest extends TestCase
     public function test_convert_without_permission_returns_403(): void
     {
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);
@@ -265,7 +265,7 @@ class OnboardingAutoStartTest extends TestCase
         $template = $this->createDefaultTemplate($this->company);
         $admin = $this->makeAdmin();
         $target = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);

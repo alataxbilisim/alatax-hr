@@ -116,7 +116,7 @@ class PermissionEnforcementWave3Test extends TestCase
     {
         $user = User::factory()->create([
             'type' => $type,
-            'company_id' => $type === UserType::SuperAdmin ? null : ($company ?? $this->company)->id,
+            'home_company_id' => $type === UserType::SuperAdmin ? null : ($company ?? $this->company)->id,
             'is_active' => true,
         ]);
 

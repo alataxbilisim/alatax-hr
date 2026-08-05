@@ -116,7 +116,7 @@ class GorselFixtureCommand extends Command
         CompanyUser::query()->where('user_id', $tek->id)->where('company_id', '!=', $otelB->id)->delete();
         $this->ensureMembership($tek, (int) $otelB->id, isDefault: true);
         $tek->forceFill([
-            'company_id' => $otelB->id,
+            'home_company_id' => $otelB->id,
             'last_company_id' => $otelB->id,
         ])->saveQuietly();
         $this->line('OK tek@demo.test → yalnız demo-otel-b');
@@ -150,7 +150,7 @@ class GorselFixtureCommand extends Command
         CompanyUser::query()->where('user_id', $portal->id)->where('company_id', '!=', $demoFirma->id)->delete();
         $this->ensureMembership($portal, (int) $demoFirma->id, isDefault: true);
         $portal->forceFill([
-            'company_id' => $demoFirma->id,
+            'home_company_id' => $demoFirma->id,
             'last_company_id' => $demoFirma->id,
             'type' => UserType::User,
         ])->saveQuietly();
@@ -200,7 +200,7 @@ class GorselFixtureCommand extends Command
         }
         $recovery = $twoFactor->generateRecoveryCodes();
         $twoFa->forceFill([
-            'company_id' => $demoFirma->id,
+            'home_company_id' => $demoFirma->id,
             'last_company_id' => $demoFirma->id,
             'two_factor_enabled' => true,
             'two_factor_secret' => $twoFactor->encryptSecret($plainSecret),
@@ -271,7 +271,7 @@ class GorselFixtureCommand extends Command
         $user = User::updateOrCreate(
             ['email' => $email],
             [
-                'company_id' => $companyId,
+                'home_company_id' => $companyId,
                 'name' => $name,
                 'password' => Hash::make(self::PASSWORD),
                 'type' => $type,

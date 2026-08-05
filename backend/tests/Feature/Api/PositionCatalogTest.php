@@ -42,14 +42,14 @@ class PositionCatalogTest extends TestCase
         $this->otherCompany = Company::factory()->create(['status' => CompanyStatus::Active]);
 
         $this->admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($this->admin);
         $this->admin = $this->admin->fresh();
 
         $this->plainUser = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
     }

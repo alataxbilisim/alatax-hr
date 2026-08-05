@@ -82,7 +82,7 @@ class NotificationCompletionC4Test extends TestCase
     private function startLeaveWorkflow(): array
     {
         $manager = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'email' => 'mgr4c2@example.com',
         ]);
@@ -96,7 +96,7 @@ class NotificationCompletionC4Test extends TestCase
         ]);
 
         $requester = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'email' => 'req4c2@example.com',
         ]);
@@ -177,7 +177,7 @@ class NotificationCompletionC4Test extends TestCase
     public function test_expense_approve_notifies_requester(): void
     {
         $requester = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'email' => 'exp-req@example.com',
         ]);
@@ -204,8 +204,7 @@ class NotificationCompletionC4Test extends TestCase
 
     public function test_in_app_preference_off_skips_notification(): void
     {
-        $user = User::factory()->create([
-            'company_id' => $this->company->id,
+        $user = User::factory()->create(['home_company_id' => $this->company->id,
             'type' => UserType::User,
             'email' => 'pref-off@example.com',
             'preferences' => [
@@ -229,8 +228,7 @@ class NotificationCompletionC4Test extends TestCase
 
     public function test_security_event_ignores_preferences(): void
     {
-        $user = User::factory()->create([
-            'company_id' => $this->company->id,
+        $user = User::factory()->create(['home_company_id' => $this->company->id,
             'type' => UserType::User,
             'email' => 'sec@example.com',
             'preferences' => [
@@ -252,7 +250,7 @@ class NotificationCompletionC4Test extends TestCase
     public function test_reminder_email_default_off(): void
     {
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'email' => 'rem@example.com',
         ]);
@@ -279,7 +277,7 @@ class NotificationCompletionC4Test extends TestCase
         ]);
 
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'name' => '<script>x</script>',
             'email' => 'tpl@example.com',
@@ -309,7 +307,7 @@ class NotificationCompletionC4Test extends TestCase
         ]);
 
         $foreign = User::factory()->create([
-            'company_id' => $this->otherCompany->id,
+            'home_company_id' => $this->otherCompany->id,
             'type' => UserType::User,
             'email' => 'foreign-tpl@example.com',
         ]);
@@ -330,7 +328,7 @@ class NotificationCompletionC4Test extends TestCase
         $this->getJson('/api/v1/notification-templates')->assertUnauthorized();
 
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         $role = Role::findOrCreate('viewer_no_notif_c4', 'sanctum');
@@ -341,7 +339,7 @@ class NotificationCompletionC4Test extends TestCase
         $this->getJson('/api/v1/notification-templates')->assertForbidden();
 
         $admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($admin);
@@ -361,7 +359,7 @@ class NotificationCompletionC4Test extends TestCase
         ]);
 
         $otherAdmin = User::factory()->create([
-            'company_id' => $this->otherCompany->id,
+            'home_company_id' => $this->otherCompany->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($otherAdmin);
@@ -375,7 +373,7 @@ class NotificationCompletionC4Test extends TestCase
     public function test_asset_assign_notifies_user(): void
     {
         $assignee = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
             'email' => 'asset-user@example.com',
         ]);

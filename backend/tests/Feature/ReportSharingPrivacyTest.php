@@ -47,7 +47,7 @@ class ReportSharingPrivacyTest extends TestCase
             'is_active' => true,
         ]);
         $this->admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($this->admin);
@@ -64,7 +64,7 @@ class ReportSharingPrivacyTest extends TestCase
         ])->assertCreated()->json('data');
 
         $viewer = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         $role = Role::findOrCreate('rep_viewer', 'sanctum');
@@ -78,7 +78,7 @@ class ReportSharingPrivacyTest extends TestCase
         $viewer->assignRole($role);
 
         $editor = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         $erole = Role::findOrCreate('rep_editor', 'sanctum');
@@ -106,7 +106,7 @@ class ReportSharingPrivacyTest extends TestCase
         $this->deleteJson('/api/v1/reports/'.$report['id'])->assertForbidden();
 
         $newOwner = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         Sanctum::actingAs($this->admin->fresh());
@@ -129,7 +129,7 @@ class ReportSharingPrivacyTest extends TestCase
         ])->assertCreated()->json('data');
 
         $inDept = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         Employee::create([
@@ -148,7 +148,7 @@ class ReportSharingPrivacyTest extends TestCase
 
         $otherCompany = Company::factory()->create(['status' => CompanyStatus::Active]);
         $outsider = User::factory()->create([
-            'company_id' => $otherCompany->id,
+            'home_company_id' => $otherCompany->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($outsider);
@@ -159,7 +159,7 @@ class ReportSharingPrivacyTest extends TestCase
     public function test_hidden_fields_meta_on_run_without_salary_permission(): void
     {
         $viewer = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::User,
         ]);
         $role = Role::findOrCreate('nosal2', 'sanctum');
@@ -240,7 +240,7 @@ class ReportSharingPrivacyTest extends TestCase
 
         for ($i = 1; $i <= 3; $i++) {
             $u = User::factory()->create([
-                'company_id' => $this->company->id,
+                'home_company_id' => $this->company->id,
                 'type' => UserType::User,
             ]);
             LeaveRequest::create([

@@ -30,7 +30,7 @@ class PortalPerformanceController extends BaseController
             return $this->error('Personel kaydı bulunamadı', null, 404);
         }
 
-        $query = PerformanceReview::where('company_id', $user->company_id)
+        $query = PerformanceReview::where('company_id', $user->home_company_id)
             ->where('employee_id', $employee->user_id)
             ->with([
                 'period:id,name,start_date,end_date,status',
@@ -43,7 +43,7 @@ class PortalPerformanceController extends BaseController
             $this->lookups->assertValid(
                 LookupService::TYPE_PERFORMANCE_REVIEW_STATUS,
                 $request->string('status')->toString(),
-                $user->company_id,
+                $user->home_company_id,
                 'status'
             );
             $query->where('status', $request->status);
@@ -72,7 +72,7 @@ class PortalPerformanceController extends BaseController
             return $this->error('Personel kaydı bulunamadı', null, 404);
         }
 
-        $review = PerformanceReview::where('company_id', $user->company_id)
+        $review = PerformanceReview::where('company_id', $user->home_company_id)
             ->where('employee_id', $employee->user_id)
             ->where('id', $id)
             ->with([
@@ -102,7 +102,7 @@ class PortalPerformanceController extends BaseController
             return $this->error('Personel kaydı bulunamadı', null, 404);
         }
 
-        $review = PerformanceReview::where('company_id', $user->company_id)
+        $review = PerformanceReview::where('company_id', $user->home_company_id)
             ->where('employee_id', $employee->user_id)
             ->where('id', $id)
             ->whereIn('status', ['submitted', 'approved']) // Sadece gönderilmiş veya onaylanmış değerlendirmelere yorum yapılabilir
@@ -128,7 +128,7 @@ class PortalPerformanceController extends BaseController
     {
         $user = $request->user();
 
-        $query = Objective::where('company_id', $user->company_id)
+        $query = Objective::where('company_id', $user->home_company_id)
             ->where('user_id', $user->id)
             ->with(['keyResults:id,objective_id,title,current_value,target_value,unit,status']);
 
@@ -155,7 +155,7 @@ class PortalPerformanceController extends BaseController
     {
         $user = $request->user();
 
-        $objective = Objective::where('company_id', $user->company_id)
+        $objective = Objective::where('company_id', $user->home_company_id)
             ->where('user_id', $user->id)
             ->where('id', $id)
             ->with(['keyResults'])
@@ -177,7 +177,7 @@ class PortalPerformanceController extends BaseController
 
         $keyResult = KeyResult::where('id', $id)
             ->whereHas('objective', function ($q) use ($user) {
-                $q->where('company_id', $user->company_id)
+                $q->where('company_id', $user->home_company_id)
                     ->where('user_id', $user->id);
             })
             ->first();
@@ -222,7 +222,7 @@ class PortalPerformanceController extends BaseController
     {
         $user = $request->user();
 
-        $query = ContinuousFeedback::where('company_id', $user->company_id)
+        $query = ContinuousFeedback::where('company_id', $user->home_company_id)
             ->where(function ($q) use ($user) {
                 $q->where('to_user_id', $user->id)
                     ->orWhere('from_user_id', $user->id);
@@ -244,7 +244,7 @@ class PortalPerformanceController extends BaseController
             $this->lookups->assertValid(
                 LookupService::TYPE_CONTINUOUS_FEEDBACK_TYPE,
                 $request->string('type')->toString(),
-                $user->company_id,
+                $user->home_company_id,
                 'type'
             );
             $query->where('type', $request->type);
@@ -273,13 +273,13 @@ class PortalPerformanceController extends BaseController
         $this->lookups->assertValid(
             LookupService::TYPE_CONTINUOUS_FEEDBACK_TYPE,
             $validated['type'],
-            $user->company_id,
+            $user->home_company_id,
             'type'
         );
 
         // Aynı firmada mı?
         $targetEmployee = \App\Models\User::where('id', $validated['employee_id'])
-            ->where('company_id', $user->company_id)
+            ->where('home_company_id', $user->home_company_id)
             ->first();
 
         if (! $targetEmployee) {
@@ -287,7 +287,7 @@ class PortalPerformanceController extends BaseController
         }
 
         $feedback = ContinuousFeedback::create([
-            'company_id' => $user->company_id,
+            'company_id' => $user->home_company_id,
             'to_user_id' => $validated['employee_id'],
             'from_user_id' => $user->id,
             'type' => $validated['type'],

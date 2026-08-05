@@ -55,7 +55,7 @@ class TestRoutes extends Command
                 'name' => 'Test Super Admin',
                 'password' => bcrypt('password'),
                 'type' => 'super_admin',
-                'company_id' => null,
+                'home_company_id' => null,
                 'is_active' => true,
             ]
         );
@@ -79,7 +79,7 @@ class TestRoutes extends Command
                 'name' => 'Test Company Admin',
                 'password' => bcrypt('password'),
                 'type' => 'company_admin',
-                'company_id' => $this->company->id,
+                'home_company_id' => $this->company->id,
                 'is_active' => true,
             ]
         );
@@ -91,7 +91,7 @@ class TestRoutes extends Command
                 'name' => 'Test Employee',
                 'password' => bcrypt('password'),
                 'type' => 'employee',
-                'company_id' => $this->company->id,
+                'home_company_id' => $this->company->id,
                 'is_active' => true,
             ]
         );

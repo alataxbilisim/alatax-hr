@@ -12,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\Validation\ValidationException;
 
@@ -701,7 +702,7 @@ class AuthController extends BaseController
         $validated = $request->validate([
             'company_name' => 'required|string|max:255',
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
+            'email' => ['required', 'email', Rule::unique('users', 'email')->whereNull('deleted_at')],
             'password' => [
                 'required',
                 'confirmed',
@@ -733,7 +734,7 @@ class AuthController extends BaseController
 
         // Admin kullanıcı oluştur
         $user = User::create([
-            'company_id' => $company->id,
+            'home_company_id' => $company->id,
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),

@@ -99,7 +99,7 @@ class BranchController extends BaseController
         // Manager'ın aynı firmaya ait olduğunu kontrol et
         if (isset($validated['manager_id'])) {
             $manager = \App\Models\User::find($validated['manager_id']);
-            if (! $manager || $manager->company_id !== $company->id) {
+            if (! $manager || $manager->home_company_id !== $company->id) {
                 return $this->error('Geçersiz yönetici seçimi', 422);
             }
         }
@@ -167,7 +167,7 @@ class BranchController extends BaseController
         // Manager kontrolü
         if (isset($validated['manager_id'])) {
             $manager = \App\Models\User::find($validated['manager_id']);
-            if (! $manager || $manager->company_id !== $company->id) {
+            if (! $manager || $manager->home_company_id !== $company->id) {
                 return $this->error('Geçersiz yönetici seçimi', 422);
             }
         }

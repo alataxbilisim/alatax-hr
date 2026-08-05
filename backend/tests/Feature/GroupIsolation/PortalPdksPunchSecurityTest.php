@@ -86,7 +86,7 @@ class PortalPdksPunchSecurityTest extends TestCase
         ]);
 
         $this->adminA = User::factory()->create([
-            'company_id' => $this->companyA->id,
+            'home_company_id' => $this->companyA->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
         ]);
@@ -94,7 +94,7 @@ class PortalPdksPunchSecurityTest extends TestCase
         $this->adminA->givePermissionTo(['timesheet.kiosk.view', 'timesheet.attendance.view']);
 
         $this->userA = User::factory()->create([
-            'company_id' => $this->companyA->id,
+            'home_company_id' => $this->companyA->id,
             'last_company_id' => $this->companyA->id,
             'type' => UserType::User,
             'is_active' => true,
@@ -111,7 +111,7 @@ class PortalPdksPunchSecurityTest extends TestCase
         ]);
 
         $userB = User::factory()->create([
-            'company_id' => $this->companyB->id,
+            'home_company_id' => $this->companyB->id,
             'type' => UserType::User,
             'is_active' => true,
         ]);
@@ -151,7 +151,7 @@ class PortalPdksPunchSecurityTest extends TestCase
     public function test_portal_qr_rejects_other_company_token_for_company_a_user(): void
     {
         $adminB = User::factory()->create([
-            'company_id' => $this->companyB->id,
+            'home_company_id' => $this->companyB->id,
             'type' => UserType::CompanyAdmin,
             'is_active' => true,
         ]);
@@ -180,7 +180,7 @@ class PortalPdksPunchSecurityTest extends TestCase
     {
         // Home A, personel kaydı yalnız B — öncelik: home eşleşmesi yok → personel şirketi B
         $mismatch = User::factory()->create([
-            'company_id' => $this->companyA->id,
+            'home_company_id' => $this->companyA->id,
             'last_company_id' => $this->companyA->id,
             'type' => UserType::User,
             'is_active' => true,

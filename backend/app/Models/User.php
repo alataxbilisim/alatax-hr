@@ -24,25 +24,35 @@ class User extends Authenticatable
     protected static function booted(): void
     {
         static::updated(function (User $user): void {
-            if ($user->wasChanged(['is_active', 'type', 'company_id'])) {
+            if ($user->wasChanged(['is_active', 'type', 'home_company_id'])) {
                 UserPermissionCache::forgetForUser((int) $user->id);
             }
         });
 
         static::deleted(function (User $user): void {
             UserPermissionCache::forgetForUser((int) $user->id);
+
+            // §6: soft-delete → detach Spatie roles + revoke Sanctum tokens
+            if (! $user->isForceDeleting()) {
+                \DB::table('model_has_roles')
+                    ->where('model_id', $user->id)
+                    ->where('model_type', static::class)
+                    ->delete();
+
+                $user->tokens()->delete();
+            }
         });
 
         // G1: home company → membership + last_company_id (factory/test/seeder uyumu)
         static::saved(function (User $user): void {
-            if ($user->type === UserType::SuperAdmin || $user->company_id === null) {
+            if ($user->type === UserType::SuperAdmin || $user->home_company_id === null) {
                 return;
             }
 
-            if (! $user->wasRecentlyCreated && ! $user->wasChanged('company_id')) {
+            if (! $user->wasRecentlyCreated && ! $user->wasChanged('home_company_id')) {
                 // last_company boşsa doldur
                 if ($user->last_company_id === null) {
-                    $user->forceFill(['last_company_id' => $user->company_id])->saveQuietly();
+                    $user->forceFill(['last_company_id' => $user->home_company_id])->saveQuietly();
                 }
 
                 return;
@@ -67,7 +77,7 @@ class User extends Authenticatable
     protected $guard_name = 'sanctum';
 
     protected $fillable = [
-        'company_id',
+        'home_company_id',
         'last_company_id',
         'name',
         'email',
@@ -120,7 +130,7 @@ class User extends Authenticatable
      */
     public function company(): BelongsTo
     {
-        return $this->belongsTo(Company::class);
+        return $this->belongsTo(Company::class, 'home_company_id');
     }
 
     public function lastCompany(): BelongsTo

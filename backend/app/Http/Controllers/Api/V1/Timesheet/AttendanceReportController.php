@@ -127,7 +127,7 @@ class AttendanceReportController extends BaseController
 
         if (! empty($filters['department_id']) || ! empty($filters['branch_id'])) {
             $empQuery = Employee::query()
-                ->where('company_id', $actor->company_id)
+                ->where('company_id', $actor->home_company_id)
                 ->whereNotNull('user_id');
 
             if (! empty($filters['department_id'])) {

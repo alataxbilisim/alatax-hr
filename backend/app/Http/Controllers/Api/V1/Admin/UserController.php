@@ -19,7 +19,7 @@ class UserController extends BaseController
 
         // Firma filtresi
         if ($request->has('company_id')) {
-            $query->where('company_id', $request->company_id);
+            $query->where('home_company_id', $request->company_id);
         }
 
         // Arama

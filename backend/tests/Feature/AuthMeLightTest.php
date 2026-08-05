@@ -31,7 +31,7 @@ class AuthMeLightTest extends TestCase
 
         $this->admin = User::factory()->create([
             'type' => UserType::CompanyAdmin,
-            'company_id' => $company->id,
+            'home_company_id' => $company->id,
             'is_active' => true,
         ]);
         $this->assignSpatieAdminRole($this->admin);

@@ -3,11 +3,11 @@
 namespace App\Services\Salary;
 
 use App\Models\Employee;
-use App\Models\Position;
 use App\Models\SalaryBand;
 
 /**
  * Pozisyon ücret bandı çözümleme (null-safe).
+ * position_id SSOT — string kolon yok (§4).
  */
 class SalaryBandService
 {
@@ -21,30 +21,23 @@ class SalaryBandService
      */
     public function indicatorForEmployee(Employee $employee, mixed $amount): array
     {
+        $employee->loadMissing('position');
+        $positionName = $employee->position?->name;
+
         $empty = [
             'band' => null,
-            'position' => $employee->position,
+            'position' => $positionName,
             'status' => null,
             'ratio' => null,
         ];
 
-        if ($amount === null || $employee->position === null || trim((string) $employee->position) === '') {
-            return $empty;
-        }
-
-        $position = Position::query()
-            ->where('company_id', $employee->company_id)
-            ->where('name', $employee->position)
-            ->where('is_active', true)
-            ->first();
-
-        if ($position === null) {
+        if ($amount === null || $employee->position_id === null) {
             return $empty;
         }
 
         $band = SalaryBand::query()
             ->where('company_id', $employee->company_id)
-            ->where('position_id', $position->id)
+            ->where('position_id', $employee->position_id)
             ->where('is_active', true)
             ->first();
 
@@ -75,9 +68,9 @@ class SalaryBandService
                 'max_amount' => $band->max_amount,
                 'currency' => $band->currency,
                 'position_id' => $band->position_id,
-                'position_name' => $position->name,
+                'position_name' => $positionName,
             ],
-            'position' => $employee->position,
+            'position' => $positionName,
             'status' => $status,
             'ratio' => round($ratio, 4),
         ];

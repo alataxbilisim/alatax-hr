@@ -32,7 +32,7 @@ class PortalLeaveController extends BaseController
     {
         $user = $request->user();
 
-        $leaveTypes = LeaveType::where('company_id', $user->company_id)
+        $leaveTypes = LeaveType::where('company_id', $user->home_company_id)
             ->where('is_active', true)
             ->get(['id', 'name', 'description', 'default_days', 'is_paid', 'requires_document', 'max_days_at_once']);
 
@@ -137,7 +137,7 @@ class PortalLeaveController extends BaseController
 
         // İzin türünü kontrol et
         $leaveType = LeaveType::where('id', $validated['leave_type_id'])
-            ->where('company_id', $user->company_id)
+            ->where('company_id', $user->home_company_id)
             ->where('is_active', true)
             ->first();
 
@@ -161,12 +161,12 @@ class PortalLeaveController extends BaseController
         return DB::transaction(function () use ($request, $validated, $user, $totalDays, $customFields) {
             $documentPath = null;
             if ($request->hasFile('document')) {
-                $documentPath = $request->file('document')->store('leave_documents/'.$user->company_id, 'public');
+                $documentPath = $request->file('document')->store('leave_documents/'.$user->home_company_id, 'public');
             }
 
             $leaveRequest = LeaveRequest::withoutAuditing(function () use ($validated, $user, $totalDays, $documentPath, $customFields) {
                 return LeaveRequest::create([
-                    'company_id' => $user->company_id,
+                    'company_id' => $user->home_company_id,
                     'user_id' => $user->id,
                     'leave_type_id' => $validated['leave_type_id'],
                     'start_date' => $validated['start_date'],
@@ -241,7 +241,7 @@ class PortalLeaveController extends BaseController
             if ($leaveRequest->document_path) {
                 \Storage::disk('public')->delete($leaveRequest->document_path);
             }
-            $validated['document_path'] = $request->file('document')->store('leave_documents/'.$user->company_id, 'public');
+            $validated['document_path'] = $request->file('document')->store('leave_documents/'.$user->home_company_id, 'public');
         }
 
         $leaveRequest->update($validated);

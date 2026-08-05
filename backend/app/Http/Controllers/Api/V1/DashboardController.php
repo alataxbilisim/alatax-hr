@@ -66,7 +66,7 @@ class DashboardController extends BaseController
         // Temel istatistikler — aktif şirket veya grup kümesi
         $stats = [
             'total_users' => User::query()
-                ->whereIn('company_id', $companyIds)
+                ->whereIn('home_company_id', $companyIds)
                 ->where('is_active', true)
                 ->count(),
             'active_modules' => count($activeModules),

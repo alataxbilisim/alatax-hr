@@ -17,7 +17,7 @@ class UpdatePositionRequest extends FormRequest
      */
     public function rules(): array
     {
-        $companyId = auth()->user()?->company_id;
+        $companyId = auth()->user()?->home_company_id;
         $positionId = (int) $this->route('id');
 
         return [
@@ -29,7 +29,14 @@ class UpdatePositionRequest extends FormRequest
                     ->where(fn ($q) => $q->where('company_id', $companyId)->whereNull('deleted_at'))
                     ->ignore($positionId),
             ],
-            'name' => ['sometimes', 'string', 'max:255'],
+            'name' => [
+                'sometimes',
+                'string',
+                'max:255',
+                Rule::unique('positions', 'name')
+                    ->where(fn ($q) => $q->where('company_id', $companyId)->whereNull('deleted_at'))
+                    ->ignore($positionId),
+            ],
             'department_id' => [
                 'nullable',
                 'integer',
@@ -51,6 +58,7 @@ class UpdatePositionRequest extends FormRequest
     {
         return [
             'code.unique' => 'Bu pozisyon kodu zaten kullanılıyor.',
+            'name.unique' => 'Bu pozisyon adı zaten kullanılıyor.',
             'department_id.exists' => 'Seçilen departman geçersiz.',
         ];
     }

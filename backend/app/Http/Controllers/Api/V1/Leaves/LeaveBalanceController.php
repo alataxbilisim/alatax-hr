@@ -138,7 +138,7 @@ class LeaveBalanceController extends BaseController
 
         $targetUser = User::query()
             ->where('id', $validated['user_id'])
-            ->where('company_id', $companyId)
+            ->where('home_company_id', $companyId)
             ->first();
 
         if ($targetUser === null) {
@@ -213,7 +213,7 @@ class LeaveBalanceController extends BaseController
             return false;
         }
 
-        if ((int) $balance->company_id !== (int) $actor->company_id) {
+        if ((int) $balance->company_id !== (int) $actor->home_company_id) {
             return false;
         }
 
@@ -221,7 +221,7 @@ class LeaveBalanceController extends BaseController
             return false;
         }
 
-        return $this->userInBranchContext((int) $balance->user_id, (int) $actor->company_id);
+        return $this->userInBranchContext((int) $balance->user_id, (int) $actor->home_company_id);
     }
 
     /**
@@ -238,7 +238,7 @@ class LeaveBalanceController extends BaseController
         $userIds = $employeeQuery->pluck('user_id')->map(fn ($id) => (int) $id)->unique()->values()->all();
 
         // user_id'siz personel yok; DataScope user tablosu üzerinden de filtrele
-        $userQuery = User::query()->where('company_id', $companyId)->whereIn('id', $userIds !== [] ? $userIds : [0]);
+        $userQuery = User::query()->where('home_company_id', $companyId)->whereIn('id', $userIds !== [] ? $userIds : [0]);
         $this->dataScope->scopeForUser($userQuery, $actor, 'id');
 
         return $userQuery->pluck('id')->map(fn ($id) => (int) $id)->all();

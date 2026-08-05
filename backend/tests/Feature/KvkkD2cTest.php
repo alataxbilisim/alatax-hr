@@ -57,7 +57,7 @@ class KvkkD2cTest extends TestCase
             'slug' => 'd2c-firma-b',
         ]);
         $this->admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($this->admin);
@@ -68,7 +68,7 @@ class KvkkD2cTest extends TestCase
     {
         Sanctum::actingAs($this->admin->fresh());
 
-        $user = User::factory()->create(['company_id' => $this->company->id, 'name' => 'Hold Person']);
+        $user = User::factory()->create(['home_company_id' => $this->company->id, 'name' => 'Hold Person']);
         $emp = Employee::factory()->create([
             'company_id' => $this->company->id,
             'user_id' => $user->id,
@@ -126,7 +126,7 @@ class KvkkD2cTest extends TestCase
         Sanctum::actingAs($this->admin->fresh());
 
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'name' => 'DryRun User',
             'email' => 'dryrun@example.com',
         ]);
@@ -163,7 +163,7 @@ class KvkkD2cTest extends TestCase
         Sanctum::actingAs($this->admin->fresh());
 
         $user = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'name' => 'Ayrilan Personel',
             'email' => 'ayrilan@example.com',
         ]);
@@ -319,7 +319,7 @@ class KvkkD2cTest extends TestCase
             'requires_approval' => true,
         ]);
 
-        $user = User::factory()->create(['company_id' => $this->company->id, 'name' => 'Eski']);
+        $user = User::factory()->create(['home_company_id' => $this->company->id, 'name' => 'Eski']);
         $emp = Employee::factory()->create([
             'company_id' => $this->company->id,
             'user_id' => $user->id,
@@ -349,7 +349,7 @@ class KvkkD2cTest extends TestCase
     {
         Sanctum::actingAs($this->admin->fresh());
 
-        $user = User::factory()->create(['company_id' => $this->company->id]);
+        $user = User::factory()->create(['home_company_id' => $this->company->id]);
         $emp = Employee::factory()->create([
             'company_id' => $this->company->id,
             'user_id' => $user->id,
@@ -402,7 +402,7 @@ class KvkkD2cTest extends TestCase
     {
         Sanctum::actingAs($this->admin->fresh());
         $this->makeFormerEmployeePolicy();
-        $user = User::factory()->create(['company_id' => $this->company->id]);
+        $user = User::factory()->create(['home_company_id' => $this->company->id]);
         $emp = Employee::factory()->create([
             'company_id' => $this->company->id,
             'user_id' => $user->id,
@@ -413,7 +413,7 @@ class KvkkD2cTest extends TestCase
         $cand = DestructionCandidate::query()->where('subject_id', $emp->id)->firstOrFail();
 
         $otherAdmin = User::factory()->create([
-            'company_id' => $this->otherCompany->id,
+            'home_company_id' => $this->otherCompany->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($otherAdmin);

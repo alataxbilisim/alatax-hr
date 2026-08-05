@@ -43,7 +43,7 @@ class ApplicationStageKanbanTest extends TestCase
         $this->enableModule($this->company, 'job-applications');
 
         $this->admin = User::factory()->create([
-            'company_id' => $this->company->id,
+            'home_company_id' => $this->company->id,
             'type' => UserType::CompanyAdmin,
         ]);
         $this->assignSpatieAdminRole($this->admin);
