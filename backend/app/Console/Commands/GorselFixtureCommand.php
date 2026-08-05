@@ -28,7 +28,9 @@ use Illuminate\Support\Str;
 class GorselFixtureCommand extends Command
 {
     protected $signature = 'gorsel:fixture
-                            {--secrets-dir= : 2FA secret yazılacak klasör (docs/gorsel-kontrol/<tarih>)}';
+                            {--secrets-dir= : 2FA secret yazılacak klasör (docs/gorsel-kontrol/<tarih>)}
+                            {--allow-dev-db : Geliştirme DB (alatax_hr) üzerine yazmaya izin ver}
+                            {--use-testing-db : Varsayılan yerine alatax_hr_testing bağlantısına yaz}';
 
     protected $description = 'Görsel kontrol fixture (idempotent, yalnız local)';
 
@@ -42,6 +44,36 @@ class GorselFixtureCommand extends Command
             $this->error('gorsel:fixture yalnız local ortamda çalışır (şu an: '.app()->environment().').');
 
             return self::FAILURE;
+        }
+
+        if ($this->option('use-testing-db')) {
+            config(['database.default' => 'pgsql']);
+            config(['database.connections.pgsql.database' => 'alatax_hr_testing']);
+            DB::purge('pgsql');
+            DB::reconnect('pgsql');
+            $this->warn('Bağlantı: alatax_hr_testing (--use-testing-db)');
+        }
+
+        $connection = (string) config('database.default');
+        $database = (string) config("database.connections.{$connection}.database");
+        $this->info("gorsel:fixture hedef DB: {$database} (connection={$connection})");
+
+        $isTestingDb = str_ends_with($database, '_testing') || $database === 'alatax_hr_testing';
+        if (! $isTestingDb && ! $this->option('allow-dev-db')) {
+            $this->error(
+                "Geliştirme DB'sine yazmak için --allow-dev-db veya --use-testing-db kullanın. "
+                .'Temizlik: php artisan gorsel:fixture-cleanup'
+            );
+
+            return self::FAILURE;
+        }
+
+        // Holding org hizası (şirket oluşturmaz; organization_id düzeltir)
+        $align = app(\App\Services\Demo\DemoOrganizationAligner::class)->align();
+        if ($align['ok']) {
+            $this->line('OK demo org hiza: '.$align['message']);
+        } else {
+            $this->warn('demo org hiza atlandı: '.$align['message']);
         }
 
         $companies = Company::query()->whereIn('slug', self::REQUIRED_SLUGS)->get()->keyBy('slug');

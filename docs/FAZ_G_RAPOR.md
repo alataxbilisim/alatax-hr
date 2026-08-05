@@ -75,7 +75,9 @@ Kritik düzeltme: `company.context` / `branch.context` → `SubstituteBindings` 
 
 ## Demo seeder
 
-`demo-firma` + `demo-otel-b` + `demo-otel-c` aynı organization; Merkez Ofis = demo-firma şubesi; `admin@demo.test` / `ik@demo.test` üçüne membership.
+`demo-firma` + `demo-otel-b` + `demo-otel-c` aynı organization (`org-demo-holding` / `DemoOrganizationAligner`); Merkez Ofis = demo-firma şubesi; `admin@demo.test` / `ik@demo.test` üçüne membership.
+
+G2 sonrası teşhis: bazı ortamlarda G1 1:1 backfill ile üç şirket ayrı org’da kalmıştı — niyet her zaman tek holding’di. Düzeltme: seeder her koşuda hizalar + `php artisan demo:align-organizations`. Detay: `docs/DEMO_ORG_DUZELTME.md`.
 
 ---
 

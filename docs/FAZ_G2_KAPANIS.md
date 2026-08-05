@@ -40,7 +40,9 @@
 | Aynı org’daki diğer şirket | Yok (org 2’de yalnız 70) |
 | `admin@demo.test` membership | **69, 71, 72** — **70 yok** |
 
-**Grup toplamına girer mi?** Aktif bağlam 69/71/72 iken `scope=group` kümesi = o şirketin org ∩ membership. Mevcut demo seed’de 69/71/72 **ayrı organization**’larda (1 / 3 / 4) — holding kesişimi bu DB anında zaten tek şirket. 70, admin üye olmadığı için hiçbir `admin@demo.test` grup kümesine **girmez**. (Kesişim regresyonu feature testte A∪B∖D ile sabitlendi; demo org dağınıklığı ayrı seed konusu.)
+**Grup toplamına girer mi?** Aktif bağlam 69/71/72 iken `scope=group` kümesi = o şirketin org ∩ membership. Kapanış anında 69/71/72 **ayrı organization**’lardaydı (1 / 3 / 4) — holding kesişimi tek şirkete düşüyordu. 70, admin üye olmadığı için hiçbir `admin@demo.test` grup kümesine **girmez**. (Kesişim regresyonu feature testte A∪B∖D ile sabitlendi.)
+
+**Seed dağınıklığı kapatıldı (2026-08-05):** `DemoOrganizationAligner` + `demo:align-organizations`; 69/71/72 → tek `org-demo-holding`. Test: `DemoHoldingOrganizationTest`. Orphan org 1/3/4 silinmedi (manuel). Detay: `docs/DEMO_ORG_DUZELTME.md`.
 
 ---
 

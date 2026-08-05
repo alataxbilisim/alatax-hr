@@ -914,8 +914,9 @@ class DemoDataSeeder extends Seeder
     }
 
     /**
-     * G1: kardeş oteller aynı organization altında; merkez İK üçüne membership.
-     * Merkez ofis = demo-firma altında şube.
+     * G1 / Dobedan: kardeş oteller tek holding organization altında;
+     * merkez İK üçüne membership. Her koşuda DemoOrganizationAligner ile hizalanır
+     * (Company::created 1:1 org üretse bile idempotent düzelir).
      */
     private function seedSisterCompanies(): void
     {
@@ -923,10 +924,6 @@ class DemoDataSeeder extends Seeder
         if ($main === null) {
             return;
         }
-
-        app(\App\Services\CompanyContextService::class)->ensureOrganizationForCompany($main);
-        $main->refresh();
-        $orgId = $main->organization_id;
 
         // Merkez ofis — demo-firma altında şube (İK home şirketi)
         Branch::firstOrCreate(
@@ -956,26 +953,16 @@ class DemoDataSeeder extends Seeder
             ],
         ];
 
-        $sisterIds = [(int) $main->id];
         foreach ($defs as $def) {
-            $sister = $this->seedSisterCompany($def);
-            if ($orgId !== null) {
-                $sister->forceFill(['organization_id' => $orgId])->saveQuietly();
-            }
-            $sisterIds[] = (int) $sister->id;
+            $this->seedSisterCompany($def);
         }
 
-        // Merkez İK: admin@demo.test + ik@demo.test → üç şirket membership
-        $ctx = app(\App\Services\CompanyContextService::class);
-        foreach (['admin@demo.test', 'ik@demo.test'] as $email) {
-            $user = $this->qaUsers[$email] ?? User::query()->where('email', $email)->first();
-            if ($user === null) {
-                continue;
-            }
-            foreach ($sisterIds as $i => $companyId) {
-                $ctx->ensureMembership($user, $companyId, $i === 0);
-            }
+        $aligner = app(\App\Services\Demo\DemoOrganizationAligner::class);
+        $align = $aligner->align();
+        if (! $align['ok']) {
+            throw new \RuntimeException('Demo org hizalama başarısız: '.$align['message']);
         }
+        $aligner->ensureCenterMemberships();
     }
 
     /**
