@@ -5,6 +5,7 @@ namespace App\Services\Timesheet;
 use App\Models\AttendanceKioskToken;
 use App\Models\Branch;
 use App\Models\User;
+use App\Services\CompanyContextService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
@@ -20,6 +21,10 @@ class AttendanceKioskTokenService
     public const TTL_SECONDS = 30;
 
     public const QR_PREFIX = 'AXPDKS1';
+
+    public function __construct(
+        protected CompanyContextService $companyContext,
+    ) {}
 
     /**
      * @return array{token: string, expires_at: string, expires_in: int, company_id: int, branch_id: int|null}
@@ -83,11 +88,13 @@ class AttendanceKioskTokenService
             throw new InvalidArgumentException('QR kodunun süresi dolmuş — yeni kodu okutun');
         }
 
-        if ((int) $parsed['cid'] !== (int) $actor->company_id) {
+        // Portal önceliği ile tek kaynak (home kör karşılaştırması yok)
+        $portalCompanyId = $this->companyContext->resolvePortalCompanyId($actor);
+        if ($portalCompanyId === null || (int) $parsed['cid'] !== $portalCompanyId) {
             throw new InvalidArgumentException('Bu QR kodu başka bir firmaya ait');
         }
 
-        return DB::transaction(function () use ($rawToken, $parsed, $actor): array {
+        return DB::transaction(function () use ($rawToken, $parsed, $actor, $portalCompanyId): array {
             $row = AttendanceKioskToken::query()
                 ->where('jti', $parsed['jti'])
                 ->lockForUpdate()
@@ -101,7 +108,7 @@ class AttendanceKioskTokenService
                 throw new InvalidArgumentException('Geçersiz QR kodu');
             }
 
-            if ((int) $row->company_id !== (int) $actor->company_id) {
+            if ((int) $row->company_id !== $portalCompanyId) {
                 throw new InvalidArgumentException('Bu QR kodu başka bir firmaya ait');
             }
 

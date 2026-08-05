@@ -50,6 +50,8 @@ Aşağıdaki bölümler kronolojik: firma kurulumu → çalışan yaşam döngü
 - **Portal yolu:** bağlam = home / personelin kendi şirketi. `X-Company-Id` ve `last_company_id` yok sayılır; portal `last_company_id` yazmaz.
 - **Panel/operasyonel yol:** bağlam = `CompanyContext` (`getCompanyId()` / `X-Company-Id` + membership). Yeni kod `$user->company_id` okumaz; istisnalar `BelongsToCompany:59`, `ApprovalWorkflowPolicy:54`, `BranchContextService:38` ve `*/Portal/*` ile sınırlıdır.
 
+**Membership = yetki:** Bir kullanıcı üye olduğu her şirkette kendi global rolüyle (Spatie) çalışır; şirkete özel rol bugün desteklenmiyor. Kanca: `company_user.role_id` (şu an NULL / kullanılmıyor). Çok şirketli müşteride şirkete özel yetki istenirse bu alan doldurulur.
+
 ---
 
 ## AŞAMA 2 — İŞE ALIM (Çalışan henüz "aday")
