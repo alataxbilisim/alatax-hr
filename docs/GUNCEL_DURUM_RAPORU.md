@@ -36,12 +36,12 @@
 
 | Katman | Durum |
 |--------|--------|
-| Test | **711 passed** (G2; Docker `alatax-hr-app`) |
+| Test | **713 passed** (G2 kapanış; Docker `alatax-hr-app`) |
 | Faz 0–3 | ✅ |
 | Faz 4 | 🔶 Lookup/Workflow/Bildirim/Ayar; Form Engine 4A + W2 iade açık |
 | Faz 5 | ✅ Rapor motoru (11 dataset) |
 | FAZ A/B + KVKK D2a–c çekirdek | ✅ |
-| Faz G | G1 ✅ (CompanyContext) · G2 ✅ grup rapor/pano kapsamı |
+| Faz G | G1 ✅ · G2 ✅ · G2 kapanış ✅ (`FAZ_G2_KAPANIS.md`) |
 | Faz 6 → 7 → 8 | ☐ |
 
 ---

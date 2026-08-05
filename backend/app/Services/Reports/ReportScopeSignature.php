@@ -75,7 +75,7 @@ final class ReportScopeSignature
         $employee = $user->employee;
 
         return match ($scope) {
-            DataScopeLevel::Company, DataScopeLevel::Group => [],
+            DataScopeLevel::Company => [],
             DataScopeLevel::Own => ['user_id' => (int) $user->id],
             DataScopeLevel::Department => ['department_id' => $employee?->department_id],
             DataScopeLevel::Branch => ['branch_id' => $employee?->branch_id],

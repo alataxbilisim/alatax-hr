@@ -20,7 +20,8 @@ use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * G2 — DataScopeLevel::Group CRUD'da yok sayılır (yalnız aktif şirket).
+ * G2 kapanış (B) — grup kapsamı yalnız reports.scope.group; DataScope::Group yok.
+ * İzin CRUD'u genişletmez; rapor scope=group üyelik kümesini açar.
  */
 class GroupDataScopeCrudIgnoreTest extends TestCase
 {
@@ -62,10 +63,8 @@ class GroupDataScopeCrudIgnoreTest extends TestCase
             'password' => Hash::make('password'),
         ]);
 
-        $role = Role::findOrCreate('g2_group_role', 'sanctum');
-        // DB CHECK group değerini tutmuyor; resolve config default ile Group olur (G2 CRUD ignore).
-        $role->forceFill(['data_scope' => null])->save();
-        config(['data-scope.defaults.g2_group_role' => DataScopeLevel::Group->value]);
+        $role = Role::findOrCreate('g2_report_group_role', 'sanctum');
+        $role->forceFill(['data_scope' => DataScopeLevel::Company->value])->save();
         $role->givePermissionTo([
             'employees.list.view',
             'employees.list.create',
@@ -86,10 +85,11 @@ class GroupDataScopeCrudIgnoreTest extends TestCase
         ]);
     }
 
-    public function test_group_data_scope_resolves_but_employee_list_stays_active_company(): void
+    public function test_reports_scope_group_permission_does_not_widen_crud_list(): void
     {
+        $this->assertTrue($this->user->fresh()->can('reports.scope.group'));
         $this->assertSame(
-            DataScopeLevel::Group,
+            DataScopeLevel::Company,
             app(DataScopeService::class)->resolve($this->user->fresh()->load('roles'))
         );
 
@@ -103,7 +103,7 @@ class GroupDataScopeCrudIgnoreTest extends TestCase
         $this->assertNotContains($this->employeeB->id, $employeeIds);
     }
 
-    public function test_group_data_scope_user_sees_b_in_report_with_scope_group(): void
+    public function test_report_scope_group_with_permission_includes_membership_companies(): void
     {
         Sanctum::actingAs($this->user->fresh()->load('roles'));
 

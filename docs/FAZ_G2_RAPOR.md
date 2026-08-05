@@ -26,7 +26,7 @@ Tek-şirket varsayılanı korundu. Rapor motoru ve klasik dashboard, isteğe ba�
 |-------|-------------|
 | İzin | `PermissionSeeder` → `reports.scope.group` |
 | Küme | `GroupScopeService::reportableCompanyIds` |
-| DataScope | `DataScopeLevel::Group` (CRUD = company gibi; DB CHECK’e yazılmaz — config default ile test) |
+| DataScope | **Group yok** (kapanış B — `FAZ_G2_KARAR.md` §c / `FAZ_G2_KAPANIS.md`) |
 | Motor | `ReportQueryBuilder` `scope=company\|group`; survey/training `whereIn` |
 | Cache | `ReportScopeSignature`: `report_scope` + sıralı `company_ids` |
 | Export/job | şirket kolonu; `ProcessHeavyReportExportJob` `(companyId, reportScope, companyIds)`; `companyId<1` → exception |

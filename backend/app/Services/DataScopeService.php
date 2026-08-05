@@ -54,13 +54,11 @@ class DataScopeService
     }
 
     /**
-     * Firma geneli satır kapsamı mı? Group CRUD'da company ile aynı (çok şirket filtresi yok).
+     * Firma geneli satır kapsamı mı? (aktif şirket içinde ek satır filtresi yok)
      */
     public function isCompanyWide(User $user): bool
     {
-        $scope = $this->resolve($user);
-
-        return $scope === DataScopeLevel::Company || $scope === DataScopeLevel::Group;
+        return $this->resolve($user) === DataScopeLevel::Company;
     }
 
     /**
@@ -74,7 +72,7 @@ class DataScopeService
         $scope = $this->resolve($user);
 
         return match ($scope) {
-            DataScopeLevel::Company, DataScopeLevel::Group => $query,
+            DataScopeLevel::Company => $query,
             DataScopeLevel::Own => $query->where($userIdColumn, $user->id),
             DataScopeLevel::Team => $query->whereIn($userIdColumn, $this->teamUserIds($user)),
             DataScopeLevel::Department => $query->whereIn($userIdColumn, $this->departmentUserIds($user)),
@@ -93,7 +91,7 @@ class DataScopeService
         $scope = $this->resolve($user);
 
         return match ($scope) {
-            DataScopeLevel::Company, DataScopeLevel::Group => $query,
+            DataScopeLevel::Company => $query,
             DataScopeLevel::Own => $query->whereIn('id', $this->ownEmployeeIds($user)),
             DataScopeLevel::Team => $query->whereIn('id', $this->teamEmployeeIds($user)),
             DataScopeLevel::Department => $this->applyDepartmentEmployeeScope($query, $user),
@@ -112,8 +110,7 @@ class DataScopeService
     {
         $scope = $this->resolve($user);
 
-        // Group CRUD'da company gibi — çok şirket filtresi yok (BelongsToCompany aktif şirket)
-        if ($scope === DataScopeLevel::Company || $scope === DataScopeLevel::Group) {
+        if ($scope === DataScopeLevel::Company) {
             return $query;
         }
 
@@ -141,7 +138,7 @@ class DataScopeService
         $scope = $this->resolve($user);
 
         return match ($scope) {
-            DataScopeLevel::Company, DataScopeLevel::Group => true,
+            DataScopeLevel::Company => true,
             DataScopeLevel::Own => $targetUserId === $user->id,
             DataScopeLevel::Team => in_array($targetUserId, $this->teamUserIds($user), true),
             DataScopeLevel::Department => in_array($targetUserId, $this->departmentUserIds($user), true),
@@ -157,7 +154,7 @@ class DataScopeService
         $scope = $this->resolve($user);
 
         return match ($scope) {
-            DataScopeLevel::Company, DataScopeLevel::Group => true,
+            DataScopeLevel::Company => true,
             DataScopeLevel::Own => in_array($employee->id, $this->ownEmployeeIds($user), true),
             DataScopeLevel::Team => in_array($employee->id, $this->teamEmployeeIds($user), true),
             DataScopeLevel::Department => $this->isSameDepartment($user, $employee),
@@ -166,13 +163,13 @@ class DataScopeService
     }
 
     /**
-     * update/delete için: company/group veya department (İK); team/own yazamaz.
+     * update/delete için: company veya department (İK); team/own yazamaz.
      */
     public function canManageHrRecords(User $user): bool
     {
         $scope = $this->resolve($user);
 
-        return in_array($scope, [DataScopeLevel::Company, DataScopeLevel::Group, DataScopeLevel::Department], true);
+        return in_array($scope, [DataScopeLevel::Company, DataScopeLevel::Department], true);
     }
 
     /**

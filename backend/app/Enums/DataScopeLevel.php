@@ -4,10 +4,10 @@ namespace App\Enums;
 
 /**
  * Satır düzeyi veri kapsamı (Data Scope).
- * Genişlik: own < team < department < branch < company < group
+ * Genişlik: own < team < department < branch < company
  *
- * Group: rol data_scope olarak çözülebilir; operasyonel CRUD'da company ile aynı
- * (yalnız aktif CompanyContext). Rapor/pano çok-şirket kümesi ayrı: scope=group + reports.scope.group.
+ * G2 kapanış (B): çok-şirket rapor kapsamı DataScope değildir;
+ * yalnız reports.scope.group + ReportQueryBuilder scope=group.
  */
 enum DataScopeLevel: string
 {
@@ -16,7 +16,6 @@ enum DataScopeLevel: string
     case Department = 'department';
     case Branch = 'branch';
     case Company = 'company';
-    case Group = 'group';
 
     /**
      * Karşılaştırma için genişlik skoru (büyük = daha geniş).
@@ -29,7 +28,6 @@ enum DataScopeLevel: string
             self::Department => 3,
             self::Branch => 4,
             self::Company => 5,
-            self::Group => 6,
         };
     }
 

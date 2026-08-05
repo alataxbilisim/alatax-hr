@@ -438,7 +438,7 @@ class ReportQueryBuilder
         match ($mode) {
             'employee' => $this->dataScope->scopeForEmployee($query, $user),
             'user' => $this->dataScope->scopeForUser($query, $user, 'user_id'),
-            'assigned_to' => ($scope === DataScopeLevel::Company || $scope === DataScopeLevel::Group)
+            'assigned_to' => $scope === DataScopeLevel::Company
                 ? $query
                 : $this->dataScope->scopeForUser($query, $user, 'assigned_to'),
             default => $query,

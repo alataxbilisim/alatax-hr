@@ -58,7 +58,7 @@ class ExpenseClaimPolicy
     {
         $scope = $this->dataScope->resolve($user);
 
-        if ($scope === DataScopeLevel::Company || $scope === DataScopeLevel::Group) {
+        if ($scope === DataScopeLevel::Company) {
             return true;
         }
 

@@ -52,3 +52,16 @@ Bu kural feature testi ile sabitlenir.
 | KVKK | her zaman tek aktif şirket; group yok |
 | Cache imzası | `{report_scope, sıralı company_ids, …}` |
 | Portal | tek personel kaydı / home kuralı (Tur5–6); group yok |
+
+---
+
+## (c) DataScopeLevel::Group — ara durum kapatıldı (B)
+
+| Seçenek | Sonuç |
+|---------|--------|
+| (A) CHECK’e `group` ekle + rol `data_scope=group` | Reddedildi |
+| **(B) `DataScopeLevel::Group` koddan çıkar** | **Seçilen** |
+
+**Gerekçe:** Grup rapor kapsamı zaten `reports.scope.group` + `ReportQueryBuilder` `scope=group` ile yönetiliyor. İkinci bir `roles.data_scope=group` yolu, Faz 6’da 14 modül gelirken “hangisi geçerli?” belirsizliği yaratır. CHECK’e yazılmayan ama enum’da duran Group değeri testlerde config default ile sahte yeşil üretiyordu — gerçek DB yolu sınanmıyordu.
+
+**Sonuç:** Satır düzeyi DataScope = own…company. Çok şirket = yalnız rapor/pano izin + scope parametresi.

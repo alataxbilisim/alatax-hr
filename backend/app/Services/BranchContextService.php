@@ -54,7 +54,7 @@ class BranchContextService
 
         $scope = $this->dataScope->resolve($user);
         $locked = $this->lockedBranchId($user, $scope);
-        $canSelectAll = $scope === DataScopeLevel::Company || $scope === DataScopeLevel::Group;
+        $canSelectAll = $scope === DataScopeLevel::Company;
 
         // branch scope: yalnız kendi şubesi (DataScope tavanı)
         if ($scope === DataScopeLevel::Branch && $locked !== null) {
@@ -130,7 +130,7 @@ class BranchContextService
             return BranchContext::locked($locked);
         }
 
-        $canSelectAll = $scope === DataScopeLevel::Company || $scope === DataScopeLevel::Group;
+        $canSelectAll = $scope === DataScopeLevel::Company;
 
         if ($raw === null || $raw === '' || strtolower($raw) === self::ALL) {
             return $canSelectAll
