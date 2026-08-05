@@ -153,21 +153,29 @@ class CompanyContextService
     }
 
     /**
-     * Portal operasyonel şirket: home / personel kaydı — last_company_id yok sayılır.
+     * Portal operasyonel şirket — last_company_id / X-Company-Id yok sayılır.
+     * Öncelik: home ile eşleşen aktif personel → yoksa auth kullanıcısının aktif personeli → home membership → fallback.
      */
     public function resolvePortalCompanyId(User $user): ?int
     {
+        $empQ = \App\Models\Employee::withoutGlobalScopes()
+            ->where('user_id', $user->id)
+            ->where('status', 'active');
+
         if ($user->company_id !== null && $this->hasMembership($user, (int) $user->company_id)) {
-            return (int) $user->company_id;
+            $homeEmpCompany = (clone $empQ)->where('company_id', $user->company_id)->value('company_id');
+            if ($homeEmpCompany !== null) {
+                return (int) $homeEmpCompany;
+            }
         }
 
-        $empCompanyId = \App\Models\Employee::withoutGlobalScopes()
-            ->where('user_id', $user->id)
-            ->where('status', 'active')
-            ->orderByDesc('id')
-            ->value('company_id');
+        $empCompanyId = (clone $empQ)->orderByDesc('id')->value('company_id');
         if ($empCompanyId !== null && $this->hasMembership($user, (int) $empCompanyId)) {
             return (int) $empCompanyId;
+        }
+
+        if ($user->company_id !== null && $this->hasMembership($user, (int) $user->company_id)) {
+            return (int) $user->company_id;
         }
 
         return $this->resolveFallbackCompanyId($user, ignoreLastCompany: true);

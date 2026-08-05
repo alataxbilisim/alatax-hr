@@ -46,6 +46,10 @@ Aşağıdaki bölümler kronolojik: firma kurulumu → çalışan yaşam döngü
 
 > **Kilit fikir:** Firma kod yazmadan, tamamen Ayarlar Stüdyosu'ndan kendine göre şekillenir. Akış mekanizması sabit, içerik firmaya özel.
 
+**Şirket bağlamı (CompanyContext):**
+- **Portal yolu:** bağlam = home / personelin kendi şirketi. `X-Company-Id` ve `last_company_id` yok sayılır; portal `last_company_id` yazmaz.
+- **Panel/operasyonel yol:** bağlam = `CompanyContext` (`getCompanyId()` / `X-Company-Id` + membership). Yeni kod `$user->company_id` okumaz; istisnalar `BelongsToCompany:59`, `ApprovalWorkflowPolicy:54`, `BranchContextService:38` ve `*/Portal/*` ile sınırlıdır.
+
 ---
 
 ## AŞAMA 2 — İŞE ALIM (Çalışan henüz "aday")

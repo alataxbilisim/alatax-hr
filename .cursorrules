@@ -19,6 +19,8 @@ ALATAX HR: Türkiye odaklı, multi-tenant B2B HR SaaS. Backend: Laravel 12 REST 
 
 - **Katmanlar:** Controller ince kalır (yetki + istek + response). Validasyon her zaman FormRequest sınıfında. İş mantığı `app/Services/` altında. Response her zaman `ApiResponse` trait metodlarıyla döner (başka format yasak).
 - **Multi-tenancy:** Firma verisi tutan HER yeni model `BelongsToCompany` trait'ini kullanır ve migration'ında `company_id` FK + indeks bulunur. `company_id` ASLA client input'undan alınmaz; her zaman auth kullanıcısından türetilir.
+- **Portal yolu:** bağlam = home / personelin kendi şirketi. `X-Company-Id` ve `last_company_id` yok sayılır; portal `last_company_id` yazmaz.
+- **Panel/operasyonel yol:** bağlam = `CompanyContext` (`getCompanyId()`). Yeni kod `$user->company_id` okumaz; istisnalar `BelongsToCompany:59`, `ApprovalWorkflowPolicy:54`, `BranchContextService:38` ve `*/Portal/*` ile sınırlıdır.
 - **Yetki:** Her yeni route bir `permission:{module}.{page}.{action}` middleware'i (veya Policy) ile korunur VE ilgili izin `PermissionSeeder`'a eklenir. Korumasız route yazılmaz; public ise açıkça `// public: <neden>` yorumu konur.
 - **Audit:** Veri tutan yeni modeller `Auditable` trait'ine kaydedilir (Faz 2 sonrası mevcut).
 - **Migration:** Baseline migration'lar ASLA düzenlenmez; her şema değişikliği yeni migration dosyasıdır. Enum yerine string kolon + PHP backed enum cast + CHECK constraint. JSON veriler `jsonb` kolon tipiyle. softDeletes + timestamps varsayılandır (log tabloları hariç).

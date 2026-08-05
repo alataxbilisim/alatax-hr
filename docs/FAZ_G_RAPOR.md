@@ -10,6 +10,8 @@
 
 Hibrit model (SEÇENEK 1): operasyonel ekranlarda tek aktif şirket; `BelongsToCompany` hâlâ `= tek company_id`. Kaynak artık `CompanyContext` (X-Company-Id + membership). Portal dokunulmadı (seçici yok; header yok sayılır).
 
+**G1 boşlukları (Tur2–Tur5’te kapatıldı):** G1 ilk dalgasında `DashboardController` ve KVKK / PDKS / Settings / Dataset dosyaları home `company_id` okumaya devam ediyordu; Tur2 (dashboard), Tur3 (KVKK+PDKS), Tur4 (Settings+4 dataset), Tur5 (SettingsWriter + dataset registry izolasyon + portal punch güvenlik) ile CompanyContext’e alındı. Rapor/pano grup kapsamı hâlâ **G2**.
+
 ---
 
 ## Şema

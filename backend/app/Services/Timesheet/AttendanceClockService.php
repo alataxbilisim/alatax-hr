@@ -49,7 +49,8 @@ class AttendanceClockService
     }
 
     /**
-     * Aktif personel kaydının şirketi (global scope dışı).
+     * Auth kullanıcısının aktif personel şirketini çözer (istekten id okunmaz; scope bypass yalnız user_id=auth).
+     * Öncelik: home ile eşleşen personel → yoksa auth kullanıcısının herhangi aktif personeli.
      */
     protected function resolveEmployeeCompanyId(User $user): ?int
     {

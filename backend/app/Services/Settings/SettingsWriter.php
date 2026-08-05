@@ -7,6 +7,7 @@ use App\Enums\UserType;
 use App\Models\Company;
 use App\Models\SettingValue;
 use App\Models\User;
+use App\Services\CompanyContextService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -52,9 +53,7 @@ class SettingsWriter
             ]);
         }
 
-        if ($companyId && (int) $actor->company_id !== $companyId && $actor->type !== UserType::SuperAdmin) {
-            abort(403, 'Başka firmanın ayarlarına erişilemez.');
-        }
+        $this->assertCanAccessCompany($actor, $companyId);
 
         $scopeId = $scopeType === SettingScopeType::Company || $scopeType === SettingScopeType::System
             ? null
@@ -117,9 +116,7 @@ class SettingsWriter
             ? null
             : (isset($scope['scope_id']) ? (int) $scope['scope_id'] : null);
 
-        if ($companyId && (int) $actor->company_id !== $companyId && $actor->type !== UserType::SuperAdmin) {
-            abort(403, 'Başka firmanın ayarlarına erişilemez.');
-        }
+        $this->assertCanAccessCompany($actor, $companyId);
 
         $q = SettingValue::query()
             ->where('key', $key)
@@ -151,9 +148,7 @@ class SettingsWriter
      */
     public function exportProfile(User $actor, int $companyId): array
     {
-        if ((int) $actor->company_id !== $companyId && $actor->type !== UserType::SuperAdmin) {
-            abort(403);
-        }
+        $this->assertCanAccessCompany($actor, $companyId);
 
         $rows = SettingValue::query()
             ->where('company_id', $companyId)
@@ -190,9 +185,7 @@ class SettingsWriter
      */
     public function importProfile(User $actor, int $companyId, array $values): array
     {
-        if ((int) $actor->company_id !== $companyId && $actor->type !== UserType::SuperAdmin) {
-            abort(403);
-        }
+        $this->assertCanAccessCompany($actor, $companyId);
 
         $written = [];
         foreach ($values as $item) {
@@ -267,5 +260,23 @@ class SettingsWriter
         }
 
         return $casted;
+    }
+
+    /**
+     * Home veya membership ile erişilebilir şirket — aktif bağlam yazmayı engellemez.
+     */
+    private function assertCanAccessCompany(User $actor, ?int $companyId): void
+    {
+        if ($companyId === null || $actor->type === UserType::SuperAdmin) {
+            return;
+        }
+
+        if ((int) $actor->company_id === $companyId) {
+            return;
+        }
+
+        if (! app(CompanyContextService::class)->hasMembership($actor, $companyId)) {
+            abort(403, 'Başka firmanın ayarlarına erişilemez.');
+        }
     }
 }

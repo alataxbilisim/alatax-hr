@@ -36,12 +36,12 @@
 
 | Katman | Durum |
 |--------|--------|
-| Test | **633 passed** (QA-3; `alatax_hr_testing`) |
+| Test | **690 passed** (Tur5; Docker `alatax_hr_testing`) |
 | Faz 0–3 | ✅ |
 | Faz 4 | 🔶 Lookup/Workflow/Bildirim/Ayar; Form Engine 4A + W2 iade açık |
 | Faz 5 | ✅ Rapor motoru (11 dataset) |
 | FAZ A/B + KVKK D2a–c çekirdek | ✅ |
-| Faz G | ☐ Grup/Holding — **modüllerden önce** |
+| Faz G | G1 ✅ (CompanyContext) · G2 ☐ grup rapor kapsamı |
 | Faz 6 → 7 → 8 | ☐ |
 
 ---
@@ -73,7 +73,8 @@
 | Sıra | Faz | Durum |
 |------|-----|--------|
 | — | Faz 0–5 (+A/B/KVKK çekirdek) | ✅ / 🔶4 |
-| **G1** | **Faz G — Grup/Holding** (SEÇENEK 1) | ☐ önce |
+| **G1** | **Faz G — Grup/Holding** (SEÇENEK 1) | ✅ (Tur2–Tur5) |
+| **G2** | Grup rapor/pano kapsamı | ☐ |
 | **6** | Modül derinleştirme (W2 iade başta → 14 modül) | ☐ |
 | **7** | On-prem installer + imzalı lisans + yedekleme + izleme | ☐ canlıdan önce |
 | **8** | Yardım motoru (D4b) + mobil/AI/entegrasyon ufku | ☐ en sonda |
@@ -95,17 +96,17 @@
 
 | Borç | Sahip |
 |------|--------|
-| DemoSeeder ↔ DemoDataSeeder çakışması | QA-4 |
-| Retention seed `active=true` (D2c ihlali) | QA-4 |
 | Onaylı izin → puantaj wire | Faz 6 B3 |
 | İade (`returned`) akışı | Faz 6 W2 |
 | E-posta doğrulama (Mailtrap E2E) | Faz 0 kalıntı |
 | Bundle &lt;1MB | FE borç |
 | i18n EN + dil switcher | Backlog / Faz 8 |
-| Görsel kontroller (QA kalanları) | `QA_RAPOR.md` son liste |
+| Görsel kontroller (QA kalanları; elle) | `QA_RAPOR.md` / Tur3 C0 |
 | Form Engine 4A tam geçiş | Faz 4 |
 | Saklama politikaları job’ları | KVKK |
 | Cascading picklist | Faz 4 sonu |
+| **L2** — Select ellipsis / title (UI) | FE borç |
+| G2 — grup rapor/pano kapsamı | Faz G |
 
 ---
 
