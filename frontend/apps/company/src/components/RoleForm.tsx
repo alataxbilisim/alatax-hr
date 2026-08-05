@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Modal } from './ui';
 import { rolesApi } from '@shared/services/api';
+import { useTranslation } from '@shared/i18n';
 import toast from 'react-hot-toast';
 import { BsChevronDown, BsChevronRight, BsCheckAll, BsXCircle } from 'react-icons/bs';
 import {
@@ -21,6 +22,7 @@ interface Role {
   id?: number;
   name: string;
   permissions: string[];
+  panel_access: boolean;
 }
 
 interface RoleFormProps {
@@ -30,6 +32,7 @@ interface RoleFormProps {
   role?: {
     id?: number;
     name?: string;
+    panel_access?: boolean;
     permissions?: Array<string | { id: number; name: string }>;
   };
 }
@@ -55,12 +58,14 @@ const RoleForm: React.FC<RoleFormProps> = ({
   onSuccess,
   role,
 }) => {
+  const { t } = useTranslation('common');
   const isEditing = !!role?.id;
   const [loading, setLoading] = useState(false);
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [formData, setFormData] = useState<Role>({
     name: '',
     permissions: [],
+    panel_access: true,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
@@ -75,6 +80,7 @@ const RoleForm: React.FC<RoleFormProps> = ({
         setFormData({
           name: role.name || '',
           permissions: permNames,
+          panel_access: role.panel_access !== false,
         });
         // Seçili modülleri otomatik aç
         const selectedModules = new Set<string>();
@@ -89,6 +95,7 @@ const RoleForm: React.FC<RoleFormProps> = ({
         setFormData({
           name: '',
           permissions: [],
+          panel_access: true,
         });
         setExpandedModules(new Set());
       }
@@ -246,6 +253,7 @@ const RoleForm: React.FC<RoleFormProps> = ({
       const payload = {
         name: formData.name,
         permissions: formData.permissions,
+        panel_access: formData.panel_access,
       };
 
       if (isEditing && role?.id) {
@@ -315,6 +323,22 @@ const RoleForm: React.FC<RoleFormProps> = ({
             style={{ maxWidth: 400 }}
           />
           {errors.name && <div className="form-error">{errors.name}</div>}
+        </div>
+
+        <div className="form-group" style={{ marginBottom: 'var(--form-field-gap)' }}>
+          <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
+            <input
+              type="checkbox"
+              checked={formData.panel_access}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, panel_access: e.target.checked }))
+              }
+            />
+            {t('roles.panelAccess')}
+          </label>
+          <p className="form-hint" style={{ marginTop: 'var(--sp-1)', color: 'var(--text-secondary)' }}>
+            {t('roles.panelAccessHint')}
+          </p>
         </div>
 
         {/* Permissions Header */}

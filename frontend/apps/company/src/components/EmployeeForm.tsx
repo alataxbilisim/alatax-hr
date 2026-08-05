@@ -402,13 +402,8 @@ const EmployeeForm: React.FC = () => {
                       return byName?.code || current;
                     })()}
                     onChange={(v) => {
-                      if (!v) {
-                        handleChange('position', undefined);
-                        return;
-                      }
-                      const match = positions.find((p) => p.code === v);
-                      // DB alanı serbest metin: görünen ad (kod değil)
-                      handleChange('position', match?.name || v);
+                      // Tur8: kimlik = code (aynı adlı pozisyonlar ayırt edilir)
+                      handleChange('position', v || undefined);
                     }}
                     options={(() => {
                       // value = benzersiz kod — aynı adlı iki pozisyon birleşmesin

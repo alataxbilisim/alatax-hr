@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Position;
 use App\Services\EmployeeSensitiveFieldService;
 use App\Services\LookupService;
 use Illuminate\Http\Request;
@@ -35,7 +36,9 @@ class EmployeeResource extends JsonResource
             'full_name' => $this->full_name,
             'name' => $this->display_name,
             'title' => $this->title,
+            // position = katalog kodu (veya legacy serbest metin); görünen ad position_label
             'position' => $this->position,
+            'position_label' => $this->resolvePositionLabel(),
             'manager_id' => $this->manager_id,
             'birth_date' => $this->birth_date,
             'gender' => $this->gender,
@@ -97,5 +100,28 @@ class EmployeeResource extends JsonResource
         }
 
         return $data;
+    }
+
+    private function resolvePositionLabel(): ?string
+    {
+        $raw = is_string($this->position) ? trim($this->position) : '';
+        if ($raw === '') {
+            return null;
+        }
+
+        $pos = Position::query()
+            ->where('company_id', $this->company_id)
+            ->where(function ($q) use ($raw) {
+                $q->where('code', $raw)->orWhere('name', $raw);
+            })
+            ->first();
+
+        if ($pos === null) {
+            return $raw;
+        }
+
+        return $pos->code === $raw
+            ? $pos->name
+            : $pos->name;
     }
 }

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import GridLayout, { type Layout, type LayoutItem } from 'react-grid-layout/legacy';
 import 'react-grid-layout/css/styles.css';
 import { useTranslation } from '@shared/i18n';
@@ -101,6 +101,7 @@ function parseChartType(value: string | undefined): ReportChartType {
 
 const DashboardViewPage: React.FC = () => {
   const { t, i18n } = useTranslation('common');
+  const navigate = useNavigate();
   const { id: idParam } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const { canEdit, canCreate } = usePermission();
@@ -108,9 +109,12 @@ const DashboardViewPage: React.FC = () => {
   const canCreateW = canCreate('reports', 'dashboards');
 
   const dashboardId = Number(idParam);
-  const editMode = searchParams.get('edit') === '1' && canEditD;
 
   const [dashboard, setDashboard] = useState<DashboardPayload | null>(null);
+  // Tur8: sistem panosu salt okunur
+  const canEditThis = canEditD && !dashboard?.is_system;
+  const editMode = searchParams.get('edit') === '1' && canEditThis;
+  const [cloning, setCloning] = useState(false);
   const [widgets, setWidgets] = useState<DashboardWidgetDef[]>([]);
   const [run, setRun] = useState<DashboardRunResult | null>(null);
   const [loading, setLoading] = useState(true);
@@ -301,7 +305,7 @@ const DashboardViewPage: React.FC = () => {
   };
 
   const saveLayout = async () => {
-    if (!dashboard || !canEditD) return;
+    if (!dashboard || !canEditThis) return;
     try {
       // Infinity/NaN JSON'da null olur — grid y değerlerini sayısallaştır
       const safeWidgets = widgets.map((w) => {
@@ -339,7 +343,7 @@ const DashboardViewPage: React.FC = () => {
   };
 
   const addWidget = async () => {
-    if (!dashboard || !canCreateW) return;
+    if (!dashboard || !canCreateW || !canEditThis) return;
     const type = parseWidgetType(newType);
     const reportId = newReportId ? Number(newReportId) : null;
     if (type !== 'text' && (!reportId || !Number.isFinite(reportId))) {
@@ -383,8 +387,27 @@ const DashboardViewPage: React.FC = () => {
     }
   };
 
+  const cloneSystemDashboard = async () => {
+    if (!dashboard?.is_system || !canCreateW) return;
+    try {
+      setCloning(true);
+      const res = await dashboardsApi.clone(dashboard.id, {
+        name: `${dashboard.name} (${t('dashboards.cloneSuffix')})`,
+      });
+      const data = res.data.data;
+      if (isDashboardPayload(data)) {
+        toast.success(t('dashboards.cloneSuccess'));
+        navigate(`/dashboards/${data.id}?edit=1`);
+      }
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, t('dashboards.cloneError')));
+    } finally {
+      setCloning(false);
+    }
+  };
+
   const removeWidget = async (widgetId: string) => {
-    if (!dashboard || !canEditD) return;
+    if (!dashboard || !canEditThis) return;
     const next = widgets.filter((w) => w.id !== widgetId);
     try {
       const res = await dashboardsApi.update(dashboard.id, { layout: { widgets: next } });
@@ -400,7 +423,7 @@ const DashboardViewPage: React.FC = () => {
   };
 
   const toggleIgnoreCross = async (widgetId: string) => {
-    if (!dashboard || !canEditD) return;
+    if (!dashboard || !canEditThis) return;
     const next = widgets.map((w) =>
       w.id === widgetId ? { ...w, ignore_cross_filter: !w.ignore_cross_filter } : w
     );
@@ -549,12 +572,25 @@ const DashboardViewPage: React.FC = () => {
           </Link>
           <h1 className="page-title">{dashboard.name}</h1>
           {dashboard.description ? <p className="page-subtitle">{dashboard.description}</p> : null}
+          {dashboard.is_system ? (
+            <p className="page-subtitle">{t('dashboards.systemReadonlyHint')}</p>
+          ) : null}
         </div>
         <div style={{ display: 'flex', gap: 'var(--sp-2)', flexWrap: 'wrap' }}>
           <button type="button" className="btn btn-secondary" onClick={() => void runBatch()} disabled={running}>
             {t('dashboards.refresh')}
           </button>
-          {canEditD ? (
+          {dashboard.is_system && canCreateW ? (
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={cloning}
+              onClick={() => void cloneSystemDashboard()}
+            >
+              {t('dashboards.cloneToCustomize')}
+            </button>
+          ) : null}
+          {canEditThis ? (
             <>
               <button
                 type="button"

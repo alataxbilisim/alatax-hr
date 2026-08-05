@@ -417,27 +417,31 @@ export const PORTAL_SELF_PERMISSIONS: readonly string[] = [
 export type PanelAccessUser = {
   type?: string | null;
   permissions?: string[] | null;
-  roles?: Array<string | { name: string }> | null;
+  roles?: Array<string | { name: string; panel_access?: boolean }> | null;
+  /** Auth API PanelAccess::has — tek doğruluk kaynağı (Tur8) */
+  panel_access?: boolean | null;
 };
 
 /**
- * Company panel erişimi var mı? (izin tabanlı; type=user tek başına yetmez)
+ * Company panel erişimi var mı?
+ * Tercih: user.panel_access (backend). Fallback: type / rol.panel_access / izin.
  */
 export function hasPanelAccess(user: PanelAccessUser | null | undefined): boolean {
   if (!user) return false;
+
+  if (typeof user.panel_access === 'boolean') {
+    return user.panel_access;
+  }
 
   if (user.type === 'super_admin' || user.type === 'company_admin') {
     return true;
   }
 
   const roles = user.roles ?? [];
-  const roleNames = roles.map((r) => (typeof r === 'string' ? r : r.name));
-  if (roleNames.includes('admin')) {
-    return true;
-  }
-  // employee dışı herhangi bir rol = panel (dar yetkili custom roller dahil)
-  if (roleNames.some((r) => r !== 'employee')) {
-    return true;
+  for (const r of roles) {
+    if (typeof r === 'object' && r !== null && typeof r.panel_access === 'boolean') {
+      if (r.panel_access) return true;
+    }
   }
 
   const permissions = user.permissions ?? [];

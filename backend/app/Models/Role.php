@@ -15,4 +15,8 @@ class Role extends SpatieRole
 
     /** @var list<string> */
     protected array $auditMasked = [];
+
+    protected $casts = [
+        'panel_access' => 'boolean',
+    ];
 }

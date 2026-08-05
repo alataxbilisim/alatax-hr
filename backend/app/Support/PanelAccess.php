@@ -7,20 +7,15 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * Company panel erişimi — izin + rol tabanlı türetim (ayrı bayrak yok).
+ * Company panel erişimi — roles.panel_access + type (Tur8).
  *
- * Portal-only: yalnızca Spatie `employee` rolü (self-servis izin seti).
- * Panel: company_admin / super_admin / admin rolü VEYA `employee` dışı herhangi bir rol
+ * Portal-only: panel_access=false roller (varsayılan: employee) ve portal-self dışı
+ * doğrudan izin yok.
+ * Panel: company_admin / super_admin VEYA en az bir panel_access=true rol
  *         VEYA portal-self dışı doğrudan atanmış izin.
- *
- * Tur7: dar yetkili custom rol (ör. yalnız employees.list.view) panel sayılır —
- * aksi halde /users listesinden kaybolur ve panele giremez.
  */
 final class PanelAccess
 {
-    /** Portal self-servis rol adı (PermissionSeeder). */
-    public const PORTAL_ROLE = 'employee';
-
     /**
      * Sıradan personelin portal self-servis izinleri (PermissionSeeder employee).
      * Doğrudan (rol dışı) atamada hâlâ portal-only sınırı için kullanılır.
@@ -50,17 +45,10 @@ final class PanelAccess
             return true;
         }
 
-        if ($user->hasRole('admin')) {
+        if ($user->roles()->where('panel_access', true)->exists()) {
             return true;
         }
 
-        foreach ($user->getRoleNames() as $roleName) {
-            if ((string) $roleName !== self::PORTAL_ROLE) {
-                return true;
-            }
-        }
-
-        // Rol yok / yalnız employee — doğrudan atanmış panel izni
         foreach ($user->getDirectPermissions()->pluck('name') as $name) {
             if (! in_array((string) $name, self::PORTAL_SELF_PERMISSIONS, true)) {
                 return true;
@@ -71,23 +59,20 @@ final class PanelAccess
     }
 
     /**
-     * Panel erişimli kullanıcıları filtrele (pagination uyumlu).
-     *
      * @param  Builder<\App\Models\User>  $query
      * @return Builder<\App\Models\User>
      */
     public static function constrainUsersQuery(Builder $query): Builder
     {
         $portalOnly = self::PORTAL_SELF_PERMISSIONS;
-        $portalRole = self::PORTAL_ROLE;
 
-        return $query->where(function (Builder $q) use ($portalOnly, $portalRole): void {
+        return $query->where(function (Builder $q) use ($portalOnly): void {
             $q->whereIn('type', [
                 UserType::CompanyAdmin->value,
                 UserType::SuperAdmin->value,
             ])
-                ->orWhereHas('roles', function (Builder $rq) use ($portalRole): void {
-                    $rq->where('name', '!=', $portalRole);
+                ->orWhereHas('roles', function (Builder $rq): void {
+                    $rq->where('panel_access', true);
                 })
                 ->orWhereHas('permissions', function (Builder $pq) use ($portalOnly): void {
                     $pq->whereNotIn('name', $portalOnly);
@@ -96,16 +81,12 @@ final class PanelAccess
     }
 
     /**
-     * Portal erişimi olan ama panel erişimi olmayan kullanıcılar
-     * (personel kaydı + PanelAccess::has === false).
-     *
      * @param  Builder<\App\Models\User>  $query
      * @return Builder<\App\Models\User>
      */
     public static function constrainPortalOnlyQuery(Builder $query): Builder
     {
         $portalOnly = self::PORTAL_SELF_PERMISSIONS;
-        $portalRole = self::PORTAL_ROLE;
 
         return $query
             ->whereHas('employee')
@@ -113,8 +94,8 @@ final class PanelAccess
                 UserType::CompanyAdmin->value,
                 UserType::SuperAdmin->value,
             ])
-            ->whereDoesntHave('roles', function (Builder $rq) use ($portalRole): void {
-                $rq->where('name', '!=', $portalRole);
+            ->whereDoesntHave('roles', function (Builder $rq): void {
+                $rq->where('panel_access', true);
             })
             ->whereDoesntHave('permissions', function (Builder $pq) use ($portalOnly): void {
                 $pq->whereNotIn('name', $portalOnly);
@@ -122,8 +103,6 @@ final class PanelAccess
     }
 
     /**
-     * Personelden panele yükseltmede atanabilir varsayılan roller.
-     *
      * @var list<string>
      */
     public const GRANTABLE_PANEL_ROLES = [

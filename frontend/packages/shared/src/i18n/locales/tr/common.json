@@ -592,6 +592,10 @@
     "title": "Özel Alanlar",
     "empty": "Bu personel için tanımlanmış özel alan yok"
   },
+  "roles": {
+    "panelAccess": "Company panele erişim",
+    "panelAccessHint": "Açıkken bu role sahip kullanıcılar /users listesinde görünür ve panele giriş yapabilir. Kapalıysa yalnız portal (self-servis)."
+  },
   "users": {
     "panelBadge": "Panel",
     "panelGrantTitle": "Personele Panel Erişimi Ver",
@@ -1447,6 +1451,11 @@
     "save": "Kaydet",
     "saveSuccess": "Pano kaydedildi",
     "saveError": "Kayıt başarısız",
+    "systemReadonlyHint": "Sistem panosu — düzenlemek için kopyalayarak özelleştirin.",
+    "cloneToCustomize": "Kopyala ve özelleştir",
+    "cloneSuffix": "kopya",
+    "cloneSuccess": "Pano kopyalandı",
+    "cloneError": "Kopyalama başarısız",
     "addWidget": "Widget ekle",
     "widgetTitle": "Başlık",
     "widgetType": "Tip",

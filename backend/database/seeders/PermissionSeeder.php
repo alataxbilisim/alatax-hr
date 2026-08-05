@@ -452,6 +452,11 @@ class PermissionSeeder extends Seeder
 
                 $role->syncPermissions($validPermissions);
 
+                // Tur8 — panel erişimi bayrağı (employee = portal-only)
+                $role->forceFill([
+                    'panel_access' => $roleName !== 'employee',
+                ])->save();
+
                 if ($roleName === 'admin' && $role->data_scope === null) {
                     $role->forceFill(['data_scope' => 'company'])->save();
                 }

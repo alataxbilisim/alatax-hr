@@ -248,13 +248,14 @@ class PanelAccessControlTest extends TestCase
     }
 
     /**
-     * Tur7 — dar yetkili custom rol (yalnız employees.list.view) panel sayılır;
-     * portal-only (employee rolü) listede görünmez kalır.
+     * Tur7/8 — dar yetkili custom rol panel_access=true → listede + login.
+     * portal-only (employee) listede görünmez kalır.
      */
     public function test_limited_custom_role_stays_in_users_list_and_can_login(): void
     {
         $perm = \Spatie\Permission\Models\Permission::findOrCreate('employees.list.view', 'sanctum');
         $role = Role::findOrCreate('test_limited', 'sanctum');
+        $role->forceFill(['panel_access' => true])->save();
         $role->syncPermissions([$perm]);
 
         $limited = User::factory()->create([
@@ -292,5 +293,52 @@ class PanelAccessControlTest extends TestCase
 
         Sanctum::actingAs($limited->fresh());
         $this->getJson('/api/v1/roles')->assertForbidden();
+    }
+
+    /**
+     * Tur8 — adı employee olmayan ama panel_access=false + yalnız portal-self izinler
+     * → panel yok, /users'da yok (rol adına güvenilmez).
+     */
+    public function test_portal_like_named_role_without_panel_access_flag_is_portal_only(): void
+    {
+        $perm = \Spatie\Permission\Models\Permission::findOrCreate('employees.list.view', 'sanctum');
+        $role = Role::create([
+            'name' => 'Otel Personeli',
+            'guard_name' => 'sanctum',
+            'panel_access' => false,
+        ]);
+        $role->syncPermissions([$perm]);
+
+        $user = User::factory()->create([
+            'company_id' => $this->company->id,
+            'type' => UserType::User,
+            'is_active' => true,
+            'email' => 'otel.personel@test.local',
+            'password' => 'Password123!',
+        ]);
+        $user->assignRole($role);
+        Employee::factory()->forUser($user)->create(['status' => 'active']);
+
+        $this->assertFalse(PanelAccess::has($user->fresh()));
+
+        $admin = User::factory()->create([
+            'company_id' => $this->company->id,
+            'type' => UserType::CompanyAdmin,
+            'is_active' => true,
+        ]);
+        $this->assignSpatieAdminRole($admin);
+        Sanctum::actingAs($admin->fresh());
+
+        $list = $this->getJson('/api/v1/users?per_page=50')->assertOk();
+        $ids = collect($list->json('data.data') ?? $list->json('data'))->pluck('id');
+        $this->assertFalse($ids->contains($user->id));
+
+        auth()->forgetGuards();
+        $this->postJson('/api/v1/auth/login', [
+            'email' => 'otel.personel@test.local',
+            'password' => 'Password123!',
+        ])
+            ->assertStatus(403)
+            ->assertJsonPath('errors.code', 'panel_access_denied');
     }
 }

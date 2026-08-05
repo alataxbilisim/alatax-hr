@@ -797,6 +797,7 @@ class AuthController extends BaseController
             'permissions' => $light ? [] : $this->cachedPermissionNames($user),
             'permissions_version' => $light ? null : $this->permissionsVersion($user),
             'roles' => $user->getRoleNames(),
+            'panel_access' => \App\Support\PanelAccess::has($user),
         ];
 
         // Aktif / son şirket (G1) — FE şirket seçici ve giriş bağlamı

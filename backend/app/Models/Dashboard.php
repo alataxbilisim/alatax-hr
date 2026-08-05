@@ -121,8 +121,8 @@ class Dashboard extends Model
 
     public function canEdit(User $user): bool
     {
-        // Global (tenant-dışı) sistem panosu düzenlenemez
-        if ($this->is_system && $this->company_id === null) {
+        // Tur8: sistem panosu (global veya firma) salt okunur — özelleştirme = clone
+        if ($this->is_system) {
             return false;
         }
 

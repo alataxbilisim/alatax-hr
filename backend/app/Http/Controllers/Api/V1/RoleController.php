@@ -30,6 +30,7 @@ class RoleController extends BaseController
                     'id' => $role->id,
                     'name' => $role->name,
                     'guard_name' => $role->guard_name,
+                    'panel_access' => (bool) $role->panel_access,
                     'permissions' => $role->permissions->map(function ($perm) {
                         return [
                             'id' => $perm->id,
@@ -63,6 +64,7 @@ class RoleController extends BaseController
             'id' => $role->id,
             'name' => $role->name,
             'guard_name' => $role->guard_name,
+            'panel_access' => (bool) $role->panel_access,
             'permissions' => $role->permissions->map(function ($perm) {
                 return [
                     'id' => $perm->id,
@@ -83,11 +85,13 @@ class RoleController extends BaseController
             'name' => 'required|string|max:50|unique:roles,name',
             'permissions' => 'required|array|min:1',
             'permissions.*' => 'string|exists:permissions,name',
+            'panel_access' => 'sometimes|boolean',
         ]);
 
         $role = Role::create([
             'name' => $validated['name'],
             'guard_name' => 'sanctum',
+            'panel_access' => $validated['panel_access'] ?? true,
         ]);
 
         // Pivot — observer yakalamaz; özel izin logu
@@ -105,6 +109,7 @@ class RoleController extends BaseController
             'id' => $role->id,
             'name' => $role->name,
             'guard_name' => $role->guard_name,
+            'panel_access' => (bool) $role->panel_access,
             'permissions' => $role->permissions->map(function ($perm) {
                 return [
                     'id' => $perm->id,
@@ -120,23 +125,31 @@ class RoleController extends BaseController
      */
     public function update(Request $request, Role $role): JsonResponse
     {
-        // Varsayılan rolleri düzenleyemez
+        // Varsayılan rolleri ad/izin düzenlenemez — panel_access istisna (Tur8)
         $protectedRoles = ['admin', 'hr_manager', 'hr_specialist', 'manager', 'employee'];
-        if (in_array($role->name, $protectedRoles)) {
-            return $this->error('Varsayılan roller düzenlenemez', 403);
-        }
+        $isProtected = in_array($role->name, $protectedRoles, true);
 
         $validated = $request->validate([
             'name' => 'sometimes|string|max:50|unique:roles,name,'.$role->id,
             'permissions' => 'sometimes|array|min:1',
             'permissions.*' => 'string|exists:permissions,name',
+            'panel_access' => 'sometimes|boolean',
         ]);
 
-        if (isset($validated['name'])) {
+        if ($isProtected && (isset($validated['name']) || isset($validated['permissions']))) {
+            return $this->error('Varsayılan roller düzenlenemez', 403);
+        }
+
+        if (! $isProtected && isset($validated['name'])) {
             $role->update(['name' => $validated['name']]);
         }
 
-        if (isset($validated['permissions'])) {
+        if (array_key_exists('panel_access', $validated)) {
+            $role->forceFill(['panel_access' => (bool) $validated['panel_access']])->save();
+            UserPermissionCache::forgetForRole($role);
+        }
+
+        if (! $isProtected && isset($validated['permissions'])) {
             $oldPermissions = $role->permissions->pluck('name')->sort()->values()->all();
             $role->syncPermissions($validated['permissions']);
             UserPermissionCache::forgetForRole($role);
@@ -153,10 +166,13 @@ class RoleController extends BaseController
             }
         }
 
+        $role->refresh();
+
         return $this->success([
             'id' => $role->id,
             'name' => $role->name,
             'guard_name' => $role->guard_name,
+            'panel_access' => (bool) $role->panel_access,
             'permissions' => $role->permissions->map(function ($perm) {
                 return [
                     'id' => $perm->id,

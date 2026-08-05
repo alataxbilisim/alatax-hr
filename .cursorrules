@@ -28,6 +28,7 @@ ALATAX HR: Türkiye odaklı, multi-tenant B2B HR SaaS. Backend: Laravel 12 REST 
 - **Dosyalar:** Upload'lar Storage disk soyutlaması üzerinden; path'ler DB'de göreli tutulur.
 - **Kuyruk:** E-posta/SMS/export gibi yavaş işler her zaman queued job/Mailable.
 - **Gizlilik:** Secrets, API key, şifre asla koda/loga yazılmaz. Hassas alanlar (maaş, TCKN) API Resource'ta alan izni kontrolüyle döner.
+- **Personel adı:** Tek doğruluk kaynağı `employees.full_name`. API Resource `name` = display alias (`full_name` veya fallback); UI/yazma `full_name`/`name` payload'ı bu kolona gider. `users.name` yalnız bağlı hesap etiketi — personel adının kaynağı değildir (portal sync ayrı).
 
 ## Veritabanı Kuralları
 
