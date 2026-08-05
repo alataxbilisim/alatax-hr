@@ -52,6 +52,7 @@ class Employee extends Model
         'full_name',
         'title',
         'position',
+        'position_id',
         'manager_id',
         'birth_date',
         'national_id',
@@ -122,6 +123,14 @@ class Employee extends Model
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);
+    }
+
+    /**
+     * Pozisyon kataloğu (FK). Attribute `position` string kolon ile çakışmasın diye positionRef.
+     */
+    public function positionRef(): BelongsTo
+    {
+        return $this->belongsTo(Position::class, 'position_id');
     }
 
     /**

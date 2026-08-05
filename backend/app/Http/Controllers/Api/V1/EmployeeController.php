@@ -12,6 +12,7 @@ use App\Models\Employee;
 use App\Models\LeaveBalance;
 use App\Models\LeaveRequest;
 use App\Models\PerformanceReview;
+use App\Models\Position;
 use App\Models\TrainingCertificate;
 use App\Models\TrainingParticipant;
 use App\Models\User;
@@ -51,7 +52,7 @@ class EmployeeController extends BaseController
     {
         $this->authorize('viewAny', Employee::class);
 
-        $query = Employee::with(['user', 'department', 'branch', 'manager.user'])
+        $query = Employee::with(['user', 'department', 'branch', 'manager.user', 'positionRef'])
             ->where('company_id', $this->getCompanyId());
 
         $this->dataScope->scopeForEmployee($query, $request->user());
@@ -83,7 +84,9 @@ class EmployeeController extends BaseController
             $query->where('status', $request->status);
         }
 
-        if ($request->filled('position')) {
+        if ($request->filled('position_id')) {
+            $query->where('position_id', (int) $request->position_id);
+        } elseif ($request->filled('position')) {
             $query->where('position', 'like', "%{$request->position}%");
         }
 
@@ -111,6 +114,7 @@ class EmployeeController extends BaseController
         $employee = Employee::with([
             'user',
             'department',
+            'positionRef',
             'manager.user',
             'subordinates.user',
             'documents' => function ($q) {
@@ -253,6 +257,13 @@ class EmployeeController extends BaseController
             'branch_id' => 'nullable|exists:branches,id',
             'title' => 'nullable|string|max:100',
             'position' => 'nullable|string|max:100',
+            'position_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('positions', 'id')->where(function ($query) {
+                    return $query->where('company_id', $this->getCompanyId())->whereNull('deleted_at');
+                }),
+            ],
             'manager_id' => 'nullable|exists:employees,id',
 
             // Kişisel bilgiler
@@ -341,6 +352,8 @@ class EmployeeController extends BaseController
             $validated['custom_fields'] ?? null
         );
 
+        $validated = $this->syncPositionFields($validated, $companyId);
+
         DB::beginTransaction();
         try {
             // Personel kaydı oluştur
@@ -352,6 +365,7 @@ class EmployeeController extends BaseController
                 'branch_id' => $validated['branch_id'] ?? null,
                 'title' => $validated['title'] ?? null,
                 'position' => $validated['position'] ?? null,
+                'position_id' => $validated['position_id'] ?? null,
                 'manager_id' => $validated['manager_id'] ?? null,
                 'birth_date' => $validated['birth_date'] ?? null,
                 'national_id' => $validated['national_id'] ?? null,
@@ -404,7 +418,7 @@ class EmployeeController extends BaseController
             DB::commit();
 
             return $this->created(
-                new EmployeeResource($employee->load('user', 'department', 'branch', 'manager')),
+                new EmployeeResource($employee->load('user', 'department', 'branch', 'manager', 'positionRef')),
                 'Personel başarıyla oluşturuldu'
             );
         } catch (\Exception $e) {
@@ -437,6 +451,13 @@ class EmployeeController extends BaseController
             'branch_id' => 'nullable|exists:branches,id',
             'title' => 'nullable|string|max:100',
             'position' => 'nullable|string|max:100',
+            'position_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('positions', 'id')->where(function ($query) {
+                    return $query->where('company_id', $this->getCompanyId())->whereNull('deleted_at');
+                }),
+            ],
             'manager_id' => 'nullable|exists:employees,id',
             'birth_date' => 'nullable|date',
             'national_id' => 'nullable|string|max:20',
@@ -510,6 +531,10 @@ class EmployeeController extends BaseController
             $name = $validated['name'];
             unset($validated['name']);
             $validated['full_name'] = $name;
+        }
+
+        if (array_key_exists('position_id', $validated) || array_key_exists('position', $validated)) {
+            $validated = $this->syncPositionFields($validated, $companyId);
         }
 
         $employee->update(array_merge($validated, [
@@ -1219,5 +1244,103 @@ class EmployeeController extends BaseController
 
             return $this->error('İstatistikler yüklenirken bir hata oluştu: '.$e->getMessage(), 500);
         }
+    }
+
+    /**
+     * position_id SSOT; string position dual-write (katalog kodu). Belirsiz ad eşleşmesinde FK tahmin edilmez.
+     *
+     * @param  array<string, mixed>  $validated
+     * @return array<string, mixed>
+     */
+    private function syncPositionFields(array $validated, int $companyId): array
+    {
+        $hasId = array_key_exists('position_id', $validated);
+        $positionId = $hasId && $validated['position_id'] !== null && $validated['position_id'] !== ''
+            ? (int) $validated['position_id']
+            : null;
+        $raw = array_key_exists('position', $validated)
+            ? trim((string) ($validated['position'] ?? ''))
+            : null;
+
+        if ($positionId) {
+            $pos = Position::query()
+                ->where('company_id', $companyId)
+                ->whereKey($positionId)
+                ->first();
+            if ($pos === null) {
+                $validated['position_id'] = null;
+                $validated['position'] = $raw !== null && $raw !== '' ? $raw : null;
+
+                return $validated;
+            }
+            $validated['position_id'] = $pos->id;
+            $validated['position'] = $pos->code;
+
+            return $validated;
+        }
+
+        if ($hasId && ($validated['position_id'] === null || $validated['position_id'] === '')) {
+            $validated['position_id'] = null;
+            if ($raw === null || $raw === '') {
+                $validated['position'] = null;
+            }
+
+            return $validated;
+        }
+
+        if ($raw === null) {
+            return $validated;
+        }
+
+        if ($raw === '') {
+            $validated['position_id'] = null;
+            $validated['position'] = null;
+
+            return $validated;
+        }
+
+        // FormEngine: Select value = position id (sayısal string)
+        if (ctype_digit($raw)) {
+            $byId = Position::query()
+                ->where('company_id', $companyId)
+                ->whereKey((int) $raw)
+                ->first();
+            if ($byId !== null) {
+                $validated['position_id'] = $byId->id;
+                $validated['position'] = $byId->code;
+
+                return $validated;
+            }
+        }
+
+        $byCode = Position::query()
+            ->where('company_id', $companyId)
+            ->where('code', $raw)
+            ->get(['id', 'code']);
+        if ($byCode->count() === 1) {
+            $pos = $byCode->first();
+            $validated['position_id'] = $pos->id;
+            $validated['position'] = $pos->code;
+
+            return $validated;
+        }
+
+        $byName = Position::query()
+            ->where('company_id', $companyId)
+            ->where('name', $raw)
+            ->get(['id', 'code']);
+        if ($byName->count() === 1) {
+            $pos = $byName->first();
+            $validated['position_id'] = $pos->id;
+            $validated['position'] = $pos->code;
+
+            return $validated;
+        }
+
+        // Belirsiz / eşleşmeyen: string korunur, FK tahmin edilmez
+        $validated['position_id'] = null;
+        $validated['position'] = $raw;
+
+        return $validated;
     }
 }

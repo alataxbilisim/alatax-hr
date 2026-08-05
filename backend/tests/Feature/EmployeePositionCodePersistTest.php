@@ -67,6 +67,9 @@ class EmployeePositionCodePersistTest extends TestCase
 
         $this->assertSame('DEMO_POS_07', $a->json('data.position'));
         $this->assertSame('YAZ_KID', $b->json('data.position'));
+        $this->assertNotNull($a->json('data.position_id'));
+        $this->assertNotNull($b->json('data.position_id'));
+        $this->assertNotSame($a->json('data.position_id'), $b->json('data.position_id'));
         $this->assertSame('Kıdemli Yazılım Geliştirici', $a->json('data.position_label'));
         $this->assertSame('Kıdemli Yazılım Geliştirici', $b->json('data.position_label'));
 

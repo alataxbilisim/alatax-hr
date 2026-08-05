@@ -36,7 +36,13 @@ interface Department {
 interface Employee {
   id: number;
   employee_code: string;
+  /** SSOT — employees.full_name */
+  full_name?: string | null;
+  /** Display alias (API Resource name) */
+  name?: string | null;
   position?: string;
+  position_id?: number | null;
+  position_label?: string | null;
   title?: string;
   status: string;
   status_label?: string;

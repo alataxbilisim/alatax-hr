@@ -58,6 +58,14 @@ final class EmployeesDataset extends AbstractDataset
                 'second' => 'branches.id',
                 'type' => 'left',
             ],
+            [
+                'key' => 'positions',
+                'table' => 'positions',
+                'first' => 'employees.position_id',
+                'operator' => '=',
+                'second' => 'positions.id',
+                'type' => 'left',
+            ],
         ];
     }
 
@@ -71,7 +79,7 @@ final class EmployeesDataset extends AbstractDataset
         return [
             'org' => [
                 'label' => 'Organizasyon',
-                'levels' => ['branch_name', 'department_name', 'position', 'employee_code'],
+                'levels' => ['branch_name', 'department_name', 'position_id', 'employee_code'],
             ],
             'hire_date' => [
                 'label' => 'İşe giriş tarihi',
@@ -96,7 +104,9 @@ final class EmployeesDataset extends AbstractDataset
             $this->dim('status', "{$t}.status", 'string', 'Durum'),
             $this->dim('department_id', "{$t}.department_id", 'number', 'Departman ID'),
             $this->dim('branch_id', "{$t}.branch_id", 'number', 'Şube ID'),
-            $this->dim('position', "{$t}.position", 'string', 'Pozisyon'),
+            $this->dim('position', "{$t}.position", 'string', 'Pozisyon (kod/legacy)'),
+            $this->dim('position_id', "{$t}.position_id", 'number', 'Pozisyon ID'),
+            $this->dim('position_name', 'positions.name', 'string', 'Pozisyon Adı'),
             $this->dim('title', "{$t}.title", 'string', 'Unvan'),
             $this->dim('hire_date', "{$t}.hire_date", 'date', 'İşe Giriş'),
             $this->dim('contract_type', "{$t}.contract_type", 'string', 'Sözleşme Türü'),
@@ -112,6 +122,7 @@ final class EmployeesDataset extends AbstractDataset
             $this->dim('currency', "{$t}.currency", 'string', 'Para Birimi', 'employees.salary.view', true, ReportField::SENSITIVITY_PERSONAL),
             $this->dim('department_name', 'departments.name', 'string', 'Departman'),
             $this->dim('branch_name', 'branches.name', 'string', 'Şube'),
+            $this->dim('position_code', 'positions.code', 'string', 'Pozisyon Kodu'),
         ];
     }
 

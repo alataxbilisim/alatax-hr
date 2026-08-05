@@ -36,8 +36,9 @@ class EmployeeResource extends JsonResource
             'full_name' => $this->full_name,
             'name' => $this->display_name,
             'title' => $this->title,
-            // position = katalog kodu (veya legacy serbest metin); görünen ad position_label
+            // position = katalog kodu (legacy dual-write); kimlik = position_id
             'position' => $this->position,
+            'position_id' => $this->position_id,
             'position_label' => $this->resolvePositionLabel(),
             'manager_id' => $this->manager_id,
             'birth_date' => $this->birth_date,
@@ -76,6 +77,7 @@ class EmployeeResource extends JsonResource
             'user' => $this->whenLoaded('user'),
             'department' => $this->whenLoaded('department'),
             'branch' => $this->whenLoaded('branch'),
+            'position_ref' => $this->whenLoaded('positionRef'),
             'manager' => $this->whenLoaded('manager', function () {
                 return new self($this->manager);
             }),
@@ -104,6 +106,19 @@ class EmployeeResource extends JsonResource
 
     private function resolvePositionLabel(): ?string
     {
+        if ($this->position_id) {
+            $pos = $this->relationLoaded('positionRef')
+                ? $this->positionRef
+                : Position::query()
+                    ->where('company_id', $this->company_id)
+                    ->whereKey($this->position_id)
+                    ->first();
+
+            if ($pos !== null) {
+                return $pos->name;
+            }
+        }
+
         $raw = is_string($this->position) ? trim($this->position) : '';
         if ($raw === '') {
             return null;
@@ -116,12 +131,6 @@ class EmployeeResource extends JsonResource
             })
             ->first();
 
-        if ($pos === null) {
-            return $raw;
-        }
-
-        return $pos->code === $raw
-            ? $pos->name
-            : $pos->name;
+        return $pos?->name ?? $raw;
     }
 }

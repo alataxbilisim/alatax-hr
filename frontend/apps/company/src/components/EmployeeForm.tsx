@@ -38,6 +38,7 @@ interface EmployeeFormData {
   branch_id?: number;
   title?: string;
   position?: string;
+  position_id?: number;
   manager_id?: number;
   birth_date?: string;
   national_id?: string;
@@ -394,21 +395,45 @@ const EmployeeForm: React.FC = () => {
                   <label className="form-label">{t('positions.formLabel')}</label>
                   <Select
                     value={(() => {
+                      if (formData.position_id) return String(formData.position_id);
                       const current = formData.position?.trim() || '';
                       if (!current) return '';
                       const byCode = positions.find((p) => p.code === current);
-                      if (byCode) return byCode.code;
-                      const byName = positions.find((p) => p.name === current);
-                      return byName?.code || current;
+                      if (byCode) return String(byCode.id);
+                      const byName = positions.filter((p) => p.name === current);
+                      // Tek eşleşme yoksa legacy string — tahmin etme
+                      return byName.length === 1 ? String(byName[0].id) : current;
                     })()}
                     onChange={(v) => {
-                      // Tur8: kimlik = code (aynı adlı pozisyonlar ayırt edilir)
-                      handleChange('position', v || undefined);
+                      if (!v) {
+                        setFormData((prev) => ({
+                          ...prev,
+                          position_id: undefined,
+                          position: undefined,
+                        }));
+                        return;
+                      }
+                      const id = Number(v);
+                      const pos = positions.find((p) => p.id === id);
+                      if (pos) {
+                        setFormData((prev) => ({
+                          ...prev,
+                          position_id: pos.id,
+                          position: pos.code, // dual-write
+                        }));
+                        return;
+                      }
+                      // Katalog dışı legacy değer
+                      setFormData((prev) => ({
+                        ...prev,
+                        position_id: undefined,
+                        position: v,
+                      }));
                     }}
                     options={(() => {
-                      // value = benzersiz kod — aynı adlı iki pozisyon birleşmesin
+                      // value = id — aynı adlı iki pozisyon birleşmesin
                       const catalog = positions.map((p) => ({
-                        value: p.code,
+                        value: String(p.id),
                         label: p.sgk_occupation_code
                           ? `${p.code} — ${p.name} (${p.sgk_occupation_code})`
                           : `${p.code} — ${p.name}`,
@@ -416,6 +441,7 @@ const EmployeeForm: React.FC = () => {
                       const current = formData.position?.trim();
                       if (
                         current &&
+                        !formData.position_id &&
                         !positions.some((p) => p.code === current || p.name === current)
                       ) {
                         catalog.unshift({

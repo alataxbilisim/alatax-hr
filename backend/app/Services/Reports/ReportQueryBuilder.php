@@ -189,15 +189,42 @@ class ReportQueryBuilder
             $this->applyPlainSelect($query, $selectFields);
         }
 
+        $aggAliases = $this->aggregationAliases(is_array($aggregations) ? $aggregations : []);
+        $groupKeys = [];
+        if (is_array($groupBy)) {
+            foreach ($groupBy as $gk) {
+                if (is_string($gk) && $gk !== '') {
+                    $groupKeys[$gk] = true;
+                }
+            }
+        }
+
         $sorts = $config['sorts'] ?? [];
-        if (! is_array($sorts) || $sorts === []) {
+        if (! is_array($sorts)) {
+            $sorts = [];
+        }
+        if ($isAggregate) {
+            // Gruplama varken sıralama yalnız group_by alanları veya ölçü alias'ları
+            $sorts = array_values(array_filter($sorts, function ($sort) use ($groupKeys, $aggAliases): bool {
+                if (! is_array($sort)) {
+                    return false;
+                }
+                $fieldKey = $sort['field'] ?? null;
+
+                return is_string($fieldKey)
+                    && (isset($groupKeys[$fieldKey]) || isset($aggAliases[$fieldKey]));
+            }));
+            if ($sorts === []) {
+                $sorts = $this->defaultAggregateSorts($groupKeys, $aggAliases, $fieldMap);
+            }
+        } elseif ($sorts === []) {
             foreach ($dataset->defaultSort() as $sk) {
                 if (isset($fieldMap[$sk])) {
                     $sorts[] = ['field' => $sk, 'dir' => 'asc'];
                 }
             }
         }
-        $this->applySorts($query, $sorts, $fieldMap, $isAggregate);
+        $this->applySorts($query, $sorts, $fieldMap, $isAggregate, $aggAliases);
 
         // __export yalnızca servis katmanından set edilir; client doğrulamasında yok.
         $forExport = ($config['__export'] ?? false) === true;
@@ -601,10 +628,61 @@ class ReportQueryBuilder
     }
 
     /**
+     * @param  list<array<string, mixed>>  $aggregations
+     * @return array<string, true>
+     */
+    private function aggregationAliases(array $aggregations): array
+    {
+        $aliases = [];
+        foreach ($aggregations as $agg) {
+            if (! is_array($agg)) {
+                continue;
+            }
+            $fn = strtolower((string) ($agg['fn'] ?? ''));
+            $fieldKey = $agg['field'] ?? null;
+            if ($fn === 'count' && ($fieldKey === '*' || $fieldKey === null)) {
+                $alias = is_string($agg['alias'] ?? null) ? $agg['alias'] : 'count_all';
+            } elseif (is_string($agg['alias'] ?? null)) {
+                $alias = $agg['alias'];
+            } elseif (is_string($fieldKey)) {
+                $alias = $fn.'_'.$fieldKey;
+            } else {
+                continue;
+            }
+            if ($alias !== '') {
+                $aliases[$alias] = true;
+            }
+        }
+
+        return $aliases;
+    }
+
+    /**
+     * @param  array<string, true>  $groupKeys
+     * @param  array<string, true>  $aggAliases
+     * @param  array<string, ReportField>  $fieldMap
+     * @return list<array{field: string, dir: string}>
+     */
+    private function defaultAggregateSorts(array $groupKeys, array $aggAliases, array $fieldMap): array
+    {
+        foreach (array_keys($groupKeys) as $gk) {
+            if (isset($fieldMap[$gk])) {
+                return [['field' => $gk, 'dir' => 'asc']];
+            }
+        }
+        foreach (array_keys($aggAliases) as $alias) {
+            return [['field' => $alias, 'dir' => 'desc']];
+        }
+
+        return [];
+    }
+
+    /**
      * @param  Builder<\Illuminate\Database\Eloquent\Model>  $query
      * @param  array<string, ReportField>  $fieldMap
+     * @param  array<string, true>  $aggAliases
      */
-    private function applySorts(Builder $query, mixed $sorts, array $fieldMap, bool $isAggregate): void
+    private function applySorts(Builder $query, mixed $sorts, array $fieldMap, bool $isAggregate, array $aggAliases = []): void
     {
         if (! is_array($sorts)) {
             return;
@@ -614,10 +692,19 @@ class ReportQueryBuilder
                 continue;
             }
             $fieldKey = $sort['field'] ?? null;
-            if (! is_string($fieldKey) || ! isset($fieldMap[$fieldKey])) {
+            if (! is_string($fieldKey)) {
                 continue;
             }
             $dir = strtolower((string) ($sort['dir'] ?? 'asc')) === 'desc' ? 'desc' : 'asc';
+            if ($isAggregate && isset($aggAliases[$fieldKey])) {
+                $this->assertSafeAlias($fieldKey);
+                $query->orderByRaw($this->quoteAlias($fieldKey).' '.$dir);
+
+                continue;
+            }
+            if (! isset($fieldMap[$fieldKey])) {
+                continue;
+            }
             $expr = $this->sqlExpression($fieldMap[$fieldKey]);
             $query->orderByRaw("{$expr} {$dir}");
         }

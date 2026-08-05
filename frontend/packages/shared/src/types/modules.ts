@@ -129,8 +129,14 @@ export interface Employee extends CompanyScopedEntity {
   user_id?: number | null;
   department_id?: number | null;
   employee_code: string;
+  /** SSOT — employees.full_name */
+  full_name?: string | null;
+  /** Display alias from API Resource */
+  name?: string | null;
   title?: string | null;
   position?: string | null;
+  position_id?: number | null;
+  position_label?: string | null;
   manager_id?: number | null;
   birth_date?: string | null;
   national_id?: string | null;

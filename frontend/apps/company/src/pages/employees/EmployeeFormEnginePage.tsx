@@ -110,11 +110,12 @@ const EmployeeFormEnginePage: React.FC = () => {
 
     if (settled[3].status === 'fulfilled') {
       const posList = asOptionList(settled[3].value.data.data);
+      // value = id (FK); FormEngine field_key hâlâ `position` — BE id/code çözümler
       map.position = posList.map((p) => {
         const code = String(p.code ?? '');
         const name = String(p.name ?? code);
         const sgk = p.sgk_occupation_code ? ` (${String(p.sgk_occupation_code)})` : '';
-        return { value: code, label: `${code} — ${name}${sgk}` };
+        return { value: String(p.id), label: `${code} — ${name}${sgk}` };
       });
     }
 
@@ -172,6 +173,12 @@ const EmployeeFormEnginePage: React.FC = () => {
               if (field.field_key === 'name') {
                 values.name =
                   employee.full_name || employee.name || employee.user?.name || '';
+              } else if (field.field_key === 'position') {
+                const pid = employee.position_id;
+                values.position =
+                  pid !== null && pid !== undefined && pid !== ''
+                    ? String(pid)
+                    : employee.position ?? '';
               } else {
                 const v = employee[field.field_key];
                 values[field.field_key] =
