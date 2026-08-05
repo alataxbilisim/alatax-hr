@@ -435,6 +435,10 @@ export function hasPanelAccess(user: PanelAccessUser | null | undefined): boolea
   if (roleNames.includes('admin')) {
     return true;
   }
+  // employee dışı herhangi bir rol = panel (dar yetkili custom roller dahil)
+  if (roleNames.some((r) => r !== 'employee')) {
+    return true;
+  }
 
   const permissions = user.permissions ?? [];
   return permissions.some((p) => !PORTAL_SELF_PERMISSIONS.includes(p));

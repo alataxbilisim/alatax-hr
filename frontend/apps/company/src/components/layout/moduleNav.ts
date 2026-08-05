@@ -253,10 +253,11 @@ export const operationalModuleGroups: ModuleGroup[] = [
     matchPrefixes: ['/analytics', '/reports', '/dashboards'],
     items: [
       { path: '/dashboards', labelKey: 'nav.dashboards', permission: { module: 'reports', page: 'dashboards' }, pageKey: 'analytics.dashboards.list' },
-      { path: '/reports', labelKey: 'nav.reportEngine', permission: { module: 'reports', page: 'definitions' }, pageKey: 'analytics.reports.list' },
+      // Tur7: "Raporlar" → rapor motoru listesi (/reports); /analytics sistem panoya yönlendiriyordu
+      { path: '/reports', labelKey: 'nav.analyticsReports', permission: { module: 'reports', page: 'definitions' }, pageKey: 'analytics.reports.list' },
       { path: '/reports/measures', labelKey: 'nav.reportMeasures', permission: { module: 'reports', page: 'measures' }, pageKey: 'analytics.measures.list' },
       { path: '/reports/schedules', labelKey: 'nav.reportSchedules', permission: { module: 'reports', page: 'schedules' }, pageKey: 'analytics.schedules.list' },
-      { path: '/analytics', labelKey: 'nav.analyticsReports', permission: { module: 'analytics', page: 'reports' }, moduleKey: 'hr-analytics', pageKey: 'analytics.overview' },
+      { path: '/analytics', labelKey: 'nav.analyticsOverview', permission: { module: 'analytics', page: 'reports' }, moduleKey: 'hr-analytics', pageKey: 'analytics.overview' },
     ],
   },
 ];

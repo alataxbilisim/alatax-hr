@@ -121,10 +121,17 @@ class Dashboard extends Model
 
     public function canEdit(User $user): bool
     {
+        // Global (tenant-dışı) sistem panosu düzenlenemez
         if ($this->is_system && $this->company_id === null) {
             return false;
         }
+
         if ((int) $this->owner_id === (int) $user->id) {
+            return true;
+        }
+
+        // Firma panosu: reports.dashboards.edit (admin / İK) — sahip olmasa da
+        if ($this->company_id !== null && $user->can('reports.dashboards.edit')) {
             return true;
         }
 

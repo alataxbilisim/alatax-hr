@@ -160,6 +160,8 @@ const EmployeeFormEnginePage: React.FC = () => {
           const empRes = await employeesApi.getById(Number(id));
           const data = empRes.data.data;
           const employee = (data.employee || data) as Record<string, unknown> & {
+            full_name?: string;
+            name?: string;
             user?: { name?: string };
             custom_fields?: Record<string, unknown>;
           };
@@ -168,7 +170,8 @@ const EmployeeFormEnginePage: React.FC = () => {
           for (const field of def.fields) {
             if (field.is_system) {
               if (field.field_key === 'name') {
-                values.name = employee.user?.name ?? '';
+                values.name =
+                  employee.full_name || employee.name || employee.user?.name || '';
               } else {
                 const v = employee[field.field_key];
                 values[field.field_key] =

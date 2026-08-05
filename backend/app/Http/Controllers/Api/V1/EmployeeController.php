@@ -347,6 +347,7 @@ class EmployeeController extends BaseController
             $employee = Employee::create([
                 'company_id' => $this->getCompanyId(),
                 'employee_code' => $validated['employee_code'],
+                'full_name' => $validated['name'],
                 'department_id' => $validated['department_id'] ?? null,
                 'branch_id' => $validated['branch_id'] ?? null,
                 'title' => $validated['title'] ?? null,
@@ -431,6 +432,7 @@ class EmployeeController extends BaseController
                     return $query->where('company_id', $this->getCompanyId());
                 })->ignore($employee->id),
             ],
+            'name' => 'sometimes|string|max:255',
             'department_id' => 'nullable|exists:departments,id',
             'branch_id' => 'nullable|exists:branches,id',
             'title' => 'nullable|string|max:100',
@@ -503,9 +505,20 @@ class EmployeeController extends BaseController
             );
         }
 
+        $name = null;
+        if (array_key_exists('name', $validated)) {
+            $name = $validated['name'];
+            unset($validated['name']);
+            $validated['full_name'] = $name;
+        }
+
         $employee->update(array_merge($validated, [
             'updated_by' => auth()->id(),
         ]));
+
+        if (is_string($name) && $name !== '' && $employee->user_id) {
+            $employee->user?->forceFill(['name' => $name])->save();
+        }
 
         // Observer Auditable update log yazar — manuel CRUD log yok
 

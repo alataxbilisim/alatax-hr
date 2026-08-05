@@ -199,7 +199,7 @@ const EmployeeForm: React.FC = () => {
       
       setFormData({
         ...employee,
-        name: employee.user?.name || '',
+        name: employee.full_name || employee.name || employee.user?.name || '',
         portal_email: employee.user?.email || '',
         create_portal_access: !!employee.user_id,
       });
@@ -393,17 +393,36 @@ const EmployeeForm: React.FC = () => {
                 <div className="form-group">
                   <label className="form-label">{t('positions.formLabel')}</label>
                   <Select
-                    value={formData.position || ''}
-                    onChange={(v) => handleChange('position', v || undefined)}
+                    value={(() => {
+                      const current = formData.position?.trim() || '';
+                      if (!current) return '';
+                      const byCode = positions.find((p) => p.code === current);
+                      if (byCode) return byCode.code;
+                      const byName = positions.find((p) => p.name === current);
+                      return byName?.code || current;
+                    })()}
+                    onChange={(v) => {
+                      if (!v) {
+                        handleChange('position', undefined);
+                        return;
+                      }
+                      const match = positions.find((p) => p.code === v);
+                      // DB alanı serbest metin: görünen ad (kod değil)
+                      handleChange('position', match?.name || v);
+                    }}
                     options={(() => {
+                      // value = benzersiz kod — aynı adlı iki pozisyon birleşmesin
                       const catalog = positions.map((p) => ({
-                        value: p.name,
+                        value: p.code,
                         label: p.sgk_occupation_code
                           ? `${p.code} — ${p.name} (${p.sgk_occupation_code})`
                           : `${p.code} — ${p.name}`,
                       }));
                       const current = formData.position?.trim();
-                      if (current && !catalog.some((o) => o.value === current)) {
+                      if (
+                        current &&
+                        !positions.some((p) => p.code === current || p.name === current)
+                      ) {
                         catalog.unshift({
                           value: current,
                           label: t('positions.formLegacyOption', { name: current }),

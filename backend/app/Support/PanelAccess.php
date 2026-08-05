@@ -7,16 +7,23 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * Company panel erişimi — izin tabanlı türetim (ayrı bayrak yok).
+ * Company panel erişimi — izin + rol tabanlı türetim (ayrı bayrak yok).
  *
- * Portal-only: yalnızca self-servis izinler (employee rol seti).
- * Panel: company_admin / super_admin / admin rolü VEYA portal-self dışı herhangi bir izin.
+ * Portal-only: yalnızca Spatie `employee` rolü (self-servis izin seti).
+ * Panel: company_admin / super_admin / admin rolü VEYA `employee` dışı herhangi bir rol
+ *         VEYA portal-self dışı doğrudan atanmış izin.
+ *
+ * Tur7: dar yetkili custom rol (ör. yalnız employees.list.view) panel sayılır —
+ * aksi halde /users listesinden kaybolur ve panele giremez.
  */
 final class PanelAccess
 {
+    /** Portal self-servis rol adı (PermissionSeeder). */
+    public const PORTAL_ROLE = 'employee';
+
     /**
      * Sıradan personelin portal self-servis izinleri (PermissionSeeder employee).
-     * Bunların dışında kalan her izin = panel erişimi.
+     * Doğrudan (rol dışı) atamada hâlâ portal-only sınırı için kullanılır.
      *
      * @var list<string>
      */
@@ -47,10 +54,15 @@ final class PanelAccess
             return true;
         }
 
-        $permissions = $user->getAllPermissions()->pluck('name')->all();
+        foreach ($user->getRoleNames() as $roleName) {
+            if ((string) $roleName !== self::PORTAL_ROLE) {
+                return true;
+            }
+        }
 
-        foreach ($permissions as $name) {
-            if (! in_array($name, self::PORTAL_SELF_PERMISSIONS, true)) {
+        // Rol yok / yalnız employee — doğrudan atanmış panel izni
+        foreach ($user->getDirectPermissions()->pluck('name') as $name) {
+            if (! in_array((string) $name, self::PORTAL_SELF_PERMISSIONS, true)) {
                 return true;
             }
         }
@@ -67,17 +79,15 @@ final class PanelAccess
     public static function constrainUsersQuery(Builder $query): Builder
     {
         $portalOnly = self::PORTAL_SELF_PERMISSIONS;
+        $portalRole = self::PORTAL_ROLE;
 
-        return $query->where(function (Builder $q) use ($portalOnly): void {
+        return $query->where(function (Builder $q) use ($portalOnly, $portalRole): void {
             $q->whereIn('type', [
                 UserType::CompanyAdmin->value,
                 UserType::SuperAdmin->value,
             ])
-                ->orWhereHas('roles', function (Builder $rq) use ($portalOnly): void {
-                    $rq->where('name', 'admin')
-                        ->orWhereHas('permissions', function (Builder $pq) use ($portalOnly): void {
-                            $pq->whereNotIn('name', $portalOnly);
-                        });
+                ->orWhereHas('roles', function (Builder $rq) use ($portalRole): void {
+                    $rq->where('name', '!=', $portalRole);
                 })
                 ->orWhereHas('permissions', function (Builder $pq) use ($portalOnly): void {
                     $pq->whereNotIn('name', $portalOnly);
@@ -95,6 +105,7 @@ final class PanelAccess
     public static function constrainPortalOnlyQuery(Builder $query): Builder
     {
         $portalOnly = self::PORTAL_SELF_PERMISSIONS;
+        $portalRole = self::PORTAL_ROLE;
 
         return $query
             ->whereHas('employee')
@@ -102,11 +113,8 @@ final class PanelAccess
                 UserType::CompanyAdmin->value,
                 UserType::SuperAdmin->value,
             ])
-            ->whereDoesntHave('roles', function (Builder $rq) use ($portalOnly): void {
-                $rq->where('name', 'admin')
-                    ->orWhereHas('permissions', function (Builder $pq) use ($portalOnly): void {
-                        $pq->whereNotIn('name', $portalOnly);
-                    });
+            ->whereDoesntHave('roles', function (Builder $rq) use ($portalRole): void {
+                $rq->where('name', '!=', $portalRole);
             })
             ->whereDoesntHave('permissions', function (Builder $pq) use ($portalOnly): void {
                 $pq->whereNotIn('name', $portalOnly);

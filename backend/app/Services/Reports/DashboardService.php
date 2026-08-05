@@ -79,18 +79,22 @@ class DashboardService
     public function update(Dashboard $dashboard, User $user, array $data): Dashboard
     {
         if (! $dashboard->canEdit($user)) {
-            throw ValidationException::withMessages(['id' => ['Bu panoyu düzenleme yetkiniz yok']]);
+            abort(403, 'Bu panoyu düzenleme yetkiniz yok.');
         }
-        if ($dashboard->is_system) {
-            throw ValidationException::withMessages(['id' => ['Sistem panosu düzenlenemez']]);
+        // Global sistem panosu kilitli; firma içi sistem panosu layout düzenlenebilir
+        if ($dashboard->is_system && $dashboard->company_id === null) {
+            abort(403, 'Sistem panosu düzenlenemez.');
         }
 
         if (isset($data['layout'])) {
             $dashboard->layout = $this->normalizeLayout($data['layout']);
         }
-        foreach (['name', 'description'] as $k) {
-            if (array_key_exists($k, $data)) {
-                $dashboard->{$k} = $data[$k];
+        // is_system firma panolarında ad/açıklama değiştirilmez (layout OK)
+        if (! $dashboard->is_system) {
+            foreach (['name', 'description'] as $k) {
+                if (array_key_exists($k, $data)) {
+                    $dashboard->{$k} = $data[$k];
+                }
             }
         }
         if (array_key_exists('global_filters', $data)) {
@@ -98,7 +102,7 @@ class DashboardService
         }
         $dashboard->save();
 
-        if (array_key_exists('shares', $data)) {
+        if (array_key_exists('shares', $data) && ! $dashboard->is_system) {
             $this->syncShares($dashboard, $data['shares'] ?? []);
         }
 

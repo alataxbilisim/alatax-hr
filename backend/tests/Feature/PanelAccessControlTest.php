@@ -246,4 +246,51 @@ class PanelAccessControlTest extends TestCase
             'role' => 'hr_specialist',
         ])->assertForbidden();
     }
+
+    /**
+     * Tur7 — dar yetkili custom rol (yalnız employees.list.view) panel sayılır;
+     * portal-only (employee rolü) listede görünmez kalır.
+     */
+    public function test_limited_custom_role_stays_in_users_list_and_can_login(): void
+    {
+        $perm = \Spatie\Permission\Models\Permission::findOrCreate('employees.list.view', 'sanctum');
+        $role = Role::findOrCreate('test_limited', 'sanctum');
+        $role->syncPermissions([$perm]);
+
+        $limited = User::factory()->create([
+            'company_id' => $this->company->id,
+            'type' => UserType::User,
+            'is_active' => true,
+            'email' => 'limited.panel@test.local',
+            'password' => 'Password123!',
+        ]);
+        $limited->assignRole($role);
+        Employee::factory()->forUser($limited)->create(['status' => 'active']);
+
+        $this->assertTrue(PanelAccess::has($limited->fresh()));
+
+        $admin = User::factory()->create([
+            'company_id' => $this->company->id,
+            'type' => UserType::CompanyAdmin,
+            'is_active' => true,
+        ]);
+        $this->assignSpatieAdminRole($admin);
+        Sanctum::actingAs($admin->fresh());
+
+        $list = $this->getJson('/api/v1/users?per_page=50')->assertOk();
+        $ids = collect($list->json('data.data') ?? $list->json('data'))->pluck('id');
+        $this->assertTrue($ids->contains($limited->id), 'dar yetkili custom rol /users listesinde olmalı');
+
+        $portal = $this->portalOnlyEmployee();
+        $this->assertFalse($ids->contains($portal->id), 'portal-only hâlâ listede olmamalı');
+
+        auth()->forgetGuards();
+        $this->postJson('/api/v1/auth/login', [
+            'email' => 'limited.panel@test.local',
+            'password' => 'Password123!',
+        ])->assertOk();
+
+        Sanctum::actingAs($limited->fresh());
+        $this->getJson('/api/v1/roles')->assertForbidden();
+    }
 }

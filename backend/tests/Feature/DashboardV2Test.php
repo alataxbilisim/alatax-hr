@@ -310,6 +310,56 @@ class DashboardV2Test extends TestCase
         $this->assertSame(45, DashboardService::BATCH_TIMEOUT_SEC);
     }
 
+    /** Tur7 — layout kaydı 200; yetkisiz → 403 (422 yetki mesajı değil). */
+    public function test_owner_can_save_layout_and_stranger_gets_403(): void
+    {
+        Sanctum::actingAs($this->admin->fresh());
+
+        $dash = $this->postJson('/api/v1/dashboards', [
+            'name' => 'Tur7 Pano',
+            'layout' => [
+                'widgets' => [
+                    [
+                        'id' => 'w1',
+                        'type' => 'text',
+                        'title' => 'Not',
+                        'content' => 'hello',
+                        'layout' => ['x' => 0, 'y' => 0, 'w' => 6, 'h' => 4],
+                    ],
+                ],
+            ],
+        ])->assertCreated()->json('data');
+
+        $this->putJson('/api/v1/dashboards/'.$dash['id'], [
+            'layout' => [
+                'widgets' => [
+                    [
+                        'id' => 'w1',
+                        'type' => 'text',
+                        'title' => 'Not',
+                        'content' => 'hello',
+                        'layout' => ['x' => 2, 'y' => 1, 'w' => 6, 'h' => 4],
+                    ],
+                ],
+            ],
+        ])->assertOk();
+
+        $fresh = Dashboard::query()->find($dash['id']);
+        $this->assertSame(2, $fresh->widgets()[0]['layout']['x'] ?? null);
+
+        $other = User::factory()->create([
+            'company_id' => $this->company->id,
+            'type' => UserType::User,
+            'is_active' => true,
+        ]);
+        $other->givePermissionTo(['reports.dashboards.view']);
+        Sanctum::actingAs($other->fresh());
+
+        $this->putJson('/api/v1/dashboards/'.$dash['id'], [
+            'layout' => ['widgets' => []],
+        ])->assertForbidden();
+    }
+
     /**
      * QA-3 regresyon: sistem panosu widget'ları company_id NULL raporlara report_id ile bağlanır.
      * BelongsToCompany + where(company_id) bu raporları gizleyince "Widget raporu bulunamadı" oluşuyordu.

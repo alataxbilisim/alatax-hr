@@ -20,7 +20,11 @@ import {
   type DashboardWidgetDef,
   type SavedReportPayload,
 } from '@shared/services/api';
-import { getErrorMessage } from '@shared/services/apiHelpers';
+import {
+  getErrorMessage,
+  getValidationErrors,
+  isAxiosValidationError,
+} from '@shared/services/apiHelpers';
 import toast from 'react-hot-toast';
 import PivotMatrixTable from '../reports/PivotMatrixTable';
 import {
@@ -299,8 +303,23 @@ const DashboardViewPage: React.FC = () => {
   const saveLayout = async () => {
     if (!dashboard || !canEditD) return;
     try {
+      // Infinity/NaN JSON'da null olur — grid y değerlerini sayısallaştır
+      const safeWidgets = widgets.map((w) => {
+        const L = w.layout ?? { x: 0, y: 0, w: 6, h: 4 };
+        const y = Number.isFinite(L.y) ? L.y : 0;
+        const x = Number.isFinite(L.x) ? L.x : 0;
+        return {
+          ...w,
+          layout: {
+            x,
+            y,
+            w: Number.isFinite(L.w) ? L.w : 6,
+            h: Number.isFinite(L.h) ? L.h : 4,
+          },
+        };
+      });
       const res = await dashboardsApi.update(dashboard.id, {
-        layout: { widgets },
+        layout: { widgets: safeWidgets },
       });
       const data = res.data.data;
       if (isDashboardPayload(data)) {
@@ -309,6 +328,12 @@ const DashboardViewPage: React.FC = () => {
         toast.success(t('dashboards.saveSuccess'));
       }
     } catch (error: unknown) {
+      if (isAxiosValidationError(error)) {
+        const ve = getValidationErrors(error);
+        const first = ve ? Object.values(ve)[0] : undefined;
+        toast.error(first || getErrorMessage(error, t('dashboards.saveError')));
+        return;
+      }
       toast.error(getErrorMessage(error, t('dashboards.saveError')));
     }
   };

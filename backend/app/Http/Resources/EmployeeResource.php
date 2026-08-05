@@ -32,6 +32,8 @@ class EmployeeResource extends JsonResource
             'department_id' => $this->department_id,
             'branch_id' => $this->branch_id,
             'employee_code' => $this->employee_code,
+            'full_name' => $this->full_name,
+            'name' => $this->display_name,
             'title' => $this->title,
             'position' => $this->position,
             'manager_id' => $this->manager_id,

@@ -49,6 +49,7 @@ class Employee extends Model
         'department_id',
         'branch_id',
         'employee_code',
+        'full_name',
         'title',
         'position',
         'manager_id',
@@ -187,10 +188,17 @@ class Employee extends Model
     }
 
     /**
-     * Tam ad
+     * Tam ad — kolon öncelikli; yoksa bağlı kullanıcı adı.
      */
-    public function getFullNameAttribute(): string
+    public function getDisplayNameAttribute(): string
     {
+        $stored = is_string($this->attributes['full_name'] ?? null)
+            ? trim((string) $this->attributes['full_name'])
+            : '';
+        if ($stored !== '') {
+            return $stored;
+        }
+
         return $this->user?->name ?? 'Unknown';
     }
 

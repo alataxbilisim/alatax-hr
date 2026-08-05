@@ -300,7 +300,7 @@ const EmployeesPage: React.FC = () => {
       {
         key: 'name',
         title: 'Ad Soyad',
-        render: (e) => <strong>{e.user?.name || '-'}</strong>,
+        render: (e) => <strong>{e.full_name || e.name || e.user?.name || '-'}</strong>,
       },
       {
         key: 'email',
