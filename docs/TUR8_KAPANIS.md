@@ -128,7 +128,7 @@ Tur7’nin Select key/value ve ellipsis düzeltmelerinin otomatik testi yok; mon
  frontend/packages/shared/src/i18n/locales/tr/common.json         |  9
 ```
 
-Tracked diff (commit öncesi HEAD’e göre, yeni dosyalar hariç sayı): ~15 dosya, +219/−75 (+ yeni test/migration/command/docs).
+Commit `cdcf9fb`: **22 files, +736/−75** (yukarıdaki `--stat` özeti).
 
 ---
 
@@ -138,5 +138,5 @@ Tracked diff (commit öncesi HEAD’e göre, yeni dosyalar hariç sayı): ~15 do
 |---|---|
 | 1–4 testli yeşil | ✓ |
 | Suite 721 + yeni → **725** | ✓ |
-| Commit | yapılacak (push yok) |
+| Commit | `cdcf9fb` (push yok) |
 | Push | yok |
