@@ -22,14 +22,14 @@ Projeye yeni bakan biri için **10 dakikalık** giriş. Detay ve kararlar: `GUNC
 
 ---
 
-## 2. Müşteri ve ölçek (tasarımın pusulası)
+## 2. Ürün çerçevesi ve ölçek (tasarımın pusulası)
 
-İlk müşteri: **Dobedan Otel Grubu** · kurulum **ON-PREM** · aynı kod tabanı ileride cloud + on-prem paket.
+Ürün **genel pazara** geliştirilir. Pilot (ör. Dobedan) doğrulama ortamıdır; gereksinimi belirlemez. Cloud + on-prem aynı kod tabanı.
 
-- Ölçek: 3 şirket (→10) · 6 şube (→40) · ~3000 personel  
-- Yönetim: **tek merkez İK** — veri karışmaz, raporlama gruba yayılır  
-- Bordro: Logo’da kalır → çıktımız **puantaj aktarım paketi**  
-- PDKS: donanım yok → telefonda QR; vardiya başı **500+ eşzamanlı** okutma  
+- Ölçek aralığı: tek şubeli ~10 kişi → yüzlerce şube / on binlerce personel  
+- Yönetim: merkez İK — veri karışmaz, raporlama gruba yayılabilir  
+- Bordro: dış sistem mümkün → çıktımız **aktarım paketi** (`ENTEGRASYON_SPEC.md`)  
+- PDKS: QR/telefon + donanım opsiyonel; büyük vardiyada yüzlerce eşzamanlı okutma  
 - İlk sürüm: **14 modülün tamamı** (kısmi çıkış yok)
 
 Her mimari karar buna göre verilir → ayrıntı: `ROADMAP.md` §0.

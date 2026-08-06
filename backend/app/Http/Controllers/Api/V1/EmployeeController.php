@@ -23,6 +23,7 @@ use App\Services\FormFieldCatalogService;
 use App\Services\InvitationService;
 use App\Services\LookupService;
 use App\Services\OrganizationChartService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -31,6 +32,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class EmployeeController extends BaseController
 {
@@ -51,12 +53,34 @@ class EmployeeController extends BaseController
     {
         $this->authorize('viewAny', Employee::class);
 
-        $query = Employee::with(['user', 'department', 'branch', 'manager.user', 'positionRef'])
-            ->where('company_id', $this->getCompanyId());
+        $query = $this->baseScopedQuery($request)
+            ->with(['user', 'department', 'branch', 'manager.user', 'positionRef']);
+
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = $request->get('sort_order', 'desc');
+        $query->orderBy($sortBy, $sortOrder);
+
+        $perPage = $request->get('per_page', 15);
+        $employees = $query->paginate($perPage);
+
+        return $this->paginated(
+            EmployeeResource::collection($employees->getCollection())->resolve(),
+            'Personel listelendi',
+            $employees
+        );
+    }
+
+    /**
+     * Index + export ortak kapsamlı sorgu (DataScope + filtreler).
+     *
+     * @return Builder<Employee>
+     */
+    protected function baseScopedQuery(Request $request): Builder
+    {
+        $query = Employee::query()->where('company_id', $this->getCompanyId());
 
         $this->dataScope->scopeForEmployee($query, $request->user());
 
-        // Arama — filled: boş string ile tüm kayıtları filtreleme
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -73,7 +97,6 @@ class EmployeeController extends BaseController
             });
         }
 
-        // Filtreleme
         if ($request->filled('department_id')) {
             $query->where('department_id', $request->department_id);
         }
@@ -90,20 +113,7 @@ class EmployeeController extends BaseController
             $query->where('position_id', (int) $request->position_id);
         }
 
-        // Sıralama
-        $sortBy = $request->get('sort_by', 'created_at');
-        $sortOrder = $request->get('sort_order', 'desc');
-        $query->orderBy($sortBy, $sortOrder);
-
-        // Sayfalama
-        $perPage = $request->get('per_page', 15);
-        $employees = $query->paginate($perPage);
-
-        return $this->paginated(
-            EmployeeResource::collection($employees->getCollection())->resolve(),
-            'Personel listelendi',
-            $employees
-        );
+        return $query;
     }
 
     /**
@@ -715,53 +725,37 @@ class EmployeeController extends BaseController
     }
 
     /**
-     * Personel listesini dışa aktar
+     * Personel listesini dışa aktar — index ile aynı baseScopedQuery; chunk/stream.
      */
-    public function export(Request $request)
+    public function export(Request $request): StreamedResponse
     {
-        $query = Employee::with(['user', 'department', 'manager.user'])
-            ->where('company_id', $this->getCompanyId());
-
-        // Filtreleri uygula
-        if ($request->has('department_id')) {
-            $query->where('department_id', $request->department_id);
-        }
-
-        if ($request->has('status')) {
-            $query->where('status', $request->status);
-        }
-
-        $employees = $query->load('position')->get();
-        $user = $request->user();
-        $columns = $this->exportColumnsForUser($user);
-
-        // CSV oluştur
+        $columns = $this->exportColumnsForUser($request->user());
         $filename = 'personel_listesi_'.date('Y-m-d_His').'.csv';
         $headers = [
             'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ];
 
-        $callback = function () use ($employees, $columns) {
+        return response()->stream(function () use ($request, $columns) {
             $file = fopen('php://output', 'w');
-
-            // BOM ekle (Excel için UTF-8 desteği)
             fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
-
             fputcsv($file, array_column($columns, 'header'), ';');
 
-            foreach ($employees as $employee) {
-                $row = [];
-                foreach ($columns as $column) {
-                    $row[] = ($column['value'])($employee);
-                }
-                fputcsv($file, $row, ';');
-            }
+            $this->baseScopedQuery($request)
+                ->with(['user', 'department', 'position'])
+                ->orderBy('id')
+                ->chunkById(500, function ($employees) use ($file, $columns) {
+                    foreach ($employees as $employee) {
+                        $row = [];
+                        foreach ($columns as $column) {
+                            $row[] = ($column['value'])($employee);
+                        }
+                        fputcsv($file, $row, ';');
+                    }
+                });
 
             fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        }, 200, $headers);
     }
 
     /**

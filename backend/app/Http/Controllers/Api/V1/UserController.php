@@ -9,9 +9,11 @@ use App\Mail\UserInvitation;
 use App\Models\ActivityLog;
 use App\Models\User;
 use App\Services\Auth\UserPermissionCache;
+use App\Services\DataScopeService;
 use App\Services\InvitationService;
 use App\Services\TwoFactorService;
 use App\Support\PanelAccess;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -28,6 +30,7 @@ class UserController extends BaseController
     public function __construct(
         protected TwoFactorService $twoFactor,
         protected InvitationService $invitations,
+        protected DataScopeService $dataScope,
     ) {}
 
     /**
@@ -35,14 +38,31 @@ class UserController extends BaseController
      */
     public function index(Request $request): JsonResponse
     {
-        $query = User::where('home_company_id', $this->getCompanyId())
+        $query = $this->baseScopedQuery($request)
             ->with(['roles', 'employee:id,user_id,employee_code']);
 
-        // Karar B: yalnızca panel erişimli kullanıcılar (portal-only personel hariç)
-        PanelAccess::constrainUsersQuery($query);
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortDir = $request->get('sort_dir', 'desc');
+        $query->orderBy($sortBy, $sortDir);
 
-        // Arama
-        if ($request->has('search')) {
+        $users = $query->paginate($request->get('per_page', 15));
+
+        return $this->paginated($users, 'Kullanıcılar listelendi');
+    }
+
+    /**
+     * Index + export ortak kapsamlı sorgu (PanelAccess + DataScope + filtreler).
+     *
+     * @return Builder<User>
+     */
+    protected function baseScopedQuery(Request $request): Builder
+    {
+        $query = User::query()->where('home_company_id', $this->getCompanyId());
+
+        PanelAccess::constrainUsersQuery($query);
+        $this->dataScope->scopeForUser($query, $request->user(), 'id');
+
+        if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
@@ -51,33 +71,23 @@ class UserController extends BaseController
             });
         }
 
-        // Durum filtresi
         if ($request->has('is_active')) {
             $query->where('is_active', $request->boolean('is_active'));
         }
 
-        // Rol filtresi (isim ile)
         if ($request->has('role')) {
             $query->whereHas('roles', function ($q) use ($request) {
                 $q->where('name', $request->role);
             });
         }
 
-        // Rol filtresi (ID ile)
         if ($request->has('role_id')) {
             $query->whereHas('roles', function ($q) use ($request) {
                 $q->where('id', $request->role_id);
             });
         }
 
-        // Sıralama
-        $sortBy = $request->get('sort_by', 'created_at');
-        $sortDir = $request->get('sort_dir', 'desc');
-        $query->orderBy($sortBy, $sortDir);
-
-        $users = $query->paginate($request->get('per_page', 15));
-
-        return $this->paginated($users, 'Kullanıcılar listelendi');
+        return $query;
     }
 
     /**
@@ -608,67 +618,89 @@ class UserController extends BaseController
     }
 
     /**
-     * Kullanıcı export (CSV)
+     * Kullanıcı export (CSV) — index ile aynı baseScopedQuery; chunk/stream.
      */
     public function export(Request $request): StreamedResponse
     {
-        $query = User::where('home_company_id', $this->getCompanyId())
-            ->with(['roles']);
-
-        // Filtreler
-        if ($request->has('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
-            });
-        }
-        if ($request->has('is_active')) {
-            $query->where('is_active', $request->boolean('is_active'));
-        }
-        if ($request->has('role')) {
-            $query->whereHas('roles', function ($q) use ($request) {
-                $q->where('name', $request->role);
-            });
-        }
-
-        $users = $query->get();
-
-        // CSV oluştur
+        $columns = $this->exportColumnsForUser($request->user());
         $filename = 'users_'.date('Y-m-d_His').'.csv';
         $headers = [
-            'Content-Type' => 'text/csv',
+            'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ];
 
-        $callback = function () use ($users) {
-            $file = fopen('php://output', 'w');
-
-            // BOM for Excel UTF-8 support
-            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
-
-            // Header
-            fputcsv($file, ['Ad Soyad', 'E-posta', 'Telefon', 'Rol', 'Durum', 'Oluşturulma Tarihi']);
-
-            // Data
-            foreach ($users as $user) {
-                $roles = $user->roles->pluck('name')->join(', ');
-                fputcsv($file, [
-                    $user->name,
-                    $user->email,
-                    $user->phone ?? '',
-                    $roles ?: 'Rol yok',
-                    $user->is_active ? 'Aktif' : 'Pasif',
-                    $user->created_at->format('Y-m-d H:i:s'),
-                ]);
-            }
-
-            fclose($file);
-        };
-
         ActivityLog::log('export', null, 'Kullanıcılar export edildi');
 
-        return response()->stream($callback, 200, $headers);
+        return response()->stream(function () use ($request, $columns) {
+            $file = fopen('php://output', 'w');
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            fputcsv($file, array_column($columns, 'header'), ';');
+
+            $this->baseScopedQuery($request)
+                ->with(['roles'])
+                ->orderBy('id')
+                ->chunkById(500, function ($users) use ($file, $columns) {
+                    foreach ($users as $user) {
+                        $row = [];
+                        foreach ($columns as $column) {
+                            $row[] = ($column['value'])($user);
+                        }
+                        fputcsv($file, $row, ';');
+                    }
+                });
+
+            fclose($file);
+        }, 200, $headers);
+    }
+
+    /**
+     * Kullanıcı CSV kolonları — EmployeeController::exportColumnsForUser deseni.
+     *
+     * @return list<array{key: string, header: string, value: callable, permission?: string}>
+     */
+    private function exportColumnsForUser(?User $actor): array
+    {
+        $all = [
+            [
+                'key' => 'name',
+                'header' => 'Ad Soyad',
+                'value' => fn (User $u) => $u->name,
+            ],
+            [
+                'key' => 'email',
+                'header' => 'E-posta',
+                'value' => fn (User $u) => $u->email,
+            ],
+            [
+                'key' => 'phone',
+                'header' => 'Telefon',
+                'value' => fn (User $u) => $u->phone ?? '',
+            ],
+            [
+                'key' => 'roles',
+                'header' => 'Rol',
+                'value' => fn (User $u) => $u->roles->pluck('name')->join(', ') ?: 'Rol yok',
+            ],
+            [
+                'key' => 'is_active',
+                'header' => 'Durum',
+                'value' => fn (User $u) => $u->is_active ? 'Aktif' : 'Pasif',
+            ],
+            [
+                'key' => 'created_at',
+                'header' => 'Oluşturulma Tarihi',
+                'value' => fn (User $u) => $u->created_at?->format('Y-m-d H:i:s') ?? '',
+            ],
+        ];
+
+        return array_values(array_filter($all, function (array $col) use ($actor) {
+            $perm = $col['permission'] ?? null;
+            if ($perm === null) {
+                return true;
+            }
+            // Gelecekte hassas kolon: permission anahtarı + actor->can(...)
+            return $actor !== null && $actor->can($perm);
+        }));
     }
 
     /**

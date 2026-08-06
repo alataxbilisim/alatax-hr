@@ -64,6 +64,14 @@ ALATAX HR: Türkiye odaklı, multi-tenant B2B HR SaaS. Backend: Laravel 12 REST 
 - Kritik iş mantığı (izin hakediş hesabı, workflow koşulları, rapor builder) unit test ister.
 - Test kırıksa özellik "bitti" sayılmaz.
 
+## Yapılandırılabilirlik sınırı
+
+Ürün **yapılandırılabilir** (kod yazmadan, Ayarlar Stüdyosu / Form Engine / registry): alanlar, form/liste düzeni, listeler (lookup), onay akışları, bildirim şablonları, politikalar, roller ve alan izinleri, import/export eşlemesi, rapor/pano, tema.
+
+**Kapsam dışı** (müşteriye açılmaz; ürün geliştirme / profesyonel hizmet): müşteri betiği, sıfırdan modül, şema değişikliği, özel ekran tasarımı.
+
+Detay: `docs/SISTEM_ISLEYIS.md` · entegrasyon: `docs/ENTEGRASYON_SPEC.md`.
+
 ## Yasaklar (kısa liste)
 
 - localStorage'a token dışında hassas veri yazmak · `company_id`'yi request body'den okumak · route'suz sidebar linki · korumasız endpoint · ham SQL · hardcoded renk/metin · baseline migration düzenlemek · Telescope/debug'ı prod'da açık bırakmak · frontend'de yetki kontrolünü tek güvence sanmak (backend her zaman asıl kapıdır) · **MySQL servisini/bağımlılığını silmek**.

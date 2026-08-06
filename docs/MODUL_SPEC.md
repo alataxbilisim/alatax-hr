@@ -22,6 +22,10 @@ Her ana / çekirdek / premium modül için zorunlu ortak katman:
 | Liste görünümleri + Excel export | Kayıtlı görünümler; DataTable ortak bileşeni. |
 | İzin anahtarları | `{modul}.{sayfa}.{aksiyon}` — korumasız route yok. |
 | Bildirim + audit | Kritik olaylarda bildirim; tüm yazma işlemleri audit’li; tenant scope (`company_id`). |
+| **Ayarlar Stüdyosu / Settings Registry** | Modülün ayarları Settings Registry’ye kaydedilir ve bağlamsal ⚙ paneli (`PageSettingsButton`) bağlanır — **bağlanmadan modül bitmez**. |
+| **Özel alan (custom field)** | Modülün ana kayıt tipi Form Engine / `CustomFieldDefinition` ile özel alan destekler. |
+| **İçe / dışa aktarma profili** | Modül, entegrasyon profiline açıktır (alan eşlemesi; bkz. `ENTEGRASYON_SPEC.md`) — standart + özel alanlar. |
+| **Kurulumsuz çalışır** | Makul varsayılanlarla (seed / sistem şablonu) kullanılabilir; **hiçbir modül kullanılabilir olmak için önce yapılandırma şart koşamaz**. |
 
 ---
 

@@ -10,7 +10,7 @@
 | Kullanıcı ↔ şirket | Çoktan-çoğa; bir kullanıcı N şirkete erişebilir |
 | Yetki | Şimdilik tüm şirketlerde **aynı rol** (eşleme tablosunda rol kolonu açılır, boş kalır) |
 
-**Müşteri:** Dobedan · 3→10 şirket · 6→40 şube · ~3000 personel · merkez İK.
+**Ölçek aralığı (ürün çerçevesi):** tek şubeli ~10 kişi → yüzlerce şube / on binlerce personel; holding’de birden çok şirket; merkez İK. Pilot müşteri gereksinim kilidi değildir (`ROADMAP.md` §0).
 
 **Önceki belge:** `FAZ_A_RAPOR` §A3 (14 Tem) — bu dosya onu günceller; A3’teki `branch` stub ve “Employee.branch_id yok” ifadeleri **artık geçersiz**.
 
@@ -250,16 +250,16 @@ Risk: Membership’li yönetici Portal’a düşerse hangi company? → Portal�
 
 ---
 
-## ADIM 4 — ~3000 personel ölçek kontrolü
+## ADIM 4 — Ölçek aralığı kontrolü (küçük ofisten kurumsal holding’e)
 
-### 4.1 Hacim tahmini (üst sınır)
+### 4.1 Hacim tahmini (üst sınır örneği)
 
-| Varsayım | Değer |
+| Varsayım | Değer (aralık / örnek üst sınır) |
 |----------|--------|
-| Personel | ~3000 (grup) |
-| Şirket | 3→10 |
-| Puantaj | ~250 iş günü/yıl × 2 yıl ≈ **1.5M** `attendance_records` satırı |
-| İzin | Personel × birkaç talep/yıl → düşük yüzbinler |
+| Personel | ~10 (küçük) → on binlerce (kurumsal); teşhis örneği ~binler–on binler grup |
+| Şirket / şube | 1 şirket 1 şube → onlarca şirket / yüzlerce şube |
+| Puantaj | personel × ~250 iş günü/yıl × saklama yılı → milyonlarca `attendance_records` |
+| İzin | Personel × birkaç talep/yıl → düşük yüzbinler–milyonlar |
 
 ### 4.2 Mevcut indeksler (D1f / A3)
 

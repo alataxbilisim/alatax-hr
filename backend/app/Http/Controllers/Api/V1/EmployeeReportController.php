@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api\V1;
 use App\Models\Department;
 use App\Models\Employee;
 use App\Models\SavedReport;
+use App\Services\DataScopeService;
 use App\Services\EmployeeSensitiveFieldService;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -15,7 +17,21 @@ class EmployeeReportController extends BaseController
 {
     public function __construct(
         protected EmployeeSensitiveFieldService $sensitiveFields,
+        protected DataScopeService $dataScope,
     ) {}
+
+    /**
+     * Rapor aggregate + export ortak personel sorgusu (company + DataScope).
+     *
+     * @return Builder<Employee>
+     */
+    protected function baseScopedQuery(): Builder
+    {
+        $query = Employee::query()->where('company_id', $this->getCompanyId());
+        $this->dataScope->scopeForEmployee($query, auth()->user());
+
+        return $query;
+    }
 
     /**
      * Desteklenen boyutlar (dimensions)
@@ -216,8 +232,7 @@ class EmployeeReportController extends BaseController
         $dimensionConfig = $this->dimensions[$dimension];
         $measureConfig = $this->measures[$measure];
 
-        $query = Employee::query()
-            ->where('company_id', $this->getCompanyId());
+        $query = $this->baseScopedQuery();
 
         // Filtreleri uygula
         $query = $this->applyFilters($query, $filters);

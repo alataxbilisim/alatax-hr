@@ -1,25 +1,25 @@
 # ALATAX HR — ROADMAP v1.1
 
-**Tarih:** 31 Temmuz 2026 (DOK-3 revizyon) · önceki: 11 Tem 2026 (Faz 2)
-**Girdiler:** Güncel kod + `GUNCEL_DURUM_RAPORU.md` + müşteri/ölçek kararları + FAZ_A §A3 holding kararı
-**Bağlam:** Solo geliştirici (Cursor + AI destekli), Türkiye first, Dobedan on-prem pilot, bordro motoru kapsam dışı (aktarım paketi var).
+**Tarih:** 6 Ağustos 2026 (yeniden çerçeveleme) · önceki: 31 Tem 2026 (DOK-3)
+**Girdiler:** Güncel kod + `GUNCEL_DURUM_RAPORU.md` + genel pazar / ölçek aralığı + FAZ_A §A3 holding kararı
+**Bağlam:** Solo geliştirici (Cursor + AI destekli), Türkiye first, genel pazar ürünü; Dobedan pilot/doğrulama; bordro motoru kapsam dışı (aktarım paketi var).
 
 ---
 
-## 0. Müşteri ve ölçek bağlamı
+## 0. Ürün çerçevesi ve ölçek
 
-> Her tasarım ve faz kararı bu bölüme göre verilir.
+> Ürün **genel pazara** geliştirilir. Dobedan (veya herhangi bir pilot) **doğrulama ortamıdır**; gereksinimi belirlemez. Tasarım kararları bu bölüme göre verilir.
 
 | Madde | Değer |
 |-------|--------|
-| İlk müşteri | **Dobedan Otel Grubu** |
-| Kurulum | **ON-PREM** |
-| İlerisi | Aynı kod tabanı → cloud SaaS + on-prem paket satışı |
-| Ölçek | **3 şirket** (artacak, ~10’a kadar) · **6 şube** (~40’a kadar) · **~3000 personel** |
-| Yönetim modeli | **Tek merkez İK** — tüm şirketleri yönetir; şirket verisi karışmaz; raporlama gruba yayılır |
-| Bordro | Logo’da kalır → bizim çıktı = **puantaj aktarım paketi** (API veya dosya) |
-| PDKS | Donanım yok → telefondan **QR okutma**; ⚠️ vardiya başı **500+ eşzamanlı** okutma |
-| İlk sürüm | **14 modülün tamamı hazır** (kısmi çıkış / “yarım paket” yok) |
+| Hedef pazar | Türkiye B2B HR SaaS — cloud + on-prem tek kod tabanı |
+| Pilot / doğrulama | Dobedan ve benzeri kurulumlar; ürün yolunu kilitlemez |
+| Kurulum | Cloud SaaS ve on-prem paket (aynı kod; `APP_MODE` + lisans) |
+| Ölçek aralığı | **Tek şubeli ~10 kişiden** → **yüzlerce şubeli / on binlerce personele**; holding’de birden çok şirket (veri karışmaz; raporlama gruba yayılabilir) |
+| Yönetim modeli | Merkez İK + şube/şirket bağlamı; tenant izolasyonu zorunlu |
+| Bordro | Dış sistemde kalabilir → çıktı = **puantaj / sicil aktarım paketi** (bkz. `ENTEGRASYON_SPEC.md`) |
+| PDKS | Donanım opsiyonel; QR/telefon; büyük vardiya başında **yüzlerce eşzamanlı** okutma hedefi |
+| İlk sürüm hedefi | **14 modülün tamamı** satılabilir kalitede (kısmi çıkış / “yarım paket” yok) |
 
 **Holding kararı (DOK-3):** FAZ_A §A3 **SEÇENEK 1 onaylandı** (`organizations` / company_groups + DataScope `group`). SEÇENEK 2 (cross-tenant bypass) reddedildi. Önceki “holding park” kararı **iptal**. Uygulama fazı: **Faz G** (Faz 6’dan önce).
 
@@ -46,7 +46,7 @@ Fark yaratacak 4 şey:
 3. **API-first.** Company/Portal/SuperAdmin SPA'larının kullandığı API, ileride mobil uygulamanın kullanacağı API'nin ta kendisidir. UI'a özel gizli endpoint yazılmaz.
 4. **Tek veritabanı motoru (uygulama default): PostgreSQL.** Default connection `pgsql`. MySQL bilgisayardan / Docker'dan **ASLA silinmez** — legacy olarak korunur (devre dışı bırakılabilir ama servis/bağımlılık kalır). SQLite yalnızca acil lokal deneme; CI ve prod pgsql. JSONB + GIN index, custom field ve audit mimarisinin temelidir.
 5. **Kod cloud/on-prem ayrımı bilmez.** Fark yalnızca konfigürasyon (`APP_MODE`) ve lisans katmanındadır.
-6. **Derinlik > genişlik — ama ilk müşteri için 14’ün tamamı.** Paket satışında à la carte korunur; Dobedan ilk sürümünde 14 modül “satılabilir” kalitede çıkar (kısmi çıkış yok). Yarım modül teslim edilmez.
+6. **Derinlik > genişlik — ama ilk genel sürümde 14’ün tamamı.** Paket satışında à la carte korunur; pilot ve genel pazarda 14 modül “satılabilir” kalitede çıkar (kısmi çıkış yok). Yarım modül teslim edilmez.
 7. **Türkçe-first, i18n-ready.** Arayüz Türkçe; ancak bugünden itibaren yazılan her yeni metin çeviri altyapısından (t()) geçer. Toplu string migrasyonu global açılım öncesine ertelenir.
 8. **Her faz test ve dokümantasyonla kapanır.** DoD (Definition of Done) karşılanmadan sonraki faza geçilmez.
 
@@ -415,7 +415,7 @@ D1a–D1g tamam. **11 dataset**, whitelist query builder, builder UI, pivot/DSL,
 
 ### FAZ 7 — On-Prem Paketleme + Lisans v1 + GA Hazırlığı (3–4 hafta)
 
-> **Sıra:** Modül derinleştirme (Faz 6) **sonra**, canlıya çıkış **önce**. Dobedan on-prem kurulumu bu fazın DoD’sine bağlıdır.
+> **Sıra:** Modül derinleştirme (Faz 6) **sonra**, canlıya çıkış **önce**. On-prem pilot kurulumu bu fazın DoD’sine bağlıdır.
 
 - [ ] `APP_MODE=standalone`: SuperAdmin gizli, tek firma/organization otomatik, kayıt kapalı; kod içinde if/else minimum (config + service provider seviyesinde)
 - [ ] On-prem dağıtım paketi: versiyonlu Docker imajları + docker-compose.prod.yml + `install.sh` (env üretimi, key generate, migrate, seed, ilk admin)
@@ -504,7 +504,7 @@ Analitik (B14) Professional’da “hazır pano + sınırlı builder”, Enterpr
 | **Professional** | Starter + **PDKS + Ücret & Ödemeler + İşe Alım + Oryantasyon & Çıkış + Performans + Eğitim (LMS)** + Analitik (hazır panolar + kopyalanabilir raporlar) | Temel workflow zincir editörü | KOBİ / ölçeklenen İK |
 | **Enterprise** | **14’ün tamamı** (+ İSG + Varlık + Anket + Analitik tam builder/ölçü/zamanlama) | Gelişmiş Workflow + API & Webhook + on-prem seçeneği + aktarım adaptörleri (Faz 8) | Kurumsal / fabrika / holding adayı |
 
-**Tekil / à la carte:** SuperAdmin (veya imzalı lisans dosyası) her modülü bağımsız aç/kapa — İSG, PDKS, LMS dahil. Paket tablosu (Starter/Pro/Enterprise) yalnızca **önerilen demet**; zorunlu kilit değildir. Dobedan ilk sürümünde 14’ü de açık gelir.
+**Tekil / à la carte:** SuperAdmin (veya imzalı lisans dosyası) her modülü bağımsız aç/kapa — İSG, PDKS, LMS dahil. Paket tablosu (Starter/Pro/Enterprise) yalnızca **önerilen demet**; zorunlu kilit değildir. Genel sürüm / pilot hedefi: 14’ü de açık gelebilir.
 
 **SuperAdmin:** Müşteri kurulumunda görünmez kalır (davranış değişmez). On-prem’de gizlilik ≠ güvenlik; koruma imzalı lisans + sözleşmedir (Faz 7).
 
@@ -519,7 +519,7 @@ Analitik (B14) Professional’da “hazır pano + sınırlı builder”, Enterpr
 | **M1 — Güvenli Çekirdek** | ✅ Faz 2 sonu (11 Tem 2026) | İzin sistemi gerçek; demo verilebilir |
 | **M2 — Platform Tamam** | ✅ Faz 5 sonu (2026-07-29) | Özelleştirme + BI çalışıyor; dogfooding başlar |
 | **M2.5 — Grup hazır** | Faz G sonu | Organization + DataScope `group` + izolasyon testleri |
-| **M3 — Pilot (Dobedan)** | Faz 6 + Faz 7 | 14 modül + on-prem kurulum + aktarım paketi |
+| **M3 — Pilot doğrulama** | Faz 6 + Faz 7 | 14 modül + on-prem kurulum + aktarım paketi (ör. Dobedan) |
 | **M4 — GA v1.0** | Faz 7 sonu (cloud paket) | Cloud satış + on-prem teklif |
 
 Sıra özeti: **G1 → Faz 6 (W2→modüller) → Faz 7 → Faz 8**. Bu belge yaşayan bir belgedir.

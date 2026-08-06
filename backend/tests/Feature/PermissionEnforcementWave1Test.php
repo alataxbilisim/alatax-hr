@@ -10,6 +10,7 @@ use App\Models\Company;
 use App\Models\User;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
@@ -130,9 +131,13 @@ class PermissionEnforcementWave1Test extends TestCase
             'is_successful' => true,
         ]);
 
+        // Firma geneli audit: company data_scope (Own/dept null user_id sistem loglarını gizler)
         $user = $this->makeUser(UserType::User, $this->company);
+        $role = Role::findOrCreate('audit_company_viewer', 'sanctum');
+        $role->forceFill(['data_scope' => 'company'])->save();
+        $user->assignRole($role);
         $user->givePermissionTo('management.audit_logs.view');
-        Sanctum::actingAs($user);
+        Sanctum::actingAs($user->fresh());
 
         $response = $this->getJson('/api/v1/activity-logs');
         $response->assertStatus(200);

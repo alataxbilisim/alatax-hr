@@ -16,19 +16,20 @@
 
 ---
 
-## 0. Müşteri ve ölçek bağlamı
+## 0. Ürün çerçevesi ve ölçek
 
 | Madde | Değer |
 |-------|--------|
-| İlk müşteri | **Dobedan Otel Grubu** |
-| Kurulum | **ON-PREM** (aynı kod → cloud + on-prem paket satışı) |
-| Ölçek | 3 şirket (→10) · 6 şube (→40) · ~3000 personel |
-| Yönetim | Tek merkez İK; şirket verisi karışmaz; raporlama gruba yayılır |
-| Bordro | Logo’da; bizim çıktı = puantaj aktarım paketi (API/dosya) |
-| PDKS | Donanım yok → telefon QR; vardiya başı **500+ eşzamanlı** okutma |
+| Hedef pazar | Türkiye B2B HR — cloud + on-prem tek kod |
+| Pilot / doğrulama | Dobedan ve benzeri; **gereksinimi belirlemez** |
+| Kurulum | Cloud SaaS + on-prem paket |
+| Ölçek aralığı | Tek şubeli ~10 kişi → yüzlerce şube / on binlerce personel |
+| Yönetim | Merkez İK; şirket verisi karışmaz; raporlama gruba yayılabilir |
+| Bordro | Dış sistem mümkün; çıktı = aktarım paketi (`ENTEGRASYON_SPEC.md`) |
+| PDKS | QR/telefon + donanım opsiyonel; büyük vardiyada yüzlerce eşzamanlı okutma |
 | İlk sürüm | **14 modülün tamamı** (kısmi çıkış yok) |
 
-→ Her tasarım kararı buna göre: `ROADMAP.md` §0.
+→ Ürün genel pazara geliştirilir: `ROADMAP.md` §0.
 
 ---
 

@@ -44,14 +44,31 @@ Aşağıdaki bölümler kronolojik: firma kurulumu → çalışan yaşam döngü
 5. Formların özelleştirilmesi: personel formuna firma-özel alanlar (Zoho mantığı), gereksiz alanları gizleme, liste görünümleri **[Form Engine]**
 6. Görünüm: tema, yoğunluk (density), logo **[TASARIM_REHBERI]**
 
-> **Kilit fikir:** Firma kod yazmadan, tamamen Ayarlar Stüdyosu'ndan kendine göre şekillenir. Akış mekanizması sabit, içerik firmaya özel.
+> **Kilit fikir:** Firma kod yazmadan, tamamen Ayarlar Stüdyosu'ndan kendine göre şekillenir. Akış mekanizması sabit, içerik firmaya özel. **Kurulum zorunlu değil:** yeni firma makul varsayılanlarla çalışır; yapılandırma derinleştirir, kapı tutmaz (`MODUL_SPEC` ortak standart).
+
+### Yapılandırılabilirlik sınırı
+
+| Yapılandırılabilir (ürün) | Kapsam dışı |
+|---|---|
+| Alanlar (standart görünürlük + özel alan) | Müşteri betiği / script |
+| Form ve liste düzeni | Sıfırdan yeni modül |
+| Listeler (lookup) | Şema / kolon değişikliği |
+| Onay akışları | Özel ekran tasarımı (pixel-perfect müşteri UI) |
+| Bildirim şablonları | |
+| Politikalar (izin, saklama, vb.) | |
+| Roller ve alan izinleri | |
+| Import / export eşlemesi (profil) | |
+| Rapor / pano | |
+| Tema / density / logo | |
+
+Entegrasyon katmanları: `ENTEGRASYON_SPEC.md`.
 
 **Şirket bağlamı (CompanyContext):**
-- **Portal yolu:** bağlam = home / personelin kendi şirketi. `X-Company-Id` ve `last_company_id` yok sayılır; portal `last_company_id` yazmaz. **Tek personel kaydı / home varsayımı** (Tur5–6); portalda grup kapsamı yok.
-- **Panel/operasyonel yol:** bağlam = `CompanyContext` (`getCompanyId()` / `X-Company-Id` + membership). Yeni kod `$user->company_id` okumaz; istisnalar `BelongsToCompany:59`, `ApprovalWorkflowPolicy:54`, `BranchContextService:38` ve `*/Portal/*` ile sınırlıdır.
+- **Portal yolu:** bağlam = home / personelin kendi şirketi (`users.home_company_id`). `X-Company-Id` ve `last_company_id` yok sayılır; portal `last_company_id` yazmaz. **Tek personel kaydı / home varsayımı** (Tur5–6); portalda grup kapsamı yok.
+- **Panel/operasyonel yol:** bağlam = `CompanyContext` (`getCompanyId()` / `X-Company-Id` + membership). Yeni kod `$user->company_id` / operasyonel `company_id` okumaz; home için `home_company_id`. İstisnalar sınırlıdır.
 - **Grup rapor/pano (G2):** varsayılan `scope=company` (aktif şirket). `scope=group` yalnız `reports.scope.group` + organization ∩ membership; **CRUD ve KVKK group kullanmaz**.
 
-**Portal / PDKS bağlam önceliği (Tur5):** QR ve portal punch'ta personel **yalnızca auth `user_id`** ile çözülür; istekten `employee_id` okunmaz. Önce home (`users.company_id`) ile eşleşen aktif personel şirketi; yoksa kullanıcının personel kaydının şirketi kazanır. QR token payload'ında employee_id yok.
+**Portal / PDKS bağlam önceliği (Tur5):** QR ve portal punch'ta personel **yalnızca auth `user_id`** ile çözülür; istekten `employee_id` okunmaz. Önce home (`users.home_company_id`) ile eşleşen aktif personel şirketi; yoksa kullanıcının personel kaydının şirketi kazanır. QR token payload'ında employee_id yok.
 
 **Settings yazma (Tur5):** `SettingsWriter` aktif operasyonel bağlama yazar (`CompanyContext` / membership); home şirketine sessiz düşmez.
 
