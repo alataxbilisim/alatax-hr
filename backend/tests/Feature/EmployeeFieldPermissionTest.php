@@ -274,4 +274,21 @@ class EmployeeFieldPermissionTest extends TestCase
             'measure' => 'avg_gross_salary',
         ])->assertStatus(403);
     }
+
+    public function test_report_export_excel_salary_measure_forbidden_without_permission(): void
+    {
+        Permission::findOrCreate('employees.reports.export', 'sanctum');
+
+        $specialist = $this->userWithRole('hr_specialist', [
+            'employees.list.view',
+            'employees.reports.view',
+            'employees.reports.export',
+        ]);
+
+        Sanctum::actingAs($specialist);
+        $this->postJson('/api/v1/employees/reports/export/excel', [
+            'dimension' => 'department',
+            'measure' => 'avg_gross_salary',
+        ])->assertStatus(403);
+    }
 }

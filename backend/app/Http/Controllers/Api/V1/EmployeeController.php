@@ -732,6 +732,8 @@ class EmployeeController extends BaseController
         }
 
         $employees = $query->load('position')->get();
+        $user = $request->user();
+        $columns = $this->exportColumnsForUser($user);
 
         // CSV oluştur
         $filename = 'personel_listesi_'.date('Y-m-d_His').'.csv';
@@ -740,44 +742,100 @@ class EmployeeController extends BaseController
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ];
 
-        $callback = function () use ($employees) {
+        $callback = function () use ($employees, $columns) {
             $file = fopen('php://output', 'w');
 
             // BOM ekle (Excel için UTF-8 desteği)
             fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
 
-            // Başlıklar
-            fputcsv($file, [
-                'Sicil No',
-                'Ad Soyad',
-                'Email',
-                'Departman',
-                'Pozisyon',
-                'Ünvan',
-                'İşe Giriş',
-                'Durum',
-                'Telefon',
-            ], ';');
+            fputcsv($file, array_column($columns, 'header'), ';');
 
-            // Veriler
             foreach ($employees as $employee) {
-                fputcsv($file, [
-                    $employee->employee_code,
-                    $employee->user?->name ?? '-',
-                    $employee->user?->email ?? $employee->personal_email ?? '-',
-                    $employee->department?->name ?? '-',
-                    $employee->position?->name ?? '-',
-                    $employee->title ?? '-',
-                    $employee->hire_date?->format('d.m.Y') ?? '-',
-                    $employee->status,
-                    $employee->personal_phone ?? '-',
-                ], ';');
+                $row = [];
+                foreach ($columns as $column) {
+                    $row[] = ($column['value'])($employee);
+                }
+                fputcsv($file, $row, ';');
             }
 
             fclose($file);
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Liste CSV kolonları — `permission` anahtarlı kolonlar izin yoksa düşer
+     * (gelecekte ücret/TCKN eklendiğinde otomatik kapı).
+     *
+     * @return list<array{key: string, header: string, value: callable, permission?: string}>
+     */
+    private function exportColumnsForUser(?\App\Models\User $user): array
+    {
+        $all = [
+            [
+                'key' => 'employee_code',
+                'header' => 'Sicil No',
+                'value' => fn (Employee $e) => $e->employee_code,
+            ],
+            [
+                'key' => 'full_name',
+                'header' => 'Ad Soyad',
+                'value' => fn (Employee $e) => $e->user?->name ?? $e->full_name ?? '-',
+            ],
+            [
+                'key' => 'email',
+                'header' => 'Email',
+                'value' => fn (Employee $e) => $e->user?->email ?? $e->personal_email ?? '-',
+            ],
+            [
+                'key' => 'department',
+                'header' => 'Departman',
+                'value' => fn (Employee $e) => $e->department?->name ?? '-',
+            ],
+            [
+                'key' => 'position',
+                'header' => 'Pozisyon',
+                'value' => fn (Employee $e) => $e->position?->name ?? '-',
+            ],
+            [
+                'key' => 'title',
+                'header' => 'Ünvan',
+                'value' => fn (Employee $e) => $e->title ?? '-',
+            ],
+            [
+                'key' => 'hire_date',
+                'header' => 'İşe Giriş',
+                'value' => fn (Employee $e) => $e->hire_date?->format('d.m.Y') ?? '-',
+            ],
+            [
+                'key' => 'status',
+                'header' => 'Durum',
+                'value' => fn (Employee $e) => $e->status,
+            ],
+            [
+                'key' => 'personal_phone',
+                'header' => 'Telefon',
+                'value' => fn (Employee $e) => $e->personal_phone ?? '-',
+            ],
+            // Örnek hassas kolonlar — export'a almak için satırı etkinleştirin; permission kapısı zorunlu
+            // ['key' => 'gross_salary', 'header' => 'Brüt Maaş', 'permission' => 'salary', 'value' => fn (Employee $e) => $e->gross_salary ?? '-'],
+            // ['key' => 'national_id', 'header' => 'TCKN', 'permission' => 'tckn', 'value' => fn (Employee $e) => $e->national_id ?? '-'],
+        ];
+
+        $canSalary = $this->sensitiveFields->canViewSalary($user);
+
+        return array_values(array_filter($all, function (array $col) use ($canSalary, $user) {
+            $perm = $col['permission'] ?? null;
+            if ($perm === 'salary') {
+                return $canSalary;
+            }
+            if ($perm === 'tckn') {
+                return $user !== null && $user->can('employees.tckn.view');
+            }
+
+            return true;
+        }));
     }
 
     /**

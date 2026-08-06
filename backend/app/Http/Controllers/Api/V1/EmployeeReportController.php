@@ -580,7 +580,7 @@ class EmployeeReportController extends BaseController
     /**
      * Raporu Excel olarak dışa aktar
      */
-    public function exportExcel(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    public function exportExcel(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse|\Illuminate\Http\JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'dimension' => 'required|string',
@@ -595,6 +595,21 @@ class EmployeeReportController extends BaseController
         $dimension = $request->input('dimension');
         $measure = $request->input('measure');
         $filters = $request->input('filters', []);
+
+        if (! isset($this->dimensions[$dimension])) {
+            return $this->error('Geçersiz boyut', 422);
+        }
+
+        if (! isset($this->measures[$measure])) {
+            return $this->error('Geçersiz metrik', 422);
+        }
+
+        // Yetki kontrolü — JSON aggregate ile aynı seviye (maaş metrikleri)
+        $measureConfig = $this->measures[$measure];
+        if (isset($measureConfig['requires_permission'])
+            && ! $this->sensitiveFields->canViewSalary(auth()->user())) {
+            return $this->error('Bu metrik için yetkiniz bulunmamaktadır', 403);
+        }
 
         $data = $this->aggregateData($dimension, $measure, $filters);
 

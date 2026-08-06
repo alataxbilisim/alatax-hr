@@ -124,6 +124,9 @@ class CustomFieldController extends BaseController
         }
 
         $validated = $request->validate([
+            'field_key' => 'prohibited',
+            'system_key' => 'prohibited',
+            'entity_type' => 'prohibited',
             'field_label' => 'sometimes|string|max:255',
             'field_type' => [
                 'sometimes',

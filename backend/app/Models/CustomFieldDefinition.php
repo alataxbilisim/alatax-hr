@@ -47,6 +47,22 @@ class CustomFieldDefinition extends Model
         'sort_order' => 'integer',
     ];
 
+    protected static function booted(): void
+    {
+        static::updating(function (CustomFieldDefinition $field) {
+            if ($field->isDirty('field_key')) {
+                throw new \RuntimeException(
+                    'custom_field_definitions.field_key is immutable after create.'
+                );
+            }
+            if ($field->isDirty('system_key') && $field->getOriginal('system_key') !== null) {
+                throw new \RuntimeException(
+                    'custom_field_definitions.system_key is immutable after create.'
+                );
+            }
+        });
+    }
+
     // Field types
     const TYPE_TEXT = 'text';
 
