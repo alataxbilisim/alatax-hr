@@ -1,0 +1,1 @@
+﻿pgsql / postgres / alatax_hr

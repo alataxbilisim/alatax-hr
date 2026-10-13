@@ -1,0 +1,8 @@
+﻿NAME                  IMAGE                 COMMAND                  SERVICE     CREATED        STATUS                 PORTS
+alatax-hr-app         alatax-hr-app         "entrypoint.sh php-fÔÇĞ"   app         26 hours ago   Up 6 hours             9000/tcp
+alatax-hr-mysql       mysql:8.0             "docker-entrypoint.sÔÇĞ"   mysql       26 hours ago   Up 6 hours (healthy)   0.0.0.0:3307->3306/tcp, [::]:3307->3306/tcp
+alatax-hr-nginx       nginx:1.27-alpine     "/docker-entrypoint.ÔÇĞ"   nginx       26 hours ago   Up 6 hours (healthy)   0.0.0.0:8000->80/tcp, [::]:8000->80/tcp
+alatax-hr-postgres    postgres:16-alpine    "docker-entrypoint.sÔÇĞ"   postgres    26 hours ago   Up 6 hours (healthy)   0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp
+alatax-hr-queue       alatax-hr-queue       "entrypoint.sh php aÔÇĞ"   queue       26 hours ago   Up 6 hours             9000/tcp
+alatax-hr-redis       redis:7-alpine        "docker-entrypoint.sÔÇĞ"   redis       26 hours ago   Up 6 hours (healthy)   0.0.0.0:6379->6379/tcp, [::]:6379->6379/tcp
+alatax-hr-scheduler   alatax-hr-scheduler   "entrypoint.sh php aÔÇĞ"   scheduler   26 hours ago   Up 6 hours             9000/tcp

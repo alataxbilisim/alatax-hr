@@ -106,6 +106,7 @@ docs/backups/
 docs/**/*.log
 docs/**/*.dump
 docs/qa/**
+docs/arsiv/**/qa/**
 docs/e2e/**
 docs/**/KANIT.html
 docs/denetim-raw.json

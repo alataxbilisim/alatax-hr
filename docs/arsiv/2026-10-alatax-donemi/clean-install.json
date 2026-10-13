@@ -1,0 +1,85 @@
+{
+    "db": "alatax_hr_testing",
+    "steps": [
+        {
+            "step": "migrate:fresh",
+            "elapsed_sec": 9.17,
+            "result": {
+                "output_tail": "\n  Dropping all tables ............................................... 1sn DONE\n\n   INFO  Preparing database.  \n\n  Creating migration table ...................................... 67.47ms DONE\n\n   INFO  Loading stored database schemas.  \n\n  database\/schema\/pgsql-schema.sql .................................. 3sn DONE\n\n   INFO  Running migrations.  \n\n  2026_07_30_160000_d3_jsonb_gin_indexes ........................ 96.35ms DONE\n  2026_07_31_150000_add_attendance_records_company_date_indexes . 36.32ms DONE\n  2026_08_04_120000_g1_organizations_and_company_context ....... 123.85ms DONE\n  2026_08_05_140000_add_full_name_to_employees_table ............ 10.21ms DONE\n  2026_08_05_153000_add_panel_access_to_roles_table .............. 4.77ms DONE\n\n"
+            },
+            "error": null
+        },
+        {
+            "step": "db:seed PermissionSeeder+DatabaseSeeder",
+            "elapsed_sec": 4.36,
+            "result": {
+                "output_tail": "ING  \n  Database\\Seeders\\SystemReportPackageSeeder ..................... 825 ms DONE  \n\n  Database\\Seeders\\SuperAdminSeeder .................................. RUNNING  \n  Database\\Seeders\\SuperAdminSeeder .............................. 449 ms DONE  \n\n  Database\\Seeders\\LeaveTypeSeeder ................................... RUNNING  \n  Database\\Seeders\\LeaveTypeSeeder ............................... 108 ms DONE  \n\n  Database\\Seeders\\LookupSeeder ...................................... RUNNING  \n  Database\\Seeders\\LookupSeeder ................................ 1,166 ms DONE  \n\n  Database\\Seeders\\EmployeeFormFieldSeeder ........................... RUNNING  \nEmployee form fields seeded: 65 system fields, 5 layout(s).\n  Database\\Seeders\\EmployeeFormFieldSeeder ....................... 288 ms DONE  \n\n"
+            },
+            "error": null
+        },
+        {
+            "step": "check_panel_access_column",
+            "elapsed_sec": 0.01,
+            "result": {
+                "has_column": true,
+                "role_count": 6,
+                "employee_panel_access": false,
+                "admin_panel_access": true,
+                "full_name_column": true
+            },
+            "error": null
+        },
+        {
+            "step": "demo:seed",
+            "elapsed_sec": 26.19,
+            "result": {
+                "output": "Retention seed pasif (D2c). Dry-run için: demo:seed --activate-retention\n+------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+\n| Kontrol          | Değer                                                                                                                                                |\n+------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+\n| user_exists      | yes                                                                                                                                                  |\n| user_active      | yes                                                                                                                                                  |\n| user_type        | company_admin                                                                                                                                        |\n| company_slug     | demo-firma                                                                                                                                           |\n| company_id       | 1                                                                                                                                                    |\n| has_admin_role   | yes                                                                                                                                                  |\n| permissions      | {\"employees.list.view\":true,\"reports.definitions.view\":true,\"reports.dashboards.view\":true,\"leaves.requests.view\":true,\"management.users.view\":true} |\n| permission_count | 444                                                                                                                                                  |\n| employee_code    | DEM-001                                                                                                                                              |\n| sister_otel_b    | yes                                                                                                                                                  |\n| sister_otel_c    | yes                                                                                                                                                  |\n+------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+\nDemo sentinel OK"
+            },
+            "error": null
+        },
+        {
+            "step": "demo:align-organizations",
+            "elapsed_sec": 0.01,
+            "result": {
+                "output": "Zaten hizalı (organization_id=4)\n+----+-------------+-----------------+\n| id | slug        | organization_id |\n+----+-------------+-----------------+\n| 1  | demo-firma  | 4               |\n| 2  | demo-otel-b | 4               |\n| 3  | demo-otel-c | 4               |\n+----+-------------+-----------------+"
+            },
+            "error": null
+        },
+        {
+            "step": "verify_demo_org",
+            "elapsed_sec": 0,
+            "result": {
+                "companies": [
+                    {
+                        "id": 1,
+                        "slug": "demo-firma",
+                        "organization_id": 4
+                    },
+                    {
+                        "id": 2,
+                        "slug": "demo-otel-b",
+                        "organization_id": 4
+                    },
+                    {
+                        "id": 3,
+                        "slug": "demo-otel-c",
+                        "organization_id": 4
+                    }
+                ],
+                "unique_org_ids": [
+                    4
+                ],
+                "single_org": true,
+                "admin_id": 2,
+                "admin_memberships": [
+                    1,
+                    2,
+                    3
+                ],
+                "admin_member_of_all_three": true
+            },
+            "error": null
+        }
+    ],
+    "total_elapsed_sec": 39.74
+}

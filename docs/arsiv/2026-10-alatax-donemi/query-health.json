@@ -1,0 +1,307 @@
+{
+    "company_id": 1189,
+    "cases": [
+        {
+            "case": "employees_list_unfiltered",
+            "query_count": 1,
+            "wall_ms": 3.6,
+            "sum_query_ms": 3.2,
+            "max_query_ms": 3.2,
+            "max_sql": "select * from \"employees\" where \"company_id\" = ? and \"deleted_at\" is null order by \"id\" asc limit 25",
+            "slow_ge_300": []
+        },
+        {
+            "case": "employees_list_filtered_status_position",
+            "query_count": 1,
+            "wall_ms": 2,
+            "sum_query_ms": 1.7,
+            "max_query_ms": 1.7,
+            "max_sql": "select * from \"employees\" where \"company_id\" = ? and \"deleted_at\" is null and \"status\" = ? and \"position\"::text like ? order by \"id\" asc limit 25",
+            "slow_ge_300": []
+        },
+        {
+            "case": "leave_requests_list",
+            "query_count": 1,
+            "wall_ms": 8.8,
+            "sum_query_ms": 8.5,
+            "max_query_ms": 8.5,
+            "max_sql": "select * from \"leave_requests\" where \"company_id\" = ? and \"deleted_at\" is null order by \"id\" desc limit 25",
+            "slow_ge_300": []
+        },
+        {
+            "case": "attendance_monthly_agg",
+            "query_count": 1,
+            "wall_ms": 55.6,
+            "sum_query_ms": 33.6,
+            "max_query_ms": 33.6,
+            "max_sql": "select date, count(*) as cnt, sum(total_hours) as hours from \"attendance_records\" where \"company_id\" = ? and \"date\" between ? and ? group by \"date\" order by \"date\" asc",
+            "slow_ge_300": []
+        },
+        {
+            "case": "dataset_employees_company",
+            "query_count": 8,
+            "wall_ms": 919.8,
+            "sum_query_ms": 27.9,
+            "max_query_ms": 7.2,
+            "max_sql": "select * from \"custom_field_definitions\" where \"entity_type\" = ? and \"is_active\" = ? and \"is_system\" = ? and (\"company_id\" = ? or \"company_id\" is null) order by \"sort_order\" asc",
+            "slow_ge_300": []
+        },
+        {
+            "case": "dataset_leave_requests_company",
+            "query_count": 6,
+            "wall_ms": 47.4,
+            "sum_query_ms": 31.5,
+            "max_query_ms": 25.8,
+            "max_sql": "select leave_requests.id as \"id\", leave_requests.company_id as \"company_id\", leave_requests.user_id as \"user_id\", leave_requests.leave_type_id as \"leave_type_id\", leave_types.name as \"leave_type_name\" from \"leave_requests\" left join \"leave_",
+            "slow_ge_300": []
+        },
+        {
+            "case": "dataset_leave_balances_company",
+            "query_count": 2,
+            "wall_ms": 17.6,
+            "sum_query_ms": 6.3,
+            "max_query_ms": 6,
+            "max_sql": "select leave_balances.id as \"id\", leave_balances.company_id as \"company_id\", leave_balances.user_id as \"user_id\", leave_balances.leave_type_id as \"leave_type_id\", leave_balances.year as \"year\" from \"leave_balances\" order by leave_balances.y",
+            "slow_ge_300": []
+        },
+        {
+            "case": "dataset_expense_claims_company",
+            "query_count": 6,
+            "wall_ms": 38.3,
+            "sum_query_ms": 15.9,
+            "max_query_ms": 10.8,
+            "max_sql": "select expense_claims.id as \"id\", expense_claims.company_id as \"company_id\", expense_claims.user_id as \"user_id\", expense_claims.claim_number as \"claim_number\", expense_claims.title as \"title\" from \"expense_claims\" order by expense_claims.e",
+            "slow_ge_300": []
+        },
+        {
+            "case": "dataset_job_applications_company",
+            "query_count": 6,
+            "wall_ms": 41.3,
+            "sum_query_ms": 19.3,
+            "max_query_ms": 11.8,
+            "max_sql": "select job_applications.id as \"id\", job_applications.company_id as \"company_id\", job_applications.job_position_id as \"job_position_id\", job_applications.status as \"status\", job_applications.source as \"source\" from \"job_applications\" where \"",
+            "slow_ge_300": []
+        },
+        {
+            "case": "dataset_survey_responses_company",
+            "query_count": 2,
+            "wall_ms": 34.8,
+            "sum_query_ms": 10.5,
+            "max_query_ms": 8.9,
+            "max_sql": "select survey_responses.id as \"id\", surveys.company_id as \"company_id\", survey_responses.survey_question_id as \"survey_question_id\", surveys.id as \"survey_id\", surveys.title as \"survey_title\" from \"survey_responses\" inner join \"survey_submi",
+            "slow_ge_300": []
+        },
+        {
+            "case": "dataset_attendance_records_company",
+            "query_count": 2,
+            "wall_ms": 199.2,
+            "sum_query_ms": 184.4,
+            "max_query_ms": 183.6,
+            "max_sql": "select attendance_records.id as \"id\", attendance_records.company_id as \"company_id\", attendance_records.user_id as \"user_id\", attendance_records.date as \"date\", attendance_records.status as \"status\" from \"attendance_records\" order by attend",
+            "slow_ge_300": []
+        },
+        {
+            "case": "dataset_assets_company",
+            "query_count": 6,
+            "wall_ms": 20.5,
+            "sum_query_ms": 7.6,
+            "max_query_ms": 3.8,
+            "max_sql": "select assets.id as \"id\", assets.company_id as \"company_id\", assets.asset_code as \"asset_code\", assets.name as \"name\", assets.status as \"status\" from \"assets\" order by assets.id asc limit 50 offset 0",
+            "slow_ge_300": []
+        },
+        {
+            "case": "dataset_training_participants_company",
+            "query_count": 2,
+            "wall_ms": 17.8,
+            "sum_query_ms": 6.3,
+            "max_query_ms": 5.9,
+            "max_sql": "select training_participants.id as \"id\", trainings.company_id as \"company_id\", training_participants.user_id as \"user_id\", training_participants.status as \"status\", training_participants.score as \"score\" from \"training_participants\" inner j",
+            "slow_ge_300": []
+        },
+        {
+            "case": "dataset_employee_documents_company",
+            "query_count": 2,
+            "wall_ms": 16,
+            "sum_query_ms": 2.6,
+            "max_query_ms": 2,
+            "max_sql": "select employee_documents.id as \"id\", employee_documents.company_id as \"company_id\", employee_documents.employee_id as \"employee_id\", employee_documents.title as \"title\", employee_documents.category as \"category\" from \"employee_documents\" w",
+            "slow_ge_300": []
+        },
+        {
+            "case": "dataset_payslips_company",
+            "query_count": 2,
+            "wall_ms": 29,
+            "sum_query_ms": 7.3,
+            "max_query_ms": 6.8,
+            "max_sql": "select payslips.id as \"id\", payslips.company_id as \"company_id\", payslips.employee_id as \"employee_id\", payslips.period as \"period\", payslips.year as \"year\" from \"payslips\" where \"payslips\".\"deleted_at\" is null order by payslips.year asc, p",
+            "slow_ge_300": []
+        }
+    ],
+    "slow_all_ge_300": [],
+    "explains": {
+        "employees_filter": [
+            {
+                "QUERY PLAN": "Limit  (cost=89.29..89.30 rows=1 width=10608) (actual time=0.442..0.443 rows=0 loops=1)"
+            },
+            {
+                "QUERY PLAN": "  Buffers: shared hit=24"
+            },
+            {
+                "QUERY PLAN": "  ->  Sort  (cost=89.29..89.30 rows=1 width=10608) (actual time=0.440..0.441 rows=0 loops=1)"
+            },
+            {
+                "QUERY PLAN": "        Sort Key: id"
+            },
+            {
+                "QUERY PLAN": "        Sort Method: quicksort  Memory: 25kB"
+            },
+            {
+                "QUERY PLAN": "        Buffers: shared hit=24"
+            },
+            {
+                "QUERY PLAN": "        ->  Bitmap Heap Scan on employees  (cost=15.78..89.28 rows=1 width=10608) (actual time=0.428..0.429 rows=0 loops=1)"
+            },
+            {
+                "QUERY PLAN": "              Recheck Cond: (company_id = 1189)"
+            },
+            {
+                "QUERY PLAN": "              Filter: ((deleted_at IS NULL) AND ((\"position\")::text ~~ '%Yazılım%'::text) AND ((status)::text = 'active'::text))"
+            },
+            {
+                "QUERY PLAN": "              Rows Removed by Filter: 1000"
+            },
+            {
+                "QUERY PLAN": "              Heap Blocks: exact=19"
+            },
+            {
+                "QUERY PLAN": "              Buffers: shared hit=24"
+            },
+            {
+                "QUERY PLAN": "              ->  Bitmap Index Scan on employees_company_id_department_id_index  (cost=0.00..15.78 rows=1000 width=0) (actual time=0.103..0.103 rows=1000 loops=1)"
+            },
+            {
+                "QUERY PLAN": "                    Index Cond: (company_id = 1189)"
+            },
+            {
+                "QUERY PLAN": "                    Buffers: shared hit=5"
+            },
+            {
+                "QUERY PLAN": "Planning Time: 0.283 ms"
+            },
+            {
+                "QUERY PLAN": "Execution Time: 0.634 ms"
+            }
+        ],
+        "attendance_month": [
+            {
+                "QUERY PLAN": "GroupAggregate  (cost=0.43..941.37 rows=500 width=12) (actual time=0.316..6.750 rows=30 loops=1)"
+            },
+            {
+                "QUERY PLAN": "  Group Key: date"
+            },
+            {
+                "QUERY PLAN": "  Buffers: shared hit=33"
+            },
+            {
+                "QUERY PLAN": "  ->  Index Only Scan using attendance_records_company_date_idx on attendance_records  (cost=0.43..788.74 rows=29525 width=4) (actual time=0.082..3.518 rows=30000 loops=1)"
+            },
+            {
+                "QUERY PLAN": "        Index Cond: ((company_id = 1189) AND (date >= '2024-06-01'::date) AND (date <= '2024-06-30'::date))"
+            },
+            {
+                "QUERY PLAN": "        Heap Fetches: 0"
+            },
+            {
+                "QUERY PLAN": "        Buffers: shared hit=33"
+            },
+            {
+                "QUERY PLAN": "Planning Time: 0.190 ms"
+            },
+            {
+                "QUERY PLAN": "Execution Time: 6.802 ms"
+            }
+        ],
+        "leave_list": [
+            {
+                "QUERY PLAN": "Limit  (cost=0.29..3.60 rows=25 width=1280) (actual time=5.537..5.546 rows=25 loops=1)"
+            },
+            {
+                "QUERY PLAN": "  Buffers: shared hit=698"
+            },
+            {
+                "QUERY PLAN": "  ->  Index Scan Backward using leave_requests_pkey on leave_requests  (cost=0.29..2204.31 rows=16652 width=1280) (actual time=5.535..5.541 rows=25 loops=1)"
+            },
+            {
+                "QUERY PLAN": "        Filter: ((deleted_at IS NULL) AND (company_id = 1189))"
+            },
+            {
+                "QUERY PLAN": "        Rows Removed by Filter: 33334"
+            },
+            {
+                "QUERY PLAN": "        Buffers: shared hit=698"
+            },
+            {
+                "QUERY PLAN": "Planning Time: 0.132 ms"
+            },
+            {
+                "QUERY PLAN": "Execution Time: 5.582 ms"
+            }
+        ],
+        "position_group": [
+            {
+                "QUERY PLAN": "Sort  (cost=106.40..107.21 rows=326 width=20) (actual time=0.815..0.840 rows=335 loops=1)"
+            },
+            {
+                "QUERY PLAN": "  Sort Key: (count(*)) DESC"
+            },
+            {
+                "QUERY PLAN": "  Sort Method: quicksort  Memory: 40kB"
+            },
+            {
+                "QUERY PLAN": "  Buffers: shared hit=21"
+            },
+            {
+                "QUERY PLAN": "  ->  HashAggregate  (cost=89.53..92.79 rows=326 width=20) (actual time=0.668..0.724 rows=335 loops=1)"
+            },
+            {
+                "QUERY PLAN": "        Group Key: \"position\""
+            },
+            {
+                "QUERY PLAN": "        Batches: 1  Memory Usage: 61kB"
+            },
+            {
+                "QUERY PLAN": "        Buffers: shared hit=21"
+            },
+            {
+                "QUERY PLAN": "        ->  Bitmap Heap Scan on employees  (cost=16.03..84.53 rows=1000 width=12) (actual time=0.056..0.350 rows=1000 loops=1)"
+            },
+            {
+                "QUERY PLAN": "              Recheck Cond: (company_id = 1189)"
+            },
+            {
+                "QUERY PLAN": "              Filter: (deleted_at IS NULL)"
+            },
+            {
+                "QUERY PLAN": "              Heap Blocks: exact=19"
+            },
+            {
+                "QUERY PLAN": "              Buffers: shared hit=21"
+            },
+            {
+                "QUERY PLAN": "              ->  Bitmap Index Scan on employees_company_id_status_index  (cost=0.00..15.78 rows=1000 width=0) (actual time=0.044..0.044 rows=1000 loops=1)"
+            },
+            {
+                "QUERY PLAN": "                    Index Cond: (company_id = 1189)"
+            },
+            {
+                "QUERY PLAN": "                    Buffers: shared hit=2"
+            },
+            {
+                "QUERY PLAN": "Planning Time: 0.125 ms"
+            },
+            {
+                "QUERY PLAN": "Execution Time: 1.018 ms"
+            }
+        ]
+    }
+}

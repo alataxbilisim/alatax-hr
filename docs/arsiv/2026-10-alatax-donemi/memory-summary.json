@@ -1,0 +1,320 @@
+{
+    "employees_preview_50": {
+        "mem_first_mb": 30,
+        "mem_last_mb": 32,
+        "mem_max_mb": 32,
+        "mem_slope_mb": 2,
+        "time_p50_ms": 8.9,
+        "time_avg_ms": 28.7,
+        "time_max_ms": 981.9,
+        "last": {
+            "rows": [
+                {
+                    "employee_code": "SC01-0001",
+                    "status": "active",
+                    "position": "DEMO_POS_07"
+                },
+                {
+                    "employee_code": "SC01-0002",
+                    "status": "active",
+                    "position": "Yönetici"
+                },
+                {
+                    "employee_code": "SC01-0003",
+                    "status": "active",
+                    "position": "ORPHAN_POS_2"
+                },
+                {
+                    "employee_code": "SC01-0004",
+                    "status": "active",
+                    "position": "DEMO_POS_07"
+                },
+                {
+                    "employee_code": "SC01-0005",
+                    "status": "active",
+                    "position": "Yönetici"
+                },
+                {
+                    "employee_code": "SC01-0006",
+                    "status": "active",
+                    "position": "ORPHAN_POS_5"
+                },
+                {
+                    "employee_code": "SC01-0007",
+                    "status": "active",
+                    "position": "DEMO_POS_07"
+                },
+                {
+                    "employee_code": "SC01-0008",
+                    "status": "active",
+                    "position": "Yönetici"
+                },
+                {
+                    "employee_code": "SC01-0009",
+                    "status": "active",
+                    "position": "ORPHAN_POS_8"
+                },
+                {
+                    "employee_code": "SC01-0010",
+                    "status": "active",
+                    "position": "DEMO_POS_07"
+                },
+                {
+                    "employee_code": "SC01-0011",
+                    "status": "active",
+                    "position": "Yönetici"
+                },
+                {
+                    "employee_code": "SC01-0012",
+                    "status": "active",
+                    "position": "ORPHAN_POS_11"
+                },
+                {
+                    "employee_code": "SC01-0013",
+                    "status": "active",
+                    "position": "DEMO_POS_07"
+                },
+                {
+                    "employee_code": "SC01-0014",
+                    "status": "active",
+                    "position": "Yönetici"
+                },
+                {
+                    "employee_code": "SC01-0015",
+                    "status": "active",
+                    "position": "ORPHAN_POS_14"
+                },
+                {
+                    "employee_code": "SC01-0016",
+                    "status": "active",
+                    "position": "DEMO_POS_07"
+                },
+                {
+                    "employee_code": "SC01-0017",
+                    "status": "active",
+                    "position": "Yönetici"
+                },
+                {
+                    "employee_code": "SC01-0018",
+                    "status": "active",
+                    "position": "ORPHAN_POS_17"
+                },
+                {
+                    "employee_code": "SC01-0019",
+                    "status": "active",
+                    "position": "DEMO_POS_07"
+                },
+                {
+                    "employee_code": "SC01-0020",
+                    "status": "active",
+                    "position": "Yönetici"
+                },
+                {
+                    "employee_code": "SC01-0021",
+                    "status": "active",
+                    "position": "ORPHAN_POS_20"
+                },
+                {
+                    "employee_code": "SC01-0022",
+                    "status": "active",
+                    "position": "DEMO_POS_07"
+                },
+                {
+                    "employee_code": "SC01-0023",
+                    "status": "active",
+                    "position": "Yönetici"
+                },
+                {
+                    "employee_code": "SC01-0024",
+                    "status": "active",
+                    "position": "ORPHAN_POS_23"
+                },
+                {
+                    "employee_code": "SC01-0025",
+                    "status": "active",
+                    "position": "DEMO_POS_07"
+                },
+                {
+                    "employee_code": "SC01-0026",
+                    "status": "active",
+                    "position": "Yönetici"
+                },
+                {
+                    "employee_code": "SC01-0027",
+                    "status": "active",
+                    "position": "ORPHAN_POS_26"
+                },
+                {
+                    "employee_code": "SC01-0028",
+                    "status": "active",
+                    "position": "DEMO_POS_07"
+                },
+                {
+                    "employee_code": "SC01-0029",
+                    "status": "active",
+                    "position": "Yönetici"
+                },
+                {
+                    "employee_code": "SC01-0030",
+                    "status": "active",
+                    "position": "ORPHAN_POS_29"
+                },
+                {
+                    "employee_code": "SC01-0031",
+                    "status": "active",
+                    "position": "DEMO_POS_07"
+                },
+                {
+                    "employee_code": "SC01-0032",
+                    "status": "active",
+                    "position": "Yönetici"
+                },
+                {
+                    "employee_code": "SC01-0033",
+                    "status": "active",
+                    "position": "ORPHAN_POS_32"
+                },
+                {
+                    "employee_code": "SC01-0034",
+                    "status": "active",
+                    "position": "DEMO_POS_07"
+                },
+                {
+                    "employee_code": "SC01-0035",
+                    "status": "active",
+                    "position": "Yönetici"
+                },
+                {
+                    "employee_code": "SC01-0036",
+                    "status": "active",
+                    "position": "ORPHAN_POS_35"
+                },
+                {
+                    "employee_code": "SC01-0037",
+                    "status": "active",
+                    "position": "DEMO_POS_07"
+                },
+                {
+                    "employee_code": "SC01-0038",
+                    "status": "active",
+                    "position": "Yönetici"
+                },
+                {
+                    "employee_code": "SC01-0039",
+                    "status": "active",
+                    "position": "ORPHAN_POS_38"
+                },
+                {
+                    "employee_code": "SC01-0040",
+                    "status": "active",
+                    "position": "DEMO_POS_07"
+                },
+                {
+                    "employee_code": "SC01-0041",
+                    "status": "active",
+                    "position": "Yönetici"
+                },
+                {
+                    "employee_code": "SC01-0042",
+                    "status": "active",
+                    "position": "ORPHAN_POS_41"
+                },
+                {
+                    "employee_code": "SC01-0043",
+                    "status": "active",
+                    "position": "DEMO_POS_07"
+                },
+                {
+                    "employee_code": "SC01-0044",
+                    "status": "active",
+                    "position": "Yönetici"
+                },
+                {
+                    "employee_code": "SC01-0045",
+                    "status": "active",
+                    "position": "ORPHAN_POS_44"
+                },
+                {
+                    "employee_code": "SC01-0046",
+                    "status": "active",
+                    "position": "DEMO_POS_07"
+                },
+                {
+                    "employee_code": "SC01-0047",
+                    "status": "active",
+                    "position": "Yönetici"
+                },
+                {
+                    "employee_code": "SC01-0048",
+                    "status": "active",
+                    "position": "ORPHAN_POS_47"
+                },
+                {
+                    "employee_code": "SC01-0049",
+                    "status": "active",
+                    "position": "DEMO_POS_07"
+                },
+                {
+                    "employee_code": "SC01-0050",
+                    "status": "active",
+                    "position": "Yönetici"
+                }
+            ],
+            "meta": {
+                "dataset": "employees",
+                "limit": 50,
+                "offset": 0,
+                "count": 50,
+                "fields": [
+                    "employee_code",
+                    "status",
+                    "position"
+                ],
+                "data_scope": "company",
+                "report_scope": "company",
+                "company_ids": [
+                    1189
+                ],
+                "hidden_fields": []
+            }
+        }
+    },
+    "attendance_monthly_sql": {
+        "mem_first_mb": 32,
+        "mem_last_mb": 32,
+        "mem_max_mb": 32,
+        "mem_slope_mb": 0,
+        "time_p50_ms": 10.4,
+        "time_avg_ms": 25.3,
+        "time_max_ms": 722,
+        "last": {
+            "scalar": 31
+        }
+    },
+    "export_employees_5k": {
+        "mem_first_mb": 32,
+        "mem_last_mb": 36,
+        "mem_max_mb": 36,
+        "mem_slope_mb": 4,
+        "time_p50_ms": 12.1,
+        "time_avg_ms": 12.3,
+        "time_max_ms": 14.6,
+        "last": {
+            "rows": 3000,
+            "json_bytes": 223888,
+            "elapsed_ms": 11.9
+        }
+    },
+    "position_group_raw_sql": {
+        "mem_first_mb": 36,
+        "mem_last_mb": 36,
+        "mem_max_mb": 36,
+        "mem_slope_mb": 0,
+        "time_p50_ms": 1.6,
+        "time_avg_ms": 1.7,
+        "time_max_ms": 2.3,
+        "last": {
+            "scalar": 335
+        }
+    }
+}

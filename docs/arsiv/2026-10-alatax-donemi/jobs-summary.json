@@ -1,0 +1,146 @@
+{
+    "jobs": [
+        {
+            "job": "LeaveAccrualBatch_allActive",
+            "elapsed_ms": 517.7,
+            "mem_delta_mb": 0,
+            "peak_mb": 26,
+            "result": {
+                "processed": 3,
+                "failed": 0,
+                "companies": [
+                    {
+                        "company_id": 1189,
+                        "status": "ok",
+                        "result": {
+                            "processed_count": 0,
+                            "month": 8,
+                            "year": 2026
+                        }
+                    },
+                    {
+                        "company_id": 1190,
+                        "status": "ok",
+                        "result": {
+                            "processed_count": 0,
+                            "month": 8,
+                            "year": 2026
+                        }
+                    },
+                    {
+                        "company_id": 1191,
+                        "status": "ok",
+                        "result": {
+                            "processed_count": 0,
+                            "month": 8,
+                            "year": 2026
+                        }
+                    }
+                ]
+            },
+            "error": null
+        },
+        {
+            "job": "DocumentExpiryAlert_processCompany_WITHOUT_context",
+            "elapsed_ms": 53,
+            "mem_delta_mb": 0,
+            "peak_mb": 26,
+            "result": {
+                "throws": "App\\Exceptions\\CompanyContextMissingException",
+                "message": "Company context is required but not set."
+            },
+            "error": null
+        },
+        {
+            "job": "DocumentExpiryAlert_processCompany_WITH_context",
+            "elapsed_ms": 62.7,
+            "mem_delta_mb": 0,
+            "peak_mb": 26,
+            "result": {
+                "checked": 0,
+                "notified": 0,
+                "skipped": 0
+            },
+            "error": null
+        },
+        {
+            "job": "DocumentExpiryAlert_processAllActive",
+            "elapsed_ms": 87,
+            "mem_delta_mb": 2,
+            "peak_mb": 28,
+            "result": {
+                "checked": 0,
+                "notified": 0,
+                "skipped": 0,
+                "failed": 0
+            },
+            "error": null
+        },
+        {
+            "job": "ApprovalEscalation_processCompany_WITHOUT_context",
+            "elapsed_ms": 18.3,
+            "mem_delta_mb": 0,
+            "peak_mb": 28,
+            "result": {
+                "throws": "App\\Exceptions\\CompanyContextMissingException",
+                "message": "Company context is required but not set."
+            },
+            "error": null
+        },
+        {
+            "job": "ApprovalEscalation_processCompany_WITH_context",
+            "elapsed_ms": 19,
+            "mem_delta_mb": 0,
+            "peak_mb": 28,
+            "result": {
+                "checked": 0,
+                "reminded": 0,
+                "escalated": 0,
+                "skipped": 0
+            },
+            "error": null
+        },
+        {
+            "job": "kvkk:scan-retention",
+            "elapsed_ms": 3021.7,
+            "mem_delta_mb": 6,
+            "peak_mb": 34,
+            "result": {
+                "output": "Toplam aday: 0, hold atlanan: 0"
+            },
+            "error": null
+        },
+        {
+            "job": "ProcessHeavyReportExportJob_companyId_0",
+            "elapsed_ms": 155.1,
+            "mem_delta_mb": 0,
+            "peak_mb": 34,
+            "result": {
+                "throws": "App\\Exceptions\\CompanyContextMissingException",
+                "message": "ProcessHeavyReportExportJob requires a valid company context (companyId)."
+            },
+            "error": null
+        },
+        {
+            "job": "ProcessHeavyReportExportJob_with_company",
+            "elapsed_ms": 2252.6,
+            "mem_delta_mb": 6.5,
+            "peak_mb": 40.5,
+            "result": {
+                "report_id": 771
+            },
+            "error": null
+        },
+        {
+            "job": "RunReportScheduleJob",
+            "elapsed_ms": 218.5,
+            "mem_delta_mb": 0,
+            "peak_mb": 40.5,
+            "result": {
+                "schedule_id": 4
+            },
+            "error": null
+        }
+    ],
+    "scale_company_id": 1189
+}

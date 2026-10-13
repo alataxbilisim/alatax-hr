@@ -1,0 +1,7 @@
+﻿npx : The term 'npx' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+At C:\xampp\htdocs\hr\docs\claude-denetim\topla.ps1:25 char:114
++ ... superadmin") { "== $a"; Push-Location "frontend\apps\$a"; npx --no-in ...
++                                                               ~~~
+    + CategoryInfo          : ObjectNotFound: (npx:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 

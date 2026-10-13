@@ -1,0 +1,39 @@
+{
+    "mode": "service_burst_sequential_sim",
+    "note": "PHP tek süreç; gerçek 500 paralel HTTP için pdks-http-parallel.sh kullanılır",
+    "n": 500,
+    "ok": 500,
+    "err": 0,
+    "deadlocks": 0,
+    "wall_ms": 5391.5,
+    "p50_ms": 9.35,
+    "p95_ms": 14.62,
+    "p99_ms": 19.07,
+    "records_today": 500,
+    "users_with_dup_rows": 0,
+    "expected_behavior_same_user_5x": "1. punch=clock_in, 2.=clock_out, 3+=exception (zaten çıkış) → tek satır",
+    "same_user_5x_results": [
+        {
+            "ok": true,
+            "action": "clock_in"
+        },
+        {
+            "ok": true,
+            "action": "clock_out"
+        },
+        {
+            "ok": false,
+            "error": "Bugün zaten giriş yapmışsınız"
+        },
+        {
+            "ok": false,
+            "error": "Bugün zaten giriş yapmışsınız"
+        },
+        {
+            "ok": false,
+            "error": "Bugün zaten giriş yapmışsınız"
+        }
+    ],
+    "same_user_record_count": 1,
+    "sample_errors": []
+}

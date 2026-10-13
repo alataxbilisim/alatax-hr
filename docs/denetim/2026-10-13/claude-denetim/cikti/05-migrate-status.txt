@@ -1,0 +1,6 @@
+﻿
+  Migration name .............................................. Batch / Status  
+  2026_08_05_240000_rename_users_company_id_to_home_company_id ...... [19] Ran  
+  2026_08_06_010000_drop_employees_position_string_and_add_position_name_unique  [19] Ran  
+  2026_08_06_020000_soft_delete_partial_unique_indexes .............. [19] Ran  
+

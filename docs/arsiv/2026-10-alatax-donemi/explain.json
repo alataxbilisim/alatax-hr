@@ -1,0 +1,1375 @@
+{
+    "employees_filter": {
+        "exec_ms": 0.299,
+        "plan": "Limit  (cost=89.29..89.30 rows=1 width=8) (actual time=0.259..0.260 rows=0 loops=1)\n  Buffers: shared hit=27\n  ->  Sort  (cost=89.29..89.30 rows=1 width=8) (actual time=0.258..0.259 rows=0 loops=1)\n        Sort Key: id\n        Sort Method: quicksort  Memory: 25kB\n        Buffers: shared hit=27\n        ->  Bitmap Heap Scan on employees  (cost=15.78..89.28 rows=1 width=8) (actual time=0.234..0.235 rows=0 loops=1)\n              Recheck Cond: (company_id = 1189)\n              Filter: ((deleted_at IS NULL) AND ((\"position\")::text ~~ '%Yazılım%'::text) AND ((status)::text = 'active'::text))\n              Rows Removed by Filter: 1000\n              Heap Blocks: exact=19\n              Buffers: shared hit=24\n              ->  Bitmap Index Scan on employees_company_id_department_id_index  (cost=0.00..15.78 rows=1000 width=0) (actual time=0.049..0.049 rows=1000 loops=1)\n                    Index Cond: (company_id = 1189)\n                    Buffers: shared hit=5\nPlanning:\n  Buffers: shared hit=152\nPlanning Time: 0.768 ms\nExecution Time: 0.299 ms"
+    },
+    "attendance_month": {
+        "exec_ms": 2.653,
+        "plan": "GroupAggregate  (cost=0.43..941.37 rows=500 width=12) (actual time=0.129..2.611 rows=30 loops=1)\n  Group Key: date\n  Buffers: shared hit=33\n  ->  Index Only Scan using attendance_records_company_date_idx on attendance_records  (cost=0.43..788.74 rows=29525 width=4) (actual time=0.044..1.363 rows=30000 loops=1)\n        Index Cond: ((company_id = 1189) AND (date >= '2024-06-01'::date) AND (date <= '2024-06-30'::date))\n        Heap Fetches: 0\n        Buffers: shared hit=33\nPlanning:\n  Buffers: shared hit=143\nPlanning Time: 0.681 ms\nExecution Time: 2.653 ms"
+    },
+    "leave_list": {
+        "exec_ms": 4.414,
+        "plan": "Limit  (cost=0.29..3.60 rows=25 width=8) (actual time=4.393..4.398 rows=25 loops=1)\n  Buffers: shared hit=698\n  ->  Index Scan Backward using leave_requests_pkey on leave_requests  (cost=0.29..2204.31 rows=16652 width=8) (actual time=4.392..4.395 rows=25 loops=1)\n        Filter: ((deleted_at IS NULL) AND (company_id = 1189))\n        Rows Removed by Filter: 33334\n        Buffers: shared hit=698\nPlanning:\n  Buffers: shared hit=76\nPlanning Time: 0.456 ms\nExecution Time: 4.414 ms"
+    },
+    "position_group": {
+        "exec_ms": 0.344,
+        "plan": "HashAggregate  (cost=89.53..92.79 rows=326 width=20) (actual time=0.260..0.280 rows=335 loops=1)\n  Group Key: \"position\"\n  Batches: 1  Memory Usage: 61kB\n  Buffers: shared hit=21\n  ->  Bitmap Heap Scan on employees  (cost=16.03..84.53 rows=1000 width=12) (actual time=0.023..0.141 rows=1000 loops=1)\n        Recheck Cond: (company_id = 1189)\n        Filter: (deleted_at IS NULL)\n        Heap Blocks: exact=19\n        Buffers: shared hit=21\n        ->  Bitmap Index Scan on employees_company_id_status_index  (cost=0.00..15.78 rows=1000 width=0) (actual time=0.017..0.017 rows=1000 loops=1)\n              Index Cond: (company_id = 1189)\n              Buffers: shared hit=2\nPlanning:\n  Buffers: shared hit=5\nPlanning Time: 0.074 ms\nExecution Time: 0.344 ms"
+    },
+    "attendance_order_limit": {
+        "exec_ms": 0.927,
+        "plan": "Limit  (cost=0.43..7.07 rows=50 width=20) (actual time=0.621..0.908 rows=50 loops=1)\n  Buffers: shared hit=1 read=52\n  ->  Index Scan Backward using attendance_records_company_date_idx on attendance_records  (cost=0.43..66739.55 rows=502550 width=20) (actual time=0.620..0.902 rows=50 loops=1)\n        Index Cond: (company_id = 1189)\n        Buffers: shared hit=1 read=52\nPlanning:\n  Buffers: shared hit=8\nPlanning Time: 0.093 ms\nExecution Time: 0.927 ms"
+    },
+    "position_group_rows": [
+        {
+            "position": "DEMO_POS_07",
+            "c": 334
+        },
+        {
+            "position": "Yönetici",
+            "c": 333
+        },
+        {
+            "position": "ORPHAN_POS_776",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_764",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_659",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_272",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_428",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_134",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_419",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_389",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_980",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_200",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_677",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_536",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_182",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_695",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_503",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_218",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_554",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_308",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_752",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_452",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_911",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_194",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_845",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_989",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_755",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_884",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_701",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_161",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_707",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_371",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_941",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_296",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_842",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_827",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_683",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_560",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_116",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_2",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_812",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_314",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_497",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_398",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_353",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_665",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_170",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_146",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_413",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_290",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_938",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_866",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_215",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_155",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_323",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_722",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_494",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_962",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_647",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_809",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_800",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_335",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_401",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_935",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_602",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_242",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_929",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_578",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_890",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_368",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_350",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_251",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_869",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_779",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_974",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_725",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_737",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_758",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_245",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_638",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_608",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_857",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_773",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_500",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_668",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_56",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_998",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_635",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_236",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_59",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_986",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_464",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_356",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_17",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_803",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_731",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_656",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_662",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_632",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_584",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_965",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_347",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_440",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_275",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_821",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_458",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_881",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_89",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_35",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_71",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_830",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_530",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_53",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_332",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_101",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_299",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_599",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_167",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_710",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_365",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_446",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_515",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_848",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_302",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_140",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_449",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_329",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_326",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_284",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_875",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_266",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_92",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_23",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_788",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_671",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_854",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_320",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_542",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_914",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_32",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_482",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_860",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_20",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_572",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_509",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_119",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_362",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_971",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_950",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_749",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_686",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_992",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_152",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_551",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_104",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_587",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_383",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_149",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_836",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_887",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_443",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_770",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_623",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_263",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_692",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_734",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_95",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_782",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_740",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_485",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_818",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_50",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_470",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_872",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_122",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_605",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_254",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_923",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_926",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_410",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_488",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_566",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_491",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_107",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_173",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_26",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_728",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_395",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_698",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_98",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_407",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_563",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_611",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_614",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_197",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_437",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_212",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_920",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_521",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_626",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_716",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_158",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_41",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_932",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_455",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_878",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_392",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_80",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_239",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_185",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_674",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_287",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_164",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_653",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_29",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_794",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_713",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_545",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_380",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_269",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_317",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_47",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_344",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_815",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_176",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_761",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_128",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_293",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_8",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_590",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_593",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_5",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_944",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_917",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_557",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_905",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_227",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_278",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_68",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_230",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_305",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_641",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_11",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_791",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_863",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_473",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_386",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_746",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_539",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_797",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_425",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_833",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_131",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_743",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_806",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_824",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_203",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_689",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_893",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_191",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_14",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_908",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_620",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_575",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_257",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_74",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_431",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_110",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_785",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_644",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_527",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_206",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_125",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_38",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_680",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_506",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_221",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_65",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_953",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_902",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_512",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_947",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_629",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_188",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_338",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_977",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_719",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_956",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_86",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_374",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_179",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_143",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_596",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_467",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_359",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_83",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_44",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_617",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_479",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_62",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_404",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_434",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_137",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_704",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_416",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_995",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_524",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_767",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_548",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_209",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_461",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_248",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_959",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_113",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_839",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_968",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_233",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_311",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_341",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_899",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_896",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_518",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_224",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_851",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_377",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_422",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_533",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_983",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_281",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_569",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_476",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_581",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_650",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_260",
+            "c": 1
+        },
+        {
+            "position": "ORPHAN_POS_77",
+            "c": 1
+        }
+    ],
+    "scale_position_mix": {
+        "match_code": 334,
+        "match_name_only": 333,
+        "match_neither": 333
+    },
+    "scale_org_id": 1128,
+    "scale_company_ids": [
+        1189,
+        1190,
+        1191
+    ]
+}

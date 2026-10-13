@@ -1,0 +1,12 @@
+{
+    "mode": "xargs_P_parallel_processes",
+    "lines": 500,
+    "ok": 9,
+    "err": 1,
+    "deadlock": 0,
+    "p50_ms": 6691,
+    "p95_ms": 7459,
+    "p99_ms": 7459,
+    "records_today": 489,
+    "dup_users": 0
+}

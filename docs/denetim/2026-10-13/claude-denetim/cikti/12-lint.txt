@@ -1,0 +1,7 @@
+﻿pnpm : The term 'pnpm' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+At C:\xampp\htdocs\hr\docs\claude-denetim\topla.ps1:26 char:46
++ Save "12-lint.txt" { Push-Location frontend; pnpm lint 2>&1 | Select- ...
++                                              ~~~~
+    + CategoryInfo          : ObjectNotFound: (pnpm:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 

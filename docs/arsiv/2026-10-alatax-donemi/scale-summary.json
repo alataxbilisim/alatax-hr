@@ -1,0 +1,13 @@
+{
+    "companies": [
+        1189,
+        1190,
+        1191
+    ],
+    "employees": 3000,
+    "users_scale": 3000,
+    "attendance": 1500000,
+    "leave_requests": 50001,
+    "employee_documents": 20001,
+    "elapsed_sec": 191.6
+}

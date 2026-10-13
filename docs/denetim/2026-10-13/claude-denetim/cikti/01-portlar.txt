@@ -1,0 +1,21 @@
+﻿
+LocalAddress LocalPort OwningProcess Proc              
+------------ --------- ------------- ----              
+::1               8000          4540 wslrelay          
+::                8000         12712 com.docker.backend
+::1               6379          4540 wslrelay          
+::                6379         12712 com.docker.backend
+::1               5432          4540 wslrelay          
+::                5432         12712 com.docker.backend
+::                3306          1688 mysqld            
+::                3003         15112 node              
+::                3002         10168 node              
+::                3001          7280 node              
+::                  80          5568 httpd             
+127.0.0.1         8000          4540 wslrelay          
+127.0.0.1         6379          4540 wslrelay          
+127.0.0.1         5432          4540 wslrelay          
+0.0.0.0             80          5568 httpd             
+
+
+
