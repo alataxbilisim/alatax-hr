@@ -251,7 +251,7 @@ veya `npx serve apps/company/dist -l 3002`. SPA history fallback gerekir. Build 
 
 ## 6) İlk login
 
-Seed / register sonrası tipik hesaplar (ortama göre değişir; seed dokümanı: `docs/BURADAN_BASLA.md`):
+Seed / register sonrası tipik hesaplar (ortama göre değişir; seed dokümanı: `docs/arsiv/2026-10-alatax-donemi/BURADAN_BASLA.md`):
 
 | Panel | Port | Not |
 |--------|------|-----|
@@ -340,7 +340,7 @@ Deploy turunda **Ubuntu 26.04 LTS** (resolute) kullanıldı:
 
 ## Sıradaki adımlar
 
-1. Aşama 2: sistematik test turu (`docs/TEST_TURU.md`) — onay zinciri, Lookups, Settings Studio, Kanban, 2FA, RBAC, CRUD; bulguları logla.
+1. Aşama 2: sistematik test turu (`docs/arsiv/2026-10-alatax-donemi/TEST_TURU.md`) — onay zinciri, Lookups, Settings Studio, Kanban, 2FA, RBAC, CRUD; bulguları logla.
 2. Bu belgedeki LAN / pnpm / seed adımlarını installer checklist’ine taşı (Faz 7).
 3. İsteğe bağlı: manuel update script; ardından GitHub Actions SSH deploy (henüz yok).
 4. Production: Vite `dev` yerine build + reverse proxy; secret’lar yalnızca sunucu `.env`.

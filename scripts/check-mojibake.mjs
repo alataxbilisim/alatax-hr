@@ -27,8 +27,8 @@ const EXCLUDE_DIR = new Set([
 function shouldSkip(rel, full) {
   if (path.resolve(full) === SELF) return true;
   const norm = rel.replace(/\\/g, '/').toLowerCase();
-  if (norm.includes('docs/qa/')) return true;
-  if (norm.endsWith('docs/qa_rapor.md')) return true;
+  if (norm.includes('docs/arsiv/2026-10-alatax-donemi/qa/')) return true;
+  if (norm.endsWith('docs/arsiv/2026-10-alatax-donemi/qa_rapor.md')) return true;
   if (norm.includes('pnpm-lock.yaml')) return true;
   return false;
 }

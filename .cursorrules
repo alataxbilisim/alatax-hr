@@ -4,14 +4,14 @@
 
 ## Proje Bağlamı
 
-ALATAX HR: Türkiye odaklı, multi-tenant B2B HR SaaS. Backend: Laravel 12 REST API (`/api/v1`, modüler monolith). Frontend: pnpm monorepo, 3 React 19 + TS SPA (superadmin/company/portal) + `@alatax/shared`. Veritabanı: **PostgreSQL** default (JSONB hibrit model); **MySQL legacy olarak korunur, ASLA silinmez**. Auth: Sanctum Bearer token. RBAC: Spatie Permission (`{module}.{page}.{action}` formatı). Multi-tenancy: `company_id` + `BelongsToCompany` global scope. Yol haritası `ROADMAP.md` dosyasındadır; faz sırasına uy, kapsam dışına çıkma.
+ALATAX HR: Türkiye odaklı, multi-tenant B2B HR SaaS. Backend: Laravel 12 REST API (`/api/v1`, modüler monolith). Frontend: pnpm monorepo, 3 React 19 + TS SPA (superadmin/company/portal) + `@alatax/shared`. Veritabanı: **PostgreSQL** default (JSONB hibrit model); **MySQL legacy olarak korunur, ASLA silinmez**. Auth: Sanctum Bearer token. RBAC: Spatie Permission (`{module}.{page}.{action}` formatı). Multi-tenancy: `company_id` + `BelongsToCompany` global scope. Güncel durum ve borç listesi `docs/DURUM.md`, doküman haritası `docs/README.md`; görev sırası `docs/cursor-gorevleri/` adımlarıdır, kapsam dışına çıkma.
 
 ## Genel Çalışma Kuralları
 
 1. Değişiklik yapmadan ÖNCE ilgili mevcut dosyaları oku; projedeki mevcut desenleri taklit et, yeni desen icat etme.
 2. Büyük refactor'ları küçük, çalışır adımlara böl. Her adımda proje ayağa kalkabilir durumda kalmalı.
 3. Kod, yorum ve commit mesajları: kod İngilizce, UI metinleri Türkçe (ama her zaman t() üzerinden), yorumlar Türkçe olabilir.
-   **i18n kuralı (Faz 0+):** Bundan sonra yazılan HER yeni UI metni `t()` ile yazılır (hardcode yasak). Eski string'ler backlog; toplu çeviri yapılmaz. Çeviri dosyaları: `packages/shared/src/i18n/locales/tr/*.json` + backend `lang/tr/`. Detay: `docs/I18N.md`.
+   **i18n kuralı (Faz 0+):** Bundan sonra yazılan HER yeni UI metni `t()` ile yazılır (hardcode yasak). Eski string'ler backlog; toplu çeviri yapılmaz. Çeviri dosyaları: `packages/shared/src/i18n/locales/tr/*.json` + backend `lang/tr/`. Detay: `docs/spec/I18N.md`.
 4. Bir şeyi silmeden önce kullanım yerlerini ara; kullanılmayan kodu tespit edersen sor, sessizce bırakma.
 5. Emin olmadığın mimari kararlarda uygulamadan önce seçenekleri özetleyip sor.
 
@@ -70,7 +70,7 @@ ALATAX HR: Türkiye odaklı, multi-tenant B2B HR SaaS. Backend: Laravel 12 REST 
 
 **Kapsam dışı** (müşteriye açılmaz; ürün geliştirme / profesyonel hizmet): müşteri betiği, sıfırdan modül, şema değişikliği, özel ekran tasarımı.
 
-Detay: `docs/SISTEM_ISLEYIS.md` · entegrasyon: `docs/ENTEGRASYON_SPEC.md`.
+Detay: `docs/spec/SISTEM_ISLEYIS.md` · entegrasyon: `docs/spec/ENTEGRASYON_SPEC.md`.
 
 ## Yasaklar (kısa liste)
 

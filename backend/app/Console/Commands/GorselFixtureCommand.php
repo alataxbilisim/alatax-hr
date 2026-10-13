@@ -28,7 +28,7 @@ use Illuminate\Support\Str;
 class GorselFixtureCommand extends Command
 {
     protected $signature = 'gorsel:fixture
-                            {--secrets-dir= : 2FA secret yazılacak klasör (docs/gorsel-kontrol/<tarih>)}
+                            {--secrets-dir= : 2FA secret yazılacak klasör (varsayılan: storage/app/gorsel-kontrol)}
                             {--allow-dev-db : Geliştirme DB (alatax_hr) üzerine yazmaya izin ver}
                             {--use-testing-db : Varsayılan yerine alatax_hr_testing bağlantısına yaz}';
 

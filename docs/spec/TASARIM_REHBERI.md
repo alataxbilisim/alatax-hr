@@ -94,7 +94,7 @@ Hero/banner kartlar · 2 satırlı sayfa başlıkları · 44px+ input · tablo i
 ## 10. Portal tasarım yönü — Apple iOS 26 "Liquid Glass"
 
 > **Kapsam:** Yalnız `apps/portal`. **Company ve SuperAdmin bu karardan etkilenmez** (masaüstü; mevcut Faz 3 token/density devam eder).  
-> Detay uygulama dalgaları: `PORTAL_RAPOR.md` · sıra: `ROADMAP.md` (PORTAL-2a → … → PORTAL-4 → Faz 8 Capacitor).
+> Detay uygulama dalgaları: `../arsiv/2026-10-alatax-donemi/PORTAL_RAPOR.md` · sıra: `../arsiv/2026-10-alatax-donemi/ROADMAP.md` (PORTAL-2a → … → PORTAL-4 → Faz 8 Capacitor).
 
 ### 10.1 Karar
 
