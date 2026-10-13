@@ -46,8 +46,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      mysql:
-        condition: service_healthy
       redis:
         condition: service_healthy
     networks:
@@ -73,35 +71,7 @@ services:
       retries: 5
       start_period: 20s
 
-  # --- Veritabanı (Faz 1'de PostgreSQL ile değiştirilecek izole blok) ---
-  mysql:
-    image: mysql:8.0
-    container_name: alatax-hr-mysql
-    restart: unless-stopped
-    ports:
-      - "${MYSQL_HOST_PORT:-3306}:3306"
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-secret}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-alatax_hr}
-      MYSQL_USER: ${MYSQL_USER:-alatax}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-secret}
-    volumes:
-      - mysql_data:/var/lib/mysql
-    command:
-      - --default-authentication-plugin=caching_sha2_password
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_unicode_ci
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p$$MYSQL_ROOT_PASSWORD"]
-      interval: 5s
-      timeout: 5s
-      retries: 30
-      start_period: 40s
-    networks:
-      - alatax
-  # --- /mysql ---
-
-  # --- PostgreSQL (Faz 1: mysql YANINA; app default hâlâ mysql) ---
+  # --- Veritabanı: yalnız PostgreSQL 16 ---
   postgres:
     image: postgres:16-alpine
     container_name: alatax-hr-postgres
@@ -223,6 +193,5 @@ networks:
     driver: bridge
 
 volumes:
-  mysql_data:
   postgres_data:
   redis_data:

@@ -26,8 +26,6 @@ backend/storage/framework/views/*
 backend/bootstrap/cache/*.php
 backend/public/build
 backend/public/hot
-backend/database/*.sqlite
-backend/database/*.sqlite-journal
 
 # Docs / IDE (build için gerekmez)
 docs

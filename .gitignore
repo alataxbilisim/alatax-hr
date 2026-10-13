@@ -44,9 +44,6 @@ backend/storage/app/private/*
 !backend/storage/app/private/.gitignore
 backend/bootstrap/cache/*
 !backend/bootstrap/cache/.gitignore
-backend/database/*.sqlite
-backend/database/*.sqlite-journal
-backend/database/database.sqlite
 .phpunit.result.cache
 .phpunit.cache/
 Homestead.json
@@ -100,6 +97,7 @@ backend/storage/app/gorsel-kontrol/
 
 # Faz1 local backup (not for commit)
 backend/database/migrations_backup_*/
+docs/arsiv/**/migrations_backup_*/
 
 # --- Docs artifacts (kişisel veri / büyük binary — commit etme) ---
 docs/backups/

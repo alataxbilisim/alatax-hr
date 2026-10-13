@@ -48,5 +48,3 @@ Dockerfile text eol=lf
 *.7z binary
 *.mp4 binary
 *.webm binary
-*.sqlite binary
-*.sqlite-journal binary

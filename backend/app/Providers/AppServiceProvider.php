@@ -22,6 +22,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // Laravel çerçeve varsayılan DB bağlantılarını config/database.php ile birleştirir;
+        // yalnız pgsql desteklendiği için diğerleri burada düşürülür.
+        config(['database.connections' => array_intersect_key(
+            (array) config('database.connections', []),
+            ['pgsql' => true],
+        )]);
+
         $this->app->bind(DatabaseChannel::class, TenantDatabaseChannel::class);
         // D4a — istek başına çözümleme cache'i için singleton
         $this->app->singleton(SettingsRegistry::class);

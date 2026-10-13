@@ -7,8 +7,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Taşınabilir string + CHECK enum (mysql / pgsql). Native DB ENUM yok.
- * SQLite'ta CHECK atlanır; uygulama PHP enum cast ile doğrular.
+ * String kolon + PostgreSQL CHECK constraint ile enum. Native DB ENUM yok;
+ * uygulama ayrıca PHP backed enum cast ile doğrular.
  */
 final class PortableEnum
 {
@@ -66,35 +66,14 @@ final class PortableEnum
             return;
         }
 
-        $driver = DB::connection()->getDriverName();
-
-        if ($driver === 'sqlite') {
-            return;
-        }
-
         $quoted = implode(', ', array_map(
             static fn (string $v): string => "'".str_replace("'", "''", $v)."'",
             $allowed
         ));
         $name = strtolower("{$table}_{$column}_check");
+        $col = '"'.str_replace('"', '""', $column).'"';
 
-        if ($driver === 'pgsql') {
-            $col = '"'.str_replace('"', '""', $column).'"';
-            DB::statement("ALTER TABLE {$table} DROP CONSTRAINT IF EXISTS {$name}");
-            DB::statement("ALTER TABLE {$table} ADD CONSTRAINT {$name} CHECK ({$col} IN ({$quoted}))");
-
-            return;
-        }
-
-        if (in_array($driver, ['mysql', 'mariadb'], true)) {
-            $col = '`'.str_replace('`', '``', $column).'`';
-            try {
-                DB::statement("ALTER TABLE {$table} DROP CHECK {$name}");
-            } catch (\Throwable) {
-                // yok
-            }
-
-            DB::statement("ALTER TABLE {$table} ADD CONSTRAINT {$name} CHECK ({$col} IN ({$quoted}))");
-        }
+        DB::statement("ALTER TABLE {$table} DROP CONSTRAINT IF EXISTS {$name}");
+        DB::statement("ALTER TABLE {$table} ADD CONSTRAINT {$name} CHECK ({$col} IN ({$quoted}))");
     }
 }
