@@ -10,6 +10,7 @@ use App\Models\ExpenseCategory;
 use App\Models\ExpenseClaim;
 use App\Models\User;
 use Laravel\Sanctum\Sanctum;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
@@ -43,7 +44,7 @@ class ExpenseTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function user_can_list_expense_categories(): void
     {
         Sanctum::actingAs($this->user);
@@ -58,7 +59,7 @@ class ExpenseTest extends TestCase
             ]);
     }
 
-    /** @test */
+    #[Test]
     public function user_can_create_expense_claim(): void
     {
         Sanctum::actingAs($this->user);
@@ -90,7 +91,7 @@ class ExpenseTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function user_can_list_their_expenses(): void
     {
         Sanctum::actingAs($this->user);
@@ -111,7 +112,7 @@ class ExpenseTest extends TestCase
             ]);
     }
 
-    /** @test */
+    #[Test]
     public function user_can_submit_draft_expense(): void
     {
         Sanctum::actingAs($this->user);
@@ -140,7 +141,7 @@ class ExpenseTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function user_can_cancel_their_expense(): void
     {
         Sanctum::actingAs($this->user);
@@ -160,7 +161,7 @@ class ExpenseTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function user_cannot_cancel_approved_expense(): void
     {
         Sanctum::actingAs($this->user);
@@ -176,7 +177,7 @@ class ExpenseTest extends TestCase
         $response->assertStatus(403); // Policy: onaylanmış masraf silinemez
     }
 
-    /** @test */
+    #[Test]
     public function user_can_get_expense_summary(): void
     {
         Sanctum::actingAs($this->user);

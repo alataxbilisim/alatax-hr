@@ -12,6 +12,7 @@ use App\Services\LookupService;
 use Database\Seeders\LookupSeeder;
 use Database\Seeders\PermissionSeeder;
 use Laravel\Sanctum\Sanctum;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
@@ -55,13 +56,13 @@ class LookupTest extends TestCase
         $this->lookups = app(LookupService::class);
     }
 
-    /** @test */
+    #[Test]
     public function unauthenticated_cannot_read_lookups(): void
     {
         $this->getJson('/api/v1/lookups/employee_status')->assertStatus(401);
     }
 
-    /** @test */
+    #[Test]
     public function system_seed_includes_currency_city_blood(): void
     {
         $this->assertDatabaseHas('lookups', [
@@ -83,7 +84,7 @@ class LookupTest extends TestCase
         $this->assertGreaterThanOrEqual(81, Lookup::where('lookup_type', 'city_tr')->count());
     }
 
-    /** @test */
+    #[Test]
     public function for_type_returns_merged_active_values(): void
     {
         Sanctum::actingAs($this->adminUser);
@@ -96,7 +97,7 @@ class LookupTest extends TestCase
         $this->assertContains('on_leave', $values);
     }
 
-    /** @test */
+    #[Test]
     public function manage_list_accepts_query_string_false_and_returns_employee_status(): void
     {
         Sanctum::actingAs($this->adminUser);
@@ -118,7 +119,7 @@ class LookupTest extends TestCase
         $this->assertNotEmpty($asZero->json('data'));
     }
 
-    /** @test */
+    #[Test]
     public function resolve_returns_label_for_value(): void
     {
         Sanctum::actingAs($this->adminUser);
@@ -129,7 +130,7 @@ class LookupTest extends TestCase
             ->assertJsonPath('data.label', 'Aktif');
     }
 
-    /** @test */
+    #[Test]
     public function ka_rename_label_reflects_on_existing_employee_without_changing_status_value(): void
     {
         Sanctum::actingAs($this->adminUser);
@@ -157,7 +158,7 @@ class LookupTest extends TestCase
         $this->assertSame('Çalışıyor', $payload['status_label']);
     }
 
-    /** @test */
+    #[Test]
     public function kb_used_value_is_deactivated_not_hard_deleted(): void
     {
         Sanctum::actingAs($this->adminUser);
@@ -197,7 +198,7 @@ class LookupTest extends TestCase
         $this->assertNotContains('active', $values);
     }
 
-    /** @test */
+    #[Test]
     public function kb_unused_company_value_can_be_hard_deleted(): void
     {
         Sanctum::actingAs($this->adminUser);
@@ -220,7 +221,7 @@ class LookupTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function system_lookup_update_returns_403(): void
     {
         Sanctum::actingAs($this->adminUser);
@@ -234,7 +235,7 @@ class LookupTest extends TestCase
         $this->deleteJson("/api/v1/lookups-manage/{$currency->id}")->assertStatus(403);
     }
 
-    /** @test */
+    #[Test]
     public function work_type_shared_by_employee_and_job_position(): void
     {
         Sanctum::actingAs($this->adminUser);
@@ -248,7 +249,7 @@ class LookupTest extends TestCase
         $this->lookups->assertValid(LookupService::TYPE_WORK_TYPE, 'hybrid', $this->company->id, 'work_type');
     }
 
-    /** @test */
+    #[Test]
     public function management_permission_enforced_on_crud(): void
     {
         Sanctum::actingAs($this->plainUser);
@@ -264,7 +265,7 @@ class LookupTest extends TestCase
         $this->getJson('/api/v1/lookups/employee_status')->assertOk();
     }
 
-    /** @test */
+    #[Test]
     public function tenant_isolation_on_company_override(): void
     {
         Sanctum::actingAs($this->adminUser);
@@ -291,7 +292,7 @@ class LookupTest extends TestCase
         $this->assertSame('Aktif', $label);
     }
 
-    /** @test */
+    #[Test]
     public function unauthorized_role_cannot_manage_even_with_company_admin_type_without_permission(): void
     {
         // company_admin type ama lookups permission yok
@@ -312,7 +313,7 @@ class LookupTest extends TestCase
         $this->assertContains($response->status(), [403, 401]);
     }
 
-    /** @test */
+    #[Test]
     public function grup1_personel_lookup_types_are_seeded(): void
     {
         Sanctum::actingAs($this->adminUser);
@@ -327,7 +328,7 @@ class LookupTest extends TestCase
         $this->assertTrue($genders->contains('female'));
     }
 
-    /** @test */
+    #[Test]
     public function hybrid_leave_request_status_cannot_add_or_delete_value(): void
     {
         Sanctum::actingAs($this->adminUser);
@@ -357,7 +358,7 @@ class LookupTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function hybrid_leave_gender_restriction_cannot_add_value(): void
     {
         Sanctum::actingAs($this->adminUser);
@@ -372,7 +373,7 @@ class LookupTest extends TestCase
         $this->assertEqualsCanonicalizing(['all', 'male', 'female'], $values->all());
     }
 
-    /** @test */
+    #[Test]
     public function application_stage_hybrid_matches_job_application_status_enum(): void
     {
         Sanctum::actingAs($this->adminUser);
@@ -411,7 +412,7 @@ class LookupTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function asset_status_and_condition_seeded_with_disposed(): void
     {
         Sanctum::actingAs($this->adminUser);
@@ -437,7 +438,7 @@ class LookupTest extends TestCase
         $this->lookups->assertValid(LookupService::TYPE_ASSET_CONDITION, 'broken', $this->company->id, 'condition');
     }
 
-    /** @test */
+    #[Test]
     public function expense_claim_status_hybrid_matches_model_constants(): void
     {
         Sanctum::actingAs($this->adminUser);
@@ -473,7 +474,7 @@ class LookupTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function employee_request_priority_and_status_seeded(): void
     {
         Sanctum::actingAs($this->adminUser);
@@ -511,7 +512,7 @@ class LookupTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function performance_and_onboarding_lookups_seeded(): void
     {
         Sanctum::actingAs($this->adminUser);
@@ -593,7 +594,7 @@ class LookupTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function document_training_survey_lookups_seeded(): void
     {
         Sanctum::actingAs($this->adminUser);

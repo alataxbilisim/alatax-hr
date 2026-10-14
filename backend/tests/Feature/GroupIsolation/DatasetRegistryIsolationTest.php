@@ -35,6 +35,7 @@ use App\Support\CompanyContext;
 use Database\Seeders\PermissionSeeder;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\Sanctum;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
@@ -151,9 +152,7 @@ class DatasetRegistryIsolationTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider registeredDatasets
-     */
+    #[DataProvider('registeredDatasets')]
     public function test_active_context_a_excludes_company_b_dataset_row(string $datasetKey): void
     {
         $registry = app(DatasetRegistry::class);
@@ -191,9 +190,7 @@ class DatasetRegistryIsolationTest extends TestCase
         );
     }
 
-    /**
-     * @dataProvider registeredDatasets
-     */
+    #[DataProvider('registeredDatasets')]
     public function test_scope_group_includes_b_excludes_c(string $datasetKey): void
     {
         $idB = $this->seedRow($datasetKey, $this->companyB, $this->userB, $this->employeeB, 'B');

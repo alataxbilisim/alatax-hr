@@ -13,6 +13,7 @@ use App\Models\User;
 use Database\Seeders\LookupSeeder;
 use Database\Seeders\PermissionSeeder;
 use Laravel\Sanctum\Sanctum;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
@@ -65,7 +66,7 @@ class SurveyTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function admin_can_create_survey(): void
     {
         Sanctum::actingAs($this->adminUser);
@@ -105,7 +106,7 @@ class SurveyTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function admin_can_list_surveys(): void
     {
         Sanctum::actingAs($this->adminUser);
@@ -124,7 +125,7 @@ class SurveyTest extends TestCase
             ]);
     }
 
-    /** @test */
+    #[Test]
     public function admin_can_update_survey(): void
     {
         Sanctum::actingAs($this->adminUser);
@@ -148,7 +149,7 @@ class SurveyTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function admin_can_delete_survey(): void
     {
         Sanctum::actingAs($this->adminUser);
@@ -166,7 +167,7 @@ class SurveyTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function portal_user_can_list_available_surveys(): void
     {
         Sanctum::actingAs($this->portalUser);
@@ -189,7 +190,7 @@ class SurveyTest extends TestCase
             ]);
     }
 
-    /** @test */
+    #[Test]
     public function portal_user_can_view_survey_details(): void
     {
         Sanctum::actingAs($this->portalUser);
@@ -219,7 +220,7 @@ class SurveyTest extends TestCase
             ]);
     }
 
-    /** @test */
+    #[Test]
     public function portal_user_can_submit_survey_response(): void
     {
         Sanctum::actingAs($this->portalUser);

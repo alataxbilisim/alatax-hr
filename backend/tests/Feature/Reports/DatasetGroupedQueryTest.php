@@ -11,6 +11,7 @@ use App\Services\Reports\DatasetRegistry;
 use App\Services\Reports\ReportQueryBuilder;
 use App\Support\CompanyContext;
 use Database\Seeders\PermissionSeeder;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
@@ -76,9 +77,7 @@ class DatasetGroupedQueryTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider registeredDatasetsWithGroupField
-     */
+    #[DataProvider('registeredDatasetsWithGroupField')]
     public function test_grouped_query_runs_for_each_registry_dataset(string $datasetKey, string $groupField): void
     {
         $registry = app(DatasetRegistry::class);

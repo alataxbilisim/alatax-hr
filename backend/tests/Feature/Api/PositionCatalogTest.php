@@ -11,6 +11,7 @@ use App\Services\PositionCatalogSeedService;
 use Database\Seeders\ModuleSeeder;
 use Database\Seeders\PermissionSeeder;
 use Laravel\Sanctum\Sanctum;
+use PHPUnit\Framework\Attributes\Test;
 use Spatie\Permission\Models\Permission;
 use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
@@ -54,13 +55,13 @@ class PositionCatalogTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function unauthenticated_gets_401(): void
     {
         $this->getJson('/api/v1/positions')->assertStatus(401);
     }
 
-    /** @test */
+    #[Test]
     public function unauthorized_role_gets_403(): void
     {
         Sanctum::actingAs($this->plainUser);
@@ -68,7 +69,7 @@ class PositionCatalogTest extends TestCase
         $this->getJson('/api/v1/positions')->assertStatus(403);
     }
 
-    /** @test */
+    #[Test]
     public function seed_creates_system_positions_with_sgk_codes(): void
     {
         $defs = PositionCatalogSeedService::definitions();
@@ -91,7 +92,7 @@ class PositionCatalogTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function seed_is_idempotent_and_preserves_custom_name(): void
     {
         $svc = app(PositionCatalogSeedService::class);
@@ -113,7 +114,7 @@ class PositionCatalogTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function admin_can_crud_positions(): void
     {
         Sanctum::actingAs($this->admin);
@@ -150,7 +151,7 @@ class PositionCatalogTest extends TestCase
         $this->assertSoftDeleted('positions', ['id' => $id]);
     }
 
-    /** @test */
+    #[Test]
     public function company_can_edit_system_position_but_cannot_delete(): void
     {
         app(PositionCatalogSeedService::class)->ensureForCompany($this->company);
@@ -173,7 +174,7 @@ class PositionCatalogTest extends TestCase
             ->assertStatus(422);
     }
 
-    /** @test */
+    #[Test]
     public function tenant_isolation_blocks_cross_company_access(): void
     {
         $otherPos = Position::factory()->create([
@@ -193,7 +194,7 @@ class PositionCatalogTest extends TestCase
         $this->assertNotContains($otherPos->id, $ids);
     }
 
-    /** @test */
+    #[Test]
     public function register_seeds_position_catalog(): void
     {
         $res = $this->postJson('/api/v1/auth/register', [
@@ -215,7 +216,7 @@ class PositionCatalogTest extends TestCase
         $this->assertSame(count(PositionCatalogSeedService::definitions()), $count);
     }
 
-    /** @test */
+    #[Test]
     public function user_with_positions_view_can_list(): void
     {
         $perm = Permission::findOrCreate('employees.positions.view', 'sanctum');

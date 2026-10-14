@@ -25,6 +25,7 @@ use App\Support\CompanyContext;
 use Database\Seeders\PermissionSeeder;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\Sanctum;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
@@ -114,9 +115,7 @@ class ApprovalEntityIsolationTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider registeredEntityTypes
-     */
+    #[DataProvider('registeredEntityTypes')]
     public function test_active_context_a_cannot_access_company_b_approval_entity(string $entityType): void
     {
         $registry = app(ApprovalEntityRegistry::class);

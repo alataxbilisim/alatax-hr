@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Services\Export\ExportEndpointRegistry;
 use Database\Seeders\PermissionSeeder;
 use Laravel\Sanctum\Sanctum;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\Concerns\RefreshDatabase;
@@ -126,9 +127,7 @@ class ExportEndpointRegistryTest extends TestCase
         );
     }
 
-    /**
-     * @dataProvider registeredExportEndpoints
-     */
+    #[DataProvider('registeredExportEndpoints')]
     public function test_out_of_scope_row_absent_from_export(string $key): void
     {
         $registry = app(ExportEndpointRegistry::class);

@@ -9,6 +9,7 @@ use App\Models\Company;
 use App\Models\Employee;
 use App\Models\User;
 use Laravel\Sanctum\Sanctum;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
@@ -34,7 +35,7 @@ class TimesheetTest extends TestCase
         Employee::factory()->forUser($this->user)->create();
     }
 
-    /** @test */
+    #[Test]
     public function user_can_get_today_status(): void
     {
         Sanctum::actingAs($this->user);
@@ -53,7 +54,7 @@ class TimesheetTest extends TestCase
             ]);
     }
 
-    /** @test */
+    #[Test]
     public function user_can_clock_in(): void
     {
         Sanctum::actingAs($this->user);
@@ -78,7 +79,7 @@ class TimesheetTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function user_cannot_clock_in_twice(): void
     {
         Sanctum::actingAs($this->user);
@@ -92,7 +93,7 @@ class TimesheetTest extends TestCase
         $response->assertStatus(422);
     }
 
-    /** @test */
+    #[Test]
     public function user_can_clock_out_after_clocking_in(): void
     {
         Sanctum::actingAs($this->user);
@@ -113,7 +114,7 @@ class TimesheetTest extends TestCase
             ]);
     }
 
-    /** @test */
+    #[Test]
     public function user_cannot_clock_out_without_clocking_in(): void
     {
         Sanctum::actingAs($this->user);
@@ -123,7 +124,7 @@ class TimesheetTest extends TestCase
         $response->assertStatus(422);
     }
 
-    /** @test */
+    #[Test]
     public function user_can_start_break(): void
     {
         Sanctum::actingAs($this->user);
@@ -137,7 +138,7 @@ class TimesheetTest extends TestCase
         $response->assertOk();
     }
 
-    /** @test */
+    #[Test]
     public function user_can_end_break(): void
     {
         Sanctum::actingAs($this->user);
@@ -159,7 +160,7 @@ class TimesheetTest extends TestCase
             ]);
     }
 
-    /** @test */
+    #[Test]
     public function user_can_get_weekly_records(): void
     {
         Sanctum::actingAs($this->user);
@@ -189,7 +190,7 @@ class TimesheetTest extends TestCase
             ]);
     }
 
-    /** @test */
+    #[Test]
     public function user_can_get_monthly_records(): void
     {
         Sanctum::actingAs($this->user);
