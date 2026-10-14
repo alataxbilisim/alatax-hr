@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1\Onboarding;
 
 use App\Http\Controllers\Api\V1\BaseController;
+use App\Http\Requests\Onboarding\DuplicateOnboardingTemplateRequest;
 use App\Models\ActivityLog;
 use App\Models\OnboardingTemplate;
 use Illuminate\Http\JsonResponse;
@@ -118,7 +119,7 @@ class TemplateController extends BaseController
     public function destroy(OnboardingTemplate $template): JsonResponse
     {
         if ($template->processes()->active()->exists()) {
-            return $this->error('Aktif süreçleri olan şablon silinemez', null, 422);
+            return $this->error('Aktif süreçleri olan şablon silinemez', 422);
         }
 
         $templateName = $template->name;
@@ -132,10 +133,10 @@ class TemplateController extends BaseController
     /**
      * Duplicate a template.
      */
-    public function duplicate(OnboardingTemplate $template): JsonResponse
+    public function duplicate(DuplicateOnboardingTemplateRequest $request, OnboardingTemplate $template): JsonResponse
     {
-        $newTemplate = $template->replicate();
-        $newTemplate->name = $template->name.' (Kopya)';
+        $newTemplate = $template->replicate(['processes_count', 'created_by', 'updated_by']);
+        $newTemplate->name = $request->validated('name') ?: $template->name.' (Kopya)';
         $newTemplate->is_default = false;
         $newTemplate->save();
 

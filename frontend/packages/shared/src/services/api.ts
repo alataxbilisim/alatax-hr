@@ -605,16 +605,6 @@ export const documentsApi = {
     getSummary: () => 
       api.get('/documents/reports/summary'),
   },
-  
-  // Dashboards (BI Dashboard - saved reports)
-  dashboards: {
-    getAll: () => api.get('/documents/dashboards'),
-    get: (id: number) => api.get(`/documents/dashboards/${id}`),
-    create: (data: Record<string, unknown>) => api.post('/documents/dashboards', data),
-    update: (id: number, data: Record<string, unknown>) => api.put(`/documents/dashboards/${id}`, data),
-    delete: (id: number) => api.delete(`/documents/dashboards/${id}`),
-    toggleFavorite: (id: number) => api.post(`/documents/dashboards/${id}/favorite`),
-  },
 };
 
 // Leaves (İzin Yönetimi) API
@@ -647,10 +637,6 @@ export const leavesApi = {
       api.post(`/leaves/requests/${id}/reject`, { reason }),
     cancel: (id: number) => 
       api.post(`/leaves/requests/${id}/cancel`),
-    myRequests: (params?: Record<string, unknown>) => 
-      api.get('/leaves/requests/my', { params }),
-    pendingApprovals: (params?: Record<string, unknown>) => 
-      api.get('/leaves/requests/pending', { params }),
   },
   
   // Leave Balance
@@ -669,10 +655,6 @@ export const leavesApi = {
   calendar: {
     get: (params: { start_date: string; end_date: string; user_id?: number }) => 
       api.get('/leaves/calendar', { params }),
-    today: () => 
-      api.get('/leaves/calendar/today'),
-    upcoming: (days?: number) => 
-      api.get('/leaves/calendar/upcoming', { params: { days } }),
   },
 
   // Holidays (Tatil Takvimi)
@@ -750,8 +732,6 @@ export const onboardingApi = {
       api.put(`/onboarding/processes/${id}`, data),
     delete: (id: number) => 
       api.delete(`/onboarding/processes/${id}`),
-    addTask: (processId: number, data: Record<string, unknown>) => 
-      api.post(`/onboarding/processes/${processId}/tasks`, data),
     completeTask: (processId: number, taskId: number, data?: Record<string, unknown>) => 
       api.post(`/onboarding/processes/${processId}/tasks/${taskId}/complete`, data),
     skipTask: (processId: number, taskId: number) =>
@@ -762,8 +742,6 @@ export const onboardingApi = {
       api.post(`/onboarding/processes/${processId}/cancel-offboarding`),
     clearanceForm: (processId: number) =>
       api.get(`/onboarding/processes/${processId}/clearance-form`, { responseType: 'blob' }),
-    dashboard: () =>
-      api.get('/onboarding/dashboard'),
   },
 };
 
@@ -1726,7 +1704,6 @@ export const employeesApi = {
   getOrganizationChart: (params?: { mode?: 'people' | 'department' | 'hybrid' }) =>
     api.get('/employees/organization-chart', { params }),
   getStats: (params?: Record<string, unknown>) => api.get('/employees/stats', { params }),
-  exportReport: (params?: Record<string, unknown>) => api.get('/employees/export-report', { params, responseType: 'blob' }),
   
   // BI Raporlama
   reports: {

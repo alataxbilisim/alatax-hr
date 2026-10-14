@@ -754,6 +754,8 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:onboarding.templates.edit');
             Route::delete('templates/{template}', [\App\Http\Controllers\Api\V1\Onboarding\TemplateController::class, 'destroy'])
                 ->middleware('permission:onboarding.templates.delete');
+            Route::post('templates/{template}/duplicate', [\App\Http\Controllers\Api\V1\Onboarding\TemplateController::class, 'duplicate'])
+                ->middleware('permission:onboarding.templates.create');
 
             Route::get('processes', [\App\Http\Controllers\Api\V1\Onboarding\ProcessController::class, 'index'])
                 ->middleware('permission:onboarding.processes.view');
@@ -768,6 +770,8 @@ Route::prefix('v1')->group(function () {
             Route::delete('processes/{process}', [\App\Http\Controllers\Api\V1\Onboarding\ProcessController::class, 'destroy'])
                 ->middleware('permission:onboarding.processes.delete');
             Route::post('/processes/{process}/tasks/{task}/complete', [\App\Http\Controllers\Api\V1\Onboarding\ProcessController::class, 'completeTask'])
+                ->middleware('permission:onboarding.processes.edit');
+            Route::post('/processes/{process}/tasks/{task}/skip', [\App\Http\Controllers\Api\V1\Onboarding\ProcessController::class, 'skipTask'])
                 ->middleware('permission:onboarding.processes.edit');
             Route::post('/processes/{process}/finalize-offboarding', [\App\Http\Controllers\Api\V1\Onboarding\ProcessController::class, 'finalizeOffboarding'])
                 ->middleware('permission:employees.terminate.create');

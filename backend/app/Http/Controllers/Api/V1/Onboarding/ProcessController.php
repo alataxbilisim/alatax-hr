@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1\Onboarding;
 
 use App\Http\Controllers\Api\V1\BaseController;
+use App\Http\Requests\Onboarding\SkipOnboardingTaskRequest;
 use App\Models\ActivityLog;
 use App\Models\OnboardingProcess;
 use App\Models\OnboardingTask;
@@ -180,7 +181,7 @@ class ProcessController extends BaseController
     public function completeTask(Request $request, OnboardingProcess $process, OnboardingTask $task): JsonResponse
     {
         if ($task->process_id !== $process->id) {
-            return $this->error('Görev bu sürece ait değil', null, 404);
+            return $this->error('Görev bu sürece ait değil', 404);
         }
 
         $validated = $request->validate([
@@ -301,17 +302,25 @@ class ProcessController extends BaseController
     /**
      * Skip a task.
      */
-    public function skipTask(OnboardingProcess $process, OnboardingTask $task): JsonResponse
+    public function skipTask(SkipOnboardingTaskRequest $request, OnboardingProcess $process, OnboardingTask $task): JsonResponse
     {
         if ($task->process_id !== $process->id) {
-            return $this->error('Görev bu sürece ait değil', null, 404);
+            return $this->error('Görev bu sürece ait değil', 404);
         }
 
         if ($task->is_required) {
-            return $this->error('Zorunlu görevler atlanamaz', null, 422);
+            return $this->error('Zorunlu görevler atlanamaz', 422);
+        }
+
+        if ($task->status === OnboardingTask::STATUS_COMPLETED) {
+            return $this->error('Tamamlanmış görev atlanamaz', 422);
         }
 
         $task->skip();
+
+        if ($request->filled('notes')) {
+            $task->update(['notes' => $request->validated('notes')]);
+        }
 
         ActivityLog::log('update', $task, 'Onboarding görevi atlandı: '.$task->title);
 
