@@ -204,7 +204,8 @@ class Employee extends Model
     }
 
     /**
-     * Tam ad — kolon öncelikli; yoksa bağlı kullanıcı adı.
+     * Tam ad — kolon öncelikli; yoksa bağlı kullanıcı adı; ikisi de yoksa sicil no
+     * (hesabı olmayan eski / işten çıkmış kayıtlar).
      */
     public function getDisplayNameAttribute(): string
     {
@@ -215,7 +216,12 @@ class Employee extends Model
             return $stored;
         }
 
-        return $this->user?->name ?? 'Unknown';
+        $userName = trim((string) ($this->user?->name ?? ''));
+        if ($userName !== '') {
+            return $userName;
+        }
+
+        return (string) ($this->attributes['employee_code'] ?? '');
     }
 
     /**

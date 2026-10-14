@@ -272,7 +272,8 @@ class DemoDataSeeder extends Seeder
             $status = $isTerm ? 'terminated' : ($i === 33 ? 'on_leave' : 'active');
             $hireYear = ($i % 5 === 0) ? 2018 : (($i % 4 === 0) ? 2025 : 2019 + ($i % 6));
             $managerId = $isTerm ? null : (in_array($dept, ['IT', 'SAT'], true) ? $mudurEmp->id : ($dept === 'IK' ? $ikEmp->id : $adminEmp->id));
-            $user = $isTerm ? null : $this->upsertUser($company->id, sprintf('personel%03d@demo.test', $i), $names[($i - 1) % 40], 'employee');
+            $fullName = $names[($i - 1) % 40];
+            $user = $isTerm ? null : $this->upsertUser($company->id, sprintf('personel%03d@demo.test', $i), $fullName, 'employee');
             $this->upsertEmployee(
                 $company,
                 $code,
@@ -284,7 +285,8 @@ class DemoDataSeeder extends Seeder
                 $status,
                 $i % 2 === 0 ? 'female' : 'male',
                 $managerId,
-                $isTerm ? now()->subMonths(($i % 8) + 1)->toDateString() : null
+                $isTerm ? now()->subMonths(($i % 8) + 1)->toDateString() : null,
+                $fullName,
             );
         }
     }
@@ -1027,6 +1029,7 @@ class DemoDataSeeder extends Seeder
         Employee::updateOrCreate(
             ['company_id' => $company->id, 'employee_code' => $def['code_prefix'].'-001'],
             [
+                'full_name' => $admin->name,
                 'user_id' => $admin->id,
                 'department_id' => $dept->id,
                 'branch_id' => $hq->id,
@@ -1053,6 +1056,7 @@ class DemoDataSeeder extends Seeder
             Employee::updateOrCreate(
                 ['company_id' => $company->id, 'employee_code' => sprintf('%s-%03d', $def['code_prefix'], $i)],
                 [
+                    'full_name' => $user->name,
                     'user_id' => $user->id,
                     'department_id' => $dept->id,
                     'branch_id' => $hq->id,
@@ -1103,9 +1107,11 @@ class DemoDataSeeder extends Seeder
         ?string $gender = null,
         ?int $managerId = null,
         ?string $terminationDate = null,
+        ?string $fullName = null,
     ): Employee {
         $position = $this->positions[$posCode] ?? null;
         $payload = [
+            'full_name' => $fullName ?? $user?->name,
             'user_id' => $user?->id,
             'department_id' => $this->departments[$deptCode]->id,
             'branch_id' => $this->branches[$branchCode]->id,

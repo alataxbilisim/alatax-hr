@@ -109,6 +109,24 @@ class DemoDataSeederGuardTest extends TestCase
         $this->assertLessThanOrEqual(15, $codesB->count());
     }
 
+    /**
+     * K6: hesabı olmayan işten çıkmış demo personeli "Unknown" görünüyordu; seeder full_name yazmıyordu.
+     */
+    public function test_every_demo_employee_has_full_name_including_terminated(): void
+    {
+        $this->seed(DemoDataSeeder::class);
+
+        $missing = Employee::withoutGlobalScopes()
+            ->where(fn ($q) => $q->whereNull('full_name')->orWhere('full_name', ''))
+            ->pluck('employee_code')
+            ->all();
+        $this->assertSame([], $missing, 'full_name boş demo personeli: '.implode(', ', $missing));
+
+        $terminated = Employee::withoutGlobalScopes()->where('employee_code', 'DEM-035')->firstOrFail();
+        $this->assertNull($terminated->user_id);
+        $this->assertSame('Nilüfer Ergin', $terminated->display_name);
+    }
+
     public function test_sister_company_employee_detail_cross_access_denied(): void
     {
         $this->seed(DemoDataSeeder::class);

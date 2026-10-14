@@ -776,7 +776,7 @@ class EmployeeController extends BaseController
             [
                 'key' => 'full_name',
                 'header' => 'Ad Soyad',
-                'value' => fn (Employee $e) => $e->user?->name ?? $e->full_name ?? '-',
+                'value' => fn (Employee $e) => $e->display_name ?: '-',
             ],
             [
                 'key' => 'email',

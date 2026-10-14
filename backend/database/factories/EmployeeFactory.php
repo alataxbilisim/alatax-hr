@@ -19,6 +19,7 @@ class EmployeeFactory extends Factory
         return [
             'company_id' => Company::factory(),
             'user_id' => null,
+            'full_name' => fake('tr_TR')->name(),
             'employee_code' => 'EMP-'.fake()->unique()->numerify('####'),
             'title' => fake()->optional()->jobTitle(),
             'position_id' => null,
@@ -38,6 +39,7 @@ class EmployeeFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'company_id' => $user->home_company_id,
             'user_id' => $user->id,
+            'full_name' => $user->name,
             'status' => 'active',
         ]);
     }
