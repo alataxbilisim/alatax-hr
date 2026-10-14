@@ -18,6 +18,7 @@
     "require-dev": {
         "brianium/paratest": "^7.8",
         "fakerphp/faker": "^1.23",
+        "larastan/larastan": "^3.0",
         "laravel/pail": "^1.2.2",
         "laravel/pint": "^1.24",
         "laravel/sail": "^1.41",
@@ -73,6 +74,11 @@
             "@php artisan config:clear --ansi",
             "@putenv PHP_INI_SCAN_DIR=:tests/php",
             "@php artisan test --parallel --coverage-html=storage/coverage/html --coverage-clover=storage/coverage/clover.xml --coverage-text=storage/coverage/summary.txt"
+        ],
+        "analyse": [
+            "Composer\\Config::disableProcessTimeout",
+            "@php scripts/larastan-schema.php",
+            "@php vendor/bin/phpstan analyse --memory-limit=2G"
         ],
         "test:db": [
             "@php artisan db:create-testing"
