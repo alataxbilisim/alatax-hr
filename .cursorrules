@@ -1,10 +1,14 @@
-# ALATAX HR — Cursor Kuralları
+# Dobedan HR — Cursor Kuralları
 
 ---
 
 ## Proje Bağlamı
 
-ALATAX HR: Türkiye odaklı, multi-tenant B2B HR SaaS. Backend: Laravel 12 REST API (`/api/v1`, modüler monolith). Frontend: pnpm monorepo, 3 React 19 + TS SPA (superadmin/company/portal) + `@alatax/shared`. Veritabanı: **yalnız PostgreSQL 16** (JSONB hibrit model); MySQL/MariaDB/SQLite yasak. Auth: Sanctum Bearer token. RBAC: Spatie Permission (`{module}.{page}.{action}` formatı). Multi-tenancy: `company_id` + `BelongsToCompany` global scope. Güncel durum ve borç listesi `docs/DURUM.md`, doküman haritası `docs/README.md`; görev sırası `docs/cursor-gorevleri/` adımlarıdır, kapsam dışına çıkma.
+Dobedan HR: Türkiye odaklı, multi-tenant B2B HR SaaS. Backend: Laravel 12 REST API (`/api/v1`, modüler monolith). Frontend: pnpm monorepo, 3 React 19 + TS SPA (superadmin/company/portal) + `@dobedan/shared`. Veritabanı: **yalnız PostgreSQL 16** (JSONB hibrit model); MySQL/MariaDB/SQLite yasak. Auth: Sanctum Bearer token. RBAC: Spatie Permission (`{module}.{page}.{action}` formatı). Multi-tenancy: `company_id` + `BelongsToCompany` global scope. Güncel durum ve borç listesi `docs/DURUM.md`, doküman haritası `docs/README.md`; görev sırası `docs/cursor-gorevleri/` adımlarıdır, kapsam dışına çıkma.
+
+<!-- brand-guard:allow-start -->
+**Ürün adı Dobedan HR. `alatax` ifadesi kod, config ve dokümanlarda kullanılmaz.** Adlar: `dobedan-hr` (slug/Docker), `dobedan_hr` (DB), `@dobedan/*` (paketler), `dobedan_*` (tarayıcı depolama). `tests/Architecture/BrandGuardTest` ve `pnpm check:brand` (CI) bunu doğrular. Tek istisna: GitHub deposu adresi ve `alatax-son` geri dönüş etiketi.
+<!-- brand-guard:allow-end -->
 
 ## Genel Çalışma Kuralları
 

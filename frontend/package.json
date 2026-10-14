@@ -12,7 +12,9 @@
     "build:superadmin": "pnpm --filter @dobedan/superadmin build",
     "build:company": "pnpm --filter @dobedan/company build",
     "build:portal": "pnpm --filter @dobedan/portal build",
-    "lint": "pnpm -r --filter \"./apps/**\" lint",    "gorsel-kontrol": "pnpm --dir ../scripts/gorsel-kontrol start"
+    "lint": "pnpm -r --filter \"./apps/**\" lint",
+    "check:brand": "node ../scripts/check-brand.mjs",
+    "gorsel-kontrol": "pnpm --dir ../scripts/gorsel-kontrol start"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
