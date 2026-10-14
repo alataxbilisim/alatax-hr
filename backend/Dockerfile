@@ -29,8 +29,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         zip \
         intl \
         opcache \
-    && pecl install redis \
-    && docker-php-ext-enable redis \
+    && pecl install redis pcov \
+    && docker-php-ext-enable redis pcov \
+    && printf "pcov.enabled=0\npcov.directory=/var/www/html/app\n" >> /usr/local/etc/php/conf.d/docker-php-ext-pcov.ini \
     && apt-get purge -y --auto-remove $PHPIZE_DEPS \
     && rm -rf /var/lib/apt/lists/*
 

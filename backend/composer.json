@@ -51,8 +51,28 @@
             "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
         ],
         "test": [
+            "Composer\\Config::disableProcessTimeout",
             "@php artisan config:clear --ansi",
             "@php artisan test"
+        ],
+        "test:parallel": [
+            "Composer\\Config::disableProcessTimeout",
+            "@php artisan config:clear --ansi",
+            "@php artisan test --parallel"
+        ],
+        "test:arch": [
+            "Composer\\Config::disableProcessTimeout",
+            "@php artisan test --testsuite=Architecture"
+        ],
+        "test:security": [
+            "Composer\\Config::disableProcessTimeout",
+            "@php artisan test --testsuite=Security"
+        ],
+        "test:coverage": [
+            "Composer\\Config::disableProcessTimeout",
+            "@php artisan config:clear --ansi",
+            "@putenv PHP_INI_SCAN_DIR=:tests/php",
+            "@php artisan test --parallel --coverage-html=storage/coverage/html --coverage-clover=storage/coverage/clover.xml --coverage-text=storage/coverage/summary.txt"
         ],
         "test:db": [
             "@php artisan db:create-testing"
