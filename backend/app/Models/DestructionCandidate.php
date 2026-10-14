@@ -5,12 +5,13 @@ namespace App\Models;
 use App\Enums\DestructionCandidateStatus;
 use App\Enums\RetentionStrategy;
 use App\Traits\BelongsToCompany;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DestructionCandidate extends Model
 {
-    use BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
         'company_id',

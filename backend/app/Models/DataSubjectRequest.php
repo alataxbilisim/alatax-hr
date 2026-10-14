@@ -8,6 +8,7 @@ use App\Enums\DataSubjectType;
 use App\Traits\Auditable;
 use App\Traits\BelongsToCompany;
 use App\Traits\HasAuditColumns;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -16,7 +17,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DataSubjectRequest extends Model
 {
-    use Auditable, BelongsToCompany, HasAuditColumns, SoftDeletes;
+    use Auditable, BelongsToCompany, HasAuditColumns, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',

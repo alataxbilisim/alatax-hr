@@ -15,7 +15,7 @@ class ExpenseClaimFactory extends Factory
     {
         return [
             'company_id' => Company::factory(),
-            'user_id' => User::factory(),
+            'user_id' => fn (array $attributes) => User::factory()->state(['home_company_id' => $attributes['company_id']]),
             'title' => $this->faker->sentence(3),
             'description' => $this->faker->optional()->paragraph(),
             'claim_number' => 'EXP-'.now()->format('Y').'-'.str_pad($this->faker->unique()->randomNumber(4), 4, '0', STR_PAD_LEFT),

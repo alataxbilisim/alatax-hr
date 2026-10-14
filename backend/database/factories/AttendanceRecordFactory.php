@@ -18,7 +18,7 @@ class AttendanceRecordFactory extends Factory
 
         return [
             'company_id' => Company::factory(),
-            'user_id' => User::factory(),
+            'user_id' => fn (array $attributes) => User::factory()->state(['home_company_id' => $attributes['company_id']]),
             'date' => $this->faker->date(),
             'clock_in' => $clockIn,
             'clock_out' => $clockOut,

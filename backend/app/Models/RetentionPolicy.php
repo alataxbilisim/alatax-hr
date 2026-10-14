@@ -6,13 +6,14 @@ use App\Enums\RetentionStrategy;
 use App\Enums\RetentionTriggerEvent;
 use App\Traits\BelongsToCompany;
 use App\Traits\HasAuditColumns;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RetentionPolicy extends Model
 {
-    use BelongsToCompany, HasAuditColumns, SoftDeletes;
+    use BelongsToCompany, HasAuditColumns, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',

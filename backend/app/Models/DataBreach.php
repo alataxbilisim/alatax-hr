@@ -5,12 +5,13 @@ namespace App\Models;
 use App\Enums\DataBreachSeverity;
 use App\Traits\BelongsToCompany;
 use App\Traits\HasAuditColumns;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DataBreach extends Model
 {
-    use BelongsToCompany, HasAuditColumns, SoftDeletes;
+    use BelongsToCompany, HasAuditColumns, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
