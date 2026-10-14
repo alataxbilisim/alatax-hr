@@ -1391,7 +1391,7 @@ Route::prefix('v1')->group(function () {
     // ===========================================
     // SUPERADMIN ROUTES
     // ===========================================
-    Route::middleware(['auth:sanctum', 'super_admin'])->prefix('admin')->group(function () {
+    Route::middleware(['auth:sanctum', 'deny.2fa.challenge', 'super_admin'])->prefix('admin')->group(function () {
         // Companies
         Route::apiResource('companies', \App\Http\Controllers\Api\V1\Admin\CompanyController::class);
         Route::post('/companies/{company}/toggle-status', [\App\Http\Controllers\Api\V1\Admin\CompanyController::class, 'toggleStatus']);
@@ -1431,7 +1431,7 @@ Route::prefix('v1')->group(function () {
     // ===========================================
     // PORTAL ROUTES (Personel Self-Servis)
     // ===========================================
-    Route::middleware(['auth:sanctum', 'company.context', 'company.active', 'portal.access'])->prefix('portal')->group(function () {
+    Route::middleware(['auth:sanctum', 'deny.2fa.challenge', 'company.context', 'company.active', 'portal.access'])->prefix('portal')->group(function () {
         // Dashboard
         Route::get('/dashboard', [\App\Http\Controllers\Api\V1\Portal\PortalDashboardController::class, 'index']);
 
