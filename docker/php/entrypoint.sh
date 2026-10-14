@@ -16,4 +16,11 @@ if [ "$(id -u)" = "0" ]; then
   chmod -R ug+rwx storage bootstrap/cache 2>/dev/null || true
 fi
 
+# public/storage -> storage/app/public (idempotent). Yalnız php-fpm (app) servisi oluşturur;
+# queue/scheduler aynı volume'u paylaşır ve aynı anda başlar.
+if [ "$1" = "php-fpm" ] && [ ! -L public/storage ] && [ ! -e public/storage ]; then
+  echo "[entrypoint] storage:link..."
+  php artisan storage:link --no-interaction || echo "[entrypoint] storage:link başarısız; uygulama yine de başlatılıyor"
+fi
+
 exec "$@"
