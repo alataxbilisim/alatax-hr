@@ -46,7 +46,7 @@ docker compose version
 
 ### Node 20 + pnpm 9 pin
 
-**Node 20’de `pnpm@latest` (11.x) kırılır** (`node:sqlite` / Node 22 ister). Deploy turunda kanıtlandı — **pnpm@9.15.9** pinleyin:
+**Node 20’de `pnpm@latest` (11.x) kırılır** (`ERR_UNKNOWN_BUILTIN_MODULE` — Node 22’nin yerleşik modülünü ister). Deploy turunda kanıtlandı — **pnpm@9.15.9** pinleyin:
 
 ```bash
 # Node 20 (ör. NodeSource veya nvm)
@@ -101,7 +101,7 @@ docker compose up -d --build
 docker compose ps
 ```
 
-Beklenen servisler: `app`, `nginx`, `postgres`, `redis`, `queue`, `scheduler` (ve varsa legacy `mysql`).
+Beklenen servisler (6): `app`, `nginx`, `postgres`, `redis`, `queue`, `scheduler`. Veritabanı yalnız PostgreSQL 16’dır.
 
 `APP_KEY` üretimi:
 
@@ -273,7 +273,7 @@ Company admin ile:
 |---------|------------|
 | Port çakışması (`8000`/`5432`) | `.env` / compose host port mapping’ini değiştirin veya çakışan süreci kapatın |
 | `docker.sock` permission denied | `usermod -aG docker` + `newgrp docker` / relogin |
-| `pnpm` / `node:sqlite` hatası | pnpm 11 + Node 20 — `pnpm@9.15.9` pinleyin |
+| `pnpm` / `ERR_UNKNOWN_BUILTIN_MODULE` hatası | pnpm 11 + Node 20 — `pnpm@9.15.9` pinleyin |
 | Eski config cache | `docker compose exec app php artisan config:clear && php artisan cache:clear` |
 | Migration hatası | `docker compose logs app` / `postgres`; DB credentials |
 | Lookup boş dropdown | `php artisan db:seed --class=LookupSeeder` |

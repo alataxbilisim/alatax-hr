@@ -317,7 +317,7 @@ Takvim (Google/Outlook), SSO (Azure AD/Google), e-imza, canlı PDKS cihaz — RO
 | `application_forms` + `request_types.form_fields` | Tek Form Engine |
 | `employee_dashboards` özel widget | Dashboard v2 (B14) ile genelleşir; personel BI path’i kırılmaz |
 | `_archive_old_app/` | Repodan çıkar |
-| MySQL servisi silme | **YASAK** — legacy korunur; default pgsql |
+| Veritabanı motoru | **Yalnız PostgreSQL 16** — MySQL/MariaDB/SQLite yasak (Adım 01’de kaldırıldı) |
 | Bordro motoru | Kapsam dışı; B5 + aktarım paketi hazırlar |
 
 ---

@@ -18,8 +18,7 @@ use Tests\Concerns\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Adım 01 — eski modül rapor uçlarındaki MySQL'e özgü SQL PostgreSQL'e çevrildi;
- * her uç gerçek PostgreSQL üzerinde 200 + beklenen JSON şekliyle doğrulanır.
+ * Tarih/yaş gruplayan rapor uçları gerçek PostgreSQL üzerinde 200 + beklenen JSON şekliyle çalışmalı.
  */
 class PostgresReportSqlTest extends TestCase
 {

@@ -15,14 +15,14 @@ Doküman haritası: [`docs/README.md`](docs/README.md) · Güncel durum: [`docs/
 ## Docker ile çalıştırma (backend + PostgreSQL + Redis)
 
 Frontend **Docker dışında** kalır (dev’de host’ta `pnpm`). Sadece API ve altyapı container’dadır.  
-Mevcut XAMPP kurulumu bozulmaz; Docker ayrı bir seçenektir (`backend/.env` değiştirilmez).
+Backend’i çalıştırmanın desteklenen tek yolu Docker’dır; `php artisan` komutları her zaman `docker compose exec app ...` ile çalıştırılır.
 
 ### Gereksinimler
 
 - Docker Desktop (Compose v2)
 - Host’ta frontend için: Node 20+, pnpm
 
-> **XAMPP ile birlikte:** Host’ta XAMPP MySQL `:3306` kullanıyorsa legacy MySQL container için `.env` içinde `MYSQL_HOST_PORT=3307` kullan. **App default DB: PostgreSQL** (`DB_HOST=postgres`, host port `5432`). Redis `:6379` ve API `:8000` boşsa değiştirme.
+> **Veritabanı:** yalnız PostgreSQL 16 (`DB_HOST=postgres`, host port `5432`). MySQL/MariaDB/SQLite desteklenmez. Host portları `5432`, `6379` ve `8000` başka bir süreç tarafından kullanılmamalıdır.
 
 ### 1) Ortam dosyası
 
@@ -30,7 +30,7 @@ Mevcut XAMPP kurulumu bozulmaz; Docker ayrı bir seçenektir (`backend/.env` de�
 cp .env.docker.example .env
 ```
 
-`.env` içinde `DB_CONNECTION=pgsql` ve `DB_PORT=5432` olmalı (örnek dosyada varsayılan). Legacy MySQL satırları yorumlu kalır.
+Kök `.env` container’lar için tek ortam kaynağıdır (`env_file`). İçinde `DB_CONNECTION=pgsql` ve `DB_PORT=5432` olmalı (örnek dosyada varsayılan). `.env` değişikliğinden sonra container’ları yeniden oluştur: `docker compose up -d`.
 
 `APP_KEY` boşsa, container ayağa kalktıktan sonra üret:
 
@@ -40,7 +40,7 @@ docker compose exec app php artisan key:generate --show
 docker compose up -d app queue scheduler
 ```
 
-Alternatif: host’taki mevcut `backend/.env` zaten `APP_KEY` içeriyorsa Docker onu kullanır; compose `DB_HOST=postgres`, `REDIS_HOST=redis` vb. override eder.
+Mevcut bir kurulumda `APP_KEY` **asla değiştirilmez**; değişirse şifreli alanlar ve oturumlar okunamaz hâle gelir.
 
 ### 2) Servisleri başlat
 
@@ -49,7 +49,7 @@ docker compose up -d --build
 docker compose ps
 ```
 
-Servisler: `app` (php-fpm), `nginx` (:8000), **`postgres` (:5432)**, `mysql` (legacy, :3307), `redis` (:6379), `queue`, `scheduler`.
+Servisler (6): `app` (php-fpm), `nginx` (:8000), **`postgres` (:5432)**, `redis` (:6379), `queue`, `scheduler`.
 
 ### 3) Migrate + seed
 
@@ -87,15 +87,15 @@ SPA’ların API base URL’i `http://localhost:8000` olmalı.
 
 ```bash
 docker compose down          # volume’lar kalır
-docker compose down -v       # Postgres/MySQL/Redis verisini de siler
+docker compose down -v       # Postgres/Redis verisini de siler — geri alınamaz, önce pg_dump yedeği al
 ```
 
-### Faz 1 notu
+### Veritabanı notu
 
-Default DB **PostgreSQL**. `mysql:` servisi **legacy** olarak compose’da kalır (silinmedi); Faz 1 sonu / Faz 2’de kaldırılacak. Migration squash Faz 2’ye ertelendi.
+Veritabanı yalnız **PostgreSQL 16**’dır. MySQL servisi, `pdo_mysql` ve MySQL/MariaDB/SQLite bağlantıları Adım 01’de kaldırıldı; `tests/Architecture/DatabaseDriverGuardTest` geri gelmelerini engeller.
 
 ---
 
-## XAMPP ile çalıştırma (mevcut)
+## XAMPP / host PHP ile çalıştırma
 
-Docker kullanmadan önceki akış: Apache/PHP + `backend/.env` (**önerilen: pgsql**; sqlite/mysql legacy), `php artisan serve` veya vhost, frontend host’ta pnpm.
+Desteklenmez. Backend yalnız Docker üzerinden çalıştırılır (yukarıdaki bölüm).
