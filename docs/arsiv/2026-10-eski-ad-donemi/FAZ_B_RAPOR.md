@@ -3,7 +3,7 @@
 **Branch:** `faz4-form-engine`  
 **Tarih:** 14 Temmuz 2026  
 **PUSH:** yok (kullanıcı onayı beklenir)  
-**DB:** `migrate:fresh` / wipe / truncate **kullanılmadı**; testler yalnızca `alatax_hr_testing` (RefreshDatabase).
+**DB:** `migrate:fresh` / wipe / truncate **kullanılmadı**; testler yalnızca `dobedan_hr_testing` (RefreshDatabase).
 
 ---
 
@@ -39,7 +39,7 @@
 
 `leaves.balances.edit` zaten hiyerarşik PermissionSeeder’da (`balances => view, edit`); admin / `leaves.*` rolleri kapsar.
 
-### Test sonuçları (`alatax_hr_testing`)
+### Test sonuçları (`dobedan_hr_testing`)
 
 | Suite | Sonuç |
 |-------|--------|
@@ -96,7 +96,7 @@
 | `POST` | `/api/v1/recruitment/applications` | `recruitment.applications.edit` |
 | `POST` | `/api/v1/recruitment/applications/{id}/convert-to-employee` | `edit` \| `employees.list.create` |
 
-### Test sonuçları (`alatax_hr_testing`)
+### Test sonuçları (`dobedan_hr_testing`)
 
 | Suite | Sonuç |
 |-------|--------|
@@ -115,22 +115,22 @@
 
 | Madde | Bulgu |
 |-------|--------|
-| `phpunit.xml` | `DB_DATABASE=alatax_hr_testing` vardı ama **`force` yoktu** |
+| `phpunit.xml` | `DB_DATABASE=dobedan_hr_testing` vardı ama **`force` yoktu** |
 | `.env.testing` | **YOKTU** |
 | `config/database.php` | `env('DB_DATABASE')` |
-| Docker compose | `DB_DATABASE=alatax_hr` process env'e yazılıyor |
+| Docker compose | `DB_DATABASE=dobedan_hr` process env'e yazılıyor |
 | `bootstrap/cache/config.php` | yok |
 | Base `TestCase` | RefreshDatabase kullanmıyor; Feature testleri trait ile kullanıyor |
 
 ### Kök neden
 
-Docker/compose ortamında `DB_DATABASE=alatax_hr` zaten set. PHPUnit `<env>` varsayılanı mevcut env'i **ezmez**.  
-Runtime kanıt (önce): `DB::connection()->getDatabaseName() = **alatax_hr**` → `RefreshDatabase` dev'i siliyordu.
+Docker/compose ortamında `DB_DATABASE=dobedan_hr` zaten set. PHPUnit `<env>` varsayılanı mevcut env'i **ezmez**.  
+Runtime kanıt (önce): `DB::connection()->getDatabaseName() = **dobedan_hr**` → `RefreshDatabase` dev'i siliyordu.
 
 ### Koruma
 
 1. `phpunit.xml`: `DB_DATABASE` / `APP_ENV` / `DB_CONNECTION` → `force="true"`
-2. `tests/bootstrap.php`: `putenv` + `$_ENV` ile `alatax_hr_testing` kesinleştirme; config cache silme
+2. `tests/bootstrap.php`: `putenv` + `$_ENV` ile `dobedan_hr_testing` kesinleştirme; config cache silme
 3. `.env.testing` + `.env.testing.example` (dev adından farklı)
 4. `TestCase::assertUsingTestingDatabase()` + `beforeRefreshingDatabase()` — yanlış DB'de **RuntimeException**
 
@@ -138,9 +138,9 @@ Runtime kanıt (önce): `DB::connection()->getDatabaseName() = **alatax_hr**` �
 
 | An | `getDatabaseName()` | Sentinel `admin@demo.test` |
 |----|---------------------|----------------------------|
-| Önce (probe) | `alatax_hr` | — |
-| Sonra (probe) | `alatax_hr_testing` | — |
-| Suite sonrası (dev tinker) | `alatax_hr` | **mevcut (SENTINEL_AFTER=yes)** |
+| Önce (probe) | `dobedan_hr` | — |
+| Sonra (probe) | `dobedan_hr_testing` | — |
+| Suite sonrası (dev tinker) | `dobedan_hr` | **mevcut (SENTINEL_AFTER=yes)** |
 
 Tam suite (ilk B-DB sonrası): 303 passed / 22 failed (testing DB deadlock — **dev wipe değil**).  
 DB wipe komutu çalıştırılmadı. Push yok.
@@ -234,7 +234,7 @@ Seed: `hr_manager` → `timesheet.attendance.*`; `manager` / `branch_manager` �
 | Tam suite (`php artisan test`, sıralı; `--processes` PHPUnit’de yok) | **338 passed / 0 fail** (1330 assertions, ~451s, exit 0) |
 | Önceki 137 | aşırı bellek/kill; bu koşuda tekrarlanmadı |
 | company `tsc --noEmit` | **0** |
-| Sentinel `admin@demo.test` @ `alatax_hr` | suite öncesi/sonrası **yes** |
+| Sentinel `admin@demo.test` @ `dobedan_hr` | suite öncesi/sonrası **yes** |
 | C regresyon | **0** |
 | Push / dev wipe | yok |
 
@@ -271,7 +271,7 @@ Commit’ler: `8e343d5` feat(B-3); `1c6b5b4` policy ad fix.
 |--------|--------|
 | company tsc | **0** |
 | Tam suite | **338 passed / 0 fail** (1330 assertions) |
-| Sentinel `admin@demo.test` @ `alatax_hr` | **yes** |
+| Sentinel `admin@demo.test` @ `dobedan_hr` | **yes** |
 | Push / wipe | yok |
 
 ---
@@ -316,7 +316,7 @@ Commit’ler: `8e343d5` feat(B-3); `1c6b5b4` policy ad fix.
 | `OnboardingAutoStartTest` + B-2 convert | **9 passed** |
 | Tam suite (`docker compose exec app php artisan test`) | **393 passed / 0 fail** (1527 assertions) |
 | company `tsc --noEmit` | **0** |
-| Sentinel `admin@demo.test` @ `alatax_hr` | **yes** (wipe yok) |
+| Sentinel `admin@demo.test` @ `dobedan_hr` | **yes** (wipe yok) |
 | Push | **yok** (bugünkü push sonrası lokal commit) |
 
 ---

@@ -10,15 +10,15 @@
 
 | Ortam | İşlem |
 |-------|--------|
-| `alatax_hr` | **pg_dump alındı** (değiştirilmeden önce) |
-| Dump yolu | `docs/backups/alatax_hr_20260805_230705.dump` (~20.4 MB, custom format `-Fc`) |
-| `alatax_hr_testing` | `migrate:fresh --seed` ile teşhis koşturuldu |
+| `dobedan_hr` | **pg_dump alındı** (değiştirilmeden önce) |
+| Dump yolu | `docs/backups/dobedan_hr_20260805_230705.dump` (~20.4 MB, custom format `-Fc`) |
+| `dobedan_hr_testing` | `migrate:fresh --seed` ile teşhis koşturuldu |
 
 ---
 
 ## 1) Silme / cascade matrisi
 
-Gerçek denemeler (`alatax_hr_testing`). API guard varsa ayrıca not edildi.
+Gerçek denemeler (`dobedan_hr_testing`). API guard varsa ayrıca not edildi.
 
 | Senaryo | API davranışı | Eloquent / DB (gerçekleşen) | Soft-delete yan etki | Kova |
 |---------|---------------|----------------------------|----------------------|------|
@@ -145,8 +145,8 @@ Liste sıralaması varsayılan collation ile Türkçe değil; ICU `tr-TR` mevcut
 |--------|------:|
 | Private dosya | 293 |
 | Public dosya | 2 |
-| `alatax_hr` DB `file_path` (documents+versions+employee_documents) | 5 (employee_documents: **0**) |
-| Diskte DB karşılığı olmayan (vs `alatax_hr`) | **~293** |
+| `dobedan_hr` DB `file_path` (documents+versions+employee_documents) | 5 (employee_documents: **0**) |
+| Diskte DB karşılığı olmayan (vs `dobedan_hr`) | **~293** |
 | Ağırlık | Çoğu `kvkk-exports/...` test/export artığı |
 
 **Kova:** Yetim cleanup job + personel silince evrak politikası → **Faz 6 sırasında**. On-prem path dokümantasyonu → **backlog**.
@@ -239,7 +239,7 @@ Soft-deleted satırlar unique index’te kalır → sicil/e-posta/kod **yeniden 
 
 ## Kanıt dosyaları
 
-- Dump: `docs/backups/alatax_hr_20260805_230705.dump`  
+- Dump: `docs/backups/dobedan_hr_20260805_230705.dump`  
 - Ham JSON: `docs/denetim-raw.json`  
 - Script: `backend/scripts/denetim/run-denetim.php`  
 

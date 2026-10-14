@@ -5,14 +5,14 @@
 
 ---
 
-## 1) Teşhis (düzeltme öncesi — prod `alatax_hr`)
+## 1) Teşhis (düzeltme öncesi — prod `dobedan_hr`)
 
 ### companies
 
 | id | name | slug | organization_id |
 |----|------|------|-----------------|
 | 69 | Demo Firma AŞ | `demo-firma` | **1** |
-| 70 | Alatax Demo A.S. | `alatax-demo-as` | **2** |
+| 70 | Dobedan Demo A.S. | `dobedan-demo-as` | **2** |
 | 71 | Demo Otel B | `demo-otel-b` | **3** |
 | 72 | Demo Otel C | `demo-otel-c` | **4** |
 
@@ -21,7 +21,7 @@
 | id | name | slug |
 |----|------|------|
 | 1 | Demo Firma AŞ | `org-demo-firma` |
-| 2 | Alatax Demo A.S. | `org-alatax-demo-as` |
+| 2 | Dobedan Demo A.S. | `org-dobedan-demo-as` |
 | 3 | Demo Otel B | `org-demo-otel-b` |
 | 4 | Demo Otel C | `org-demo-otel-c` |
 
@@ -35,7 +35,7 @@
 | `DemoDataSeeder` niyet | Kardeş şirketleri ana şirketin `organization_id`’sine `forceFill` ile çekmek (Dobedan: tek holding). |
 | Kod ↔ DB | **Uyuşmuyordu.** Seeder niyeti tek org; yerel DB G1 sonrası 1:1 org’da kalmıştı. |
 | Bozulma noktası | `Company::created` → `ensureOrganizationForCompany` + `group:backfill-company-context` her şirket için **ayrı** org üretir. Eski seeder hizası bu ortamda kalıcı tutunmamış / yeniden koşulmamış. **`gorsel:fixture` şirket/org üretmez** — yalnızca mevcut üç slug’a kullanıcı/içerik yazar. |
-| `demo-otel-d-ix` vb. | **Prod’da yok.** PHPUnit `GroupScopeIntersectionTest` vb. `RefreshDatabase` ile **`alatax_hr_testing`** üzerinde `*-ix` slug üretir; geliştirme DB’sine yazılmaz. |
+| `demo-otel-d-ix` vb. | **Prod’da yok.** PHPUnit `GroupScopeIntersectionTest` vb. `RefreshDatabase` ile **`dobedan_hr_testing`** üzerinde `*-ix` slug üretir; geliştirme DB’sine yazılmaz. |
 
 ---
 
@@ -66,7 +66,7 @@ php artisan demo:align-organizations --with-memberships
 | 71 | demo-otel-b | **5** |
 | 72 | demo-otel-c | **5** |
 
-`alatax-demo-as` (70) / org 2 — holding dışı; dokunulmadı.
+`dobedan-demo-as` (70) / org 2 — holding dışı; dokunulmadı.
 
 ### Test artığı / orphan temizliği (karar sizde — otomatik silinmedi)
 
@@ -96,9 +96,9 @@ php artisan demo:align-organizations --with-memberships
 
 | | |
 |--|--|
-| Varsayılan hedef | Uygulama default connection (`alatax_hr` local) |
+| Varsayılan hedef | Uygulama default connection (`dobedan_hr` local) |
 | Koruma | `_testing` dışı DB’ye yazmak için **`--allow-dev-db`** zorunlu |
-| Alternatif | `--use-testing-db` → `alatax_hr_testing` |
+| Alternatif | `--use-testing-db` → `dobedan_hr_testing` |
 | Holding | Fixture başında `DemoOrganizationAligner::align()` (şirket yaratmaz) |
 | İşaretler | `GORSEL-*` employee_code, `gorsel-fixture` leave reason, `gorsel.fixture` notification event, `gorsel-aday-*` e-posta |
 | Temizlik | `php artisan gorsel:fixture-cleanup [--dry-run]` — **şirket silmez** |

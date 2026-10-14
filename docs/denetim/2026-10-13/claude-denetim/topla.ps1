@@ -1,4 +1,4 @@
-# ALATAX HR - salt okunur durum toplama betigi (Claude capraz denetim)
+# Dobedan HR - salt okunur durum toplama betigi (Claude capraz denetim)
 # Hicbir veriyi DEGISTIRMEZ. Proje kokunden calistir:
 #   powershell -ExecutionPolicy Bypass -File docs\claude-denetim\topla.ps1
 $ErrorActionPreference = "Continue"

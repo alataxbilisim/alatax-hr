@@ -34,7 +34,7 @@
 | G4 | Şirket değişince şube seçici sıfırlanır | ✅ | — | before=""; after="Tüm Şubeler"; branchOptions=[Tüm Şubeler|Merkez] | ss/04-G4-sube-sifirlama.png |
 | G5 | tek@demo.test → seçici gizli, ad görünür | ✅ | — | selectorCount=0; label="Şirket: Demo Otel B" | ss/05-G5-tek-sirket-gizli.png |
 | G6 | other_company_unread rozeti | ✅ | — | badges=1; maxNum=5; titles=["5"] | ss/06-G6-other-company-badge.png |
-| G7 | localStorage.alatax_company_id reload korunuyor | ✅ | — | before=69; after=69; label="Şirket: Demo Firma AŞ" | ss/07-G7-localstorage-reload.png |
+| G7 | localStorage.dobedan_company_id reload korunuyor | ✅ | — | before=69; after=69; label="Şirket: Demo Firma AŞ" | ss/07-G7-localstorage-reload.png |
 
 ### Blok P
 | ID | Kontrol | Sonuç | Şiddet | Ölçüm | Görsel |

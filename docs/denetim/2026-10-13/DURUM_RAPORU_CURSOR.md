@@ -1,4 +1,4 @@
-# ALATAX HR — Kapsamlı Proje Durum Değerlendirmesi (Cursor, salt-okunur denetim)
+# Dobedan HR — Kapsamlı Proje Durum Değerlendirmesi (Cursor, salt-okunur denetim)
 
 **Tarih:** 13 Ekim 2026 · **Branch:** `faz4-form-engine` · **HEAD:** `f006f93` (2026-08-06)
 **Yöntem:** Yalnızca okuma. Kod/yapılandırma/migration/DB kaydı değiştirilmedi. DB'de yalnızca `SELECT` + `information_schema`/`pg_catalog` kullanıldı. Yazılan tek dosya bu rapordur.
@@ -17,7 +17,7 @@ Gerekçe: Mimari kapsamlı ve disiplinli (666 korumalı API rotası, 155 tablo, 
 
 1. **DOĞRULANDI** — Sistem bu makinede ayakta: 7 Docker servisi çalışıyor (`docker compose ps`), PostgreSQL 16.15, canlı şema = squash dump + 3 migration (sapma yok).
 2. **DOĞRULANDI** — Frontend: `pnpm lint` exit 0, `pnpm build` exit 0 (3 app). TS'de `any` 0, `@ts-ignore` 0.
-3. **DOĞRULANDI** — Backend test paketi bu makinede **koşmuyor**: 771 test, 732 error. Sebep `alatax_hr_testing` veritabanının olmaması (`pg_database` sorgusu = 0). Son yeşil log: 725 passed (5 Ağu 2026).
+3. **DOĞRULANDI** — Backend test paketi bu makinede **koşmuyor**: 771 test, 732 error. Sebep `dobedan_hr_testing` veritabanının olmaması (`pg_database` sorgusu = 0). Son yeşil log: 725 passed (5 Ağu 2026).
 4. **DOĞRULANDI (statik)** — **2FA atlatma:** `deny.2fa.challenge` middleware'i yalnız panel grubunda. **Portal (77 rota)** ve **süper admin (31 rota)** grupları 2FA "challenge" token'ını kabul ediyor.
 5. **DOĞRULANDI (runtime config)** — `Storage::disk('private')` **tanımsız** (`InvalidArgumentException`). Bu yüzden personel belgesi yükle/indir, bordro yükle/indir, portal belge/bordro indirme ve KVKK toplayıcılarının dosya kısmı çalışmıyor (16 kullanım, 8 dosya).
 6. **DOĞRULANDI (psql)** — PostgreSQL'de çalışmayan MySQL'e özgü SQL var: `YEAR()`, `DATE_FORMAT`, `TIMESTAMPDIFF`, `CURDATE`, çift tırnaklı string. Etkilenenler: çalışan rapor/pano tarih ve yaş kırılımları ile işe alım `trends` (UI'dan çağrılıyor); `employees/stats` ile doküman `widget-data`/`kpi-data` (UI'dan çağrılmıyor).
@@ -33,7 +33,7 @@ Gerekçe: Mimari kapsamlı ve disiplinli (666 korumalı API rotası, 155 tablo, 
 | 1 | Portal (77) ve süper admin (31) rotalarında 2FA challenge token kabul ediliyor → şifreyi bilen, 2FA kodu olmadan erişir | DOĞRULANDI (statik) | `backend/routes/api.php:35` (yalnız panel grubu), `backend/app/Http/Middleware/PortalAccess.php`, `SuperAdminOnly.php`, `AuthController.php:87-92`; route:list analizi |
 | 2 | `private` disk tanımsız → personel belgeleri, bordrolar, portal belge/bordro indirme 500 | DOĞRULANDI | `backend/config/filesystems.php` (yalnız local/public/s3), tinker: `Disk [private] does not have a configured driver` |
 | 3 | MySQL'e özgü SQL PostgreSQL'de hata veriyor (rapor/pano/istatistik uçları) | DOĞRULANDI | `EmployeeController.php:1187`, `EmployeeReportController.php:266-336`, `EmployeeDashboardController.php:350-357`, `Documents/ReportController.php:220-244`, `Recruitment/ReportController.php:190`; psql `function year(...) does not exist` |
-| 4 | Test paketi koşturulamıyor (test DB yok); dokümandaki test sayısı yanlış | DOĞRULANDI | `phpunit`: Tests 771, Errors 732; `select count(*) from pg_database where datname='alatax_hr_testing'` = 0 |
+| 4 | Test paketi koşturulamıyor (test DB yok); dokümandaki test sayısı yanlış | DOĞRULANDI | `phpunit`: Tests 771, Errors 732; `select count(*) from pg_database where datname='dobedan_hr_testing'` = 0 |
 | 5 | Bağımlılık açıkları: jsPDF critical (2), axios 35 advisory, league/commonmark 14, guzzle 9 | DOĞRULANDI | `pnpm audit --json`, `composer audit --format=json` |
 
 ---
@@ -51,7 +51,7 @@ Gerekçe: Mimari kapsamlı ve disiplinli (666 korumalı API rotası, 155 tablo, 
 | Git: main ile fark | faz4 175 commit önde, 0 geride | `git rev-list --count main..faz4-form-engine` |
 | Backend | Laravel 12.43.1, PHP 8.2.34, Sanctum 4, Spatie Permission 6, Telescope 5, Google2FA | `composer.json`, container `php -v` / `artisan --version` |
 | PHP | 8.2.34 (Docker `php:8.2-fpm-bookworm`) | `backend/Dockerfile`, `docker compose exec app php -v` |
-| Frontend | React 19, React Router 7, Vite 7.3.0, TS 5.9.3, pnpm monorepo (3 app + `@alatax/shared`) | `frontend/**/package.json`, build çıktısı |
+| Frontend | React 19, React Router 7, Vite 7.3.0, TS 5.9.3, pnpm monorepo (3 app + `@dobedan/shared`) | `frontend/**/package.json`, build çıktısı |
 | PostgreSQL | 16.15 (alpine) | `select version()` |
 | Docker servisleri | 7: app, nginx, mysql, postgres, redis, queue, scheduler (hepsi running) | `docker compose ps` |
 | Migration dosyası | 3 + squash şema `backend/database/schema/pgsql-schema.sql` (13.901 satır, 107 migration kaydı) | `git ls-files backend/database/migrations`, `ReadAllLines` |
@@ -115,7 +115,7 @@ Gerekçe: Mimari kapsamlı ve disiplinli (666 korumalı API rotası, 155 tablo, 
 
 **Çalışma anı yapılandırması (container içinde config okundu; değer değil durum)** — DOĞRULANDI
 - `env=local`, `debug=true`, `tz=Europe/Istanbul`, `locale=tr`.
-- `db.default=pgsql` (host `postgres`, db `alatax_hr`); cache/queue/session `redis`; mail `log`.
+- `db.default=pgsql` (host `postgres`, db `dobedan_hr`); cache/queue/session `redis`; mail `log`.
 - `telescope.enabled=true`. Config ve route cache yok.
 - CORS: `config/cors.php` varsayılan listesi (localhost/127.0.0.1 :3001–3003), `supports_credentials=true`.
 - Sanctum: `expiration=NULL`.
@@ -2926,7 +2926,7 @@ Not: Aynı bileşen birden çok rotada kullanıldığında (örn. `LeavesPage` 8
 
 - **DOĞRULANDI** — Bu makinede `docker compose exec -T app php vendor/bin/phpunit`:
   - `Tests: 771, Assertions: 104, Errors: 732, PHPUnit Deprecations: 59`.
-  - 734 satırda `database "alatax_hr_testing" does not exist` (`RefreshDatabase` → `PostgresAdvisoryLock.php:97`).
+  - 734 satırda `database "dobedan_hr_testing" does not exist` (`RefreshDatabase` → `PostgresAdvisoryLock.php:97`).
   - Kalan 39 test DB'siz (unit) ve geçti.
 - **DOĞRULANDI** — Test izolasyonu güvenli: `phpunit.xml` ve `tests/bootstrap.php` test DB'sini zorluyor, ana DB'ye düşmüyor. Test DB oluşturmak DDL olduğu için bu denetimde yapılmadı.
 - **DOĞRULANDI** — Geçmiş loglarla karşılaştırma:
@@ -3109,7 +3109,7 @@ ROADMAP checkbox'ları: 53 `[x]` / 136 toplam (**%39**).
 2. **`private` disk nereye bakmalı?** Laravel 12'de `local` disk kökü zaten `storage/app/private`. `private` ayrı bir kök mü (örn. `storage/app/secure`) olmalı, yoksa `local`'a alias mı? Mevcut sunucularda (Ubuntu deploy) bu disk tanımlı mı?
 3. Önceki PC/sunucuda bordro ve personel belgesi yükleme çalışıyor muydu? (Yerel config dosyası commit'lenmemiş olabilir.)
 4. `auth/register` (self-signup) ürün olarak açık kalmalı mı?
-5. Test DB'si (`alatax_hr_testing`) bu makinede oluşturulsun mu? (DDL — kullanıcı onayı gerekir.)
+5. Test DB'si (`dobedan_hr_testing`) bu makinede oluşturulsun mu? (DDL — kullanıcı onayı gerekir.)
 6. Eski `EmployeeReportController` / `EmployeeDashboardController` / `Documents\ReportController` Faz 5 rapor motoruyla değiştirilecek mi, yoksa düzeltilecek mi? (ROADMAP:323 "`employee_dashboards` birleştirme" borcu.)
 7. 20 ölü tablo ileride kullanılacak mı (buddy, preboarding, job_offers…), yoksa silinsin mi?
 8. MySQL fallback'i için `mysql-schema.sql` üretilmesi isteniyor mu, yoksa "servis korunur, şema desteklenmez" mi kabul ediliyor?
@@ -3143,7 +3143,7 @@ ROADMAP checkbox'ları: 53 `[x]` / 136 toplam (**%39**).
 - `information_schema.tables` / `columns` (tablo, kolon, jsonb, `deleted_at`, `company_id` sayıları; kolon adı diff'i)
 - `pg_constraint` (FK sayısı ve `confdeltype` dağılımı)
 - `pg_indexes` (index sayısı, GIN, partial unique)
-- `pg_database` (`alatax_hr_testing` var mı)
+- `pg_database` (`dobedan_hr_testing` var mı)
 - `pg_proc` (MySQL fonksiyonları var mı)
 - `pg_database_size`, `pg_total_relation_size('telescope_entries')`
 - `select year(now());` ve `select coalesce(null, "…");` (yalnız hata doğrulaması; veri değiştirmez)

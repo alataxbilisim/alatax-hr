@@ -1,8 +1,8 @@
 # Dobedan HR — Güncel Durum (tek kaynak)
 
-**Son güncelleme:** 2026-10-13 (Adım 01) · **Çalışma dalı:** `altyapi` · **Geri dönüş noktası:** tag `alatax-son`
+**Son güncelleme:** 2026-10-14 (Adım 02) · **Çalışma dalı:** `altyapi` · **Geri dönüş noktası:** tag `alatax-son`
 
-Bu dosya projenin **tek durum belgesidir**. Eski durum/yol haritası belgeleri (`GUNCEL_DURUM_RAPORU`, `ROADMAP`, `BURADAN_BASLA`, faz raporları) `arsiv/2026-10-alatax-donemi/` altındadır ve yalnızca tarihçe içindir. Kaynaklar: eski `GUNCEL_DURUM_RAPORU.md` + `ROADMAP.md` ve iki bağımsız denetim (`denetim/2026-10-13/`).
+Bu dosya projenin **tek durum belgesidir**. Eski durum/yol haritası belgeleri (`GUNCEL_DURUM_RAPORU`, `ROADMAP`, `BURADAN_BASLA`, faz raporları) `arsiv/2026-10-eski-ad-donemi/` altındadır ve yalnızca tarihçe içindir. Kaynaklar: eski `GUNCEL_DURUM_RAPORU.md` + `ROADMAP.md` ve iki bağımsız denetim (`denetim/2026-10-13/`).
 
 > **Okuma notu:** Hiçbir modül ve hiçbir sayfa "bitti" değildir. Aşağıdaki tablolar abartısız gerçek durumu gösterir. Eski belgelerdeki "✅ KAPANDI" işaretleri faz kapsamının *çekirdeği* içindir; ürün kalitesinde bitmiş anlamına gelmez.
 
@@ -12,7 +12,7 @@ Bu dosya projenin **tek durum belgesidir**. Eski durum/yol haritası belgeleri (
 
 | Madde | Değer |
 |---|---|
-| Ürün | **Dobedan HR** — Türkiye odaklı, kurumsal, çok kiracılı (multi-tenant) B2B İK SaaS. Kodda ad hâlâ `alatax` (yeniden adlandırma: Adım 02). |
+| Ürün | **Dobedan HR** — Türkiye odaklı, kurumsal, çok kiracılı (multi-tenant) B2B İK SaaS. Kod, paket, Docker ve veritabanı adları Adım 02'de Dobedan'a çevrildi (`dobedan-hr`, `dobedan_hr`, `@dobedan/*`). |
 | Dağıtım | Cloud SaaS + on-prem; tek kod tabanı (`APP_MODE`) |
 | Ölçek hedefi | 10 kişilik tek şubeden on binlerce personelli, yüzlerce şubeli holdinglere. Tasarım sorusu: *40 modül, 50.000 personel, 500 şirkette çalışır mı?* |
 | Modül sayısı | Bugün 14 operasyonel modül + 7 çekirdek platform modülü; hedef çok daha fazla |
@@ -20,7 +20,7 @@ Bu dosya projenin **tek durum belgesidir**. Eski durum/yol haritası belgeleri (
 | Bordro | Dış sistem; çıktı = aktarım paketi (`spec/ENTEGRASYON_SPEC.md`) |
 | Pilot | Dobedan ve benzeri kurulumlar doğrulama ortamıdır; ürün gereksinimini tek başına belirlemez |
 
-**Teknik sabitler:** Laravel 12 / PHP 8.2 (`/api/v1`), PostgreSQL 16, Redis, Docker Compose (6 servis: app, queue, scheduler, nginx, postgres, redis). Frontend pnpm monorepo: React 19 + TypeScript, 3 uygulama (superadmin, company, portal) + `@alatax/shared`.
+**Teknik sabitler:** Laravel 12 / PHP 8.2 (`/api/v1`), PostgreSQL 16, Redis, Docker Compose (6 servis: app, queue, scheduler, nginx, postgres, redis). Frontend pnpm monorepo: React 19 + TypeScript, 3 uygulama (superadmin, company, portal) + `@dobedan/shared`.
 
 **Sayılarla (2026-10-13):** 666 API rotası · 155 tablo · 116 model · 114 controller · 117 test dosyası / 771+ test · ön yüzde 159 rota satırı (123 TAMAM, 7 KISMİ, 1 İSKELET, 2 BOZUK, 26 yönlendirme — denetim tanımına göre "API çağrısı kırık değil" anlamında TAMAM).
 
@@ -104,7 +104,7 @@ Durum ölçeği: **Tam** (spec kapsamı + test eksiksiz) · **Kısmi** (çalış
 | K1 | 2FA challenge token portal (77 rota) ve süper admin (31 rota) gruplarında kabul ediliyor | Adım 03'te ele alınacak |
 | K2 | `private` disk tanımsız → belge/bordro yükle-indir, portal indirme, KVKK dosya toplama 500 | Adım 03'te ele alınacak |
 | K3 | MySQL'e özgü SQL (5 controller: `YEAR`, `DATE_FORMAT`, `TIMESTAMPDIFF`, çift tırnaklı string) | **Adım 01'de düzeltildi** (PostgreSQL feature testleriyle) |
-| K4 | Test DB (`alatax_hr_testing`) kurulumu belgelenmemiş / otomatik değil; suite yeni makinede koşmuyordu | Adım 01'de bu makinede elle oluşturuldu (tam suite yeşil: 781 test); otomasyon ve belgeleme Adım 03'te |
+| K4 | Test DB (`dobedan_hr_testing`) kurulumu belgelenmemiş / otomatik değil; suite yeni makinede koşmuyordu | Adım 01'de bu makinede elle oluşturuldu (tam suite yeşil: 781 test); otomasyon ve belgeleme Adım 03'te |
 | K5 | Bağımlılık açıkları: pnpm 137 (2 critical `jspdf`), composer 46 (14 high) | Adım 03'te ele alınacak |
 | K6 | 2 kırık onboarding ucu (duplicate/skip — FE çağırıyor, BE rotası yok) | Adım 03'te ele alınacak |
 
@@ -114,7 +114,7 @@ Durum ölçeği: **Tam** (spec kapsamı + test eksiksiz) · **Kısmi** (çalış
 
 | # | Borç | Sahip / adım |
 |---|---|---|
-| 1 | Ürün adı `alatax` → Dobedan (kod, paket adları, UI) | Adım 02 |
+| 1 | ~~Ürün adının Dobedan'a çevrilmesi (kod, paket adları, UI, Docker, DB)~~ | **Adım 02'de tamamlandı** |
 | 2 | Kritik hatalar K1, K2, K4, K5, K6 | Adım 03 |
 | 3 | Test altyapısı: test DB otomasyonu, suite'in her makinede yeşil koşması | Adım 03 |
 | 4 | Telescope varsayılan açık + prune yok; Sanctum token süresiz | Atanmadı |

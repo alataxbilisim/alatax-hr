@@ -1,4 +1,4 @@
-# ALATAX HR — Manuel Test Turu
+# Dobedan HR — Manuel Test Turu
 
 Kısa smoke / regresyon listesi.
 

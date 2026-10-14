@@ -25,7 +25,7 @@
 - `frontend/apps/company/src/pages/employees/EmployeesPage.tsx` — local `Employee` arayüzüne `full_name`, `name` (+ `position_id` / `position_label`)
 - `frontend/packages/shared/src/types/modules.ts` — paylaşılan tip hizalandı
 
-**Doğrulama:** `@alatax/company`, `@alatax/portal`, `@alatax/superadmin` production build yeşil.
+**Doğrulama:** `@dobedan/company`, `@dobedan/portal`, `@dobedan/superadmin` production build yeşil.
 
 ---
 
@@ -57,7 +57,7 @@
 `php artisan employees:backfill-position-id [--dry-run]`  
 Rapor: `storage/logs/position_id_backfill_report.json`
 
-**Docker `alatax_hr` (migrate sonrası, 2026-08-05):**
+**Docker `dobedan_hr` (migrate sonrası, 2026-08-05):**
 
 | Metrik | Değer |
 |--------|-------|

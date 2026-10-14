@@ -75,7 +75,7 @@ Her madde için: **ölçüm** (DOM'dan sayısal/boolean kanıt) + **ekran görü
 | G4 | Şirket değişince **şube seçici sıfırlanır** + yeni şirketin şubeleri gelir | branch select değerleri değişti; eski şube id yok |
 | G5 | `tek@demo.test` login → seçici **gizli**, aktif şirket adı yine görünür | seçici DOM'da yok/hidden; ad metni var |
 | G6 | Bildirim rozeti: `other_company_unread` göstergesi görünüyor | rozet elementi + sayı > 0 |
-| G7 | `localStorage.alatax_company_id` yazılıyor; sayfa yenilendiğinde aktif şirket korunuyor | reload sonrası aynı şirket |
+| G7 | `localStorage.dobedan_company_id` yazılıyor; sayfa yenilendiğinde aktif şirket korunuyor | reload sonrası aynı şirket |
 
 ### BLOK P — Portal (dokunulmadı kanıtı)
 

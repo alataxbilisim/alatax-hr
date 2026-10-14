@@ -1,4 +1,4 @@
-# ALATAX HR — BURADAN BAŞLA
+# Dobedan HR — BURADAN BAŞLA
 
 Projeye yeni bakan biri için **10 dakikalık** giriş. Detay ve kararlar: `GUNCEL_DURUM_RAPORU.md` + `ROADMAP.md`.
 
@@ -10,7 +10,7 @@ Projeye yeni bakan biri için **10 dakikalık** giriş. Detay ve kararlar: `GUNC
 
 | Alan | Durum |
 |------|--------|
-| Test suite | **633 passed** (QA-3; `alatax_hr_testing`) |
+| Test suite | **633 passed** (QA-3; `dobedan_hr_testing`) |
 | Faz 0–3 | ✅ Kapalı (stabilizasyon, pgsql, RBAC+audit, tasarım sistemi) |
 | Faz 4 | 🔶 Platform motorları (Lookup/Form/Workflow/Bildirim/Ayar — kısmen; Form Engine 4A + iade W2 açık) |
 | Faz 5 | ✅ Rapor & analitik motoru kapalı |
@@ -18,7 +18,7 @@ Projeye yeni bakan biri için **10 dakikalık** giriş. Detay ve kararlar: `GUNC
 | Faz G (Grup/Holding) | ☐ **Sıradaki mimari faz** — Faz 6 modüllerinden **önce** |
 | Faz 6 → 7 → 8 | ☐ Modüller → on-prem/lisans → yardım motoru + ufuk |
 
-**Kritik kural:** Yalnız `faz4-form-engine` üzerinde çalış. `alatax_hr` DB silinmez; testler `alatax_hr_testing`.
+**Kritik kural:** Yalnız `faz4-form-engine` üzerinde çalış. `dobedan_hr` DB silinmez; testler `dobedan_hr_testing`.
 
 ---
 
@@ -58,7 +58,7 @@ Kök: `.cursorrules` (sürekli kurallar + DoD’ler).
 ## 4. Çalışma ritmi
 
 1. Faz/dalga başı: ROADMAP maddesini tek prompt’a çevir (tek DoD, yıkıcı DB yok).  
-2. Geliştirme → test (`alatax_hr_testing`) → commit.  
+2. Geliştirme → test (`dobedan_hr_testing`) → commit.  
 3. Modül dalgası bitmeden: Settings Registry + PersonalDataCollector + `docs/help/{modul}/{sayfa}.md` içerik.  
 4. Yeni fikir → ROADMAP Backlog; sırayı bozma.
 

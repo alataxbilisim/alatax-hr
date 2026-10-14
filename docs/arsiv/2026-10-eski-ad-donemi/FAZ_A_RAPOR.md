@@ -19,7 +19,7 @@
 | 4 FE navbar Select | ✅ Redux + localStorage + interceptor |
 | 5 Testler | ✅ `BranchContextTest` + DataScope regresyon |
 
-**Kural:** Şube seçici DataScope’u genişletmez. DB silinmedi (`alatax_hr` korunur; yalnızca `alatax_hr_testing` yeniden oluşturuldu).
+**Kural:** Şube seçici DataScope’u genişletmez. DB silinmedi (`dobedan_hr` korunur; yalnızca `dobedan_hr_testing` yeniden oluşturuldu).
 
 ---
 
@@ -107,7 +107,7 @@ Faz 2 DataScope/policy **yeşil kaldı**. Güvenlik testi kırılmadı.
 ### Bağlantılar
 
 - `AuthController::register` + SuperAdmin `CompanyController::store` → `DefaultCompanyHrSeedService::ensureForCompany` + tatil seed
-- `php artisan alatax:seed-defaults` — idempotent backfill (HR defaults + leave workflow)
+- `php artisan dobedan:seed-defaults` — idempotent backfill (HR defaults + leave workflow)
 - `LeaveTypeSeeder` → aynı servis
 
 ### Hakediş mantığı

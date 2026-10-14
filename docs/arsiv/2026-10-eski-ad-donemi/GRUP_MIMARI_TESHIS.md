@@ -71,7 +71,7 @@
 | Middleware | `branch.context` → `ResolveBranchContext` | `company.context` benzeri |
 | Container | `BranchContext` DTO | `CompanyContext` DTO |
 | Servis | `BranchContextService` — DataScope tavanı içinde daraltır | Membership + aktif şirket doğrulama |
-| FE | Redux `branchContextSlice` + `localStorage` `alatax_branch_id` | Aynı desen: slice + `alatax_company_id` |
+| FE | Redux `branchContextSlice` + `localStorage` `dobedan_branch_id` | Aynı desen: slice + `dobedan_company_id` |
 | Axios | `@shared/services/api.ts` interceptor | Aynı interceptor’a şirket header |
 | Global scope | Yalnız `Employee`’a ek scope (`branch_id`) | Ops: BelongsToCompany kaynağını context’ten okur |
 | Endpoint | `GET /context/branches` | `GET /context/companies` |

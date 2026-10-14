@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ALATAX HR — Company + Portal Akış Şeması</title>
+  <title>Dobedan HR — Company + Portal Akış Şeması</title>
   <style>
     :root {
       --bg: #f4f6f8;
@@ -268,7 +268,7 @@
 (function () {
   'use strict';
 
-  const STORAGE_KEY = 'alatax-akis-sema-v2';
+  const STORAGE_KEY = 'dobedan-akis-sema-v2';
   const world = document.getElementById('world');
   const nodesEl = document.getElementById('nodes');
   const edgesEl = document.getElementById('edges');
@@ -597,7 +597,7 @@
     return {
       version: 2,
       meta: {
-        title: 'ALATAX HR Company + Portal',
+        title: 'Dobedan HR Company + Portal',
         updatedAt: new Date().toISOString(),
         notes: 'SuperAdmin hariç. Sayfalar modül kartı içinde; bağlar modüller arası akış.',
       },
@@ -1000,7 +1000,7 @@
     const blob = new Blob([JSON.stringify(model, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'alatax-akis-sema-v2.json';
+    a.download = 'dobedan-akis-sema-v2.json';
     a.click();
     URL.revokeObjectURL(a.href);
   };

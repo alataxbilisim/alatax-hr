@@ -73,7 +73,7 @@ Tur4 ~765s → Tur5 ~1258s. Faz 6’da 14 modül eklenince koşu maliyeti artaca
 Filter: PortalQrHomeEmployeeMismatchTest|PortalPdksPunchSecurityTest|PortalPdksCompanyRegressionTest|DemoDataSeederGuardTest
 Tests: 12 passed (67 assertions)
 
-Full suite (Docker alatax-hr-app):
+Full suite (Docker dobedan-hr-app):
 Tests: 691 passed (3028 assertions)
 Duration: 1258.55s
 (Tur5: 690 → +1 yeni Tur6 testi)

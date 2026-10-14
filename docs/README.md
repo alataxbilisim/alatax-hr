@@ -19,7 +19,7 @@ docs/
 ├── cursor-gorevleri/      adım adım görev tanımları + raporlar/
 ├── arsiv/                 tarihçe; aktif kaynak değildir, koddan referans verilmez
 │   ├── 2026-08/           önceki arşiv
-│   └── 2026-10-alatax-donemi/  ALATAX dönemi raporları, ROADMAP, qa, ölçümler
+│   └── 2026-10-eski-ad-donemi/  yeniden adlandırma öncesi dönem raporları, ROADMAP, qa, ölçümler
 └── backups/               pg_dump yedekleri (git dışı)
 ```
 

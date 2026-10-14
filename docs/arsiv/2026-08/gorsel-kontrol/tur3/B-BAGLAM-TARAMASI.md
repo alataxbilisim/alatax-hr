@@ -49,7 +49,7 @@
 | `UserController` | `getCompanyId()` + home izolasyon kontrolleri — home alanı kullanıcı kaydının sahibi; operasyonel liste context'ten. |
 | `*/Portal/*` | Portal tek-firma personel yüzü; çoğu endpoint home personel kaydına bağlı (DSR portal index hâlâ home — ayrı borç). |
 
-## php artisan test (Docker `alatax-hr-app`)
+## php artisan test (Docker `dobedan-hr-app`)
 
 ```
 Filter: CompanyContextKvkkPdksTest|ApprovalEntityIsolationTest

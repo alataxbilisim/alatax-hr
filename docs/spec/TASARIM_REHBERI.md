@@ -1,4 +1,4 @@
-# ALATAX HR — TASARIM REHBERİ (Faz 3 Şartnamesi)
+# Dobedan HR — TASARIM REHBERİ (Faz 3 Şartnamesi)
 
 **Amaç:** "Ekranlar ve sayfalar büyük duruyor" sorununu somut değerlerle çözmek. Hedef cihaz: **13" laptop, 1366×768** — tüm ana akışlar bu çözünürlükte yatay scroll'suz ve rahat kullanılmalı. Bu dosya Faz 3'te Cursor'a verilecek şartnamedir; tüm değerler `packages/shared/src/styles/theme.css` token'larına yazılır, hiçbir bileşende hardcode edilmez.
 
@@ -94,7 +94,7 @@ Hero/banner kartlar · 2 satırlı sayfa başlıkları · 44px+ input · tablo i
 ## 10. Portal tasarım yönü — Apple iOS 26 "Liquid Glass"
 
 > **Kapsam:** Yalnız `apps/portal`. **Company ve SuperAdmin bu karardan etkilenmez** (masaüstü; mevcut Faz 3 token/density devam eder).  
-> Detay uygulama dalgaları: `../arsiv/2026-10-alatax-donemi/PORTAL_RAPOR.md` · sıra: `../arsiv/2026-10-alatax-donemi/ROADMAP.md` (PORTAL-2a → … → PORTAL-4 → Faz 8 Capacitor).
+> Detay uygulama dalgaları: `../arsiv/2026-10-eski-ad-donemi/PORTAL_RAPOR.md` · sıra: `../arsiv/2026-10-eski-ad-donemi/ROADMAP.md` (PORTAL-2a → … → PORTAL-4 → Faz 8 Capacitor).
 
 ### 10.1 Karar
 

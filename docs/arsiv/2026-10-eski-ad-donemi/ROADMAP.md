@@ -1,4 +1,4 @@
-# ALATAX HR — ROADMAP v1.1
+# Dobedan HR — ROADMAP v1.1
 
 **Tarih:** 6 Ağustos 2026 (yeniden çerçeveleme) · önceki: 31 Tem 2026 (DOK-3)
 **Girdiler:** Güncel kod + `GUNCEL_DURUM_RAPORU.md` + genel pazar / ölçek aralığı + FAZ_A §A3 holding kararı
@@ -67,7 +67,7 @@ Fark yaratacak 4 şey:
 | Deployment | Docker Compose + CI (Pint/FE/PHPUnit blocking) | On-prem installer, imzalı lisans |
 | UI | Desktop odaklı, ekranlar büyük | Kompakt token ölçeği, 1366×768 hedefi, density modu |
 | i18n | Altyapı kurulu (tr); yeni kod t() zorunlu (Faz 0) | Toplu string migrasyonu + dil switcher + EN (backlog) |
-| Test | **633 passed** (QA-3, `alatax_hr_testing`), PHPUnit CI blocking | Endpoint auth+permission+happy path + grup izolasyon (Faz G) |
+| Test | **633 passed** (QA-3, `dobedan_hr_testing`), PHPUnit CI blocking | Endpoint auth+permission+happy path + grup izolasyon (Faz G) |
 
 ---
 

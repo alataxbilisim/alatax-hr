@@ -44,7 +44,7 @@
   },
   {
     "id": "G7",
-    "title": "localStorage.alatax_company_id reload korunuyor",
+    "title": "localStorage.dobedan_company_id reload korunuyor",
     "status": "pass",
     "measurement": "before=69; after=69; label=\"Şirket: Demo Firma AŞ\"",
     "screenshot": "ss/07-G7-localstorage-reload.png"

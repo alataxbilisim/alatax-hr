@@ -30,13 +30,13 @@
 | `GroupScopeIntersectionTest::test_scope_group_excludes_same_org_company_without_membership` | ✅ D satırı yok |
 | `GroupScopeIntersectionTest::test_dashboard_group_kpi_excludes_non_member_org_company` | ✅ KPI `company_ids` ve `total_users` D’siz |
 
-### company_id = 70 (prod `alatax_hr`, anlık)
+### company_id = 70 (prod `dobedan_hr`, anlık)
 
 | Alan | Değer |
 |------|--------|
 | id | **70** |
-| name / slug | Alatax Demo A.S. / `alatax-demo-as` |
-| organization_id | **2** (`org-alatax-demo-as`) |
+| name / slug | Dobedan Demo A.S. / `dobedan-demo-as` |
+| organization_id | **2** (`org-dobedan-demo-as`) |
 | Aynı org’daki diğer şirket | Yok (org 2’de yalnız 70) |
 | `admin@demo.test` membership | **69, 71, 72** — **70 yok** |
 
@@ -71,7 +71,7 @@ LIMIT 1000;
 
 Önceki G2 raporundaki `company_id_source` Index Scan + `Filter: date` kanıtı, `SELECT id` + geniş/boş sonuç seti ile planlayıcı yanılgısıydı; **gerçek rapor sütunları + ANALYZE** ile değiştirildi.
 
-### Sentetik (~1.5M) — `alatax_hr_testing.attendance_g2_bench`
+### Sentetik (~1.5M) — `dobedan_hr_testing.attendance_g2_bench`
 
 Prod’a dokunulmadı. Yapısal klon + indeksler:
 

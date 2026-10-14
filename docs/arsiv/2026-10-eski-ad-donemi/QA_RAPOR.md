@@ -1,4 +1,4 @@
-# QA Raporu — ALATAX HR
+# QA Raporu — Dobedan HR
 
 ## QA-1 — Demo veri seeder + uçtan uca görsel/işlevsel süpürme
 
@@ -33,7 +33,7 @@ Ekran görüntüsü (anlamlı adlandırılmış): **16** (`docs/qa/e2e/01`…`18
 | 5 | Company dashboard | KPI “Açık Pozisyon: 0” (seed’de 3 ilan var; status/publish eşleşmesi şüpheli). | 🟠 | (önceki dashboard oturumu) |
 | 6 | Lazy sayfalar (Rapor/Pano/KVKK ilk paint) | Suspense fallback `â€¦` mojibake (UTF-8 ellipsis bozulması). | 🟠 | `05-dashboards-mojibake.png`, kısa süre `12`/`15` |
 | 7 | Company login | Demo ipucu hâlâ `test@test.com` / `Password123!` — seeder hesaplarıyla uyumsuz. | 🟡 | login ekranı |
-| 8 | Company branding | Başlık/favicon metni “DOBEDAN HOTELS”; portal “ALATAX”. | 🟡 | login / panel |
+| 8 | Company branding | Başlık/favicon metni “DOBEDAN HOTELS”; portal “Dobedan”. | 🟡 | login / panel |
 | 9 | Dashboard karşılama | “Hoş Geldiniz, Demo !” — gereksiz boşluk + ünlem. | 🟡 | dashboard |
 | 10 | Nav rail | Uzun etiketler kırpılıyor (“Ücret &…”, “Varlık &…”). | 🟡 | `01-nav-rail.png`, `02-nav-rail-with-pdks.png` |
 | 11 | Portal rail | “Ana Sayfa” iki satıra bölünüyor. | 🟡 | `08-portal-login-or-home.png` |
@@ -148,7 +148,7 @@ Bu dalgada yalnız izin bağlandı. Kanıt: `PortalLeaveApprovalWorkflowQa2Test`
 | 4 | Form sonrası boş | ✅ | aynı kök (liste unwrap) |
 | 5 | Açık Pozisyon 0 | ✅ | KPI `published` → `JobPositionStatus::Active`; `open_positions=3` |
 | 6 | Mojibake `â€¦` | ✅ | App.tsx + collectors + `scripts/check-mojibake.mjs` CI |
-| 7–14 | Kozmetik/branding/redirect | ✅ | ALATAX HR, DEV-only demo hint, shortLabel, greeting, `/management/workflows` → `/settings/workflows` |
+| 7–14 | Kozmetik/branding/redirect | ✅ | Dobedan HR, DEV-only demo hint, shortLabel, greeting, `/management/workflows` → `/settings/workflows` |
 | 15–16 | KVKK 9 sekme / saklama | ✅ karar | MODUL_SPEC 9 sekme; seeder `active=true` — **D2c ihlali → QA-4** (DOK-3) |
 | 17 | Bloklanan derin UI | ⏭ kısmi | Liste/motor/KPI/branding doğrulandı; pivot/export/çapraz filtre/KVKK paket derin UI QA-2b’ye |
 
@@ -350,7 +350,7 @@ D1d/D1g yeşildi çünkü testler **firma-içi** `report_id` / inline config kul
 
 ### Test / CI
 
-- Tek koşu: **633 passed** (2813 assertions) — `alatax_hr_testing`
+- Tek koşu: **633 passed** (2813 assertions) — `dobedan_hr_testing`
 - 3× ardışık + random seed `1785420999` + sentinel + portal-route-smoke + 3 SPA tsc/lint → Actions
 
 ---
@@ -367,7 +367,7 @@ D1d/D1g yeşildi çünkü testler **firma-içi** `report_id` / inline config kul
 ## QA-4 — DOK-3 düzeltmeleri + Faz G ön hazırlık
 
 **Tarih:** 31 Temmuz 2026 · **Branch:** `faz4-form-engine`  
-**Mutlak:** DB silinmedi · `alatax_hr` korunur · testler `alatax_hr_testing`
+**Mutlak:** DB silinmedi · `dobedan_hr` korunur · testler `dobedan_hr_testing`
 
 ### Seeder tek kaynak kararı
 
@@ -392,7 +392,7 @@ Migration: `2026_07_31_150000_add_attendance_records_company_date_indexes`
 - `attendance_records_company_status_date_idx (company_id, status, date)`  
 - `unique(user_id, date)` **değişmedi**
 
-**EXPLAIN** (`alatax_hr`, ~305 satır — planner hâlâ mevcut `company_id_*` indekslerini seçebilir; yeni indeksler `\d` ile doğrulandı):
+**EXPLAIN** (`dobedan_hr`, ~305 satır — planner hâlâ mevcut `company_id_*` indekslerini seçebilir; yeni indeksler `\d` ile doğrulandı):
 
 | | Plan |
 |--|------|

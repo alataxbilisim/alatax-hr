@@ -77,7 +77,7 @@ Aktif bağlam Otel C (B) iken `PUT /settings/values` → satır **B**’ye yazı
 
 ```
 Filter (Tur5 + regresyon): yeşil
-Full suite (Docker alatax-hr-app):
+Full suite (Docker dobedan-hr-app):
 Tests: 690 passed (3022 assertions)
 Duration: 1258.55s
 (Tur4: 675 → +15 yeni Tur5 testi)

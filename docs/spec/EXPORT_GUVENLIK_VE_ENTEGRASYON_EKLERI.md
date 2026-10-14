@@ -57,5 +57,5 @@
 ## 5) Test / commit
 
 - Odak: `EmployeeFieldPermissionTest` (10) + `CustomFieldKeyImmutabilityTest` (3) → **13 passed**.
-- Tam suite: **762 passed** (Docker `alatax-hr-app`).
+- Tam suite: **762 passed** (Docker `dobedan-hr-app`).
 - Push yok.

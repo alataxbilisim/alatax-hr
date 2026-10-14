@@ -1,7 +1,7 @@
 # FAZ G — Kapanış Özeti (Tur2–8 + G1/G2)
 
 **Tarih:** 6 Ağustos 2026 · **Branch:** `faz4-form-engine`  
-**Suite:** **758 passed** (Docker `alatax-hr-app`)  
+**Suite:** **758 passed** (Docker `dobedan-hr-app`)  
 **Detay arşiv:** `docs/arsiv/2026-08/`
 
 ---

@@ -2,7 +2,7 @@
 
 ---
 
-# ALATAX HR — PROJECT_SNAPSHOT
+# Dobedan HR — PROJECT_SNAPSHOT
 
 > **Not (FAZ A/B güncellemesi):** 13 Tem 2026 baseline; FAZ A/B ile güncellendi (branch-context, izin/işe alım/masraf/puantaj HR, test **~338**). Tam yeniden envanter üretilmedi — detay: `docs/FAZ_B_RAPOR.md`.
 
@@ -15,7 +15,7 @@
 
 ## 1. Proje Özeti
 
-- **Ad:** ALATAX HR — Türkiye odaklı multi-tenant B2B HR SaaS.
+- **Ad:** Dobedan HR — Türkiye odaklı multi-tenant B2B HR SaaS.
 - **Repo:** Monorepo. Backend `backend/` (Laravel 12 REST `/api/v1`). Frontend `frontend/` (pnpm: `apps/superadmin`, `apps/company`, `apps/portal`, `packages/shared`).
 - **Auth:** Laravel Sanctum Bearer. RBAC: Spatie Permission (`{module}.{page}.{action}`). Multi-tenancy: `company_id` + `BelongsToCompany` global scope.
 - **Tamamlanma (kabaca):** Çekirdek HR modülleri + Faz 2 yetki/audit + Faz 3 UI + Faz 4 Lookup/Select/Ayarlar iskeleti + **4B B0–B3 onay motoru (izin pilot)** çalışır. Form Engine (4A), bildirim merkezi (4C), Stüdyo workflow UI (B5), paralel/eskalasyon (B4) henüz yok. Tahmini ürün olgunluğu ~%55–65 (çekirdek CRUD güçlü; yapılandırılabilir form/rapor/workflow UI eksik).
@@ -38,7 +38,7 @@
 ## 3. Klasör Yapısı (özet)
 
 ```
-alatax-hr/
+dobedan-hr/
 ├── backend/          # Laravel API
 │   ├── app/{Models,Http,Services,Policies,Events,Listeners,Notifications,Enums,Traits}
 │   ├── database/{migrations,seeders,factories}
@@ -113,7 +113,7 @@ alatax-hr/
 - Company: operasyonel modüller + `/lookups`, `/settings/*`, `/account/*`.
 - Portal: self-servis izin/masraf/anket.
 - Superadmin: firma/lisans.
-- Ortak: `@alatax/shared` (api client, DataTable, Select, i18n `t()`).
+- Ortak: `@dobedan/shared` (api client, DataTable, Select, i18n `t()`).
 
 ---
 

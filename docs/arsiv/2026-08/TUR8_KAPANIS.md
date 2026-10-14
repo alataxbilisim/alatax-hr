@@ -8,7 +8,7 @@
 
 ## 1) `full_name` backfill
 
-### Ham sayım (`alatax_hr`)
+### Ham sayım (`dobedan_hr`)
 
 ```
 SELECT count(*) FROM employees WHERE full_name IS NULL OR full_name = '';

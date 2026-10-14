@@ -1,7 +1,7 @@
 # UZUN KOŞU — Faz 6 öncesi genel sağlık turu
 
 **Branch:** `faz4-form-engine`  
-**Kural:** ürün kodu değiştirilmedi · `alatax_hr` wipe yok · push yok  
+**Kural:** ürün kodu değiştirilmedi · `dobedan_hr` wipe yok · push yok  
 **Tarih:** 2026-08-05  
 **Amaç:** ölçüm; düzeltme yok. Araçlar: `backend/scripts/uzun-kosu/*` (ölçüm script’leri).
 
@@ -22,9 +22,9 @@
 
 ---
 
-## 2) Ölçekli veri — `alatax_hr_testing`
+## 2) Ölçekli veri — `dobedan_hr_testing`
 
-Komut: `docker exec -e DB_DATABASE=alatax_hr_testing alatax-hr-app php scripts/uzun-kosu/seed-scale.php`
+Komut: `docker exec -e DB_DATABASE=dobedan_hr_testing dobedan-hr-app php scripts/uzun-kosu/seed-scale.php`
 
 | Metrik | Değer |
 |---|---:|
@@ -36,7 +36,7 @@ Komut: `docker exec -e DB_DATABASE=alatax_hr_testing alatax-hr-app php scripts/u
 | employee_documents | **20_001** |
 | elapsed_sec | **191.6** |
 
-`alatax_hr` dokunulmadı. (Adım 9 `migrate:fresh` sonrası scale silindi — ham sayılar log/JSON’da.)
+`dobedan_hr` dokunulmadı. (Adım 9 `migrate:fresh` sonrası scale silindi — ham sayılar log/JSON’da.)
 
 ---
 
@@ -193,7 +193,7 @@ Kaynak: `docs/memory-summary.json`
 
 ## 8) Pozisyon karışık veri
 
-### Prod `alatax_hr`
+### Prod `dobedan_hr`
 
 | match_code | match_name_only | match_neither | empty | total |
 |---:|---:|---:|---:|---:|
@@ -225,7 +225,7 @@ Kaynak: `docs/memory-summary.json`
 
 ---
 
-## 9) Temiz kurulum provası (`alatax_hr_testing`)
+## 9) Temiz kurulum provası (`dobedan_hr_testing`)
 
 Komut: `php scripts/uzun-kosu/clean-install-proof.php` — **total 39.74s**
 

@@ -1,5 +1,5 @@
 {
-    "db": "alatax_hr_testing",
+    "db": "dobedan_hr_testing",
     "steps": [
         {
             "step": "migrate:fresh",

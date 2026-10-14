@@ -1,4 +1,4 @@
-# ALATAX HR — Güncel Durum Raporu
+# Dobedan HR — Güncel Durum Raporu
 
 **Üretim:** 6 Ağustos 2026 (DOK-3) · **Branch:** `faz4-form-engine`  
 **Amaç:** Tek sayfa handoff. Detay faz raporlarında; tarihsel teşhisler `docs/arsiv/`.
@@ -9,7 +9,7 @@
 
 | # | Bulgu | Sonuç | Devret |
 |---|--------|--------|--------|
-| **1.1** | `DemoSeeder` (Faz A6) ve `DemoDataSeeder` (QA-1 / `demo:seed`) ikisi de `admin@demo.test` üretiyor; ikisi de `slug=demo-firma` (“Demo Firma AŞ”). Sentinel (`admin@demo.test` @ `alatax_hr`) hangi seeder’ın yazdığına bakmaz — kullanıcı varlığını kontrol eder. Çift kaynak / drift riski. | ✅ QA-4: `DemoSeeder` → ince sarmalayıcı, tek kaynak `DemoDataSeeder` (`DemoDataSeederGuardTest`) | — |
+| **1.1** | `DemoSeeder` (Faz A6) ve `DemoDataSeeder` (QA-1 / `demo:seed`) ikisi de `admin@demo.test` üretiyor; ikisi de `slug=demo-firma` (“Demo Firma AŞ”). Sentinel (`admin@demo.test` @ `dobedan_hr`) hangi seeder’ın yazdığına bakmaz — kullanıcı varlığını kontrol eder. Çift kaynak / drift riski. | ✅ QA-4: `DemoSeeder` → ince sarmalayıcı, tek kaynak `DemoDataSeeder` (`DemoDataSeederGuardTest`) | — |
 | **1.2** | `DemoDataSeeder` → `RetentionPolicy` seed: **`active => true`** (yorum: QA dry-run). D2c kuralı (“seed politika asla otomatik aktif olmaz”) **ihlal**. | ✅ QA-4: seed `active => false`; `test_retention_policies_inactive_after_seed` | — |
 | **1.3** | Onaylı izin → puantaj: `LeaveRequest::onWorkflowCompleted` yalnızca status + bakiye; `AttendanceRecord` (`status=leave`) üretmez. Model/UI “izinli gün”i destekler ama **otomatik wire yok** (AKIS_SPEC §1/§2 borcu). | ⬜ açık | Faz 6 B3 |
 | **1.4** | `AKIS_SEMA_EDITOR.html` **repoda var** (`docs/`). `SISTEM_ISLEYIS.md` linki geçerli — kaldırma yok. | ✅ | — |
@@ -37,7 +37,7 @@
 
 | Katman | Durum |
 |--------|--------|
-| Test | **758 passed** (Tur8 + position_id SSOT; Docker `alatax-hr-app`) |
+| Test | **758 passed** (Tur8 + position_id SSOT; Docker `dobedan-hr-app`) |
 | Faz 0–3 | ✅ |
 | Faz 4 | 🔶 Lookup/Workflow/Bildirim/Ayar; Form Engine 4A + W2 iade açık |
 | Faz 5 | ✅ Rapor motoru (11 dataset) |

@@ -56,7 +56,7 @@ in-app her zaman; email kapalıysa atlanır. Company Ayarlar + Portal Profil.
 | `NotificationCenterTest` | **9 passed** |
 | Tam suite | **402 passed / 0 fail** (1566 assertions) |
 | company + portal `tsc` | **0** |
-| Sentinel `admin@demo.test` @ `alatax_hr` | **yes** |
+| Sentinel `admin@demo.test` @ `dobedan_hr` | **yes** |
 | Wipe / push | **yok** |
 
 ### Kapsam dışı (4C-2+)
@@ -101,7 +101,7 @@ Overlap: `withoutOverlapping` + `onOneServer` (üçü de).
 | `SchedulerJobsTest` | **2 passed** |
 | Tam suite | **404 passed / 0 fail** (1582 assertions) |
 | company `tsc` | **0** |
-| Sentinel `admin@demo.test` @ `alatax_hr` | **yes** |
+| Sentinel `admin@demo.test` @ `dobedan_hr` | **yes** |
 | Wipe / push | **yok** (ekleyici migration `document_expiry_alerts`) |
 
 ---
@@ -146,5 +146,5 @@ Permission: `management.notifications.view|edit`. Render: override → lang vars
 | `NotificationCenterTest` | **9 passed** (regresyon yok) |
 | Tam suite | **481 passed / 0 fail** |
 | 3 SPA `tsc` | **0** |
-| Sentinel `admin@demo.test` @ `alatax_hr` | **yes** |
+| Sentinel `admin@demo.test` @ `dobedan_hr` | **yes** |
 | Wipe | **yok** |

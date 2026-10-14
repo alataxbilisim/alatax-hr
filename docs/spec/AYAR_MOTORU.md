@@ -44,5 +44,5 @@
 | `SettingsRegistryD4aTest` | **9 passed** |
 | Tam suite | **576 passed / 0 fail** |
 | 3 SPA tsc + lint | **0** |
-| Sentinel `admin@demo.test` @ `alatax_hr` | **yes** |
+| Sentinel `admin@demo.test` @ `dobedan_hr` | **yes** |
 | Flaky fix (önce) | 3× + `--order-by=random` → 567 pass |

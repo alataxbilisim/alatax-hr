@@ -1,4 +1,4 @@
-# ALATAX HR — ÇALIŞMA MANTIĞI & AKIŞLAR (AKIS_SPEC)
+# Dobedan HR — ÇALIŞMA MANTIĞI & AKIŞLAR (AKIS_SPEC)
 
 **Amaç:** Modüllerin *nasıl çalıştığını* — portal (personel) ile yönetim (İK/yönetici) tarafı arasındaki uçtan uca olay akışlarını — tanımlar. MODUL_SPEC "hangi ekran/CRUD" der; bu dosya "bir işlem başlayınca ne olur, kim tetiklenir, veriye/bakiyeye ne olur, kime bildirim gider, sonra ne olur" der.
 

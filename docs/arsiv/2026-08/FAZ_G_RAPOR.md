@@ -41,7 +41,7 @@ Backfill: migration içinde idempotent + `php artisan group:backfill-company-con
 
 ## FE (company SPA)
 
-- Navbar şirket seçici (A6 deseni): Redux `companyContextSlice` + `alatax_company_id` + `X-Company-Id`
+- Navbar şirket seçici (A6 deseni): Redux `companyContextSlice` + `dobedan_company_id` + `X-Company-Id`
 - Tek şirkette seçici gizli; aktif şirket adı her zaman görünür
 - Değişimde şube sıfırlanır + dashboard’a dönüş; `companyContext.version` listeleri yeniler
 - Portal SPA’ya dokunulmadı

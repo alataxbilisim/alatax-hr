@@ -585,7 +585,7 @@ Onay örneği: `1=genişlet, 2=trait kolonları, 3=default seed, 4=modül endpoi
 
 **Frontend:** `operationalModuleGroups` + `pinnedModuleGroups`; ContextSidebar grup başlıkları; `/account/*` sayfaları; header → `/account/profile`; i18n `nav` / `account` / `studio`.
 
-**Doğrulama:** `AccountSelfTwoFactorTest` + `Totp2faTest` = 16 passed (Docker pgsql); 3 SPA lint OK; `@alatax/company` tsc+build OK.
+**Doğrulama:** `AccountSelfTwoFactorTest` + `Totp2faTest` = 16 passed (Docker pgsql); 3 SPA lint OK; `@dobedan/company` tsc+build OK.
 
 **DUR — görsel kontrol:** Rail altı Ayarlar+Yönetim ayracı; Yönetim sidebar grupları (Firma / Kullanıcı & Yetki / Özelleştirme / Modül Ayarları); `/account/security` self-2FA akışı; `/settings/custom-fields` index kartları; kısıtlı rolle Yönetim/grup görünürlüğü.
 
@@ -1321,7 +1321,7 @@ Kullanım varsa → `is_active=false` (pasif). Pasif değer yeni formlarda seçi
 
 | Madde | Durum |
 |-------|--------|
-| `@radix-ui/react-select` → `@alatax/shared` | ✅ |
+| `@radix-ui/react-select` → `@dobedan/shared` | ✅ |
 | `@shared/components/Select` (token, density, ellipsis+title, color swatch, portal) | ✅ |
 | `searchable` iskelet (default kapalı) | ✅ |
 | Pilot: Personel Durum + Çalışma Tipi → ortak Select | ✅ |

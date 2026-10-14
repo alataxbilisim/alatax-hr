@@ -1,4 +1,4 @@
-# ALATAX HR — UÇTAN UCA ÇALIŞMA MANTIĞI (SISTEM_ISLEYIS)
+# Dobedan HR — UÇTAN UCA ÇALIŞMA MANTIĞI (SISTEM_ISLEYIS)
 
 **Amaç:** Programın bütününün nasıl çalıştığını, bir çalışanın **işe alım öncesinden çıkışına kadarki tüm yaşam döngüsü** boyunca hangi modüllerin nasıl, ne zaman, kim tarafından devreye girdiğini uçtan uca anlatır. Diğer dosyalar parçaları anlatır; bu dosya **bütünü** anlatır ve hepsini birbirine bağlar.
 
@@ -9,7 +9,7 @@
 |---|---|
 | Sistem uçtan uca nasıl işler? | **bu dosya** |
 | Company + Portal görsel akış şeması (düzenlenebilir) | [AKIS_SEMA_EDITOR.html](AKIS_SEMA_EDITOR.html) |
-| Ne zaman, hangi sırayla geliştirilir? | [../DURUM.md](../DURUM.md) (eski ROADMAP arşivde: `../arsiv/2026-10-alatax-donemi/ROADMAP.md`) |
+| Ne zaman, hangi sırayla geliştirilir? | [../DURUM.md](../DURUM.md) (eski ROADMAP arşivde: `../arsiv/2026-10-eski-ad-donemi/ROADMAP.md`) |
 | Hangi modülde hangi ekran/işlem var? | MODUL_SPEC.md |
 | Bir işlem başlayınca ne olur (akış)? | AKIS_SPEC.md |
 | Ekranlar nasıl görünür (boyut/tasarım)? | TASARIM_REHBERI.md |

@@ -32,7 +32,7 @@
 
 | # | Dosya | Boyut | Tarih |
 |---|-------|-------|-------|
-| 1 | `docs/backups/alatax_hr_20260805_230705.dump` | 19.5 MB | 2026-08-05 |
+| 1 | `docs/backups/dobedan_hr_20260805_230705.dump` | 19.5 MB | 2026-08-05 |
 | 2 | `docs/qa/e2e/page-2026-06-04T09-40-12-326Z.png` | 859 KB | 2026-06-04 |
 | 3 | `docs/qa/e2e/page-2026-06-23T12-45-24-796Z.png` | 586 KB | 2026-06-23 |
 | 4 | `docs/gorsel-kontrol/tur2/KANIT.html` | 566 KB | 2026-08-04 |
@@ -90,7 +90,7 @@
 | `arsiv/CURSOR_PROJE_ANALIZ_PROMPT.md` | 134 | 2026-07-31 | teshis | — | hayır | **Arşive** |
 | `arsiv/MENU_PUANTAJ_TESHIS.md` | 342 | 2026-07-31 | teshis | — | hayır | **Arşive** |
 | `arsiv/PROJECT_SNAPSHOT.md` | 205 | 2026-07-31 | teshis | L7: Test **~338** (FAZ A/B güncellemesi)… | FAZ4_RAPOR.md | **Arşive** |
-| `backups/alatax_hr_20260805_230705.dump` | — | 2026-08-05 | rehber | — | hayır | **Repo dışına** |
+| `backups/dobedan_hr_20260805_230705.dump` | — | 2026-08-05 | rehber | — | hayır | **Repo dışına** |
 | `clean-install.json` | 85 | 2026-08-05 | olcum artifact | — | hayır | **Repo dışına** |
 | `explain.json` | 1375 | 2026-08-05 | olcum artifact | — | UZUN_KOSU_RAPORU.md | **Repo dışına** |
 | `gorsel-kontrol/2026-08-04/.secrets.local` | 3 | 2026-08-04 | tur raporu | — | hayır | **Repo dışına** |
@@ -238,7 +238,7 @@
 | `qa/e2e/16-settings-registry.png` | — | 2026-07-30 | olcum artifact | — | hayır | **Repo dışına** |
 | `qa/e2e/18-workflows-list.png` | — | 2026-07-30 | olcum artifact | — | hayır | **Repo dışına** |
 | `qa/e2e/19-portal-leaves-fixed.png` | — | 2026-07-30 | olcum artifact | — | hayır | **Repo dışına** |
-| `qa/e2e/20-company-dashboard-alatax.png` | — | 2026-07-30 | olcum artifact | — | hayır | **Repo dışına** |
+| `qa/e2e/20-company-dashboard-dobedan.png` | — | 2026-07-30 | olcum artifact | — | hayır | **Repo dışına** |
 | `qa/e2e/20-dashboard-admin.png` | — | 2026-07-31 | olcum artifact | — | hayır | **Repo dışına** |
 | `qa/e2e/21-login-attempt.png` | — | 2026-07-31 | olcum artifact | — | hayır | **Repo dışına** |
 | `qa/e2e/22-reports-list.png` | — | 2026-07-31 | olcum artifact | — | hayır | **Repo dışına** |
@@ -503,7 +503,7 @@
 ### Ek notlar
 
 - **Test sayıları** (186 → 604 → 713 → 725): faz/tur raporlarında kronolojik doğru; yalnız `GUNCEL_DURUM_RAPORU.md` güncellenmeli.
-- **`docs/backups/alatax_hr_20260805_230705.dump`**: repoda **19.5 MB** — `.gitignore` + harici yedek önerilir.
+- **`docs/backups/dobedan_hr_20260805_230705.dump`**: repoda **19.5 MB** — `.gitignore` + harici yedek önerilir.
 - **`position_id`**: `FAZ6_ONCESI_KAPATMA.md` güncel kaynak; `FAZ4_RAPOR`/`TUR8` eski strateji metni.
 - **`.cursorrules`**: `docs/` dışında kökte; pusula sınıfında, bu envanterde yok.
 

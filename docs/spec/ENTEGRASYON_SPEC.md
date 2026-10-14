@@ -1,4 +1,4 @@
-# ALATAX HR — Entegrasyon Şartnamesi (ENTEGRASYON_SPEC)
+# Dobedan HR — Entegrasyon Şartnamesi (ENTEGRASYON_SPEC)
 
 **Amaç:** Dış sistemlerle (bordro, İK, PDKS dosyası, vb.) veri alışverişinin ürün çerçevesi. Uygulama detayı Faz 6/8’de; bu belge sözleşme ve güvenlik sınırıdır.
 

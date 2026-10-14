@@ -38,7 +38,7 @@ Faz3 borcu: uzun etiket kesilsin + title. CSS ellipsis .ax-select-value-text üz
 
 ## Suite / diff
 ```
-Tests: 668 passed (2950 assertions)  · docker exec alatax-hr-app php artisan test
+Tests: 668 passed (2950 assertions)  · docker exec dobedan-hr-app php artisan test
 (Tur2: 657 + Tur3 B: 11 yeni = 668)
 ```
 

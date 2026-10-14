@@ -1,4 +1,4 @@
-# Ubuntu’da Docker ile ALATAX HR (temiz makine)
+# Ubuntu’da Docker ile Dobedan HR (temiz makine)
 
 Bu belge **yalnızca dokümantasyondur**. `docker-compose.yml` ve compose servisleri değiştirilmez.
 
@@ -70,8 +70,8 @@ pnpm -v
 ## 1) Klon
 
 ```bash
-git clone <repo-url> alatax-hr
-cd alatax-hr
+git clone <repo-url> dobedan-hr
+cd dobedan-hr
 git checkout faz4-form-engine   # veya çalışılacak branch
 ```
 
@@ -167,9 +167,9 @@ pnpm install
 **LAN’dan (başka makineden) erişim için `--host` şarttır** (yoksa yalnızca localhost dinler):
 
 ```bash
-pnpm --filter @alatax/superadmin dev -- --host   # :3001
-pnpm --filter @alatax/company    dev -- --host   # :3002
-pnpm --filter @alatax/portal     dev -- --host   # :3003
+pnpm --filter @dobedan/superadmin dev -- --host   # :3001
+pnpm --filter @dobedan/company    dev -- --host   # :3002
+pnpm --filter @dobedan/portal     dev -- --host   # :3003
 ```
 
 Aynı makinede tarayıcı yeterliyse `--host` olmadan da çalışır; uzak tarayıcı için her zaman `--host` kullanın.
@@ -181,7 +181,7 @@ Aynı makinede tarayıcı yeterliyse `--host` olmadan da çalışır; uzak taray
 **Çözüm — nohup script (önerilen deneme ortamı):**
 
 ```bash
-cd ~/alatax-hr
+cd ~/dobedan-hr
 git pull
 # Docker ayakta mı?
 docker compose up -d
@@ -190,7 +190,7 @@ chmod +x scripts/ubuntu-frontend-start.sh scripts/ubuntu-frontend-stop.sh
 bash scripts/ubuntu-frontend-start.sh
 ```
 
-Loglar: `~/alatax-hr/logs/frontend/*.log`  
+Loglar: `~/dobedan-hr/logs/frontend/*.log`  
 Durdur: `bash scripts/ubuntu-frontend-stop.sh`
 
 > Not: Bu hâlâ **Vite dev** modudur. Sunucu reboot sonrası script’i yeniden çalıştırmanız gerekir (systemd unit Faz 7 / production). Reboot sonrası Docker `restart: unless-stopped` ile API’yi kendi açar; frontend script’ini bir kez daha çalıştırın.
@@ -242,7 +242,7 @@ Compose’a dokunmadan host’ta:
 cd frontend
 pnpm install
 pnpm build
-pnpm --filter @alatax/company exec vite preview --port 3002 --host
+pnpm --filter @dobedan/company exec vite preview --port 3002 --host
 ```
 
 veya `npx serve apps/company/dist -l 3002`. SPA history fallback gerekir. Build öncesi aynı `VITE_API_URL` (LAN IP) ile build alın.
@@ -251,7 +251,7 @@ veya `npx serve apps/company/dist -l 3002`. SPA history fallback gerekir. Build 
 
 ## 6) İlk login
 
-Seed / register sonrası tipik hesaplar (ortama göre değişir; seed dokümanı: `docs/arsiv/2026-10-alatax-donemi/BURADAN_BASLA.md`):
+Seed / register sonrası tipik hesaplar (ortama göre değişir; seed dokümanı: `docs/arsiv/2026-10-eski-ad-donemi/BURADAN_BASLA.md`):
 
 | Panel | Port | Not |
 |--------|------|-----|
@@ -310,7 +310,7 @@ docker compose logs -f nginx app
 Otomatik CI → sunucu deploy **yok**. Güncelleme:
 
 ```bash
-cd ~/alatax-hr
+cd ~/dobedan-hr
 git pull
 docker compose up -d --build          # backend değiştiyse
 docker compose exec app php artisan migrate
@@ -327,6 +327,44 @@ Bunlar Faz 7 / cloud backlog’unda; bu belge installer için manuel yolu sabitl
 
 ---
 
+<!-- brand-guard:allow-start -->
+## Alatax → Dobedan sunucu geçişi
+
+Yalnız Adım 02 öncesinden kalan, hâlâ eski adlarla (`~/alatax-hr`, compose projesi `alatax-hr`, DB `alatax_hr`, kullanıcı `alatax`) çalışan bir sunucu için, **bir kez** uygulanır. Compose proje adı değişince Docker yeni ve boş volume’ler açar; veri `pg_dump` / `pg_restore` ile taşınır. Eski volume’ler silinmez.
+
+1. **Yedek ve satır sayıları (kod çekmeden önce, eski yığın çalışırken):**
+   ```bash
+   cd ~/alatax-hr
+   docker compose -p alatax-hr stop queue scheduler nginx
+   docker compose -p alatax-hr exec -T postgres sh -c 'pg_dump -Fc -U "$POSTGRES_USER" "$POSTGRES_DB"' > ~/oncesi_dobedan.dump
+   docker compose -p alatax-hr cp ~/oncesi_dobedan.dump postgres:/tmp/kontrol.dump
+   docker compose -p alatax-hr exec -T postgres sh -c 'pg_restore -l /tmp/kontrol.dump | grep -c " TABLE public "'
+   ```
+   Tablo bazlı `count(*)` listesini bir dosyaya kaydedin (karşılaştırma için).
+2. **Eski yığını durdurun** (volume silmeden): `docker compose -p alatax-hr down` — **`-v` kullanmayın.**
+3. **Klasörü ve kodu güncelleyin:** `mv ~/alatax-hr ~/dobedan-hr && cd ~/dobedan-hr && git pull` (betikler `~/dobedan-hr` yolunu bekler).
+4. **Sunucu `.env`:** `APP_NAME="Dobedan HR"`, `POSTGRES_DB=dobedan_hr`, `POSTGRES_USER=dobedan`; e-posta alan adı `alatax…` ise `dobedan…` yapın. `POSTGRES_PASSWORD` ve **`APP_KEY` değişmez.**
+5. **Yalnız veritabanı ve Redis’i başlatın:** `docker compose up -d --build postgres redis` (app/queue/scheduler henüz kapalı; restore sırasında DB’ye yazılmaz).
+6. **Restore:**
+   ```bash
+   docker compose cp ~/oncesi_dobedan.dump postgres:/tmp/oncesi.dump
+   docker compose exec -T postgres sh -c 'pg_restore --no-owner --role="$POSTGRES_USER" -U "$POSTGRES_USER" -d "$POSTGRES_DB" /tmp/oncesi.dump'
+   docker compose exec -T postgres rm /tmp/oncesi.dump
+   ```
+   Satır sayılarını yeniden alın; 1. adımdaki listeyle **fark sıfır** olmalı.
+7. **Kalan servisleri başlatın ve veriyi dönüştürün:**
+   ```bash
+   docker compose up -d --build
+   docker compose exec app php artisan dobedan:rebrand-data --dry-run
+   docker compose exec app php artisan dobedan:rebrand-data
+   ```
+8. **Frontend:** `cd frontend && pnpm install`, ardından `bash scripts/ubuntu-frontend-stop.sh && bash scripts/ubuntu-frontend-start.sh`. Tarayıcı depolama anahtarları değiştiği için kullanıcılar **bir kez yeniden giriş** yapar.
+9. Test DB’si kullanılıyorsa: `docker compose exec -T postgres sh -c 'createdb -U "$POSTGRES_USER" dobedan_hr_testing'`.
+10. Yeni yığın birkaç gün sorunsuz çalıştıktan sonra, yedek doğrulanmış ve onay alınmışsa eski volume’ler silinebilir: `docker volume rm alatax-hr_postgres_data alatax-hr_redis_data` (geri alınamaz).
+<!-- brand-guard:allow-end -->
+
+---
+
 ## Ubuntu 26.04 notları
 
 Deploy turunda **Ubuntu 26.04 LTS** (resolute) kullanıldı:
@@ -340,7 +378,7 @@ Deploy turunda **Ubuntu 26.04 LTS** (resolute) kullanıldı:
 
 ## Sıradaki adımlar
 
-1. Aşama 2: sistematik test turu (`docs/arsiv/2026-10-alatax-donemi/TEST_TURU.md`) — onay zinciri, Lookups, Settings Studio, Kanban, 2FA, RBAC, CRUD; bulguları logla.
+1. Aşama 2: sistematik test turu (`docs/arsiv/2026-10-eski-ad-donemi/TEST_TURU.md`) — onay zinciri, Lookups, Settings Studio, Kanban, 2FA, RBAC, CRUD; bulguları logla.
 2. Bu belgedeki LAN / pnpm / seed adımlarını installer checklist’ine taşı (Faz 7).
 3. İsteğe bağlı: manuel update script; ardından GitHub Actions SSH deploy (henüz yok).
 4. Production: Vite `dev` yerine build + reverse proxy; secret’lar yalnızca sunucu `.env`.

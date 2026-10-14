@@ -1,4 +1,4 @@
-# ALATAX HR — Claude Bağımsız Durum Değerlendirmesi + Cursor Çapraz Doğrulaması
+# Dobedan HR — Claude Bağımsız Durum Değerlendirmesi + Cursor Çapraz Doğrulaması
 
 **Tarih:** 13 Ekim 2026 · **Branch:** `faz4-form-engine` @ `f006f93` · **Yöntem:** Salt okuma (kod + git + log + `docs/claude-denetim/cikti/` canlı DB/route çıktıları). Çapraz doğrulama sonucu §16'da.
 **Amaç:** `docs/DURUM_RAPORU_CURSOR.md` ile çapraz doğrulama. Bölüm 1'deki tablo Cursor promptundaki tabloyla aynı sırada.
@@ -13,7 +13,7 @@
 - Genel sağlık notu (çapraz doğrulama sonrası): **6 / 10** (Cursor: 4/10; gerekçe §16). Mimari ve test güçlü; düşüren noktalar: `main` 175 commit geride, iki kırık frontend butonu, controller şişkinliği ve `.cursorrules`'tan sapma (inline validation), ortam yapılandırmasındaki MySQL kalıntıları.
 
 **Güncel öncelik listesi §16.5'te.** İlk turdaki bulgular:
-1. `backend/.env` → `DB_CONNECTION=mysql`, `127.0.0.1:3306`, `alatax-hr`. Docker'da compose ezdiği için sorun yok; backend XAMPP/host üzerinden çalıştırılırsa yanlış (boş) MySQL'e bağlanır.
+1. `backend/.env` → `DB_CONNECTION=mysql`, `127.0.0.1:3306`, `dobedan-hr`. Docker'da compose ezdiği için sorun yok; backend XAMPP/host üzerinden çalıştırılırsa yanlış (boş) MySQL'e bağlanır.
 2. `main` branch'i 11 Temmuz'da kalmış, `faz4-form-engine` 175 commit önde. Tek hat üzerinde çalışılıyor; release/merge stratejisi yok.
 3. Onboarding'de 2 canlı kırık çağrı: "şablonu çoğalt" ve "görevi atla" backend'de route'u olmayan uç noktalara gidiyor (404).
 4. `storage/logs/laravel.log` 235 MB, rotasyon yok (`LOG_CHANNEL` stack/single).
@@ -73,7 +73,7 @@
 - Compose yorumları bayat: "app default hâlâ mysql", "Faz 1'de PostgreSQL ile değiştirilecek". `app` servisi hâlâ `mysql` healthy olmasını bekliyor → gereksiz bir container ve açılış bağımlılığı.
 - Kök `.env` = `.env.docker.example` kopyası; `MYSQL_*` anahtarları var, `CORS_ALLOWED_ORIGINS` yok (config varsayılanına düşüyor).
 - `backend/.env` MySQL'e işaret ediyor (bkz. Özet #1).
-- Taşıma izleri: eski yol `C:\xampp\htdocs\alatax-hr` yalnızca derlenmiş view cache'inde (`storage/framework/views`), zararsız; `php artisan view:clear` temizler. `bootstrap/cache` içinde config/route cache yok (iyi).
+- Taşıma izleri: eski yol `C:\xampp\htdocs\dobedan-hr` yalnızca derlenmiş view cache'inde (`storage/framework/views`), zararsız; `php artisan view:clear` temizler. `bootstrap/cache` içinde config/route cache yok (iyi).
 - Frontend `node_modules` pnpm ile kurulmuş (junction'lar). Kök `frontend/` içinde hem `pnpm-lock.yaml` hem `package-lock.json` var → karışık paket yöneticisi riski.
 - `backend/package.json` + `backend/node_modules` + boş `backend/frontend/apps` → Laravel iskeletinden kalma, kullanılmıyor görünüyor.
 
@@ -89,7 +89,7 @@
 
 ## 5. Veritabanı (canlı DB — `topla.ps1` çıktısı)
 
-- `config('database.default')` = **pgsql / postgres / alatax_hr** (doğrulandı). Laravel 12.43.1, PHP 8.2.34.
+- `config('database.default')` = **pgsql / postgres / dobedan_hr** (doğrulandı). Laravel 12.43.1, PHP 8.2.34.
 - Canlı 155 tablo = kod 155 tablo. Farklar yalnızca squash sonrası 3 migration'ın beklenen etkileri (`users.company_id→home_company_id`, `employees.position` kaldırıldı, soft-delete partial unique index'ler). **Şema sapması yok.**
 - 3 migration `Ran` (batch 19). Satır: 60 personel, 59 kullanıcı, 444 izin, 7 rol, 14 modül, 4 organizasyon, 300 puantaj kaydı; 93 tablo boş.
 - `public/storage` **NOT LINKED** (avatar/logo URL'leri 404).
@@ -104,7 +104,7 @@ Yapılacak karşılaştırmalar (`topla.ps1` sonrası): canlı tablo sayısı vs
 
 ## 6. Frontend
 
-- 3 SPA: company (:3002, 124 route), portal (:3003, 24), superadmin (:3001, 11) + `@alatax/shared`.
+- 3 SPA: company (:3002, 124 route), portal (:3003, 24), superadmin (:3001, 11) + `@dobedan/shared`.
 - `tsc` / lint bu incelemede koşturulamadı (Windows junction'ları sanal makinede okunamıyor) → `topla.ps1` 11–12. adımlar.
 
 ## 7. Backend ↔ Frontend sözleşmesi
@@ -190,14 +190,14 @@ Karşılığı olmayan 15 çağrı (`packages/shared/src/services/api.ts`):
 | 1 | **2FA atlatma:** portal (77) ve admin (31) route grupları `deny.2fa.challenge` içermiyor; challenge token bu uçlara erişebilir | `routes/api.php:1394` ve `:1434` grup tanımları; `route:list` middleware analizi: panel 541 ✔, portal 77 ✘, admin 31 ✘ |
 | 2 | **`private` disk tanımsız** → belge/bordro yükleme-indirme 500 | `config/filesystems.php` yalnız local/public/s3; 8 dosyada 15 kullanım. Disk **hiçbir commit'te tanımlanmamış**; tek test `Storage::fake('private')` ile maskelemiş (`CompanyGapsC5Test.php:144`) |
 | 3 | **MySQL'e özgü SQL** (`YEAR`, `MONTH`, `TIMESTAMPDIFF`, `CURDATE`, çift tırnaklı string) | `EmployeeController.php:1225-1249`, `EmployeeDashboardController.php:350-364`, `Documents/ReportController.php:220-244` |
-| 4 | Test DB `alatax_hr_testing` yok → suite koşmuyor | `phpunit.xml:31` bu DB'yi zorunlu kılıyor (DB varlığı Cursor'un psql kanıtına dayanıyor) |
+| 4 | Test DB `dobedan_hr_testing` yok → suite koşmuyor | `phpunit.xml:31` bu DB'yi zorunlu kılıyor (DB varlığı Cursor'un psql kanıtına dayanıyor) |
 | 5 | Bağımlılık açıkları (composer 46, pnpm 137; jspdf critical) | Claude doğrulayamadı (audit aracı yok) — Cursor kanıtına dayanıyor |
 
 ### 16.3 Claude'un bulup Cursor'un raporlamadığı
 - `storage/logs/laravel.log` **235 MB**, rotasyon yok (`LOG_STACK=single`).
 - Host'ta XAMPP `mysqld`/`httpd` hâlâ çalışıyor (port 3306/80) — kullanılmıyorsa kapatılmalı.
 - Claude Projesindeki dokümanlar 14 Temmuz sürümü (repo 6 Ağustos).
-- Eski klasör yolu (`alatax-hr`) yalnız derlenmiş view cache'inde.
+- Eski klasör yolu (`dobedan-hr`) yalnız derlenmiş view cache'inde.
 
 ### 16.4 Ayrışmalar
 | Konu | Claude | Cursor | Sonuç |
@@ -211,7 +211,7 @@ Karşılığı olmayan 15 çağrı (`packages/shared/src/services/api.ts`):
 1. 2FA: `deny.2fa.challenge` portal + admin gruplarına + regresyon testi (S)
 2. `private` disk tanımı + gerçek config testi (S)
 3. MySQL SQL → PostgreSQL uyumlu (`EXTRACT`, `age()`, tek tırnak) + uç testleri (M)
-4. `alatax_hr_testing` oluştur, suite'i koş, sayıyı dokümanlara yaz (S)
+4. `dobedan_hr_testing` oluştur, suite'i koş, sayıyı dokümanlara yaz (S)
 5. Onboarding duplicate/skip uçları (S)
 6. `storage:link`, log rotasyonu, Telescope/Sanctum expiry (S)
 7. Bağımlılık güncellemeleri (M) → ardından Faz 6 (W2 iade akışı)

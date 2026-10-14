@@ -45,7 +45,7 @@ Tek-şirket varsayılanı korundu. Rapor motoru ve klasik dashboard, isteğe ba�
 | `KvkkGroupScopeIgnoredTest` | ✅ |
 | `ReportScheduleAndCacheTest` group cache | ✅ |
 
-Full suite: **711 passed** (Docker `alatax-hr-app`, 5 Ağustos 2026).
+Full suite: **711 passed** (Docker `dobedan-hr-app`, 5 Ağustos 2026).
 
 ---
 

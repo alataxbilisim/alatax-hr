@@ -2,7 +2,7 @@
 
 ---
 
-# ALATAX HR — Uçtan Uca Akış Envanteri
+# Dobedan HR — Uçtan Uca Akış Envanteri
 
 **Branch:** `faz4-form-engine`  
 **Tarih:** 13 Temmuz 2026  

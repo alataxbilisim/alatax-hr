@@ -236,13 +236,13 @@ Sistem alanı silme: PUT `delete` → 422; `DELETE /custom-fields/{id}` sistem i
 - Standart kolonlar: strip sonrası `FormFieldCatalogService::validateStandardFields` (TCKN dahil)
 - FE zod: 4A-2
 
-### Test kanıtı (Docker `alatax-hr-app`, pgsql)
+### Test kanıtı (Docker `dobedan-hr-app`, pgsql)
 
-- `getDatabaseName() = alatax_hr_testing`, driver `pgsql` (FormDefinitionApiTest)
+- `getDatabaseName() = dobedan_hr_testing`, driver `pgsql` (FormDefinitionApiTest)
 - FormDefinitionApiTest: 9 passed (401/403/happy/tenant/TCKN/idempotent)
 - Regresyon: EmployeeCustomFieldValidation + EmployeeFieldPermission + PolicyDataScopeWave2 yeşil
 - **Tam suite: 347 passed / 0 fail**
-- `alatax_hr` wipe yok; PUSH yok
+- `dobedan_hr` wipe yok; PUSH yok
 
 ### Bilinçli sınırlar (4A-2+)
 
@@ -278,7 +278,7 @@ Neden: eski form varsayılan kalır; geri dönüş tek tık; auto-flag riski yok
 | 2 field_permission → render | ✅ | hidden→yok, readonly→disabled + payload’dan çıkar; BE strip korunur |
 | 3 Layout editörü | ✅ | Sıralı liste (↑↓); rename/gizle/zorunlu/permission; sistem silinemez |
 | 4 Personel pilotu | ✅ | Ayrı route; create/update → system + `custom_fields` jsonb |
-| 5 Test | ✅ | **349 passed / 0 fail** (pgsql `alatax_hr_testing`); company **tsc 0** |
+| 5 Test | ✅ | **349 passed / 0 fail** (pgsql `dobedan_hr_testing`); company **tsc 0** |
 
 ### Zod / submit
 
@@ -300,7 +300,7 @@ Neden: eski form varsayılan kalır; geri dönüş tek tık; auto-flag riski yok
 ### Doğrulama
 
 - DB wipe yok; PUSH yok  
-- Docker’da ekleyici migrate + `EmployeeFormFieldSeeder` (36 alan) uygulandı (`alatax_hr`)  
+- Docker’da ekleyici migrate + `EmployeeFormFieldSeeder` (36 alan) uygulandı (`dobedan_hr`)  
 - Suite: 349 passed  
 
 ---
@@ -317,10 +317,10 @@ Neden: eski form varsayılan kalır; geri dönüş tek tık; auto-flag riski yok
 |-------|--------|
 | Stack | `Class "App\Http\Controllers\Api\V1\Employee" not found` @ `DepartmentController.php:182` (`getManagers`) |
 | Endpoint | `GET /api/v1/departments/managers` → **500** (eksik `use App\Models\Employee`) |
-| `GET /api/v1/form-definitions/employee` | **200**, 36 alan (alatax_hr, company 70) — seed/form-definitions **değil** |
+| `GET /api/v1/form-definitions/employee` | **200**, 36 alan (dobedan_hr, company 70) — seed/form-definitions **değil** |
 | Editör vs pilot | Editör yalnız `form-definitions`. Pilot ek olarak lookups + `/employees/departments|managers` + branches + positions. Axios global interceptor her 500’de “Sunucu hatası…” toast basar. |
 
-### ADIM 1 — Dev veri (alatax_hr, salt okuma)
+### ADIM 1 — Dev veri (dobedan_hr, salt okuma)
 
 - `custom_field_definitions` sistem (`is_system=true`, `company_id IS NULL`): **36**
 - `form_definitions` sistem (`company_id IS NULL`, employee): **1** satır var
@@ -337,7 +337,7 @@ Neden: eski form varsayılan kalır; geri dönüş tek tık; auto-flag riski yok
 
 - `GET .../form-definitions/employee` → 200  
 - `GET .../departments/managers` → 200 (fix sonrası)  
-- Suite: **354 passed / 0 fail** (`alatax_hr_testing`); B-DB guard sağlam; company **tsc 0**  
+- Suite: **354 passed / 0 fail** (`dobedan_hr_testing`); B-DB guard sağlam; company **tsc 0**  
 - DB wipe yok; PUSH yok; B-DB guard’a dokunulmadı  
 
 ---
@@ -351,7 +351,7 @@ Neden: eski form varsayılan kalır; geri dönüş tek tık; auto-flag riski yok
 
 **Tarih:** 15 Temmuz 2026  
 **Branch:** `faz4-form-engine` (main / faz3-tasarim’e dokunulmadı)  
-**Push:** yok · **DB wipe:** yok (`alatax_hr` + `alatax_hr_testing` ayakta)
+**Push:** yok · **DB wipe:** yok (`dobedan_hr` + `dobedan_hr_testing` ayakta)
 
 ### Zincir tablosu
 
@@ -368,7 +368,7 @@ Neden: eski form varsayılan kalır; geri dönüş tek tık; auto-flag riski yok
 
 | Kontrol | Sonuç |
 |---------|--------|
-| Tam suite (Docker, `alatax_hr_testing`, sıralı) | **375 passed** / 0 fail (1456 assertions) |
+| Tam suite (Docker, `dobedan_hr_testing`, sıralı) | **375 passed** / 0 fail (1456 assertions) |
 | company `tsc --noEmit` | **0** |
 | B-DB guard | dokunulmadı |
 
@@ -376,7 +376,7 @@ Neden: eski form varsayılan kalır; geri dönüş tek tık; auto-flag riski yok
 
 | Kontrol | Sonuç |
 |---------|--------|
-| `admin@demo.test` @ `alatax_hr` | **mevcut** (id=82, `is_active=t`) |
+| `admin@demo.test` @ `dobedan_hr` | **mevcut** (id=82, `is_active=t`) |
 
 ### Git
 
@@ -454,7 +454,7 @@ Neden: eski form varsayılan kalır; geri dönüş tek tık; auto-flag riski yok
 |---------|--------|
 | Tam suite | **386 passed** / 0 fail |
 | company tsc | **0** |
-| Sentinel `admin@demo.test` @ `alatax_hr` | mevcut (id=82) |
+| Sentinel `admin@demo.test` @ `dobedan_hr` | mevcut (id=82) |
 | Seed | `job_application` sistem alan **7** (idempotent) |
 
 ### KARAR BEKLENİYOR

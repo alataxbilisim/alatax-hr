@@ -1,4 +1,4 @@
-# ALATAX HR — MODÜL ŞARTNAMESİ (MODUL_SPEC)
+# Dobedan HR — MODÜL ŞARTNAMESİ (MODUL_SPEC)
 
 **Amaç:** Hangi özellik hangi modülde yaşar, her modülün ekranları ve işlemleri (CRUD+) nedir — Cursor'a modül geliştirme promptu verirken referans şartname. ROADMAP Faz 6'nın detay karşılığıdır.
 
@@ -340,4 +340,4 @@ Takvim (Google/Outlook), SSO (Azure AD/Google), e-imza, canlı PDKS cihaz — RO
 
 **Sürekli (Faz 2–5):** A1 Rol (F2) · A6 Audit (F2) · A5 Bildirim (F4) · C1 Workflow (F4) · B14 Analitik (F5) · A7 KVKK (F6C).
 
-Detaylı paket matrisi: `../arsiv/2026-10-alatax-donemi/ROADMAP.md` §6.
+Detaylı paket matrisi: `../arsiv/2026-10-eski-ad-donemi/ROADMAP.md` §6.

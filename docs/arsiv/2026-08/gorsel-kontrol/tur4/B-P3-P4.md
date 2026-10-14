@@ -81,7 +81,7 @@ Tests: 7 passed (24 assertions)
 Filter: SettingsRegistryD4aTest
 Tests: 9 passed (34 assertions)
 
-Full suite (Docker alatax-hr-app):
+Full suite (Docker dobedan-hr-app):
 Tests: 675 passed (2974 assertions)
 Duration: 765.51s
 (Tur3: 668 → +7 yeni Tur4 testi)

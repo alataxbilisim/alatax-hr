@@ -58,7 +58,7 @@
 - `docker-compose.yml`: app/queue/scheduler → `DB_HOST=postgres`; mysql servisi **kalır**
 - README güncellendi
 
-**Doğrulama:** `config=pgsql @ postgres:5432` · migrate+seed ✅ · `/up` 200 · login `admin@alataxbilisim.com` ✅  
+**Doğrulama:** `config=pgsql @ postgres:5432` · migrate+seed ✅ · `/up` 200 · login `admin@dobedan.com` ✅  
 **Dikkat:** root `.env` içinde `DB_PORT=5432` olmalı (eski 3306 postgres’e bağlanmayı bozar).
 
 ---
