@@ -1,9 +1,11 @@
 import React from 'react';
 import { Outlet, Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { useTranslation } from '@shared/i18n';
 import { RootState } from '../store';
 
 const AuthLayout: React.FC = () => {
+  const { t } = useTranslation('auth');
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
 
   // If already authenticated and is super_admin, redirect to dashboard
@@ -15,7 +17,7 @@ const AuthLayout: React.FC = () => {
     <div className="auth-layout">
       <div className="auth-container">
         <div className="auth-brand">
-          <h1 className="admin-brand">Dobedan</h1>
+          <h1 className="admin-brand">{t('auth:brandName')}</h1>
           <p>SuperAdmin Panel</p>
         </div>
         <Outlet />
@@ -25,4 +27,3 @@ const AuthLayout: React.FC = () => {
 };
 
 export default AuthLayout;
-
