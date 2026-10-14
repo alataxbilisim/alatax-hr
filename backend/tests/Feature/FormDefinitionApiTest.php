@@ -66,7 +66,7 @@ class FormDefinitionApiTest extends TestCase
     public function test_database_is_pgsql_testing(): void
     {
         $this->assertSame('pgsql', DB::connection()->getDriverName());
-        $this->assertSame('dobedan_hr_testing', DB::connection()->getDatabaseName());
+        $this->assertMatchesRegularExpression('/^dobedan_hr_testing(_test_\d+)?$/', DB::connection()->getDatabaseName());
     }
 
     public function test_system_field_seed_is_idempotent(): void
