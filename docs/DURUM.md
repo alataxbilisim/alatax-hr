@@ -104,7 +104,7 @@ Durum ölçeği: **Tam** (spec kapsamı + test eksiksiz) · **Kısmi** (çalış
 | K1 | 2FA challenge token portal (77 rota) ve süper admin (31 rota) gruplarında kabul ediliyor | Adım 03'te ele alınacak |
 | K2 | `private` disk tanımsız → belge/bordro yükle-indir, portal indirme, KVKK dosya toplama 500 | Adım 03'te ele alınacak |
 | K3 | MySQL'e özgü SQL (5 controller: `YEAR`, `DATE_FORMAT`, `TIMESTAMPDIFF`, çift tırnaklı string) | **Adım 01'de düzeltildi** (PostgreSQL feature testleriyle) |
-| K4 | Test DB (`alatax_hr_testing`) kurulumu belgelenmemiş / otomatik değil; suite yeni makinede koşmuyordu | Adım 03'te ele alınacak |
+| K4 | Test DB (`alatax_hr_testing`) kurulumu belgelenmemiş / otomatik değil; suite yeni makinede koşmuyordu | Adım 01'de bu makinede elle oluşturuldu (tam suite yeşil: 781 test); otomasyon ve belgeleme Adım 03'te |
 | K5 | Bağımlılık açıkları: pnpm 137 (2 critical `jspdf`), composer 46 (14 high) | Adım 03'te ele alınacak |
 | K6 | 2 kırık onboarding ucu (duplicate/skip — FE çağırıyor, BE rotası yok) | Adım 03'te ele alınacak |
 
@@ -138,5 +138,7 @@ Durum ölçeği: **Tam** (spec kapsamı + test eksiksiz) · **Kısmi** (çalış
 | 22 | E-posta doğrulama uçtan uca (Mailtrap) | Atanmadı |
 | 23 | i18n EN + dil seçici | Backlog |
 | 24 | Şirkete özel rol (`company_user.role_id`) | Backlog |
+| 25 | `EmployeeDashboardController::getKPIData` olmayan `age`/`tenure` kolonlarında `AVG` yapıyor (KPI tipi için 500 riski) | Atanmadı |
+| 26 | `EmployeeDashboardController::getWidgetData` filtre kolon adlarını istemciden whitelist'siz alıyor | Atanmadı |
 
 `GEÇİCİ` işaretli çözümler bu listeye eklenir.
