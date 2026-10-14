@@ -68,6 +68,17 @@ Dobedan HR: Türkiye odaklı, multi-tenant B2B HR SaaS. Backend: Laravel 12 REST
 - Kritik iş mantığı (izin hakediş hesabı, workflow koşulları, rapor builder) unit test ister.
 - Test kırıksa özellik "bitti" sayılmaz.
 
+## Tamamlanma tanımı (DoD)
+
+Bir backend işi aşağıdakilerin hepsi sağlanmadan **BİTMİŞ SAYILMAZ** (ayrıntı: `docs/operasyon/TEST.md`):
+
+- **Her yeni endpoint** için feature testleri: auth'suz 401, yetkisiz 403, yetkili happy path, başka şirketin kaydına erişim (404/403), geçersiz girdide 422 (validasyon).
+- **Her yeni model** için tenant-doğru factory (`company_id` ve şirketli ebeveynler aynı şirkette, `fake()` `tr_TR`) + `HasFactory`. Factory anlamsızsa gerekçesiyle `ModelFactoryCoverageTest::EXCEPTIONS`'a.
+- Yeni route yetki kapısından geçer; public / self-service istisnası gerekiyorsa `RouteSecurityInventoryTest` listesine **gerekçesiyle** eklenir. `company_id`'li yeni tablo `BelongsToCompany` kullanır.
+- `composer test:parallel` yeşil, deprecation 0; `composer test:arch` yeşil.
+- `vendor/bin/pint --test` exit 0.
+- `composer analyse` (PHPStan seviye 5) exit 0 ve **`phpstan-baseline.neon` büyümez**; yeni koddaki hata baseline'a eklenmez, düzeltilir.
+
 ## Yapılandırılabilirlik sınırı
 
 Ürün **yapılandırılabilir** (kod yazmadan, Ayarlar Stüdyosu / Form Engine / registry): alanlar, form/liste düzeni, listeler (lookup), onay akışları, bildirim şablonları, politikalar, roller ve alan izinleri, import/export eşlemesi, rapor/pano, tema.

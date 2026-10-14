@@ -39,5 +39,6 @@ docs/
 | `spec/EXPORT_KAPSAM_BIRLIGI.md` | Export'ta DataScope birliği, chunk/stream, export registry |
 | `spec/EXPORT_GUVENLIK_VE_ENTEGRASYON_EKLERI.md` | Export yetki kapatma, `field_key` değişmezliği |
 | `operasyon/DEPLOY_UBUNTU.md` | Ubuntu sunucuya Docker ile kurulum |
+| `operasyon/TEST.md` | Backend test altyapısı: test DB, komutlar, paralel, kapsam, mimari testler, test şablonu |
 | `denetim/2026-10-13/` | Claude + Cursor durum denetimleri ve ham çıktıları |
 | `cursor-gorevleri/` | Görev tanımları (`ADIM_XX_*.md`) ve raporları (`raporlar/`) |
