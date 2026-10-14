@@ -539,7 +539,7 @@ class UserController extends BaseController
         $user = User::withoutAuditing(function () use ($company, $validated, $issue) {
             return User::create([
                 'home_company_id' => $company->id,
-                    'name' => $validated['name'],
+                'name' => $validated['name'],
                 'email' => $validated['email'],
                 'password' => Hash::make(Str::random(32)), // Geçici şifre (giriş kapalı)
                 'type' => 'user',
@@ -698,6 +698,7 @@ class UserController extends BaseController
             if ($perm === null) {
                 return true;
             }
+
             // Gelecekte hassas kolon: permission anahtarı + actor->can(...)
             return $actor !== null && $actor->can($perm);
         }));

@@ -497,9 +497,9 @@ CompanyContext::run($tzCompany->id, function () use ($tzCompany, &$out) {
     }
 });
 
-$ilikeIstanbul = DB::select("SELECT full_name FROM employees WHERE company_id = ? AND full_name ILIKE ? AND deleted_at IS NULL", [$tzCompany->id, '%istanbul%']);
-$ilikeIsmail = DB::select("SELECT full_name FROM employees WHERE company_id = ? AND full_name ILIKE ? AND deleted_at IS NULL", [$tzCompany->id, '%ismail%']);
-$lowerIstanbul = DB::select("SELECT full_name FROM employees WHERE company_id = ? AND lower(full_name) LIKE lower(?) AND deleted_at IS NULL", [$tzCompany->id, '%istanbul%']);
+$ilikeIstanbul = DB::select('SELECT full_name FROM employees WHERE company_id = ? AND full_name ILIKE ? AND deleted_at IS NULL', [$tzCompany->id, '%istanbul%']);
+$ilikeIsmail = DB::select('SELECT full_name FROM employees WHERE company_id = ? AND full_name ILIKE ? AND deleted_at IS NULL', [$tzCompany->id, '%ismail%']);
+$lowerIstanbul = DB::select('SELECT full_name FROM employees WHERE company_id = ? AND lower(full_name) LIKE lower(?) AND deleted_at IS NULL', [$tzCompany->id, '%istanbul%']);
 $sorted = DB::select("SELECT full_name FROM employees WHERE company_id = ? AND full_name IN ('Çakır','Öz','Şahin','Uçar','Ünal') AND deleted_at IS NULL ORDER BY full_name ASC", [$tzCompany->id]);
 $icuSorted = catchResult(fn () => DB::select("SELECT full_name FROM employees WHERE company_id = ? AND full_name IN ('Çakır','Öz','Şahin','Uçar','Ünal') AND deleted_at IS NULL ORDER BY full_name COLLATE \"tr-TR-x-icu\" ASC", [$tzCompany->id]));
 

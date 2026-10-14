@@ -287,8 +287,8 @@ class ReportDefinitionService
     }
 
     /**
-     * @return array{rows: list<array<string, mixed>>, meta: array<string, mixed>}
      * @param  array<string, mixed>  $overrides
+     * @return array{rows: list<array<string, mixed>>, meta: array<string, mixed>}
      */
     public function exportSaved(SavedReport $report, User $viewer, int $companyId, array $overrides = []): array
     {

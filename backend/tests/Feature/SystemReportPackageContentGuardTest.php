@@ -166,6 +166,7 @@ class SystemReportPackageContentGuardTest extends TestCase
                 $wid = (string) ($w['id'] ?? '?');
                 if (! ($w['success'] ?? false)) {
                     $failures[] = "{$dashboard->system_key}/{$wid}: ".($w['error'] ?? 'unknown');
+
                     continue;
                 }
                 $data = $w['data'] ?? null;
@@ -182,7 +183,7 @@ class SystemReportPackageContentGuardTest extends TestCase
 
         // Boş sonuç kabul; uyarı olarak logla (test kırılmaz)
         if ($emptyWidgets !== []) {
-            fwrite(STDERR, "[SystemReportPackageContentGuard] boş widget (uyarı): ".implode(', ', $emptyWidgets)."\n");
+            fwrite(STDERR, '[SystemReportPackageContentGuard] boş widget (uyarı): '.implode(', ', $emptyWidgets)."\n");
         }
     }
 }

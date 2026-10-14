@@ -6,7 +6,6 @@ use App\Models\Role;
 use App\Support\PostgresAdvisoryLock;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Permission;
 use Throwable;
 

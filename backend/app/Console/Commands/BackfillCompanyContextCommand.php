@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use App\Models\Company;
 use App\Models\CompanyUser;
-use App\Models\Organization;
 use App\Models\User;
 use App\Services\CompanyContextService;
 use Illuminate\Console\Command;

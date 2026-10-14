@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Enums\CompanyStatus;
 use App\Enums\UserType;
 use App\Exceptions\AdvisoryLockTimeoutException;
-use App\Models\ApprovalInstance;
 use App\Models\ApprovalRecord;
 use App\Models\ApprovalStep;
 use App\Models\ApprovalWorkflow;
@@ -86,7 +85,7 @@ class AdvisoryLockW1FixTest extends TestCase
         $stmt->closeCursor();
 
         try {
-            DB::transaction(function () use ($k1, $k2): void {
+            DB::transaction(function (): void {
                 PostgresAdvisoryLock::transactionScoped(7, 'approval_instance', 55, '200ms');
             });
             $this->fail('AdvisoryLockTimeoutException bekleniyordu');

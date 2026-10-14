@@ -8,7 +8,6 @@ use App\Models\AccrualLog;
 use App\Models\AccrualPolicy;
 use App\Models\ApprovalStep;
 use App\Models\ApprovalWorkflow;
-use App\Models\Branch;
 use App\Models\Company;
 use App\Models\Employee;
 use App\Models\LeaveBalance;

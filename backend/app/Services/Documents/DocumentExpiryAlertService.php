@@ -73,7 +73,7 @@ class DocumentExpiryAlertService
         CompanyContext::requireId();
         if (CompanyContext::id() !== $companyId) {
             throw new \App\Exceptions\CompanyContextMissingException(
-                "Company context mismatch: bound=".CompanyContext::id().", expected={$companyId}"
+                'Company context mismatch: bound='.CompanyContext::id().", expected={$companyId}"
             );
         }
 

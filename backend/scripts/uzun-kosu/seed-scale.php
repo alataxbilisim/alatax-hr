@@ -172,7 +172,7 @@ foreach ($companyIds as $ci => $cid) {
     for ($i = 1; $i <= $EMP_PER_CO; $i++) {
         $userBatch[] = [
             'company_id' => $cid,
-            'name' => "Scale Emp ".($ci + 1)."-{$i}",
+            'name' => 'Scale Emp '.($ci + 1)."-{$i}",
             'email' => sprintf('scale-e%02d-%04d@example.test', $ci + 1, $i),
             'password' => $password,
             'type' => 'user',

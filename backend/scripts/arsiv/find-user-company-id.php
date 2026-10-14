@@ -4,7 +4,7 @@ $roots = [__DIR__.'/../app', __DIR__.'/../database', __DIR__.'/../tests'];
 $patterns = [
     "/User::(?:query\(\)->)?where\(['\"]company_id['\"]/",
     "/->where\(['\"]company_id['\"].{0,80}users/",
-    "/user:id,name,email,company_id/",
+    '/user:id,name,email,company_id/',
     "/'company_id',\s*'preferences'/",
     "/DB::table\(['\"]users['\"]\).*company_id/s",
 ];

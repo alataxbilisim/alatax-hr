@@ -4,7 +4,6 @@
  * Postgres 16 pg_dump çıktısını Laravel schema load için birleştir.
  * App konteynerindeki psql 15 \\restrict anlamaz → satırlar çıkarılır.
  */
-
 $schemaDir = dirname(__DIR__).'/database/schema';
 $schemaOnly = $schemaDir.'/_schema_only.sql';
 $migData = $schemaDir.'/_mig_data.sql';

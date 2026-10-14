@@ -5,7 +5,6 @@
  * ve eager-load select company_id → home_company_id.
  * Entity company_id dokunulmaz — yalnız User::... blokları.
  */
-
 $files = [
     'app/Services/Documents/DocumentExpiryAlertService.php',
     'app/Services/Recruitment/ConvertApplicationToEmployeeService.php',
