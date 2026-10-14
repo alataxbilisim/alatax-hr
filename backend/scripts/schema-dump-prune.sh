@@ -10,15 +10,20 @@ TMP_MIG="$(mktemp)"
 
 mkdir -p "${SCHEMA_DIR}"
 
+# Kimlik bilgisi betikte tutulmaz: kullanıcı/şifre postgres konteynerinin kendi ortamından
+# (POSTGRES_USER / POSTGRES_PASSWORD) okunur. Kaynak DB: DB_NAME (varsayılan dobedan_hr).
+DB_NAME="${DB_NAME:-dobedan_hr}"
+PG_DUMP_IN_CONTAINER='PGPASSWORD="$POSTGRES_PASSWORD" pg_dump --no-owner --no-acl -U "$POSTGRES_USER" "$@"'
+
+COMPOSE=(docker compose -f "${ROOT}/../docker-compose.yml")
+
 echo "==> schema-only dump (postgres container)"
-docker exec -e PGPASSWORD=secret dobedan-hr-postgres \
-  pg_dump --no-owner --no-acl --schema-only \
-  -U dobedan -d dobedan_hr > "${TMP_SCHEMA}"
+"${COMPOSE[@]}" exec -T postgres sh -c "${PG_DUMP_IN_CONTAINER}" pg_dump \
+  --schema-only -d "${DB_NAME}" > "${TMP_SCHEMA}"
 
 echo "==> migrations data dump"
-docker exec -e PGPASSWORD=secret dobedan-hr-postgres \
-  pg_dump --no-owner --no-acl --data-only -t public.migrations \
-  -U dobedan -d dobedan_hr > "${TMP_MIG}"
+"${COMPOSE[@]}" exec -T postgres sh -c "${PG_DUMP_IN_CONTAINER}" pg_dump \
+  --data-only -t public.migrations -d "${DB_NAME}" > "${TMP_MIG}"
 
 # \restrict / \unrestrict satırları bazı psql istemcilerinde sorun çıkarabilir; temizle
 # (Laravel load app konteynerindeki psql 15 kullanır)

@@ -4,7 +4,7 @@
  * UZUN KOŞU — ölçekli sentetik veri (yalnız dobedan_hr_testing).
  * Idempotent: slug scale-co-{1,2,3} silinip yeniden üretilir.
  *
- * docker exec -e DB_DATABASE=dobedan_hr_testing dobedan-hr-app php scripts/uzun-kosu/seed-scale.php
+ * docker compose exec -e DB_DATABASE=dobedan_hr_testing -e SCALE_SEED_PASSWORD=<sentetik-kullanıcı-şifresi> app php scripts/uzun-kosu/seed-scale.php
  */
 
 declare(strict_types=1);
@@ -29,6 +29,12 @@ $ATT_DAYS = 500; // 3*1000*500 = 1_500_000
 $LEAVE_TARGET = 50_000;
 $DOC_TARGET = 20_000;
 $MARKER = 'uzun-kosu-scale-v1';
+
+$plainPassword = (string) getenv('SCALE_SEED_PASSWORD');
+if (strlen($plainPassword) < 8) {
+    fwrite(STDERR, "ABORT: SCALE_SEED_PASSWORD (en az 8 karakter) ortam değişkeni gerekli\n");
+    exit(1);
+}
 $t0 = microtime(true);
 $now = now()->toDateTimeString();
 
@@ -53,7 +59,7 @@ if ($oldIds !== []) {
     DB::table('companies')->whereIn('id', $oldIds)->delete();
 }
 
-$password = Hash::make('Scale!12345');
+$password = Hash::make($plainPassword);
 $companyIds = [];
 $branchIds = [];
 $deptIds = [];
