@@ -47,9 +47,10 @@ class JobPositionController extends BaseController
         }
 
         // Sıralama
-        $sortBy = $request->get('sort_by', 'created_at');
-        $sortDir = $request->get('sort_dir', 'desc');
-        $query->orderBy($sortBy, $sortDir);
+        $this->applyListSorting($query, $request, [
+            'title', 'status', 'department', 'location', 'employment_type', 'experience_level',
+            'positions_count', 'application_deadline', 'published_at', 'created_at', 'updated_at',
+        ]);
 
         $positions = $query->paginate($request->get('per_page', 15));
 

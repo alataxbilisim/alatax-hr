@@ -57,9 +57,10 @@ class CompanyController extends BaseController
         }
 
         // Sıralama
-        $sortBy = $request->get('sort_by', 'created_at');
-        $sortDir = $request->get('sort_dir', 'desc');
-        $query->orderBy($sortBy, $sortDir);
+        $this->applyListSorting($query, $request, [
+            'name', 'slug', 'status', 'package_type', 'city', 'employee_count',
+            'license_end_date', 'trial_ends_at', 'created_at', 'updated_at',
+        ]);
 
         $companies = $query->paginate($request->get('per_page', 15));
 

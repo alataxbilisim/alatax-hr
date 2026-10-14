@@ -131,4 +131,10 @@ return [
         'kvkk_destruction_review_due_body' => 'Son imha turundan bu yana inceleme süresi doldu. Sistem otomatik imha etmez; /kvkk İmha Kuyruğu üzerinden karar verin (:date).',
     ],
 
+    'query' => [
+        'unknown_filter_field' => '":field" alanına göre filtreleme desteklenmiyor.',
+        'forbidden_filter_field' => '":field" alanına göre filtreleme için yetkiniz bulunmamaktadır.',
+        'invalid_filter_value' => '":field" filtresi için değer geçersiz.',
+    ],
+
 ];

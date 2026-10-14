@@ -42,9 +42,9 @@ class UserController extends BaseController
         }
 
         // Sıralama
-        $sortBy = $request->get('sort_by', 'created_at');
-        $sortDir = $request->get('sort_dir', 'desc');
-        $query->orderBy($sortBy, $sortDir);
+        $this->applyListSorting($query, $request, [
+            'name', 'email', 'type', 'is_active', 'last_login_at', 'created_at', 'updated_at',
+        ]);
 
         $users = $query->paginate($request->get('per_page', 15));
 

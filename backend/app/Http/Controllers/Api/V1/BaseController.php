@@ -6,6 +6,7 @@ use App\Enums\UserType;
 use App\Http\Controllers\Controller;
 use App\Support\CompanyContext;
 use App\Traits\ApiResponse;
+use App\Traits\AppliesListSorting;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 /**
@@ -14,7 +15,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
  */
 class BaseController extends Controller
 {
-    use ApiResponse, AuthorizesRequests;
+    use ApiResponse, AppliesListSorting, AuthorizesRequests;
 
     /**
      * Aktif operasyonel şirket (CompanyContext; yoksa home company_id).

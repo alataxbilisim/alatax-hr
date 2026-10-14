@@ -41,9 +41,9 @@ class UserController extends BaseController
         $query = $this->baseScopedQuery($request)
             ->with(['roles', 'employee:id,user_id,employee_code']);
 
-        $sortBy = $request->get('sort_by', 'created_at');
-        $sortDir = $request->get('sort_dir', 'desc');
-        $query->orderBy($sortBy, $sortDir);
+        $this->applyListSorting($query, $request, [
+            'name', 'email', 'title', 'is_active', 'last_login_at', 'created_at', 'updated_at',
+        ]);
 
         $users = $query->paginate($request->get('per_page', 15));
 

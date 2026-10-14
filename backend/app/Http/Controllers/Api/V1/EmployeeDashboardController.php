@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\EmployeeDashboard;
 use App\Services\EmployeeSensitiveFieldService;
+use App\Services\Reports\EmployeeDashboardFilterResolver;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,6 +20,7 @@ class EmployeeDashboardController extends Controller
 {
     public function __construct(
         protected EmployeeSensitiveFieldService $sensitiveFields,
+        protected EmployeeDashboardFilterResolver $filterResolver,
     ) {}
 
     /**
@@ -196,19 +199,21 @@ class EmployeeDashboardController extends Controller
             ], 403);
         }
 
-        $query = Employee::where('company_id', (\App\Support\CompanyContext::id() ?? $user->home_company_id));
+        $companyId = (int) (\App\Support\CompanyContext::id() ?? $user->home_company_id);
 
-        // Filtreleri uygula
-        if (! empty($config['filters'])) {
-            foreach ($config['filters'] as $field => $value) {
-                if (! empty($value)) {
-                    if (is_array($value)) {
-                        $query->whereIn($field, $value);
-                    } else {
-                        $query->where($field, $value);
-                    }
-                }
-            }
+        try {
+            $filters = $this->filterResolver->resolve($config['filters'] ?? [], $user, $companyId);
+        } catch (AuthorizationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 403);
+        }
+
+        $query = Employee::where('company_id', $companyId);
+
+        foreach ($filters as $column => $value) {
+            is_array($value) ? $query->whereIn($column, $value) : $query->where($column, $value);
         }
 
         // KPI widget için

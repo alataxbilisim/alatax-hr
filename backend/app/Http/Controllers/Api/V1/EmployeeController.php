@@ -56,9 +56,10 @@ class EmployeeController extends BaseController
         $query = $this->baseScopedQuery($request)
             ->with(['user', 'department', 'branch', 'manager.user', 'positionRef']);
 
-        $sortBy = $request->get('sort_by', 'created_at');
-        $sortOrder = $request->get('sort_order', 'desc');
-        $query->orderBy($sortBy, $sortOrder);
+        $this->applyListSorting($query, $request, [
+            'full_name', 'employee_code', 'title', 'status', 'department_id', 'branch_id', 'position_id',
+            'hire_date', 'contract_type', 'work_type', 'city', 'created_at', 'updated_at',
+        ], directionKey: 'sort_order');
 
         $perPage = $request->get('per_page', 15);
         $employees = $query->paginate($perPage);
