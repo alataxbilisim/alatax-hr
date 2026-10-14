@@ -217,13 +217,13 @@ class ReportController extends BaseController
             case 'month':
                 return (clone $query)
                     ->select(
-                        DB::raw('YEAR(created_at) as year'),
-                        DB::raw('MONTH(created_at) as month'),
+                        DB::raw('CAST(EXTRACT(YEAR FROM created_at) AS integer) as year'),
+                        DB::raw('CAST(EXTRACT(MONTH FROM created_at) AS integer) as month'),
                         $measureSelect
                     )
-                    ->groupBy(DB::raw('YEAR(created_at)'), DB::raw('MONTH(created_at)'))
-                    ->orderBy(DB::raw('YEAR(created_at)'))
-                    ->orderBy(DB::raw('MONTH(created_at)'))
+                    ->groupBy('year', 'month')
+                    ->orderBy('year')
+                    ->orderBy('month')
                     ->limit($limit)
                     ->get()
                     ->map(function ($item) {
@@ -238,10 +238,10 @@ class ReportController extends BaseController
             case 'year':
                 return (clone $query)
                     ->select(
-                        DB::raw('YEAR(created_at) as year'),
+                        DB::raw('CAST(EXTRACT(YEAR FROM created_at) AS integer) as year'),
                         $measureSelect
                     )
-                    ->groupBy(DB::raw('YEAR(created_at)'))
+                    ->groupBy('year')
                     ->orderBy('year')
                     ->limit($limit)
                     ->get()

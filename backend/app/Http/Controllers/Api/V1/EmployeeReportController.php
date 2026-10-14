@@ -263,49 +263,49 @@ class EmployeeReportController extends BaseController
 
         switch ($dimensionType) {
             case 'year':
-                $query->selectRaw('YEAR('.$groupField.') as dimension_key');
-                $query->groupByRaw('YEAR('.$groupField.')');
+                $query->selectRaw('CAST(EXTRACT(YEAR FROM '.$groupField.') AS integer) as dimension_key');
+                $query->groupByRaw('CAST(EXTRACT(YEAR FROM '.$groupField.') AS integer)');
                 break;
             case 'month':
-                $query->selectRaw('DATE_FORMAT('.$groupField.", '%Y-%m') as dimension_key");
-                $query->groupByRaw('DATE_FORMAT('.$groupField.", '%Y-%m')");
+                $query->selectRaw('to_char('.$groupField.", 'YYYY-MM') as dimension_key");
+                $query->groupByRaw('to_char('.$groupField.", 'YYYY-MM')");
                 break;
             case 'age_group':
                 $query->selectRaw("
-                    CASE 
-                        WHEN TIMESTAMPDIFF(YEAR, birth_date, CURDATE()) < 25 THEN '18-24'
-                        WHEN TIMESTAMPDIFF(YEAR, birth_date, CURDATE()) < 35 THEN '25-34'
-                        WHEN TIMESTAMPDIFF(YEAR, birth_date, CURDATE()) < 45 THEN '35-44'
-                        WHEN TIMESTAMPDIFF(YEAR, birth_date, CURDATE()) < 55 THEN '45-54'
+                    CASE
+                        WHEN date_part('year', age(CURRENT_DATE, birth_date)) < 25 THEN '18-24'
+                        WHEN date_part('year', age(CURRENT_DATE, birth_date)) < 35 THEN '25-34'
+                        WHEN date_part('year', age(CURRENT_DATE, birth_date)) < 45 THEN '35-44'
+                        WHEN date_part('year', age(CURRENT_DATE, birth_date)) < 55 THEN '45-54'
                         ELSE '55+'
                     END as dimension_key
                 ");
                 $query->groupByRaw("
-                    CASE 
-                        WHEN TIMESTAMPDIFF(YEAR, birth_date, CURDATE()) < 25 THEN '18-24'
-                        WHEN TIMESTAMPDIFF(YEAR, birth_date, CURDATE()) < 35 THEN '25-34'
-                        WHEN TIMESTAMPDIFF(YEAR, birth_date, CURDATE()) < 45 THEN '35-44'
-                        WHEN TIMESTAMPDIFF(YEAR, birth_date, CURDATE()) < 55 THEN '45-54'
+                    CASE
+                        WHEN date_part('year', age(CURRENT_DATE, birth_date)) < 25 THEN '18-24'
+                        WHEN date_part('year', age(CURRENT_DATE, birth_date)) < 35 THEN '25-34'
+                        WHEN date_part('year', age(CURRENT_DATE, birth_date)) < 45 THEN '35-44'
+                        WHEN date_part('year', age(CURRENT_DATE, birth_date)) < 55 THEN '45-54'
                         ELSE '55+'
                     END
                 ");
                 break;
             case 'seniority_group':
                 $query->selectRaw("
-                    CASE 
-                        WHEN TIMESTAMPDIFF(YEAR, hire_date, CURDATE()) < 1 THEN '0-1 Yıl'
-                        WHEN TIMESTAMPDIFF(YEAR, hire_date, CURDATE()) < 3 THEN '1-3 Yıl'
-                        WHEN TIMESTAMPDIFF(YEAR, hire_date, CURDATE()) < 5 THEN '3-5 Yıl'
-                        WHEN TIMESTAMPDIFF(YEAR, hire_date, CURDATE()) < 10 THEN '5-10 Yıl'
+                    CASE
+                        WHEN date_part('year', age(CURRENT_DATE, hire_date)) < 1 THEN '0-1 Yıl'
+                        WHEN date_part('year', age(CURRENT_DATE, hire_date)) < 3 THEN '1-3 Yıl'
+                        WHEN date_part('year', age(CURRENT_DATE, hire_date)) < 5 THEN '3-5 Yıl'
+                        WHEN date_part('year', age(CURRENT_DATE, hire_date)) < 10 THEN '5-10 Yıl'
                         ELSE '10+ Yıl'
                     END as dimension_key
                 ");
                 $query->groupByRaw("
-                    CASE 
-                        WHEN TIMESTAMPDIFF(YEAR, hire_date, CURDATE()) < 1 THEN '0-1 Yıl'
-                        WHEN TIMESTAMPDIFF(YEAR, hire_date, CURDATE()) < 3 THEN '1-3 Yıl'
-                        WHEN TIMESTAMPDIFF(YEAR, hire_date, CURDATE()) < 5 THEN '3-5 Yıl'
-                        WHEN TIMESTAMPDIFF(YEAR, hire_date, CURDATE()) < 10 THEN '5-10 Yıl'
+                    CASE
+                        WHEN date_part('year', age(CURRENT_DATE, hire_date)) < 1 THEN '0-1 Yıl'
+                        WHEN date_part('year', age(CURRENT_DATE, hire_date)) < 3 THEN '1-3 Yıl'
+                        WHEN date_part('year', age(CURRENT_DATE, hire_date)) < 5 THEN '3-5 Yıl'
+                        WHEN date_part('year', age(CURRENT_DATE, hire_date)) < 10 THEN '5-10 Yıl'
                         ELSE '10+ Yıl'
                     END
                 ");
@@ -324,10 +324,10 @@ class EmployeeReportController extends BaseController
                 $query->selectRaw('COUNT(*) as value');
                 break;
             case 'avg_age':
-                $query->selectRaw('AVG(TIMESTAMPDIFF(YEAR, birth_date, CURDATE())) as value');
+                $query->selectRaw("AVG(date_part('year', age(CURRENT_DATE, birth_date))) as value");
                 break;
             case 'avg_seniority':
-                $query->selectRaw('AVG(TIMESTAMPDIFF(YEAR, hire_date, CURDATE())) as value');
+                $query->selectRaw("AVG(date_part('year', age(CURRENT_DATE, hire_date))) as value");
                 break;
             case 'avg_gross_salary':
                 $query->selectRaw('AVG(gross_salary) as value');

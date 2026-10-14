@@ -1184,7 +1184,7 @@ class EmployeeController extends BaseController
             $byDepartment = Employee::where('employees.company_id', $companyId)
                 ->where('employees.status', 'active')
                 ->leftJoin('departments', 'employees.department_id', '=', 'departments.id')
-                ->selectRaw('COALESCE(departments.name, "Departman Atanmamış") as name, count(*) as count')
+                ->selectRaw("COALESCE(departments.name, 'Departman Atanmamış') as name, count(*) as count")
                 ->groupBy('departments.id', 'departments.name')
                 ->orderByDesc('count')
                 ->get()
@@ -1208,7 +1208,7 @@ class EmployeeController extends BaseController
             // Cinsiyete göre dağılım
             $byGender = Employee::where('company_id', $companyId)
                 ->where('status', 'active')
-                ->selectRaw('COALESCE(gender, "unspecified") as gender, count(*) as count')
+                ->selectRaw("COALESCE(gender, 'unspecified') as gender, count(*) as count")
                 ->groupBy('gender')
                 ->get()
                 ->map(function ($item) {
@@ -1220,16 +1220,16 @@ class EmployeeController extends BaseController
             $byAgeGroup = Employee::where('company_id', $companyId)
                 ->where('status', 'active')
                 ->whereNotNull('birth_date')
-                ->selectRaw('
-                    CASE 
-                        WHEN TIMESTAMPDIFF(YEAR, birth_date, CURDATE()) < 25 THEN "18-24"
-                        WHEN TIMESTAMPDIFF(YEAR, birth_date, CURDATE()) < 35 THEN "25-34"
-                        WHEN TIMESTAMPDIFF(YEAR, birth_date, CURDATE()) < 45 THEN "35-44"
-                        WHEN TIMESTAMPDIFF(YEAR, birth_date, CURDATE()) < 55 THEN "45-54"
-                        ELSE "55+"
-                    END as `group`,
+                ->selectRaw("
+                    CASE
+                        WHEN date_part('year', age(CURRENT_DATE, birth_date)) < 25 THEN '18-24'
+                        WHEN date_part('year', age(CURRENT_DATE, birth_date)) < 35 THEN '25-34'
+                        WHEN date_part('year', age(CURRENT_DATE, birth_date)) < 45 THEN '35-44'
+                        WHEN date_part('year', age(CURRENT_DATE, birth_date)) < 55 THEN '45-54'
+                        ELSE '55+'
+                    END as \"group\",
                     count(*) as count
-                ')
+                ")
                 ->groupBy('group')
                 ->get()
                 ->map(function ($item) {
@@ -1241,16 +1241,16 @@ class EmployeeController extends BaseController
             $bySeniority = Employee::where('company_id', $companyId)
                 ->where('status', 'active')
                 ->whereNotNull('hire_date')
-                ->selectRaw('
-                    CASE 
-                        WHEN TIMESTAMPDIFF(YEAR, hire_date, CURDATE()) < 1 THEN "0-1 Yıl"
-                        WHEN TIMESTAMPDIFF(YEAR, hire_date, CURDATE()) < 3 THEN "1-3 Yıl"
-                        WHEN TIMESTAMPDIFF(YEAR, hire_date, CURDATE()) < 5 THEN "3-5 Yıl"
-                        WHEN TIMESTAMPDIFF(YEAR, hire_date, CURDATE()) < 10 THEN "5-10 Yıl"
-                        ELSE "10+ Yıl"
-                    END as `range`,
+                ->selectRaw("
+                    CASE
+                        WHEN date_part('year', age(CURRENT_DATE, hire_date)) < 1 THEN '0-1 Yıl'
+                        WHEN date_part('year', age(CURRENT_DATE, hire_date)) < 3 THEN '1-3 Yıl'
+                        WHEN date_part('year', age(CURRENT_DATE, hire_date)) < 5 THEN '3-5 Yıl'
+                        WHEN date_part('year', age(CURRENT_DATE, hire_date)) < 10 THEN '5-10 Yıl'
+                        ELSE '10+ Yıl'
+                    END as \"range\",
                     count(*) as count
-                ')
+                ")
                 ->groupBy('range')
                 ->get()
                 ->map(function ($item) {

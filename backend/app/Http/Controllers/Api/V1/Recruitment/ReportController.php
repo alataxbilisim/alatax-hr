@@ -178,16 +178,16 @@ class ReportController extends BaseController
         $interval = $request->get('interval', 'month'); // day, week, month
 
         $dateFormat = match ($interval) {
-            'day' => '%Y-%m-%d',
-            'week' => '%Y-%u',
-            'month' => '%Y-%m',
-            default => '%Y-%m',
+            'day' => 'YYYY-MM-DD',
+            'week' => 'IYYY-IW',
+            'month' => 'YYYY-MM',
+            default => 'YYYY-MM',
         };
 
         $trends = JobApplication::where('company_id', $companyId)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->select(
-                DB::raw("DATE_FORMAT(created_at, '{$dateFormat}') as period"),
+                DB::raw("to_char(created_at, '{$dateFormat}') as period"),
                 DB::raw('count(*) as total'),
                 DB::raw("SUM(CASE WHEN status = 'hired' THEN 1 ELSE 0 END) as hired"),
                 DB::raw("SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected")

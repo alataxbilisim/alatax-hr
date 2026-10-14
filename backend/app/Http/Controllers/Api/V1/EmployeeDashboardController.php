@@ -347,22 +347,22 @@ class EmployeeDashboardController extends Controller
 
         // Hesaplanan boyutlar için özel işlem
         $dimensionSelect = match ($dimensionField) {
-            'hire_year' => DB::raw('YEAR(hire_date) as dimension'),
-            'birth_year' => DB::raw('YEAR(birth_date) as dimension'),
+            'hire_year' => DB::raw('CAST(EXTRACT(YEAR FROM hire_date) AS integer) as dimension'),
+            'birth_year' => DB::raw('CAST(EXTRACT(YEAR FROM birth_date) AS integer) as dimension'),
             default => $dimensionField.' as dimension',
         };
 
         $dimensionGroup = match ($dimensionField) {
-            'hire_year' => DB::raw('YEAR(hire_date)'),
-            'birth_year' => DB::raw('YEAR(birth_date)'),
+            'hire_year' => DB::raw('CAST(EXTRACT(YEAR FROM hire_date) AS integer)'),
+            'birth_year' => DB::raw('CAST(EXTRACT(YEAR FROM birth_date) AS integer)'),
             default => $dimensionField,
         };
 
         // Hesaplanan metrikler için özel işlem
         $selectRaw = match ($measureField) {
             'count' => 'COUNT(*) as value',
-            'age' => 'AVG(TIMESTAMPDIFF(YEAR, birth_date, CURDATE())) as value',
-            'tenure' => 'AVG(TIMESTAMPDIFF(YEAR, hire_date, CURDATE())) as value',
+            'age' => "AVG(date_part('year', age(CURRENT_DATE, birth_date))) as value",
+            'tenure' => "AVG(date_part('year', age(CURRENT_DATE, hire_date))) as value",
             default => "AVG($measureField) as value",
         };
 
