@@ -316,9 +316,9 @@ class EmployeeDashboardController extends Controller
      */
     private function getKPIData($query, string $measure): array
     {
-        $measureField = $this->getMeasureField($measure);
+        $expression = $this->measureExpression($this->getMeasureField($measure));
 
-        if ($measureField === 'count') {
+        if ($expression === null) {
             return [
                 'total' => $query->count(),
                 'label' => 'Toplam Personel',
@@ -327,18 +327,18 @@ class EmployeeDashboardController extends Controller
 
         $stats = $query->selectRaw("
             COUNT(*) as total,
-            AVG($measureField) as average,
-            MIN($measureField) as min_value,
-            MAX($measureField) as max_value,
-            SUM($measureField) as sum_value
+            AVG($expression) as average,
+            MIN($expression) as min_value,
+            MAX($expression) as max_value,
+            SUM($expression) as sum_value
         ")->first();
 
         return [
-            'total' => $stats->total ?? 0,
-            'average' => round($stats->average ?? 0, 2),
-            'min' => $stats->min_value ?? 0,
-            'max' => $stats->max_value ?? 0,
-            'sum' => $stats->sum_value ?? 0,
+            'total' => (int) ($stats->total ?? 0),
+            'average' => round((float) ($stats->average ?? 0), 2),
+            'min' => (float) ($stats->min_value ?? 0),
+            'max' => (float) ($stats->max_value ?? 0),
+            'sum' => (float) ($stats->sum_value ?? 0),
         ];
     }
 
@@ -363,13 +363,8 @@ class EmployeeDashboardController extends Controller
             default => $dimensionField,
         };
 
-        // Hesaplanan metrikler için özel işlem
-        $selectRaw = match ($measureField) {
-            'count' => 'COUNT(*) as value',
-            'age' => "AVG(date_part('year', age(CURRENT_DATE, birth_date))) as value",
-            'tenure' => "AVG(date_part('year', age(CURRENT_DATE, hire_date))) as value",
-            default => "AVG($measureField) as value",
-        };
+        $expression = $this->measureExpression($measureField);
+        $selectRaw = $expression === null ? 'COUNT(*) as value' : "AVG($expression) as value";
 
         $results = $query->clone()
             ->selectRaw(is_string($dimensionSelect) ? $dimensionSelect : $dimensionSelect->getValue(DB::connection()->getQueryGrammar()))
@@ -439,5 +434,19 @@ class EmployeeDashboardController extends Controller
         ];
 
         return $map[$measure] ?? 'count';
+    }
+
+    /**
+     * Metrik alanının SQL ifadesi; null = satır sayımı. `age` / `tenure` employees'ta kolon
+     * değil, doğum / işe giriş tarihinden hesaplanır (PostgreSQL).
+     */
+    private function measureExpression(string $measureField): ?string
+    {
+        return match ($measureField) {
+            'count' => null,
+            'age' => "date_part('year', age(CURRENT_DATE, birth_date))",
+            'tenure' => "date_part('year', age(CURRENT_DATE, hire_date))",
+            default => $measureField,
+        };
     }
 }
