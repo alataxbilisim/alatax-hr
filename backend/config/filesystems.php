@@ -38,6 +38,24 @@ return [
             'report' => false,
         ],
 
+        // Kişisel veri içeren dosyalar (personel belgeleri, bordrolar). Asla public URL ile sunulmaz;
+        // indirme her zaman yetki kontrollü controller üzerinden. S3/MinIO: PRIVATE_DISK_DRIVER=s3
+        // + PRIVATE_DISK_ROOT (bucket içi önek) + AWS_* değişkenleri.
+        'private' => [
+            'driver' => env('PRIVATE_DISK_DRIVER', 'local'),
+            'root' => env('PRIVATE_DISK_ROOT', storage_path('app/private')),
+            'visibility' => 'private',
+            'serve' => false,
+            'throw' => true,
+            'report' => false,
+            'key' => env('AWS_ACCESS_KEY_ID'),
+            'secret' => env('AWS_SECRET_ACCESS_KEY'),
+            'region' => env('AWS_DEFAULT_REGION'),
+            'bucket' => env('AWS_BUCKET'),
+            'endpoint' => env('AWS_ENDPOINT'),
+            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
