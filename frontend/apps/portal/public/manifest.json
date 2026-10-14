@@ -1,6 +1,6 @@
 {
-  "name": "ALATAX Personel Portalı",
-  "short_name": "ALATAX Portal",
+  "name": "Dobedan Personel Portalı",
+  "short_name": "Dobedan Portal",
   "description": "Personel self-servis portalı - İzin, puantaj, masraf ve daha fazlası",
   "start_url": "/",
   "display": "standalone",

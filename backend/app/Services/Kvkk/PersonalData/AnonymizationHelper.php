@@ -10,7 +10,7 @@ final class AnonymizationHelper
 {
     public static function anonymLabel(int $id): string
     {
-        return 'Anonim-'.substr(hash('sha256', 'alatax-kvkk-'.$id), 0, 10);
+        return 'Anonim-'.substr(hash('sha256', 'dobedan-kvkk-'.$id), 0, 10);
     }
 
     public static function yearOnly(?string $date): ?string

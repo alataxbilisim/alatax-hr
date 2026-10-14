@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Gerçek eşzamanlı punch: N worker process × AttendanceClockService
-# docker exec -e DB_DATABASE=alatax_hr_testing alatax-hr-app bash scripts/uzun-kosu/pdks-parallel.sh
+# docker exec -e DB_DATABASE=dobedan_hr_testing dobedan-hr-app bash scripts/uzun-kosu/pdks-parallel.sh
 set -euo pipefail
 cd /var/www/html
-export DB_DATABASE=alatax_hr_testing
+export DB_DATABASE=dobedan_hr_testing
 N="${1:-500}"
 WORKERS="${2:-50}"
 OUT="scripts/uzun-kosu/pdks-parallel-results.txt"

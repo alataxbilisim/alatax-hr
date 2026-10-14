@@ -1,4 +1,4 @@
-# ALATAX HR
+# Dobedan HR
 
 Türkiye odaklı multi-tenant B2B HR SaaS.
 
@@ -76,9 +76,9 @@ docker compose exec redis redis-cli ping
 ```bash
 cd frontend
 pnpm install
-pnpm --filter @alatax/superadmin dev   # :3001
-pnpm --filter @alatax/company dev      # :3002
-pnpm --filter @alatax/portal dev       # :3003
+pnpm --filter @dobedan/superadmin dev   # :3001
+pnpm --filter @dobedan/company dev      # :3002
+pnpm --filter @dobedan/portal dev       # :3003
 ```
 
 SPA’ların API base URL’i `http://localhost:8000` olmalı.

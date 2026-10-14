@@ -1,8 +1,8 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.alatax.portal',
-  appName: 'ALATAX Portal',
+  appId: 'com.dobedan.portal',
+  appName: 'Dobedan Portal',
   webDir: 'dist',
   server: {
     androidScheme: 'https',

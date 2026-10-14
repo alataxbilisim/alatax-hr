@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# ALATAX HR — Frontend Vite'ları Ubuntu'da SSH bağımsız çalıştırır (nohup).
+# Dobedan HR — Frontend Vite'ları Ubuntu'da SSH bağımsız çalıştırır (nohup).
 # PC / terminal kapanınca süreçler ayakta kalır.
 #
 # Kullanım (Ubuntu SSH'da):
-#   cd ~/alatax-hr && bash scripts/ubuntu-frontend-start.sh
+#   cd ~/dobedan-hr && bash scripts/ubuntu-frontend-start.sh
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -52,9 +52,9 @@ start_one() {
 # Node/pnpm PATH (login shell dışı nohup için)
 export PATH="${PATH}:/usr/local/bin:$HOME/.local/bin"
 
-start_one "@alatax/superadmin" superadmin 3001
-start_one "@alatax/company" company 3002
-start_one "@alatax/portal" portal 3003
+start_one "@dobedan/superadmin" superadmin 3001
+start_one "@dobedan/company" company 3002
+start_one "@dobedan/portal" portal 3003
 
 sleep 2
 echo ""

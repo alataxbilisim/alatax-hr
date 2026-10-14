@@ -1,10 +1,10 @@
 <?php
 
 /**
- * UZUN KOŞU adım 4 — PDKS eşzamanlılık (service-level, alatax_hr_testing).
+ * UZUN KOŞU adım 4 — PDKS eşzamanlılık (service-level, dobedan_hr_testing).
  * 500 farklı personel aynı anda punch; + aynı personel 5× ardışık.
  *
- * docker exec -e DB_DATABASE=alatax_hr_testing alatax-hr-app php scripts/uzun-kosu/pdks-concurrency.php
+ * docker exec -e DB_DATABASE=dobedan_hr_testing dobedan-hr-app php scripts/uzun-kosu/pdks-concurrency.php
  */
 
 declare(strict_types=1);
@@ -21,7 +21,7 @@ $app = require $backend.'/bootstrap/app.php';
 $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
 $dbName = (string) config('database.connections.'.config('database.default').'.database');
-if ($dbName !== 'alatax_hr_testing') {
+if ($dbName !== 'dobedan_hr_testing') {
     fwrite(STDERR, "ABORT: need testing DB\n");
     exit(1);
 }

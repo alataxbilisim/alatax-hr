@@ -1,4 +1,4 @@
-# ALATAX Portal - Mobil Uygulama Build Rehberi
+# Dobedan Portal - Mobil Uygulama Build Rehberi
 
 ## Gereksinimler
 
@@ -27,7 +27,7 @@ npm install @capacitor/geolocation @capacitor/camera @capacitor/keyboard
 ### 2. Capacitor'u Başlat
 
 ```bash
-npx cap init "ALATAX Portal" com.alatax.portal
+npx cap init "Dobedan Portal" com.dobedan.portal
 ```
 
 ### 3. Web Uygulamasını Build Et

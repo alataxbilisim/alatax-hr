@@ -8,7 +8,7 @@ use Illuminate\Console\Command;
 
 class SeedCompanyDefaultsCommand extends Command
 {
-    protected $signature = 'alatax:seed-defaults';
+    protected $signature = 'dobedan:seed-defaults';
 
     protected $description = 'Mevcut firmalara TR varsayılan izin türleri, hakediş politikası ve resmi tatilleri idempotent seed eder';
 

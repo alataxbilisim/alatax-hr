@@ -130,8 +130,8 @@ class DefaultCompanyHrSeedTest extends TestCase
         $policiesBefore = AccrualPolicy::withoutCompanyScope()->where('company_id', $company->id)->count();
         $holidaysBefore = Holiday::query()->whereNull('company_id')->count();
 
-        Artisan::call('alatax:seed-defaults');
-        Artisan::call('alatax:seed-defaults');
+        Artisan::call('dobedan:seed-defaults');
+        Artisan::call('dobedan:seed-defaults');
 
         $this->assertSame($typesBefore, LeaveType::withoutCompanyScope()->where('company_id', $company->id)->count());
         $this->assertSame($policiesBefore, AccrualPolicy::withoutCompanyScope()->where('company_id', $company->id)->count());

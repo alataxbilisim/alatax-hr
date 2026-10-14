@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Frontend Vite süreçlerini durdurur.
-# Kullanım: cd ~/alatax-hr && bash scripts/ubuntu-frontend-stop.sh
+# Kullanım: cd ~/dobedan-hr && bash scripts/ubuntu-frontend-stop.sh
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

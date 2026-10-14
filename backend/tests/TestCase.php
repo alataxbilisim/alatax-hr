@@ -15,7 +15,7 @@ use Spatie\Permission\PermissionRegistrar;
 abstract class TestCase extends BaseTestCase
 {
     /** Testlerin bağlanmasına izin verilen tek veritabanı adı. */
-    private const TESTING_DATABASE = 'alatax_hr_testing';
+    private const TESTING_DATABASE = 'dobedan_hr_testing';
 
     protected function setUp(): void
     {
@@ -88,7 +88,7 @@ abstract class TestCase extends BaseTestCase
     }
 
     /**
-     * Dev DB (alatax_hr) üzerinde test çalıştırmayı gürültülü şekilde reddet.
+     * Dev DB (dobedan_hr) üzerinde test çalıştırmayı gürültülü şekilde reddet.
      */
     protected function assertUsingTestingDatabase(): void
     {

@@ -80,7 +80,7 @@ const LoginPage: React.FC = () => {
                   id="email"
                   name="email"
                   className="form-control"
-                  placeholder="admin@alataxbilisim.com"
+                  placeholder="admin@dobedan.com"
                   value={formData.email}
                   onChange={handleChange}
                   required

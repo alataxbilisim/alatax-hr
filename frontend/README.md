@@ -1,6 +1,6 @@
-# ALATAX HR Frontend - Monorepo
+# Dobedan HR Frontend - Monorepo
 
-Bu proje, ALATAX HR SaaS platformu için **3 ayrı frontend uygulaması** içeren bir monorepo yapısıdır.
+Bu proje, Dobedan HR SaaS platformu için **3 ayrı frontend uygulaması** içeren bir monorepo yapısıdır.
 
 ## 📁 Proje Yapısı
 
@@ -54,7 +54,7 @@ Bu proje **pnpm workspaces** kullanır. Tüm bağımlılıklar root seviyesinde 
 pnpm add <package-name> -w
 
 # Belirli bir uygulamaya
-pnpm add <package-name> --filter @alatax/superadmin
+pnpm add <package-name> --filter @dobedan/superadmin
 ```
 
 ## 🏗️ Build

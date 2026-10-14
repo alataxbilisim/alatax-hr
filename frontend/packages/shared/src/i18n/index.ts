@@ -6,7 +6,7 @@ import authTr from './locales/tr/auth.json';
 import validationTr from './locales/tr/validation.json';
 
 /**
- * ALATAX HR i18n — tek kaynak (@alatax/shared).
+ * Dobedan HR i18n — tek kaynak (@dobedan/shared).
  * Varsayılan dil: tr. Dil değiştirici UI yok; ileride preferences + switcher eklenecek.
  * Yeni UI metni: t('namespace:key') — hardcode yasak (.cursorrules).
  */

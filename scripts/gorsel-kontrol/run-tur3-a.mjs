@@ -85,7 +85,7 @@ async function readFields(page) {
       }
     }
     const kpi = document.querySelector('.stat-card-value')?.textContent?.trim() || '';
-    const companyId = localStorage.getItem('alatax_company_id') || '';
+    const companyId = localStorage.getItem('dobedan_company_id') || '';
     return { label, selector, subtitle, firmaCard, kpi, companyId };
   });
 }
@@ -107,7 +107,7 @@ async function switchToCompanyId(page, targetId) {
   for (let i = 0; i < count; i++) {
     await opts.nth(i).click();
     await page.waitForTimeout(400);
-    const id = await page.evaluate(() => localStorage.getItem('alatax_company_id'));
+    const id = await page.evaluate(() => localStorage.getItem('dobedan_company_id'));
     if (id === String(targetId)) return `id=${id}`;
     if (i < count - 1) {
       await page.click('#header-company-selector');
@@ -177,7 +177,7 @@ async function main() {
   }
 
   // Mevcut id'yi oku; 69'a sabitle
-  let current = await page.evaluate(() => localStorage.getItem('alatax_company_id'));
+  let current = await page.evaluate(() => localStorage.getItem('dobedan_company_id'));
   if (current !== '69') {
     await switchToCompanyId(page, 69);
     await settleDashboard(page);

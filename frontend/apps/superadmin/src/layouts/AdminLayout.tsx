@@ -47,7 +47,7 @@ const AdminLayout: React.FC = () => {
       <aside className="sidebar">
         <div className="sidebar-header">
           <div className="sidebar-brand">
-            <h1 className="admin-brand">ALATAX</h1>
+            <h1 className="admin-brand">Dobedan</h1>
             <span className="sidebar-subtitle">SuperAdmin</span>
           </div>
         </div>

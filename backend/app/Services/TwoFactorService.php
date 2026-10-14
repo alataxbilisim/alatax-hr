@@ -69,7 +69,7 @@ class TwoFactorService
 
     public function getOtpAuthUrl(User $user, string $secret): string
     {
-        $issuer = $user->company?->name ?? config('app.name', 'ALATAX HR');
+        $issuer = $user->company?->name ?? config('app.name', 'Dobedan HR');
 
         return $this->google2fa->getQRCodeUrl($issuer, $user->email, $secret);
     }

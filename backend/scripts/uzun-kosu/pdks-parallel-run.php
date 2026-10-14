@@ -2,7 +2,7 @@
 
 /**
  * Gerçek çok süreçli punch — proc_open ile N worker.
- * docker exec -e DB_DATABASE=alatax_hr_testing alatax-hr-app php scripts/uzun-kosu/pdks-parallel-run.php
+ * docker exec -e DB_DATABASE=dobedan_hr_testing dobedan-hr-app php scripts/uzun-kosu/pdks-parallel-run.php
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ $lat = [];
 
 $launch = function (int $uid) use ($php, $script, &$running): void {
     $cmd = sprintf(
-        'DB_DATABASE=alatax_hr_testing %s %s %d',
+        'DB_DATABASE=dobedan_hr_testing %s %s %d',
         escapeshellarg($php),
         escapeshellarg($script),
         $uid

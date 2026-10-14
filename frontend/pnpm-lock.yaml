@@ -42,7 +42,7 @@ importers:
 
   apps/company:
     dependencies:
-      '@alatax/shared':
+      '@dobedan/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       '@hookform/resolvers':
@@ -172,7 +172,7 @@ importers:
 
   apps/portal:
     dependencies:
-      '@alatax/shared':
+      '@dobedan/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       '@hookform/resolvers':
@@ -257,7 +257,7 @@ importers:
 
   apps/superadmin:
     dependencies:
-      '@alatax/shared':
+      '@dobedan/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       '@hookform/resolvers':

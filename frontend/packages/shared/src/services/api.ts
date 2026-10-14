@@ -27,12 +27,12 @@ api.interceptors.request.use(
       }
     }
     // Company panel şube seçici — localStorage (Redux ile senkron)
-    const branchId = localStorage.getItem('alatax_branch_id');
+    const branchId = localStorage.getItem('dobedan_branch_id');
     if (branchId && !config.headers['X-Branch-Id']) {
       config.headers['X-Branch-Id'] = branchId;
     }
     // Company panel şirket seçici (G1) — localStorage (Redux ile senkron)
-    const companyId = localStorage.getItem('alatax_company_id');
+    const companyId = localStorage.getItem('dobedan_company_id');
     if (companyId && !config.headers['X-Company-Id']) {
       config.headers['X-Company-Id'] = companyId;
     }

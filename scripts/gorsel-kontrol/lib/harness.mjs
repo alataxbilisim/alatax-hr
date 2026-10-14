@@ -116,7 +116,7 @@ export async function assertSession(page, expectedEmailOrNamePart) {
       document.querySelector('.user-btn')?.textContent?.trim() ||
       '';
     const label = document.querySelector('.header-company-label')?.textContent?.trim() || '';
-    const token = !!(localStorage.getItem('token') || localStorage.getItem('auth_token') || localStorage.getItem('alatax_token'));
+    const token = !!(localStorage.getItem('token') || localStorage.getItem('auth_token') || localStorage.getItem('dobedan_token'));
     return { name, label, path: location.pathname, token };
   });
   // Başarılı oturum: login değil + (token veya şirket etiketi veya kullanıcı adı)

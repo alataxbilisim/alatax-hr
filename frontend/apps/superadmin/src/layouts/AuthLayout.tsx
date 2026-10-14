@@ -15,7 +15,7 @@ const AuthLayout: React.FC = () => {
     <div className="auth-layout">
       <div className="auth-container">
         <div className="auth-brand">
-          <h1 className="admin-brand">ALATAX</h1>
+          <h1 className="admin-brand">Dobedan</h1>
           <p>SuperAdmin Panel</p>
         </div>
         <Outlet />

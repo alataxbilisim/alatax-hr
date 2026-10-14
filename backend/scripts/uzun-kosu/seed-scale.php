@@ -1,10 +1,10 @@
 <?php
 
 /**
- * UZUN KOŞU — ölçekli sentetik veri (yalnız alatax_hr_testing).
+ * UZUN KOŞU — ölçekli sentetik veri (yalnız dobedan_hr_testing).
  * Idempotent: slug scale-co-{1,2,3} silinip yeniden üretilir.
  *
- * docker exec -e DB_DATABASE=alatax_hr_testing alatax-hr-app php scripts/uzun-kosu/seed-scale.php
+ * docker exec -e DB_DATABASE=dobedan_hr_testing dobedan-hr-app php scripts/uzun-kosu/seed-scale.php
  */
 
 declare(strict_types=1);
@@ -19,8 +19,8 @@ $app = require $backend.'/bootstrap/app.php';
 $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
 $dbName = (string) config('database.connections.'.config('database.default').'.database');
-if ($dbName !== 'alatax_hr_testing') {
-    fwrite(STDERR, "ABORT: DB must be alatax_hr_testing, got [{$dbName}]\n");
+if ($dbName !== 'dobedan_hr_testing') {
+    fwrite(STDERR, "ABORT: DB must be dobedan_hr_testing, got [{$dbName}]\n");
     exit(1);
 }
 

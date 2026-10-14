@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Gerçek HTTP paralel QR punch — scale kullanıcılarıyla (alatax_hr_testing API).
+# Gerçek HTTP paralel QR punch — scale kullanıcılarıyla (dobedan_hr_testing API).
 # Kullanım: APP URL + önceden üretilmiş token listesi gerekir.
 # Bu script ölçüm turunda token/kiosk akışı yoksa atlanır; service-level pdks-concurrency.php birincil.
 

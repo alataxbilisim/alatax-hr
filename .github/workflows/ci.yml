@@ -22,13 +22,13 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_DB: alatax_hr_testing
-          POSTGRES_USER: alatax
+          POSTGRES_DB: dobedan_hr_testing
+          POSTGRES_USER: dobedan
           POSTGRES_PASSWORD: secret
         ports:
           - 5432:5432
         options: >-
-          --health-cmd="pg_isready -U alatax -d alatax_hr_testing"
+          --health-cmd="pg_isready -U dobedan -d dobedan_hr_testing"
           --health-interval=5s
           --health-timeout=5s
           --health-retries=20
@@ -64,8 +64,8 @@ jobs:
             echo "DB_CONNECTION=pgsql"
             echo "DB_HOST=127.0.0.1"
             echo "DB_PORT=5432"
-            echo "DB_DATABASE=alatax_hr_testing"
-            echo "DB_USERNAME=alatax"
+            echo "DB_DATABASE=dobedan_hr_testing"
+            echo "DB_USERNAME=dobedan"
             echo "DB_PASSWORD=secret"
             echo "CACHE_STORE=array"
             echo "QUEUE_CONNECTION=sync"
@@ -85,8 +85,8 @@ jobs:
           DB_CONNECTION: pgsql
           DB_HOST: 127.0.0.1
           DB_PORT: 5432
-          DB_DATABASE: alatax_hr_testing
-          DB_USERNAME: alatax
+          DB_DATABASE: dobedan_hr_testing
+          DB_USERNAME: dobedan
           DB_PASSWORD: secret
 
       - name: Migrate again on existing schema (idempotent)
@@ -95,8 +95,8 @@ jobs:
           DB_CONNECTION: pgsql
           DB_HOST: 127.0.0.1
           DB_PORT: 5432
-          DB_DATABASE: alatax_hr_testing
-          DB_USERNAME: alatax
+          DB_DATABASE: dobedan_hr_testing
+          DB_USERNAME: dobedan
           DB_PASSWORD: secret
 
       - name: Pint (style check)
@@ -108,8 +108,8 @@ jobs:
           DB_CONNECTION: pgsql
           DB_HOST: 127.0.0.1
           DB_PORT: 5432
-          DB_DATABASE: alatax_hr_testing
-          DB_USERNAME: alatax
+          DB_DATABASE: dobedan_hr_testing
+          DB_USERNAME: dobedan
           DB_PASSWORD: secret
 
   frontend:

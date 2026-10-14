@@ -64,7 +64,7 @@ export async function runBlockG(page, results, seq) {
     await page.waitForSelector('#header-company-selector', { timeout: 20000 });
 
     const before = await page.evaluate(() => ({
-      companyId: localStorage.getItem('alatax_company_id'),
+      companyId: localStorage.getItem('dobedan_company_id'),
       label: document.querySelector('.header-company-label')?.textContent || '',
     }));
 
@@ -97,7 +97,7 @@ export async function runBlockG(page, results, seq) {
       void itemVal;
       await options.nth(i).click();
       await page.waitForTimeout(600);
-      const now = await page.evaluate(() => localStorage.getItem('alatax_company_id'));
+      const now = await page.evaluate(() => localStorage.getItem('dobedan_company_id'));
       if (now && now !== before.companyId) {
         switched = true;
         break;
@@ -116,7 +116,7 @@ export async function runBlockG(page, results, seq) {
     await page.waitForTimeout(500);
 
     const after = await page.evaluate(() => ({
-      companyId: localStorage.getItem('alatax_company_id'),
+      companyId: localStorage.getItem('dobedan_company_id'),
       label: document.querySelector('.header-company-label')?.textContent || '',
       url: location.pathname,
     }));
@@ -249,24 +249,24 @@ export async function runBlockG(page, results, seq) {
 
   // G7 — localStorage persistence
   {
-    await page.waitForFunction(() => !!localStorage.getItem('alatax_company_id'), null, {
+    await page.waitForFunction(() => !!localStorage.getItem('dobedan_company_id'), null, {
       timeout: 15000,
     }).catch(() => null);
-    const before = await page.evaluate(() => localStorage.getItem('alatax_company_id'));
+    const before = await page.evaluate(() => localStorage.getItem('dobedan_company_id'));
     await page.reload({ waitUntil: 'domcontentloaded' });
     await page.waitForSelector('.header-company-label', { timeout: 30000 });
-    await page.waitForFunction(() => !!localStorage.getItem('alatax_company_id'), null, {
+    await page.waitForFunction(() => !!localStorage.getItem('dobedan_company_id'), null, {
       timeout: 15000,
     }).catch(() => null);
     const after = await page.evaluate(() => ({
-      id: localStorage.getItem('alatax_company_id'),
+      id: localStorage.getItem('dobedan_company_id'),
       label: document.querySelector('.header-company-label')?.textContent || '',
     }));
     const ss = await screenshot(page, `${String(n++).padStart(2, '0')}-G7-localstorage-reload`);
     const ok = !!before && before === after.id;
     results.push({
       id: 'G7',
-      title: 'localStorage.alatax_company_id reload korunuyor',
+      title: 'localStorage.dobedan_company_id reload korunuyor',
       status: ok ? 'pass' : 'fail',
       severity: ok ? undefined : '🔴',
       measurement: `before=${before}; after=${after.id}; label="${after.label}"`,

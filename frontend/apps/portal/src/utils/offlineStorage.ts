@@ -3,7 +3,7 @@
  * IndexedDB wrapper for offline data persistence
  */
 
-const DB_NAME = 'alatax-offline-db';
+const DB_NAME = 'dobedan-offline-db';
 const DB_VERSION = 1;
 
 interface OfflineRecord {

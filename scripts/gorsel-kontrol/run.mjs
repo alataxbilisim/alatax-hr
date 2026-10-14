@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * ALATAX HR — Görsel kontrol otomasyonu
+ * Dobedan HR — Görsel kontrol otomasyonu
  * Kullanım: node run.mjs [--block G|P|T|L|Y|all]
  */
 import { chromium } from 'playwright';

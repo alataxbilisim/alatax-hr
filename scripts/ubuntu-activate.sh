@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# ALATAX HR — Ubuntu'da git'ten son hali çek + Docker + migrate + frontend (nohup)
-# Kullanım: cd ~/alatax-hr && bash scripts/ubuntu-activate.sh [branch]
+# Dobedan HR — Ubuntu'da git'ten son hali çek + Docker + migrate + frontend (nohup)
+# Kullanım: cd ~/dobedan-hr && bash scripts/ubuntu-activate.sh [branch]
 set -euo pipefail
 
 BRANCH="${1:-faz4-form-engine}"

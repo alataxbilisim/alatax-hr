@@ -1,8 +1,8 @@
 <?php
 
 /**
- * UZUN KOŞU adım 3 — sorgu sağlığı (alatax_hr_testing + scale-co-* verisi).
- * docker exec -e DB_DATABASE=alatax_hr_testing alatax-hr-app php scripts/uzun-kosu/query-health.php
+ * UZUN KOŞU adım 3 — sorgu sağlığı (dobedan_hr_testing + scale-co-* verisi).
+ * docker exec -e DB_DATABASE=dobedan_hr_testing dobedan-hr-app php scripts/uzun-kosu/query-health.php
  */
 
 declare(strict_types=1);
@@ -20,8 +20,8 @@ $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
 
 $dbName = (string) config('database.connections.'.config('database.default').'.database');
-if ($dbName !== 'alatax_hr_testing') {
-    fwrite(STDERR, "ABORT: need alatax_hr_testing, got {$dbName}\n");
+if ($dbName !== 'dobedan_hr_testing') {
+    fwrite(STDERR, "ABORT: need dobedan_hr_testing, got {$dbName}\n");
     exit(1);
 }
 

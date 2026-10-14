@@ -1,7 +1,7 @@
 FROM php:8.2-fpm-bookworm
 
-LABEL org.opencontainers.image.title="alatax-hr-app" \
-      org.opencontainers.image.description="ALATAX HR Laravel PHP-FPM (dev)"
+LABEL org.opencontainers.image.title="dobedan-hr-app" \
+      org.opencontainers.image.description="Dobedan HR Laravel PHP-FPM (dev)"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         git \

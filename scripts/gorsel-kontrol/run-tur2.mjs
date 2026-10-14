@@ -79,7 +79,7 @@ async function main() {
       pushFailSession('G3', 'A→B şirket değişimi', sess.measurement);
     } else {
       const before = await page.evaluate(() => ({
-        id: localStorage.getItem('alatax_company_id'),
+        id: localStorage.getItem('dobedan_company_id'),
         label: document.querySelector('.header-company-label')?.textContent || '',
         title: document.querySelector('.page-title')?.textContent || '',
         companyCard: document.body.innerText.match(/Firma[^\n]*/)?.[0] || '',
@@ -93,7 +93,7 @@ async function main() {
         await opts.nth(i).click();
         await page.waitForTimeout(800);
         await waitForData(page, '.stat-card-value, .page-title');
-        const now = await page.evaluate(() => localStorage.getItem('alatax_company_id'));
+        const now = await page.evaluate(() => localStorage.getItem('dobedan_company_id'));
         if (now && now !== before.id) {
           switched = true;
           break;
@@ -106,7 +106,7 @@ async function main() {
       await page.waitForTimeout(1000);
       await waitForData(page, '.stat-card-value, .page-subtitle, .page-title');
       const after = await page.evaluate(() => ({
-        id: localStorage.getItem('alatax_company_id'),
+        id: localStorage.getItem('dobedan_company_id'),
         url: location.pathname,
         title: document.querySelector('.page-title')?.textContent || '',
         subtitle: document.querySelector('.page-subtitle')?.textContent || '',
@@ -139,7 +139,7 @@ async function main() {
     await waitForData(page, '.header-company-label');
     const ctxBefore = await page.evaluate(() => ({
       company: document.querySelector('.header-company-label')?.textContent || '',
-      companyId: localStorage.getItem('alatax_company_id'),
+      companyId: localStorage.getItem('dobedan_company_id'),
       branchExists: !!document.querySelector('#header-branch-selector'),
       branchText: document.querySelector('#header-branch-selector')?.textContent || '',
     }));
@@ -164,7 +164,7 @@ async function main() {
     }
     const ctxAfter = await page.evaluate(() => ({
       company: document.querySelector('.header-company-label')?.textContent || '',
-      companyId: localStorage.getItem('alatax_company_id'),
+      companyId: localStorage.getItem('dobedan_company_id'),
       branchExists: !!document.querySelector('#header-branch-selector'),
       branchText: document.querySelector('#header-branch-selector')?.textContent || '',
     }));

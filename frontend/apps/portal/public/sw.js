@@ -1,4 +1,4 @@
-const CACHE_NAME = 'alatax-portal-v1';
+const CACHE_NAME = 'dobedan-portal-v1';
 const OFFLINE_URL = '/offline.html';
 
 // Resources to cache immediately on install
@@ -189,7 +189,7 @@ async function syncRequests() {
 // IndexedDB helpers
 function openDB() {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open('alatax-offline-db', 1);
+    const request = indexedDB.open('dobedan-offline-db', 1);
     request.onerror = () => reject(request.error);
     request.onsuccess = () => resolve(request.result);
     request.onupgradeneeded = (event) => {
@@ -241,7 +241,7 @@ self.addEventListener('push', (event) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || 'ALATAX Portal', options)
+    self.registration.showNotification(data.title || 'Dobedan Portal', options)
   );
 });
 

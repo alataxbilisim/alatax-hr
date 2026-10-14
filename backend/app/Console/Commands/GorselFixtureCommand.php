@@ -29,8 +29,8 @@ class GorselFixtureCommand extends Command
 {
     protected $signature = 'gorsel:fixture
                             {--secrets-dir= : 2FA secret yazılacak klasör (varsayılan: storage/app/gorsel-kontrol)}
-                            {--allow-dev-db : Geliştirme DB (alatax_hr) üzerine yazmaya izin ver}
-                            {--use-testing-db : Varsayılan yerine alatax_hr_testing bağlantısına yaz}';
+                            {--allow-dev-db : Geliştirme DB (dobedan_hr) üzerine yazmaya izin ver}
+                            {--use-testing-db : Varsayılan yerine dobedan_hr_testing bağlantısına yaz}';
 
     protected $description = 'Görsel kontrol fixture (idempotent, yalnız local)';
 
@@ -48,17 +48,17 @@ class GorselFixtureCommand extends Command
 
         if ($this->option('use-testing-db')) {
             config(['database.default' => 'pgsql']);
-            config(['database.connections.pgsql.database' => 'alatax_hr_testing']);
+            config(['database.connections.pgsql.database' => 'dobedan_hr_testing']);
             DB::purge('pgsql');
             DB::reconnect('pgsql');
-            $this->warn('Bağlantı: alatax_hr_testing (--use-testing-db)');
+            $this->warn('Bağlantı: dobedan_hr_testing (--use-testing-db)');
         }
 
         $connection = (string) config('database.default');
         $database = (string) config("database.connections.{$connection}.database");
         $this->info("gorsel:fixture hedef DB: {$database} (connection={$connection})");
 
-        $isTestingDb = str_ends_with($database, '_testing') || $database === 'alatax_hr_testing';
+        $isTestingDb = str_ends_with($database, '_testing') || $database === 'dobedan_hr_testing';
         if (! $isTestingDb && ! $this->option('allow-dev-db')) {
             $this->error(
                 "Geliştirme DB'sine yazmak için --allow-dev-db veya --use-testing-db kullanın. "

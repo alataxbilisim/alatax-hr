@@ -13,7 +13,7 @@ import {
   FiMaximize,
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
-import { employeesApi } from '@alatax/shared';
+import { employeesApi } from '@dobedan/shared';
 import { useTranslation } from '@shared/i18n';
 import type { Dashboard, DashboardWidget, ReportMetadata } from './reports/types';
 import DashboardGrid from './reports/DashboardGrid';

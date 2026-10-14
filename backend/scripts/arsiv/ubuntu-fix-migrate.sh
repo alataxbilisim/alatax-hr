@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
-cd ~/alatax-hr
+cd ~/dobedan-hr
 
 echo "==> duplicate positions"
-docker compose exec -T postgres psql -U alatax -d alatax_hr <<'SQL'
+docker compose exec -T postgres psql -U dobedan -d dobedan_hr <<'SQL'
 SELECT company_id, name, count(*) AS c
 FROM positions
 WHERE deleted_at IS NULL
@@ -13,7 +13,7 @@ ORDER BY company_id, name;
 SQL
 
 echo "==> soft-delete duplicate positions (keep lowest id, rewire employees)"
-docker compose exec -T postgres psql -U alatax -d alatax_hr <<'SQL'
+docker compose exec -T postgres psql -U dobedan -d dobedan_hr <<'SQL'
 WITH ranked AS (
   SELECT id, company_id, name,
          MIN(id) OVER (PARTITION BY company_id, name) AS keep_id,

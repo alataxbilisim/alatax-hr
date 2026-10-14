@@ -137,7 +137,7 @@ async function main() {
     await page.goto(`${URLS.portal}/leaves`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(1000);
     const token = await page.evaluate(
-      () => localStorage.getItem('token') || localStorage.getItem('auth_token') || localStorage.getItem('alatax_token')
+      () => localStorage.getItem('token') || localStorage.getItem('auth_token') || localStorage.getItem('dobedan_token')
     );
     let statusA = null;
     let statusB = null;
@@ -516,7 +516,7 @@ async function main() {
   }
 
   // Suite ayrı koşulur (rapora placeholder; commit öncesi docker exec)
-  let suite = process.env.GORSEL_SUITE || 'pending — docker exec alatax-hr-app php artisan test';
+  let suite = process.env.GORSEL_SUITE || 'pending — docker exec dobedan-hr-app php artisan test';
 
   let diffStat = '';
   try {

@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import api from '@shared/services/api';
 
-export const BRANCH_STORAGE_KEY = 'alatax_branch_id';
+export const BRANCH_STORAGE_KEY = 'dobedan_branch_id';
 export const BRANCH_ALL = 'all';
 
 export interface ContextBranch {

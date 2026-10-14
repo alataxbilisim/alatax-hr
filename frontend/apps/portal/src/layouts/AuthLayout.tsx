@@ -6,7 +6,7 @@ const AuthLayout: React.FC = () => {
     <div className="auth-layout">
       <div className="auth-container">
         <div className="auth-brand">
-          <h1>ALATAX</h1>
+          <h1>Dobedan</h1>
           <p>Personel Self-Servis Portalı</p>
         </div>
         <Outlet />

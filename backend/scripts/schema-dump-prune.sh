@@ -11,14 +11,14 @@ TMP_MIG="$(mktemp)"
 mkdir -p "${SCHEMA_DIR}"
 
 echo "==> schema-only dump (postgres container)"
-docker exec -e PGPASSWORD=secret alatax-hr-postgres \
+docker exec -e PGPASSWORD=secret dobedan-hr-postgres \
   pg_dump --no-owner --no-acl --schema-only \
-  -U alatax -d alatax_hr > "${TMP_SCHEMA}"
+  -U dobedan -d dobedan_hr > "${TMP_SCHEMA}"
 
 echo "==> migrations data dump"
-docker exec -e PGPASSWORD=secret alatax-hr-postgres \
+docker exec -e PGPASSWORD=secret dobedan-hr-postgres \
   pg_dump --no-owner --no-acl --data-only -t public.migrations \
-  -U alatax -d alatax_hr > "${TMP_MIG}"
+  -U dobedan -d dobedan_hr > "${TMP_MIG}"
 
 # \restrict / \unrestrict satırları bazı psql istemcilerinde sorun çıkarabilir; temizle
 # (Laravel load app konteynerindeki psql 15 kullanır)

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { FiEdit2, FiTrash2, FiMove, FiTag, FiMessageSquare } from 'react-icons/fi';
 import type { DashboardWidget, ChartDataItem, KPIData } from './types';
-import { employeesApi } from '@alatax/shared';
+import { employeesApi } from '@dobedan/shared';
 import BarChartWidget from './charts/BarChartWidget';
 import PieChartWidget from './charts/PieChartWidget';
 import LineChartWidget from './charts/LineChartWidget';

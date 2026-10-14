@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
- * Kalıcı güvenlik kanıtı — testler yalnızca alatax_hr_testing'e bağlanmalı.
+ * Kalıcı güvenlik kanıtı — testler yalnızca dobedan_hr_testing'e bağlanmalı.
  */
 class DatabaseNameProbeTest extends TestCase
 {
@@ -15,6 +15,6 @@ class DatabaseNameProbeTest extends TestCase
         $name = DB::connection()->getDatabaseName();
         fwrite(STDERR, "\n[PROBE] DB::connection()->getDatabaseName() = {$name}\n");
 
-        $this->assertSame('alatax_hr_testing', $name);
+        $this->assertSame('dobedan_hr_testing', $name);
     }
 }

@@ -1,4 +1,4 @@
-# ALATAX HR — root .gitignore (Laravel backend + pnpm frontend monorepo)
+# Dobedan HR — root .gitignore (Laravel backend + pnpm frontend monorepo)
 
 # --- Dependencies ---
 node_modules/

@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import api from '@shared/services/api';
 
-export const COMPANY_STORAGE_KEY = 'alatax_company_id';
+export const COMPANY_STORAGE_KEY = 'dobedan_company_id';
 
 export interface ContextCompany {
   id: number;

@@ -1,9 +1,9 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "dobedan/hr-backend",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "description": "Dobedan HR — multi-tenant B2B HR SaaS REST API (Laravel 12, PostgreSQL 16).",
+    "keywords": ["dobedan", "hr", "laravel"],
     "license": "MIT",
     "require": {
         "php": "^8.2",

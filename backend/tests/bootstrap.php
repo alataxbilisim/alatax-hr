@@ -2,7 +2,7 @@
 
 /**
  * PHPUnit bootstrap — config cache temizliği + test DB zorlaması.
- * Docker compose DB_DATABASE=alatax_hr ortam değişkenini ezer.
+ * Docker compose DB_DATABASE=dobedan_hr ortam değişkenini ezer.
  * Yıkıcı migrate komutu yok.
  */
 $autoload = dirname(__DIR__).'/vendor/autoload.php';
@@ -22,16 +22,16 @@ putenv('DB_CONNECTION=pgsql');
 $_ENV['DB_CONNECTION'] = 'pgsql';
 $_SERVER['DB_CONNECTION'] = 'pgsql';
 
-putenv('DB_DATABASE=alatax_hr_testing');
-$_ENV['DB_DATABASE'] = 'alatax_hr_testing';
-$_SERVER['DB_DATABASE'] = 'alatax_hr_testing';
+putenv('DB_DATABASE=dobedan_hr_testing');
+$_ENV['DB_DATABASE'] = 'dobedan_hr_testing';
+$_SERVER['DB_DATABASE'] = 'dobedan_hr_testing';
 
 // Spatie permission cache paylaşılan Redis/DB store'a sızmasın
 putenv('CACHE_STORE=array');
 $_ENV['CACHE_STORE'] = 'array';
 $_SERVER['CACHE_STORE'] = 'array';
 
-if ((getenv('DB_DATABASE') ?: '') !== 'alatax_hr_testing') {
-    fwrite(STDERR, "[BOOTSTRAP] FATAL: DB_DATABASE could not be forced to alatax_hr_testing\n");
+if ((getenv('DB_DATABASE') ?: '') !== 'dobedan_hr_testing') {
+    fwrite(STDERR, "[BOOTSTRAP] FATAL: DB_DATABASE could not be forced to dobedan_hr_testing\n");
     exit(1);
 }

@@ -34,7 +34,7 @@ const PortalLayout: React.FC = () => {
       <div className="portal-shell__main">
         <div className="portal-shell__content">
           <div className="portal-shell-top">
-            <span className="portal-shell-top__brand">ALATAX</span>
+            <span className="portal-shell-top__brand">Dobedan</span>
             <div className="portal-shell-top__actions">
               <NotificationBell />
               <button

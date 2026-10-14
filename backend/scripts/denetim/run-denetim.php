@@ -2,8 +2,8 @@
 
 /**
  * Faz 6 öncesi DENETİM TURU — teşhis (ürün kodu değiştirmez).
- * Çalıştır: docker exec alatax-hr-app php scripts/denetim/run-denetim.php
- * DB: alatax_hr_testing (migrate:fresh --seed önce).
+ * Çalıştır: docker exec dobedan-hr-app php scripts/denetim/run-denetim.php
+ * DB: dobedan_hr_testing (migrate:fresh --seed önce).
  */
 
 use App\Enums\CompanyStatus;
@@ -38,7 +38,7 @@ $app = require __DIR__.'/../../bootstrap/app.php';
 $app->make(Kernel::class)->bootstrap();
 
 // Testing DB'ye zorla
-config(['database.connections.pgsql.database' => 'alatax_hr_testing']);
+config(['database.connections.pgsql.database' => 'dobedan_hr_testing']);
 config(['database.default' => 'pgsql']);
 DB::purge('pgsql');
 DB::reconnect('pgsql');
@@ -80,11 +80,11 @@ function catchResult(callable $fn): array
 }
 
 if (getenv('DENETIM_SKIP_FRESH') !== '1') {
-    echo "migrate:fresh --seed on alatax_hr_testing...\n";
+    echo "migrate:fresh --seed on dobedan_hr_testing...\n";
     Artisan::call('migrate:fresh', ['--seed' => true, '--force' => true]);
     echo Artisan::output();
 } else {
-    echo "SKIP fresh — using existing alatax_hr_testing\n";
+    echo "SKIP fresh — using existing dobedan_hr_testing\n";
 }
 
 // ─── 1) CASCADE MATRIX ───────────────────────────────────────────
@@ -551,7 +551,7 @@ $dbPathSet = array_flip($dbPaths);
 $orphanPrivate = array_values(array_filter($privateFiles, fn ($p) => ! isset($dbPathSet[$p]) && ! str_starts_with($p, '.gitignore')));
 $orphanPublic = array_values(array_filter($publicFiles, fn ($p) => ! isset($dbPathSet[$p]) && ! str_contains($p, '.gitignore')));
 
-// Also check alatax_hr storage? We're on testing — scan host container storage only
+// Also check dobedan_hr storage? We're on testing — scan host container storage only
 $out['files']['private_file_count'] = count($privateFiles);
 $out['files']['public_file_count'] = count($publicFiles);
 $out['files']['db_path_count'] = count($dbPaths);
@@ -562,8 +562,8 @@ $out['files']['orphan_public_sample'] = array_slice($orphanPublic, 0, 30);
 $out['files']['employee_document_destroy'] = 'EmployeeDocumentController::destroy Storage::disk(private)->delete then soft/hard delete model';
 $out['files']['employee_destroy'] = 'EmployeeController::destroy only soft-deletes employee — does NOT delete document files';
 
-// Extra: scan alatax_hr DB paths vs same disk (prod-like data)
-config(['database.connections.pgsql.database' => 'alatax_hr']);
+// Extra: scan dobedan_hr DB paths vs same disk (prod-like data)
+config(['database.connections.pgsql.database' => 'dobedan_hr']);
 DB::purge('pgsql');
 DB::reconnect('pgsql');
 $prodPaths = [];
@@ -578,12 +578,12 @@ $prodSet = array_flip($prodPaths);
 $orphanVsProd = array_values(array_filter(array_merge($privateFiles, $publicFiles), function ($p) use ($prodSet) {
     return ! isset($prodSet[$p]) && ! str_contains($p, '.gitignore');
 }));
-$out['files']['alatax_hr_db_path_count'] = count($prodPaths);
-$out['files']['orphan_vs_alatax_hr_count'] = count($orphanVsProd);
-$out['files']['orphan_vs_alatax_hr_sample'] = array_slice($orphanVsProd, 0, 40);
+$out['files']['dobedan_hr_db_path_count'] = count($prodPaths);
+$out['files']['orphan_vs_dobedan_hr_count'] = count($orphanVsProd);
+$out['files']['orphan_vs_dobedan_hr_sample'] = array_slice($orphanVsProd, 0, 40);
 
 // switch back to testing
-config(['database.connections.pgsql.database' => 'alatax_hr_testing']);
+config(['database.connections.pgsql.database' => 'dobedan_hr_testing']);
 DB::purge('pgsql');
 DB::reconnect('pgsql');
 

@@ -1,19 +1,18 @@
 {
-  "name": "alatax-hr-frontend",
+  "name": "dobedan-hr-frontend",
   "private": true,
   "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "pnpm -r --parallel --filter \"./apps/**\" dev",
-    "dev:superadmin": "pnpm --filter @alatax/superadmin dev",
-    "dev:company": "pnpm --filter @alatax/company dev",
-    "dev:portal": "pnpm --filter @alatax/portal dev",
+    "dev:superadmin": "pnpm --filter @dobedan/superadmin dev",
+    "dev:company": "pnpm --filter @dobedan/company dev",
+    "dev:portal": "pnpm --filter @dobedan/portal dev",
     "build": "pnpm -r --filter \"./apps/**\" build",
-    "build:superadmin": "pnpm --filter @alatax/superadmin build",
-    "build:company": "pnpm --filter @alatax/company build",
-    "build:portal": "pnpm --filter @alatax/portal build",
-    "lint": "pnpm -r --filter \"./apps/**\" lint",
-    "gorsel-kontrol": "pnpm --dir ../scripts/gorsel-kontrol start"
+    "build:superadmin": "pnpm --filter @dobedan/superadmin build",
+    "build:company": "pnpm --filter @dobedan/company build",
+    "build:portal": "pnpm --filter @dobedan/portal build",
+    "lint": "pnpm -r --filter \"./apps/**\" lint",    "gorsel-kontrol": "pnpm --dir ../scripts/gorsel-kontrol start"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * UZUN KOŞU adım 5 — kuyruk / zamanlanmış işler (alatax_hr_testing).
+ * UZUN KOŞU adım 5 — kuyruk / zamanlanmış işler (dobedan_hr_testing).
  */
 
 declare(strict_types=1);
@@ -24,7 +24,7 @@ $app = require $backend.'/bootstrap/app.php';
 $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
 $dbName = (string) config('database.connections.'.config('database.default').'.database');
-if ($dbName !== 'alatax_hr_testing') {
+if ($dbName !== 'dobedan_hr_testing') {
     fwrite(STDERR, "ABORT testing DB\n");
     exit(1);
 }

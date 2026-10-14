@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { FiDownload, FiFileText, FiFile, FiChevronDown } from 'react-icons/fi';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import { employeesApi } from '@alatax/shared';
+import { employeesApi } from '@dobedan/shared';
 import toast from 'react-hot-toast';
 
 interface ExportMenuProps {

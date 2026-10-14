@@ -1,10 +1,10 @@
 <?php
 
 /**
- * Adım 9 — temiz kurulum provası (yalnız alatax_hr_testing).
+ * Adım 9 — temiz kurulum provası (yalnız dobedan_hr_testing).
  * NOT: migrate:fresh çalıştırır — scale verisini siler.
  *
- * docker exec -e DB_DATABASE=alatax_hr_testing alatax-hr-app php scripts/uzun-kosu/clean-install-proof.php
+ * docker exec -e DB_DATABASE=dobedan_hr_testing dobedan-hr-app php scripts/uzun-kosu/clean-install-proof.php
  */
 
 declare(strict_types=1);
@@ -18,7 +18,7 @@ $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
 
 $dbName = (string) config('database.connections.'.config('database.default').'.database');
-if ($dbName !== 'alatax_hr_testing') {
+if ($dbName !== 'dobedan_hr_testing') {
     fwrite(STDERR, "ABORT: {$dbName}\n");
     exit(1);
 }

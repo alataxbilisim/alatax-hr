@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# ALATAX HR — Ubuntu host'ta manuel tam güncelleme (otomatik CI deploy değil)
-# Kullanım: cd ~/alatax-hr && bash scripts/deploy-ubuntu-update.sh
+# Dobedan HR — Ubuntu host'ta manuel tam güncelleme (otomatik CI deploy değil)
+# Kullanım: cd ~/dobedan-hr && bash scripts/deploy-ubuntu-update.sh
 set -euo pipefail
 
 BRANCH="${1:-faz4-form-engine}"
