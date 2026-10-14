@@ -14,8 +14,8 @@ use Spatie\Permission\PermissionRegistrar;
 
 abstract class TestCase extends BaseTestCase
 {
-    /** Testlerin bağlanmasına izin verilen tek veritabanı adı. */
-    private const TESTING_DATABASE = 'dobedan_hr_testing';
+    /** Test DB adı `_testing` ile biter; paralel koşuda Laravel `_test_{N}` ekler. */
+    private const TESTING_DATABASE_PATTERN = '/_testing(_test_\d+)?$/';
 
     protected function setUp(): void
     {
@@ -92,12 +92,12 @@ abstract class TestCase extends BaseTestCase
      */
     protected function assertUsingTestingDatabase(): void
     {
-        $name = DB::connection()->getDatabaseName();
+        $name = (string) DB::connection()->getDatabaseName();
 
-        if ($name !== self::TESTING_DATABASE) {
+        if (preg_match(self::TESTING_DATABASE_PATTERN, $name) !== 1) {
             throw new RuntimeException(
                 'Refusing to run tests against non-testing database: '.$name
-                .' (expected '.self::TESTING_DATABASE.')'
+                .' (expected a name ending with _testing)'
             );
         }
     }

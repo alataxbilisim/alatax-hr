@@ -84,6 +84,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secret}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      # Boş volume'de {POSTGRES_DB}_testing oluşturur (mevcut volume: composer test:db)
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 5s
