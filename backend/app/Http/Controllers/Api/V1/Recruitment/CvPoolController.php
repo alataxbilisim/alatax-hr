@@ -19,7 +19,7 @@ class CvPoolController extends BaseController
         $query = JobApplication::query()
             ->select('email', 'first_name', 'last_name', 'phone')
             ->selectRaw('MAX(id) as id')
-            ->selectRaw('MAX(cv_path) as cv_path')
+            ->selectRaw('MAX(CASE WHEN cv_path IS NOT NULL THEN id END) as cv_application_id')
             ->selectRaw('MAX(rating) as rating')
             ->selectRaw('MAX(created_at) as last_application_date')
             ->groupBy('email', 'first_name', 'last_name', 'phone');
@@ -37,6 +37,7 @@ class CvPoolController extends BaseController
             ->limit(100)
             ->get()
             ->map(function ($candidate) {
+                $cvApplicationId = $candidate->getAttribute('cv_application_id');
                 $latestApplication = JobApplication::where('email', $candidate->email)
                     ->orderBy('created_at', 'desc')
                     ->first();
@@ -53,7 +54,10 @@ class CvPoolController extends BaseController
                     'tags' => $latestApplication?->form_data['tags'] ?? [],
                     'rating' => $candidate->rating,
                     'status' => $latestApplication?->status,
-                    'cv_path' => $candidate->cv_path ? asset('storage/'.$candidate->cv_path) : null,
+                    'cv_path' => $cvApplicationId
+                        ? ApplicationController::cvDownloadUrl((int) $cvApplicationId)
+                        : null,
+                    'cv_application_id' => $cvApplicationId ? (int) $cvApplicationId : null,
                     'last_application_date' => $candidate->last_application_date,
                     'created_at' => $latestApplication?->created_at?->toDateTimeString(),
                 ];

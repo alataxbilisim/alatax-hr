@@ -632,6 +632,8 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:recruitment.applications.edit');
             Route::get('/applications/{id}', [\App\Http\Controllers\Api\V1\Recruitment\ApplicationController::class, 'show'])
                 ->middleware('permission:recruitment.applications.view');
+            Route::get('/applications/{id}/cv', [\App\Http\Controllers\Api\V1\Recruitment\ApplicationController::class, 'cv'])
+                ->middleware('permission:recruitment.applications.view');
             Route::put('/applications/{id}/status', [\App\Http\Controllers\Api\V1\Recruitment\ApplicationController::class, 'updateStatus'])
                 ->middleware('permission:recruitment.applications.approve');
             Route::put('/applications/{id}/notes', [\App\Http\Controllers\Api\V1\Recruitment\ApplicationController::class, 'updateNotes'])
@@ -804,6 +806,8 @@ Route::prefix('v1')->group(function () {
                 ->middleware('permission:leaves.requests.create');
             Route::get('requests/{leave_request}', [\App\Http\Controllers\Api\V1\Leaves\LeaveRequestController::class, 'show'])
                 ->middleware('permission:leaves.requests.view');
+            Route::get('requests/{leave_request}/document', [\App\Http\Controllers\Api\V1\Leaves\LeaveRequestController::class, 'document'])
+                ->middleware('permission:leaves.requests.view');
             // update/destroy controller'da yok — apiResource kalıntısı eklenmedi
             Route::post('/requests/{leave_request}/approve', [\App\Http\Controllers\Api\V1\Leaves\LeaveRequestController::class, 'approve'])
                 ->middleware('permission:leaves.requests.approve');
@@ -920,6 +924,8 @@ Route::prefix('v1')->group(function () {
             Route::get('claims', [\App\Http\Controllers\Api\V1\Expenses\ExpenseClaimController::class, 'index'])
                 ->middleware('permission:expenses.claims.view');
             Route::get('claims/{expense_claim}', [\App\Http\Controllers\Api\V1\Expenses\ExpenseClaimController::class, 'show'])
+                ->middleware('permission:expenses.claims.view');
+            Route::get('claims/{expense_claim}/items/{item}/receipt', [\App\Http\Controllers\Api\V1\Expenses\ExpenseClaimController::class, 'receipt'])
                 ->middleware('permission:expenses.claims.view');
             Route::post('claims/{expense_claim}/approve', [\App\Http\Controllers\Api\V1\Expenses\ExpenseClaimController::class, 'approve'])
                 ->middleware('permission:expenses.claims.approve');
@@ -1473,6 +1479,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/', [\App\Http\Controllers\Api\V1\Portal\PortalLeaveController::class, 'index']);
             Route::post('/', [\App\Http\Controllers\Api\V1\Portal\PortalLeaveController::class, 'store']);
             Route::get('/{id}', [\App\Http\Controllers\Api\V1\Portal\PortalLeaveController::class, 'show']);
+            Route::get('/{id}/document', [\App\Http\Controllers\Api\V1\Portal\PortalLeaveController::class, 'document']);
             Route::put('/{id}', [\App\Http\Controllers\Api\V1\Portal\PortalLeaveController::class, 'update']);
             Route::post('/{id}/cancel', [\App\Http\Controllers\Api\V1\Portal\PortalLeaveController::class, 'cancel']);
         });
@@ -1508,6 +1515,8 @@ Route::prefix('v1')->group(function () {
             Route::get('/', [\App\Http\Controllers\Api\V1\Portal\PortalRequestController::class, 'index']);
             Route::post('/', [\App\Http\Controllers\Api\V1\Portal\PortalRequestController::class, 'store']);
             Route::get('/{id}', [\App\Http\Controllers\Api\V1\Portal\PortalRequestController::class, 'show']);
+            Route::get('/{id}/attachments/{index}', [\App\Http\Controllers\Api\V1\Portal\PortalRequestController::class, 'attachment'])
+                ->whereNumber('index');
             Route::put('/{id}', [\App\Http\Controllers\Api\V1\Portal\PortalRequestController::class, 'update']);
             Route::post('/{id}/cancel', [\App\Http\Controllers\Api\V1\Portal\PortalRequestController::class, 'cancel']);
         });
@@ -1566,6 +1575,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/{id}/submit', [\App\Http\Controllers\Api\V1\Portal\PortalExpenseController::class, 'submit']);
             Route::delete('/{id}', [\App\Http\Controllers\Api\V1\Portal\PortalExpenseController::class, 'cancel']);
             Route::post('/items/{itemId}/receipt', [\App\Http\Controllers\Api\V1\Portal\PortalExpenseController::class, 'uploadReceipt']);
+            Route::get('/items/{itemId}/receipt', [\App\Http\Controllers\Api\V1\Portal\PortalExpenseController::class, 'receipt']);
         });
     });
 

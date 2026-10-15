@@ -4,10 +4,10 @@ namespace App\Services\Kvkk\PersonalData\Collectors;
 
 use App\Models\Employee;
 use App\Models\User;
+use App\Services\Files\SensitiveFileStorage;
 use App\Services\Kvkk\PersonalData\AnonymizationHelper;
 use App\Services\Kvkk\PersonalData\PersonalDataCollector;
 use App\Services\Kvkk\PersonalData\ResolvesSubjectUser;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * Profil imhası: kimlik alanları maskelenir; departman/pozisyon/cinsiyet/işe giriş yılı kalır.
@@ -121,7 +121,7 @@ final class EmployeeProfileCollector implements PersonalDataCollector
                     $label = AnonymizationHelper::anonymLabel((int) $user->id);
                     if ($user->avatar) {
                         try {
-                            Storage::disk('private')->delete((string) $user->avatar);
+                            app(SensitiveFileStorage::class)->delete((string) $user->avatar);
                         } catch (\Throwable) {
                             // dosya yoksa devam
                         }

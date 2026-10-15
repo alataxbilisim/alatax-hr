@@ -11,6 +11,7 @@ use App\Models\ActivityLog;
 use App\Models\Company;
 use App\Models\JobApplication;
 use App\Models\JobPosition;
+use App\Services\Files\SensitiveFileStorage;
 use App\Services\Kvkk\ConsentRecordService;
 use App\Services\Kvkk\PrivacyNoticeService;
 use App\Services\PublicApplicationFormService;
@@ -24,6 +25,7 @@ class ApplicationController extends Controller
         protected PublicApplicationFormService $publicFormService,
         protected ConsentRecordService $consents,
         protected PrivacyNoticeService $notices,
+        protected SensitiveFileStorage $files,
     ) {}
 
     /**
@@ -83,7 +85,7 @@ class ApplicationController extends Controller
         $cvOriginal = null;
         if ($request->hasFile('cv')) {
             $file = $request->file('cv');
-            $cvPath = $file->store('applications/'.$company->id, 'public');
+            $cvPath = $this->files->store($file, 'applications/'.$company->id);
             $cvOriginal = $file->getClientOriginalName();
         }
 

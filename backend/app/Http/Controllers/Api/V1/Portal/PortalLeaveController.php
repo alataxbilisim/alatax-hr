@@ -9,6 +9,7 @@ use App\Models\LeaveBalance;
 use App\Models\LeaveRequest;
 use App\Models\LeaveType;
 use App\Services\CustomFieldValidationService;
+use App\Services\Files\SensitiveFileStorage;
 use App\Services\Leaves\LeaveRequestCancelService;
 use App\Services\WorkflowService;
 use Illuminate\Http\JsonResponse;
@@ -16,6 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PortalLeaveController extends BaseController
 {
@@ -23,6 +25,7 @@ class PortalLeaveController extends BaseController
         protected LeaveRequestCancelService $cancelService,
         protected CustomFieldValidationService $customFieldValidation,
         protected WorkflowService $workflowService,
+        protected SensitiveFileStorage $files,
     ) {}
 
     /**
@@ -114,6 +117,25 @@ class PortalLeaveController extends BaseController
     }
 
     /**
+     * Kendi izin talebinin belgesini indir
+     */
+    public function document(Request $request, int $id): StreamedResponse|JsonResponse
+    {
+        $leaveRequest = LeaveRequest::where('user_id', $request->user()->id)
+            ->where('id', $id)
+            ->first();
+
+        if (! $leaveRequest || ! $this->files->exists($leaveRequest->document_path)) {
+            return $this->notFound('Belge bulunamadı');
+        }
+
+        return $this->files->download(
+            $leaveRequest->document_path,
+            $leaveRequest->document_name ?: basename((string) $leaveRequest->document_path)
+        );
+    }
+
+    /**
      * Yeni izin talebi oluştur
      */
     public function store(Request $request): JsonResponse
@@ -160,11 +182,13 @@ class PortalLeaveController extends BaseController
 
         return DB::transaction(function () use ($request, $validated, $user, $totalDays, $customFields) {
             $documentPath = null;
+            $documentName = null;
             if ($request->hasFile('document')) {
-                $documentPath = $request->file('document')->store('leave_documents/'.$user->home_company_id, 'public');
+                $documentPath = $this->files->store($request->file('document'), 'leave_documents/'.$user->home_company_id);
+                $documentName = $request->file('document')->getClientOriginalName();
             }
 
-            $leaveRequest = LeaveRequest::withoutAuditing(function () use ($validated, $user, $totalDays, $documentPath, $customFields) {
+            $leaveRequest = LeaveRequest::withoutAuditing(function () use ($validated, $user, $totalDays, $documentPath, $documentName, $customFields) {
                 return LeaveRequest::create([
                     'company_id' => $user->home_company_id,
                     'user_id' => $user->id,
@@ -175,6 +199,7 @@ class PortalLeaveController extends BaseController
                     'reason' => $validated['reason'] ?? null,
                     'custom_fields' => $customFields,
                     'document_path' => $documentPath,
+                    'document_name' => $documentName,
                     'status' => LeaveRequest::STATUS_PENDING,
                 ]);
             });
@@ -238,10 +263,9 @@ class PortalLeaveController extends BaseController
 
         // Belge güncelleme
         if ($request->hasFile('document')) {
-            if ($leaveRequest->document_path) {
-                \Storage::disk('public')->delete($leaveRequest->document_path);
-            }
-            $validated['document_path'] = $request->file('document')->store('leave_documents/'.$user->home_company_id, 'public');
+            $this->files->delete($leaveRequest->document_path);
+            $validated['document_path'] = $this->files->store($request->file('document'), 'leave_documents/'.$user->home_company_id);
+            $validated['document_name'] = $request->file('document')->getClientOriginalName();
         }
 
         $leaveRequest->update($validated);

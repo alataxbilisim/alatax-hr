@@ -467,8 +467,10 @@ export const recruitmentApi = {
   applications: {
     list: (params?: Record<string, unknown>) => 
       api.get('/recruitment/applications', { params }),
-    get: (id: number) => 
+    get: (id: number) =>
       api.get(`/recruitment/applications/${id}`),
+    downloadCv: (id: number) =>
+      api.get(`/recruitment/applications/${id}/cv`, { responseType: 'blob' }),
     create: (data: {
       job_position_id: number;
       first_name: string;

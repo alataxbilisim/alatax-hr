@@ -3,10 +3,10 @@
 namespace App\Services\Kvkk\PersonalData\Collectors;
 
 use App\Models\JobApplication;
+use App\Services\Files\SensitiveFileStorage;
 use App\Services\Kvkk\PersonalData\AnonymizationHelper;
 use App\Services\Kvkk\PersonalData\PersonalDataCollector;
 use App\Services\Kvkk\PersonalData\ResolvesSubjectUser;
-use Illuminate\Support\Facades\Storage;
 
 final class JobApplicationCollector implements PersonalDataCollector
 {
@@ -72,7 +72,7 @@ final class JobApplicationCollector implements PersonalDataCollector
             if (! $dryRun) {
                 if ($a->cv_path) {
                     try {
-                        Storage::disk('private')->delete((string) $a->cv_path);
+                        app(SensitiveFileStorage::class)->delete((string) $a->cv_path);
                     } catch (\Throwable) {
                     }
                 }

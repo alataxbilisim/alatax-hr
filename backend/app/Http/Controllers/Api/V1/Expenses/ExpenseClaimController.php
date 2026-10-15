@@ -6,12 +6,15 @@ use App\Http\Controllers\Api\V1\BaseController;
 use App\Http\Requests\Expenses\MarkPaidExpenseClaimRequest;
 use App\Models\ActivityLog;
 use App\Models\ExpenseClaim;
+use App\Models\ExpenseItem;
 use App\Services\DataScopeService;
+use App\Services\Files\SensitiveFileStorage;
 use App\Services\LookupService;
 use App\Services\WorkflowService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * HR / manager masraf talepleri (portal own API'sinden ayrı).
@@ -22,6 +25,7 @@ class ExpenseClaimController extends BaseController
         protected DataScopeService $dataScope,
         protected LookupService $lookups,
         protected WorkflowService $workflowService,
+        protected SensitiveFileStorage $files,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -61,6 +65,27 @@ class ExpenseClaimController extends BaseController
             $expenseClaim->load(['user:id,name,email', 'items.category:id,name', 'approver:id,name']),
             'Masraf talebi detayı'
         );
+    }
+
+    /**
+     * Masraf kaleminin fişini indir — talebin show yetkisiyle.
+     */
+    public function receipt(ExpenseClaim $expenseClaim, int $item): StreamedResponse|JsonResponse
+    {
+        $this->authorize('view', $expenseClaim);
+
+        $expenseItem = ExpenseItem::query()
+            ->where('expense_claim_id', $expenseClaim->id)
+            ->whereKey($item)
+            ->first();
+
+        if (! $expenseItem || ! $this->files->exists($expenseItem->receipt_path)) {
+            return $this->notFound('Fiş bulunamadı');
+        }
+
+        ActivityLog::log('download', $expenseItem, 'Masraf fişi indirildi');
+
+        return $this->files->download($expenseItem->receipt_path, basename((string) $expenseItem->receipt_path));
     }
 
     /**

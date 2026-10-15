@@ -11,12 +11,14 @@ use App\Models\LeaveRequest;
 use App\Models\LeaveType;
 use App\Services\CustomFieldValidationService;
 use App\Services\DataScopeService;
+use App\Services\Files\SensitiveFileStorage;
 use App\Services\Leaves\LeaveRequestCancelService;
 use App\Services\WorkflowService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class LeaveRequestController extends BaseController
 {
@@ -25,6 +27,7 @@ class LeaveRequestController extends BaseController
         protected WorkflowService $workflowService,
         protected LeaveRequestCancelService $cancelService,
         protected CustomFieldValidationService $customFieldValidation,
+        protected SensitiveFileStorage $files,
     ) {}
 
     /**
@@ -117,7 +120,7 @@ class LeaveRequestController extends BaseController
         $documentPath = null;
         $documentName = null;
         if ($request->hasFile('document')) {
-            $documentPath = $request->file('document')->store('leave-documents/'.$this->getCompanyId(), 'public');
+            $documentPath = $this->files->store($request->file('document'), 'leave-documents/'.$this->getCompanyId());
             $documentName = $request->file('document')->getClientOriginalName();
         }
 
@@ -173,6 +176,25 @@ class LeaveRequestController extends BaseController
         ]);
 
         return $this->success($leaveRequest, 'İzin talebi detayları');
+    }
+
+    /**
+     * İzin belgesini (ör. sağlık raporu) indir — show ile aynı yetki.
+     */
+    public function document(LeaveRequest $leaveRequest): StreamedResponse|JsonResponse
+    {
+        $this->authorize('view', $leaveRequest);
+
+        if (! $this->files->exists($leaveRequest->document_path)) {
+            return $this->notFound('Belge bulunamadı');
+        }
+
+        ActivityLog::log('download', $leaveRequest, 'İzin belgesi indirildi');
+
+        return $this->files->download(
+            $leaveRequest->document_path,
+            $leaveRequest->document_name ?: basename((string) $leaveRequest->document_path)
+        );
     }
 
     /**

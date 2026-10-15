@@ -6,12 +6,16 @@ use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\ActivityLog;
 use App\Models\Employee;
 use App\Models\Payslip;
+use App\Services\Files\SensitiveFileStorage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class PortalPayslipController extends BaseController
 {
+    public function __construct(
+        protected SensitiveFileStorage $files,
+    ) {}
+
     /**
      * Bordrolarımı listele
      */
@@ -125,22 +129,13 @@ class PortalPayslipController extends BaseController
             return $this->error('Bordro dosyası bulunamadı', 404);
         }
 
-        $disk = null;
-        if (Storage::disk('private')->exists($payslip->file_path)) {
-            $disk = 'private';
-        } elseif (Storage::disk('public')->exists($payslip->file_path)) {
-            $disk = 'public';
-        }
-
-        if ($disk === null) {
+        if (! $this->files->exists($payslip->file_path)) {
             return $this->error('Bordro dosyası bulunamadı', 404);
         }
 
         ActivityLog::log('export', $payslip, 'bordro export edildi');
 
-        $fileName = "Bordro_{$payslip->year}_{$payslip->month}.pdf";
-
-        return Storage::disk($disk)->download($payslip->file_path, $fileName);
+        return $this->files->download($payslip->file_path, "Bordro_{$payslip->year}_{$payslip->month}.pdf");
     }
 
     /**

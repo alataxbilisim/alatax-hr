@@ -5,9 +5,9 @@ namespace App\Services\Payroll;
 use App\Models\Employee;
 use App\Models\Payslip;
 use App\Models\User;
+use App\Services\Files\SensitiveFileStorage;
 use App\Services\Notification\NotificationService;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 
@@ -18,6 +18,7 @@ class PayslipService
 {
     public function __construct(
         protected NotificationService $notifications,
+        protected SensitiveFileStorage $files,
     ) {}
 
     /**
@@ -70,9 +71,7 @@ class PayslipService
         }
 
         if ($file !== null) {
-            if ($payslip->file_path && Storage::disk('private')->exists($payslip->file_path)) {
-                Storage::disk('private')->delete($payslip->file_path);
-            }
+            $this->files->delete($payslip->file_path);
             $safeName = Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME));
             $path = $file->storeAs(
                 "payslips/{$companyId}/{$period}",

@@ -7,10 +7,10 @@ use App\Models\ActivityLog;
 use App\Models\Employee;
 use App\Models\Payslip;
 use App\Services\DataScopeService;
+use App\Services\Files\SensitiveFileStorage;
 use App\Services\Payroll\PayslipService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -22,6 +22,7 @@ class PayslipController extends BaseController
     public function __construct(
         protected PayslipService $payslips,
         protected DataScopeService $dataScope,
+        protected SensitiveFileStorage $files,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -116,9 +117,7 @@ class PayslipController extends BaseController
     {
         $payslip = $this->findScoped($request, $id);
 
-        if ($payslip->file_path && Storage::disk('private')->exists($payslip->file_path)) {
-            Storage::disk('private')->delete($payslip->file_path);
-        }
+        $this->files->delete($payslip->file_path);
 
         ActivityLog::log('delete', $payslip, 'Bordro silindi: '.$payslip->period);
         $payslip->delete();
@@ -134,17 +133,13 @@ class PayslipController extends BaseController
             return $this->error('Bordro dosyası yok', 404);
         }
 
-        $disk = Storage::disk('private')->exists($payslip->file_path)
-            ? 'private'
-            : (Storage::disk('public')->exists($payslip->file_path) ? 'public' : null);
-
-        if ($disk === null) {
+        if (! $this->files->exists($payslip->file_path)) {
             return $this->error('Bordro dosyası bulunamadı', 404);
         }
 
         ActivityLog::log('export', $payslip, 'bordro HR indirildi');
 
-        return Storage::disk($disk)->download(
+        return $this->files->download(
             $payslip->file_path,
             "Bordro_{$payslip->year}_{$payslip->month}.pdf"
         );

@@ -76,7 +76,7 @@ final class EmployeeDocumentCollector implements PersonalDataCollector
             if (! $dryRun) {
                 if ($d->file_path) {
                     try {
-                        \Illuminate\Support\Facades\Storage::disk('private')->delete((string) $d->file_path);
+                        app(\App\Services\Files\SensitiveFileStorage::class)->delete((string) $d->file_path);
                     } catch (\Throwable) {
                     }
                 }

@@ -855,6 +855,8 @@
     "openQrScan": "QR ile Giriş/Çıkış"
   },
   "recruitment": {
+    "downloadCv": "CV İndir",
+    "downloadCvFailed": "CV indirilemedi",
     "addCandidate": "Aday Ekle",
     "candidateAdded": "Aday eklendi",
     "candidateAddFailed": "Aday eklenemedi",

@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\BaseController;
 use App\Models\Employee;
 use App\Models\EmployeeRequest;
 use App\Models\RequestType;
+use App\Services\Files\SensitiveFileStorage;
 use App\Services\LookupService;
 use App\Services\RequestTypeFormFieldsAdapter;
 use App\Services\WorkflowService;
@@ -13,6 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PortalRequestController extends BaseController
 {
@@ -20,6 +22,7 @@ class PortalRequestController extends BaseController
         protected LookupService $lookups,
         protected RequestTypeFormFieldsAdapter $formFieldsAdapter,
         protected WorkflowService $workflowService,
+        protected SensitiveFileStorage $files,
     ) {}
 
     /**
@@ -99,6 +102,27 @@ class PortalRequestController extends BaseController
     }
 
     /**
+     * Kendi talebinin ekini indir (index = attachments dizisindeki sıra)
+     */
+    public function attachment(Request $request, int $id, int $index): StreamedResponse|JsonResponse
+    {
+        $employee = Employee::where('user_id', $request->user()->id)->first();
+
+        $employeeRequest = $employee
+            ? EmployeeRequest::where('employee_id', $employee->id)->where('id', $id)->first()
+            : null;
+
+        $attachment = $employeeRequest?->attachments[$index] ?? null;
+        $path = is_array($attachment) ? ($attachment['path'] ?? null) : null;
+
+        if (! $this->files->exists($path)) {
+            return $this->notFound('Ek bulunamadı');
+        }
+
+        return $this->files->download($path, $attachment['name'] ?? basename((string) $path));
+    }
+
+    /**
      * Yeni talep oluştur
      */
     public function store(Request $request): JsonResponse
@@ -159,7 +183,7 @@ class PortalRequestController extends BaseController
             $attachments = [];
             if ($request->hasFile('attachments')) {
                 foreach ($request->file('attachments') as $file) {
-                    $path = $file->store('request_attachments/'.$user->home_company_id, 'public');
+                    $path = $this->files->store($file, 'request_attachments/'.$user->home_company_id);
                     $attachments[] = [
                         'path' => $path,
                         'name' => $file->getClientOriginalName(),

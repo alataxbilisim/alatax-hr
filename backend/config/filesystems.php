@@ -30,10 +30,12 @@ return [
 
     'disks' => [
 
+        // Kök private ile aynı; `serve` kapalı: imzalı `/storage/{path}` route'u açılmaz,
+        // `/storage/...` yalnız public diski (symlink) gösterir.
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
+            'serve' => false,
             'throw' => false,
             'report' => false,
         ],

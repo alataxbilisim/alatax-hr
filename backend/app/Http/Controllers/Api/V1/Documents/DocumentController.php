@@ -8,10 +8,10 @@ use App\Models\ActivityLog;
 use App\Models\Document;
 use App\Models\DocumentVersion;
 use App\Services\DataScopeService;
+use App\Services\Files\SensitiveFileStorage;
 use App\Services\LookupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DocumentController extends BaseController
@@ -19,7 +19,14 @@ class DocumentController extends BaseController
     public function __construct(
         protected DataScopeService $dataScope,
         protected LookupService $lookups,
+        protected SensitiveFileStorage $files,
     ) {}
+
+    /** `file_path` alanı geriye uyumluluk için korunur; değeri yetki kontrollü indirme ucudur. */
+    private function downloadUrl(Document $document): ?string
+    {
+        return $document->file_path ? url("/api/v1/documents/{$document->id}/download") : null;
+    }
 
     /**
      * Doküman listesi
@@ -105,7 +112,7 @@ class DocumentController extends BaseController
                 'id' => $doc->id,
                 'name' => $doc->name,
                 'file_name' => $doc->file_name,
-                'file_path' => $doc->file_path ? asset('storage/'.$doc->file_path) : null,
+                'file_path' => $this->downloadUrl($doc),
                 'file_size' => $doc->file_size,
                 'file_type' => $doc->file_type,
                 'category' => $doc->category ? [
@@ -146,7 +153,7 @@ class DocumentController extends BaseController
         ]);
 
         $file = $request->file('file');
-        $path = $file->store('documents/'.$this->getCompanyId(), 'public');
+        $path = $this->files->store($file, 'documents/'.$this->getCompanyId());
 
         $document = Document::withoutAuditing(function () use ($validated, $file, $path) {
             return Document::create([
@@ -168,7 +175,7 @@ class DocumentController extends BaseController
         return $this->success([
             'id' => $document->id,
             'name' => $document->name,
-            'file_path' => asset('storage/'.$document->file_path),
+            'file_path' => $this->downloadUrl($document),
         ], 'Doküman başarıyla yüklendi', 201);
     }
 
@@ -212,7 +219,7 @@ class DocumentController extends BaseController
             'id' => $document->id,
             'name' => $document->name,
             'file_name' => $document->file_name,
-            'file_path' => $document->file_path ? asset('storage/'.$document->file_path) : null,
+            'file_path' => $this->downloadUrl($document),
             'file_size' => $document->file_size,
             'file_type' => $document->file_type,
             'category' => $document->category,
@@ -247,19 +254,15 @@ class DocumentController extends BaseController
 
         $this->authorize('view', $document);
 
-        if (! $document->file_path || ! Storage::disk('public')->exists($document->file_path)) {
+        if (! $this->files->exists($document->file_path)) {
             return $this->error('Dosya bulunamadı', 404);
         }
 
         ActivityLog::log('download', $document, 'Doküman indirildi: '.$document->name);
 
-        return Storage::disk('public')->download(
-            $document->file_path,
-            $document->file_name,
-            [
-                'Content-Type' => $document->file_type,
-            ]
-        );
+        return $this->files->download($document->file_path, $document->file_name, [
+            'Content-Type' => (string) $document->file_type,
+        ]);
     }
 
     /**
@@ -272,6 +275,8 @@ class DocumentController extends BaseController
         if (! $document) {
             return $this->notFound('Doküman bulunamadı');
         }
+
+        $this->authorize('view', $document);
 
         $versions = [];
         if (class_exists(DocumentVersion::class)) {
@@ -310,6 +315,8 @@ class DocumentController extends BaseController
             return $this->notFound('Doküman bulunamadı');
         }
 
+        $this->authorize('view', $document);
+
         if (! class_exists(DocumentVersion::class)) {
             return $this->error('Versiyon sistemi aktif değil', 400);
         }
@@ -320,19 +327,15 @@ class DocumentController extends BaseController
             return $this->notFound('Versiyon bulunamadı');
         }
 
-        if (! $version->file_path || ! Storage::disk('public')->exists($version->file_path)) {
+        if (! $this->files->exists($version->file_path)) {
             return $this->error('Dosya bulunamadı', 404);
         }
 
         ActivityLog::log('download', $document, 'Doküman versiyonu indirildi: '.$document->name.' v'.$version->version_number);
 
-        return Storage::disk('public')->download(
-            $version->file_path,
-            $version->file_name,
-            [
-                'Content-Type' => $version->file_type,
-            ]
-        );
+        return $this->files->download($version->file_path, $version->file_name, [
+            'Content-Type' => (string) $version->file_type,
+        ]);
     }
 
     /**
@@ -442,9 +445,7 @@ class DocumentController extends BaseController
         $this->authorize('delete', $document);
 
         // Dosyayı sil
-        if ($document->file_path) {
-            Storage::disk('public')->delete($document->file_path);
-        }
+        $this->files->delete($document->file_path);
 
         $document->delete();
 

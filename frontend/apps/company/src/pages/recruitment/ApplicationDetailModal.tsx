@@ -5,6 +5,7 @@ import { recruitmentApi, lookupsApi, type LookupItem } from '@shared/services/ap
 import { Select } from '@shared/components';
 import toast from 'react-hot-toast';
 import { Modal } from '../../components/ui';
+import { downloadApplicationCv } from './downloadCv';
 import {
   BsEnvelope,
   BsTelephone,
@@ -290,15 +291,18 @@ const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
                 </span>
               )}
               {application.cv_path && (
-                <a
-                  href={application.cv_path}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
                   className="btn btn-secondary btn-sm"
                   style={{ marginLeft: 'auto' }}
+                  onClick={() => {
+                    downloadApplicationCv(application.id).catch(() =>
+                      toast.error(t('recruitment.downloadCvFailed'))
+                    );
+                  }}
                 >
-                  <BsDownload size={14} /> CV İndir
-                </a>
+                  <BsDownload size={14} /> {t('recruitment.downloadCv')}
+                </button>
               )}
             </div>
             {application.status === 'hired' && (

@@ -9,12 +9,13 @@ use App\Models\ExpenseCategory;
 use App\Models\ExpenseClaim;
 use App\Models\ExpenseItem;
 use App\Services\CustomFieldValidationService;
+use App\Services\Files\SensitiveFileStorage;
 use App\Services\LookupService;
 use App\Services\WorkflowService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PortalExpenseController extends BaseController
 {
@@ -22,6 +23,7 @@ class PortalExpenseController extends BaseController
         protected LookupService $lookups,
         protected WorkflowService $workflowService,
         protected CustomFieldValidationService $customFieldValidation,
+        protected SensitiveFileStorage $files,
     ) {}
 
     /**
@@ -241,9 +243,10 @@ class PortalExpenseController extends BaseController
             'receipt' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120', // 5MB max
         ]);
 
-        $path = $request->file('receipt')->store(
-            'expenses/'.auth()->user()->home_company_id.'/'.date('Y-m'),
-            'public'
+        $this->files->delete($item->receipt_path);
+        $path = $this->files->store(
+            $request->file('receipt'),
+            'expenses/'.auth()->user()->home_company_id.'/'.date('Y-m')
         );
 
         $item->update(['receipt_path' => $path]);
@@ -252,8 +255,23 @@ class PortalExpenseController extends BaseController
 
         return $this->success([
             'receipt_path' => $path,
-            'receipt_url' => Storage::url($path),
+            'receipt_url' => url("/api/v1/portal/expenses/items/{$item->id}/receipt"),
         ], 'Fiş yüklendi');
+    }
+
+    /**
+     * Kendi masraf kaleminin fişini indir
+     */
+    public function receipt(int $itemId): StreamedResponse|JsonResponse
+    {
+        $item = ExpenseItem::whereHas('expenseClaim', fn ($q) => $q->where('user_id', auth()->id()))
+            ->find($itemId);
+
+        if (! $item || ! $this->files->exists($item->receipt_path)) {
+            return $this->notFound('Fiş bulunamadı');
+        }
+
+        return $this->files->download($item->receipt_path, basename((string) $item->receipt_path));
     }
 
     /**

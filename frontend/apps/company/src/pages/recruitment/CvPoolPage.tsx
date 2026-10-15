@@ -1,7 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { recruitmentApi } from '@shared/services/api';
+import { useTranslation } from '@shared/i18n';
 import toast from 'react-hot-toast';
+import { downloadApplicationCv } from './downloadCv';
 import { DataTable } from '../../components/ui';
 import {
   BsArrowLeft,
@@ -29,6 +31,7 @@ interface Candidate {
   rating: number | null;
   status: string;
   cv_path: string | null;
+  cv_application_id: number | null;
   last_application_date: string;
   created_at: string;
 }
@@ -47,6 +50,7 @@ const statusLabels: Record<string, { label: string; class: string }> = {
 
 const CvPoolPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation('common');
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -234,16 +238,21 @@ const CvPoolPage: React.FC = () => {
       title: 'CV',
       width: '60px',
       align: 'center' as const,
-      render: (c: Candidate) => c.cv_path ? (
-        <a
-          href={c.cv_path}
-          target="_blank"
-          rel="noopener noreferrer"
+      render: (c: Candidate) => c.cv_application_id ? (
+        <button
+          type="button"
           className="btn btn-ghost btn-icon btn-sm"
-          title="CV İndir"
+          title={t('recruitment.downloadCv')}
+          onClick={() => {
+            const applicationId = c.cv_application_id;
+            if (!applicationId) return;
+            downloadApplicationCv(applicationId).catch(() =>
+              toast.error(t('recruitment.downloadCvFailed'))
+            );
+          }}
         >
           <BsDownload />
-        </a>
+        </button>
       ) : '-',
     },
     {

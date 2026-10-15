@@ -13,18 +13,46 @@ use App\Models\Employee;
 use App\Models\JobApplication;
 use App\Models\JobPosition;
 use App\Models\OnboardingProcess;
+use App\Services\Files\SensitiveFileStorage;
 use App\Services\LookupService;
 use App\Services\Recruitment\ConvertApplicationToEmployeeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use InvalidArgumentException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ApplicationController extends BaseController
 {
     public function __construct(
         protected LookupService $lookups,
         protected ConvertApplicationToEmployeeService $convertService,
+        protected SensitiveFileStorage $files,
     ) {}
+
+    /** `cv_path` alanı geriye uyumluluk için korunur; değeri yetki kontrollü indirme ucudur. */
+    public static function cvDownloadUrl(int $applicationId): string
+    {
+        return url("/api/v1/recruitment/applications/{$applicationId}/cv");
+    }
+
+    /**
+     * Adayın CV'sini indir
+     */
+    public function cv(int $id): StreamedResponse|JsonResponse
+    {
+        $application = JobApplication::find($id);
+
+        if (! $application || ! $this->files->exists($application->cv_path)) {
+            return $this->notFound('CV bulunamadı');
+        }
+
+        ActivityLog::log('download', $application, 'Aday CV indirildi');
+
+        return $this->files->download(
+            $application->cv_path,
+            $application->cv_original_name ?: basename((string) $application->cv_path)
+        );
+    }
 
     /**
      * Başvuru listesi (kanban kaynağı) — şema alanları + FE alias.
@@ -113,7 +141,7 @@ class ApplicationController extends BaseController
         $cvOriginal = null;
         if ($request->hasFile('cv')) {
             $file = $request->file('cv');
-            $cvPath = $file->store('applications/'.$companyId, 'public');
+            $cvPath = $this->files->store($file, 'applications/'.$companyId);
             $cvOriginal = $file->getClientOriginalName();
         }
 
@@ -335,7 +363,7 @@ class ApplicationController extends BaseController
             ] : null,
             'status' => $status,
             'form_data' => $app->form_data ?? [],
-            'cv_path' => $app->cv_path ? asset('storage/'.$app->cv_path) : null,
+            'cv_path' => $app->cv_path ? self::cvDownloadUrl($app->id) : null,
             'notes' => $app->notes,
             'rating' => $app->rating,
             'source' => $app->source,
