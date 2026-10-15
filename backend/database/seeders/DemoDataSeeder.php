@@ -68,6 +68,23 @@ class DemoDataSeeder extends Seeder
 {
     public const PASSWORD = 'Demo1234!';
 
+    public const COMPANY_SLUG = 'demo-firma';
+
+    /** DEM-001…040 sıralı personel adları (demo:fill-employee-names de bunu kullanır). */
+    public const EMPLOYEE_NAMES = [
+        'Ayşe Demir', 'Can Yıldız', 'Elif Kara', 'Burak Şahin', 'Zeynep Ak', 'Mert Çelik', 'Selin Öztürk',
+        'Emre Aydın', 'Deniz Kılıç', 'Gökhan Arslan', 'İrem Koç', 'Onur Yılmaz', 'Melis Acar', 'Hakan Polat',
+        'Ceren Taş', 'Barış Erdoğan', 'Nazlı Kurt', 'Tolga Şimşek', 'Pınar Avcı', 'Serkan Doğan', 'Ece Yalçın',
+        'Murat Keskin', 'Seda Güneş', 'Volkan Aslan', 'Hande Bozkurt', 'Kaan Tekin', 'Derya Çakır', 'Oğuz Demirtaş',
+        'Büşra İlhan', 'Alper Soylu', 'Gizem Karaca', 'Yiğit Özkan', 'Tuğçe Bulut', 'Furkan Aksoy', 'Nilüfer Ergin',
+        'Cem Uçar', 'Şeyma Korkmaz', 'Arda Sezer', 'Esra Bilgin', 'Berkay Tunç',
+    ];
+
+    public static function employeeFullName(int $index): string
+    {
+        return self::EMPLOYEE_NAMES[($index - 1) % count(self::EMPLOYEE_NAMES)];
+    }
+
     /** @var array<string, User> */
     private array $qaUsers = [];
 
@@ -136,7 +153,7 @@ class DemoDataSeeder extends Seeder
         }
 
         $company = Company::firstOrCreate(
-            ['slug' => 'demo-firma'],
+            ['slug' => self::COMPANY_SLUG],
             [
                 'name' => 'Demo Firma AŞ',
                 'status' => 'active',
@@ -249,14 +266,6 @@ class DemoDataSeeder extends Seeder
         $this->departments['SAT']->update(['manager_id' => $mudur->id]);
         $this->upsertEmployee($company, 'DEM-020', $personel, 'SAT', 'IST', 'DEMO_POS_03', '2022-04-10', 'active', 'female', $mudurEmp->id);
 
-        $names = [
-            'Ayşe Demir', 'Can Yıldız', 'Elif Kara', 'Burak Şahin', 'Zeynep Ak', 'Mert Çelik', 'Selin Öztürk',
-            'Emre Aydın', 'Deniz Kılıç', 'Gökhan Arslan', 'İrem Koç', 'Onur Yılmaz', 'Melis Acar', 'Hakan Polat',
-            'Ceren Taş', 'Barış Erdoğan', 'Nazlı Kurt', 'Tolga Şimşek', 'Pınar Avcı', 'Serkan Doğan', 'Ece Yalçın',
-            'Murat Keskin', 'Seda Güneş', 'Volkan Aslan', 'Hande Bozkurt', 'Kaan Tekin', 'Derya Çakır', 'Oğuz Demirtaş',
-            'Büşra İlhan', 'Alper Soylu', 'Gizem Karaca', 'Yiğit Özkan', 'Tuğçe Bulut', 'Furkan Aksoy', 'Nilüfer Ergin',
-            'Cem Uçar', 'Şeyma Korkmaz', 'Arda Sezer', 'Esra Bilgin', 'Berkay Tunç',
-        ];
         $deptCodes = ['IK', 'IT', 'SAT', 'OPR', 'FIN', 'PAZ'];
         $branchCodes = ['HQ', 'IST', 'ANK'];
         $posCodes = array_keys($this->positions);
@@ -272,7 +281,7 @@ class DemoDataSeeder extends Seeder
             $status = $isTerm ? 'terminated' : ($i === 33 ? 'on_leave' : 'active');
             $hireYear = ($i % 5 === 0) ? 2018 : (($i % 4 === 0) ? 2025 : 2019 + ($i % 6));
             $managerId = $isTerm ? null : (in_array($dept, ['IT', 'SAT'], true) ? $mudurEmp->id : ($dept === 'IK' ? $ikEmp->id : $adminEmp->id));
-            $fullName = $names[($i - 1) % 40];
+            $fullName = self::employeeFullName($i);
             $user = $isTerm ? null : $this->upsertUser($company->id, sprintf('personel%03d@demo.test', $i), $fullName, 'employee');
             $this->upsertEmployee(
                 $company,
