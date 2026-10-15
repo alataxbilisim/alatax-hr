@@ -1,11 +1,22 @@
 # ADIM 03B — Frontend Test Altyapısı, Uçtan Uca (E2E) Testler ve CI
 
-**Ön koşul:** `00_ORTAK_KURALLAR.md` okunmuş olmalı. `ADIM_03A_RAPOR.md` tüm kabul kriterleri ✅ olmalı.
+**Ön koşul:** `00_ORTAK_KURALLAR.md` okunmuş olmalı. `ADIM_03A_RAPOR.md` tüm kabul kriterleri ✅ olmalı. Bu adım Bölüm 0'daki güvenlik düzeltmeleriyle başlar.
 **Dal:** `altyapi`. Görev dosyasını adımın başında commit et.
 **Amaç:** Bugün frontend'de **sıfır** test var. Üç uygulama ve shared paket için birim/bileşen test altyapısını kurmak, kritik kullanıcı akışlarını gerçek tarayıcıda doğrulayan E2E katmanını eklemek ve CI'ı tüm bu katmanları her push'ta çalıştıracak hale getirmek.
 **Bu adımda YAPILMAYACAKLAR:** UI yeniden tasarımı, React Query / react-hook-form geçişi (Adım 04 frontend mimarisi), bağımlılık güvenlik yükseltmeleri (Adım 04).
 
 ---
+
+## Bölüm 0 — 03A'dan devreden acil düzeltmeler (önce bunlar, her biri ayrı commit + regresyon testi)
+
+| # | Sorun | Beklenen çözüm | Test |
+|---|---|---|---|
+| S1 | **Hassas dosyalar `public` diskte** (KVKK): şirket belgeleri (`Documents/DocumentController`), izin belgeleri/sağlık raporları (`Portal/PortalLeaveController`), CV ve benzeri yüklemeler. `storage:link` kurulu olduğundan URL'yi bilen herkes erişebilir. | Kişisel/hassas veri içeren **tüm** yüklemeler `private` diske. İndirme yalnız yetki kontrollü controller ucu üzerinden (gerekirse süreli imzalı URL). `public` diskte yalnız gerçekten herkese açık varlıklar kalır (şirket logosu, avatar); bu izin listesini mimari teste bağla (`public` diske yazan kod yalnız listedeki yerlerden olabilir). Okuma tarafı geriye dönük: dosya eski kayıtta `public`teyse oradan da okunabilsin. Mevcut dosyaları taşıyan idempotent komut yaz (`storage:move-sensitive-to-private --dry-run`); canlıda önce dry-run çıktısını rapora koy, sonra çalıştır. | Hassas yükleme sonrası dosya `public` diskte yok; `/storage/...` URL'si 404; yetkili kullanıcı indirir, yetkisiz/başka şirket 403/404. |
+| S2 | **Vekalette şirket kontrolü yok:** `Workflow/ApprovalController` ~177 `delegate_id => exists:users,id` | Vekil yalnız aynı şirkette (CompanyContext) aktif üyeliği olan kullanıcı olabilir. Onay yetkisi çözülürken de vekilin şirket üyeliği yeniden doğrulanır. Mevcut verilerde başka şirkete işaret eden vekalet var mı tara ve raporla. Aynı deseni (`exists:users,id`, `exists:employees,id` vb. tenant'sız `exists` kuralları) **tüm** validasyonlarda ara, düzelt; mimari test ekle (tenant tablolarına `exists` kuralı şirket kapsamı olmadan yazılamaz). | Başka şirket kullanıcısını vekil atama → 422; vekil başka şirkete taşınırsa onay veremez. |
+| S3 | **Yanlış argümanlı hata çağrıları (33 yer):** kullanıcı 400/403/404 yerine 500 görüyor, çoğu portalda. | Hepsini düzelt. `ApiResponse::error` imzasını tip güvenli hale getir ki yanlış kullanım PHPStan'de yakalansın. | Her düzeltilen uç için doğru durum kodu testi (gruplu olabilir). |
+| S4 | Adı boş 6 eski demo personel | Kullanıcı onayladı: canlı veride doldur (idempotent komut veya düzeltilmiş seeder mantığıyla). Öncesi/sonrası rapora. | — |
+
+**Kapsam alt sınırı (kullanıcı onayladı):** Backend satır kapsamı %58,32 taban çizgisinin altına düşemez. Bu bir "mandal"dır: CI'da ölçülen değer tabandan düşükse job kırılır; değer yükselirse taban `docs/operasyon/TEST.md` ve CI yapılandırmasında yeni değere çekilir (elle, ayrı commit). Frontend için aynı mekanizmayı bu adımda ölçülen ilk değerle kur.
 
 ## Bölüm A — Araç sürümlerinin sabitlenmesi
 1. Denetimde tespit edilen uyumsuzluk: CI `pnpm 10 / Node 20`, geliştirme makinesi `pnpm 9.15.9 / Node 22`. Tek bir sürüm seç (Node LTS + pnpm sürümü). Seçimi `package.json` → `packageManager` ve `engines`, `.nvmrc` / `.node-version` ve CI'da sabitle.
@@ -38,8 +49,8 @@
 
 ## Bölüm D — CI (GitHub Actions)
 Mevcut `.github/workflows/ci.yml`'i yeniden düzenle. İş paralel job'lara bölünsün:
-1. **backend-quality:** Pint `--test`, PHPStan (baseline), mimari testler, `composer audit` (rapor; şimdilik kırmasın).
-2. **backend-tests:** PostgreSQL 16 servis container'ı, paralel PHPUnit, Clover kapsam çıktısı artifact olarak.
+1. **backend-quality:** Pint `--test`, PHPStan (baseline; baseline büyürse kırılır), mimari testler, `composer audit` (rapor; şimdilik kırmasın).
+2. **backend-tests:** PostgreSQL 16 servis container'ı, paralel PHPUnit, Clover kapsam çıktısı artifact olarak, kapsam mandalı kontrolü.
 3. **frontend-quality:** `pnpm install --frozen-lockfile`, lint, `tsc --noEmit` (3 uygulama + shared), `check:brand`, API sözleşme kontrolü.
 4. **frontend-tests:** Vitest + kapsam artifact.
 5. **frontend-build:** 3 uygulamanın production build'i; bundle boyutlarını özet olarak yazdır.
@@ -61,6 +72,8 @@ Mevcut `.github/workflows/ci.yml`'i yeniden düzenle. İş paralel job'lara böl
 6. Backend suite hâlâ yeşil.
 
 ## Kabul kriterleri
+- [ ] S1–S4 kapandı, regresyon testleri ve mimari korumalar var; hassas dosya `public` diskte kalmadı.
+- [ ] Backend ve frontend kapsam mandalı CI'da aktif.
 - [ ] Node/pnpm sürümleri tek ve sabit; npm kilidi ve derleme çıktıları depodan çıktı.
 - [ ] Vitest + RTL + MSW kurulu; zorunlu ilk test seti yazıldı ve yeşil.
 - [ ] Route duman testi tüm route'ları otomatik kapsıyor; menü–route tutarlılık testi var.
