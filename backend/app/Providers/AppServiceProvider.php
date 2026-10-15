@@ -9,10 +9,13 @@ use App\Rules\CompanyMember;
 use App\Rules\ExistsInCompany;
 use App\Services\Settings\SettingsRegistry;
 use App\Services\Settings\SettingsResolver;
+use App\Support\E2eDatabaseGuard;
 use App\Support\HierarchicalPermission;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\Channels\DatabaseChannel;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Validator;
@@ -51,6 +54,7 @@ class AppServiceProvider extends ServiceProvider
         $this->configureRateLimiting();
         $this->configureAuthorizationGates();
         $this->configureTenantValidationRules();
+        $this->guardE2eDatabaseCommands();
 
         // Test ortamında .env/config:cache log mailer'ı ezmesin (queued Mailable)
         if ($this->app->environment('testing')) {
@@ -108,6 +112,19 @@ class AppServiceProvider extends ServiceProvider
 
         Validator::extend('company_member', function (string $attribute, mixed $value, array $parameters): bool {
             return CompanyMember::passes($value, in_array('active', $parameters, true));
+        });
+    }
+
+    /**
+     * `migrate:fresh --seeder=E2eSeeder` tabloları seeder'dan önce düşürür; hedef `_e2e` DB değilse
+     * komut hiç başlamadan durdurulur (seeder içindeki kontrol bu durumda çok geç kalır).
+     */
+    protected function guardE2eDatabaseCommands(): void
+    {
+        Event::listen(CommandStarting::class, function (CommandStarting $event): void {
+            if (E2eDatabaseGuard::targetsE2eSeeder($event->command, $event->input)) {
+                E2eDatabaseGuard::assertE2eDatabase();
+            }
         });
     }
 
