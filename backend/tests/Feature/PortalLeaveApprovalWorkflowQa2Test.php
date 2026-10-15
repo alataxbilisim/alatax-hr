@@ -229,6 +229,83 @@ class PortalLeaveApprovalWorkflowQa2Test extends TestCase
         $this->assertSame(LeaveRequest::STATUS_APPROVED, $leave->status->value);
     }
 
+    public function test_portal_leave_reserves_pending_days_and_approval_moves_them_to_used(): void
+    {
+        Sanctum::actingAs($this->employee);
+        $start = $this->startInBalanceYear();
+
+        $leaveId = (int) $this->postJson('/api/v1/portal/leaves', [
+            'leave_type_id' => $this->leaveType->id,
+            'start_date' => $start->toDateString(),
+            'end_date' => $start->copy()->addDays(2)->toDateString(),
+        ])->assertCreated()->json('data.id');
+
+        $balance = $this->balance();
+        $this->assertSame(3.0, (float) $balance->pending_days);
+        $this->assertSame(27.0, (float) $balance->remaining_days);
+
+        Sanctum::actingAs($this->manager);
+        $this->postJson("/api/v1/leaves/requests/{$leaveId}/approve")->assertOk();
+
+        $balance->refresh();
+        $this->assertSame(0.0, (float) $balance->pending_days);
+        $this->assertSame(3.0, (float) $balance->used_days);
+        $this->assertSame(27.0, (float) $balance->remaining_days);
+    }
+
+    public function test_portal_cancel_releases_pending_days_without_going_negative(): void
+    {
+        Sanctum::actingAs($this->employee);
+        $start = $this->startInBalanceYear();
+
+        $leaveId = (int) $this->postJson('/api/v1/portal/leaves', [
+            'leave_type_id' => $this->leaveType->id,
+            'start_date' => $start->toDateString(),
+            'end_date' => $start->copy()->addDay()->toDateString(),
+        ])->assertCreated()->json('data.id');
+
+        $this->postJson("/api/v1/portal/leaves/{$leaveId}/cancel")->assertOk();
+
+        $balance = $this->balance();
+        $this->assertSame(0.0, (float) $balance->pending_days);
+        $this->assertSame(30.0, (float) $balance->remaining_days);
+    }
+
+    public function test_portal_update_rebalances_pending_days(): void
+    {
+        Sanctum::actingAs($this->employee);
+        $start = $this->startInBalanceYear();
+
+        $leaveId = (int) $this->postJson('/api/v1/portal/leaves', [
+            'leave_type_id' => $this->leaveType->id,
+            'start_date' => $start->toDateString(),
+            'end_date' => $start->copy()->addDays(3)->toDateString(),
+        ])->assertCreated()->json('data.id');
+
+        $this->putJson("/api/v1/portal/leaves/{$leaveId}", [
+            'start_date' => $start->toDateString(),
+            'end_date' => $start->toDateString(),
+        ])->assertOk();
+
+        $this->assertSame(1.0, (float) $this->balance()->pending_days);
+    }
+
+    /** Bakiye satırı yalnız bu yıl için var; yıl sonunda yarın yeni yıla düşer. */
+    private function startInBalanceYear(): \Illuminate\Support\Carbon
+    {
+        $tomorrow = now()->addDay();
+
+        return $tomorrow->year === now()->year ? $tomorrow : now();
+    }
+
+    private function balance(): LeaveBalance
+    {
+        return LeaveBalance::where('user_id', $this->employee->id)
+            ->where('leave_type_id', $this->leaveType->id)
+            ->where('year', now()->year)
+            ->firstOrFail();
+    }
+
     public function test_portal_leaves_index_data_is_flat_array_not_nested(): void
     {
         Sanctum::actingAs($this->employee);

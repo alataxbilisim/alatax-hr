@@ -204,6 +204,10 @@ class PortalLeaveController extends BaseController
                 ]);
             });
 
+            // Onay/red/iptal pending_days'ten düşer; company akışı gibi burada eklenmezse bakiye bozulur.
+            $this->pendingBalance($user->id, (int) $leaveRequest->leave_type_id, $leaveRequest->start_date->year)
+                ?->addPending((float) $totalDays);
+
             // Company LeaveRequestController ile aynı köprü — portal da ApprovalFlowEngine'e girer
             $record = $this->workflowService->startWorkflow($leaveRequest, [
                 'total_days' => $totalDays,
@@ -268,9 +272,27 @@ class PortalLeaveController extends BaseController
             $validated['document_name'] = $request->file('document')->getClientOriginalName();
         }
 
-        $leaveRequest->update($validated);
+        $previousDays = (float) $leaveRequest->total_days;
+        $previousYear = $leaveRequest->start_date->year;
+
+        DB::transaction(function () use ($leaveRequest, $validated, $user, $previousDays, $previousYear) {
+            $leaveRequest->update($validated);
+
+            $leaveTypeId = (int) $leaveRequest->leave_type_id;
+            $this->pendingBalance($user->id, $leaveTypeId, $previousYear)?->rejectPending($previousDays);
+            $this->pendingBalance($user->id, $leaveTypeId, $leaveRequest->start_date->year)
+                ?->addPending((float) $leaveRequest->total_days);
+        });
 
         return $this->success($leaveRequest, 'İzin talebi güncellendi');
+    }
+
+    private function pendingBalance(int $userId, int $leaveTypeId, int $year): ?LeaveBalance
+    {
+        return LeaveBalance::where('user_id', $userId)
+            ->where('leave_type_id', $leaveTypeId)
+            ->where('year', $year)
+            ->first();
     }
 
     /**
