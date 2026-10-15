@@ -2,6 +2,7 @@
 
 namespace App\Traits;
 
+use Illuminate\Contracts\Support\MessageBag;
 use Illuminate\Http\JsonResponse;
 
 trait ApiResponse
@@ -21,9 +22,13 @@ trait ApiResponse
     }
 
     /**
-     * Hata response döndür
+     * Hata response döndür. Sıra: mesaj, HTTP kodu, alan hataları — `error($m, null, 404)` gibi
+     * yanlış sıralı çağrılar PHPStan'de yakalanır (Adım 03B S3).
+     *
+     * @param  int<400, 599>  $code
+     * @param  array<array-key, mixed>|MessageBag|null  $errors
      */
-    protected function error(string $message = 'Bir hata oluştu', int $code = 400, $errors = null): JsonResponse
+    protected function error(string $message = 'Bir hata oluştu', int $code = 400, array|MessageBag|null $errors = null): JsonResponse
     {
         return response()->json([
             'success' => false,
@@ -119,8 +124,10 @@ trait ApiResponse
 
     /**
      * 422 Validation Error response
+     *
+     * @param  array<array-key, mixed>|MessageBag  $errors
      */
-    protected function validationError($errors, string $message = 'Doğrulama hatası'): JsonResponse
+    protected function validationError(array|MessageBag $errors, string $message = 'Doğrulama hatası'): JsonResponse
     {
         return $this->error($message, 422, $errors);
     }

@@ -28,7 +28,7 @@ class PortalProfileController extends BaseController
             ->first();
 
         if (! $employee) {
-            return $this->error('Personel kaydı bulunamadı', null, 404);
+            return $this->error('Personel kaydı bulunamadı', 404);
         }
 
         // Portal FE düz string alanlar bekler — EmployeeResource.department nesne döner
@@ -69,7 +69,7 @@ class PortalProfileController extends BaseController
         $employee = Employee::where('user_id', $user->id)->first();
 
         if (! $employee) {
-            return $this->error('Personel kaydı bulunamadı', null, 404);
+            return $this->error('Personel kaydı bulunamadı', 404);
         }
 
         $validated = $request->validate([
@@ -161,7 +161,7 @@ class PortalProfileController extends BaseController
         $user = $request->user();
 
         if (! Hash::check($validated['current_password'], $user->password)) {
-            return $this->error('Mevcut şifre hatalı', ['current_password' => ['Mevcut şifre hatalı']], 422);
+            return $this->error('Mevcut şifre hatalı', 422, ['current_password' => ['Mevcut şifre hatalı']]);
         }
 
         $user->update([

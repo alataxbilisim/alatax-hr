@@ -178,7 +178,7 @@ class CompanyLedgerController extends BaseController
     {
         // İşlemin bu firmaya ait olduğunu kontrol et
         if ($transaction->company_id !== $company->id) {
-            return $this->error('İşlem bu firmaya ait değil', null, 404);
+            return $this->error('İşlem bu firmaya ait değil', 404);
         }
 
         $transaction->load('createdBy:id,name');

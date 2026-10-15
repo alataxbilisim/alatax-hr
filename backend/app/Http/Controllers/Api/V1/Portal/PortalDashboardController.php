@@ -22,7 +22,7 @@ class PortalDashboardController extends BaseController
         $employee = $this->getEmployee($user);
 
         if (! $employee) {
-            return $this->error('Personel kaydı bulunamadı', null, 404);
+            return $this->error('Personel kaydı bulunamadı', 404);
         }
 
         // İzin bakiyesi

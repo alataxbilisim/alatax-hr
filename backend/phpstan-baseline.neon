@@ -61,12 +61,6 @@ parameters:
 			path: app/Http/Controllers/Api/V1/Admin/CompanyController.php
 
 		-
-			message: '#^Parameter \#2 \$code of method App\\Http\\Controllers\\Api\\V1\\BaseController\:\:error\(\) expects int, null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Http/Controllers/Api/V1/Admin/CompanyLedgerController.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
 			identifier: property.notFound
 			count: 1
@@ -76,12 +70,6 @@ parameters:
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$pivot\.$#'
 			identifier: property.notFound
 			count: 2
-			path: app/Http/Controllers/Api/V1/Admin/LicensePackageController.php
-
-		-
-			message: '#^Parameter \#2 \$code of method App\\Http\\Controllers\\Api\\V1\\BaseController\:\:error\(\) expects int, null given\.$#'
-			identifier: argument.type
-			count: 1
 			path: app/Http/Controllers/Api/V1/Admin/LicensePackageController.php
 
 		-
@@ -793,12 +781,6 @@ parameters:
 			path: app/Http/Controllers/Api/V1/Leaves/LeaveRequestController.php
 
 		-
-			message: '#^Parameter \#2 \$code of method App\\Http\\Controllers\\Api\\V1\\BaseController\:\:error\(\) expects int, null given\.$#'
-			identifier: argument.type
-			count: 7
-			path: app/Http/Controllers/Api/V1/Leaves/LeaveRequestController.php
-
-		-
 			message: '#^Relation ''approvedBy'' is not found in App\\Models\\LeaveRequest model\.$#'
 			identifier: larastan.relationExistence
 			count: 2
@@ -961,12 +943,6 @@ parameters:
 			path: app/Http/Controllers/Api/V1/Portal/PortalAnnouncementController.php
 
 		-
-			message: '#^Parameter \#2 \$code of method App\\Http\\Controllers\\Api\\V1\\BaseController\:\:error\(\) expects int, null given\.$#'
-			identifier: argument.type
-			count: 7
-			path: app/Http/Controllers/Api/V1/Portal/PortalAnnouncementController.php
-
-		-
 			message: '#^Using nullsafe property access "\?\-\>acknowledged" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
@@ -976,12 +952,6 @@ parameters:
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
 			identifier: property.notFound
 			count: 2
-			path: app/Http/Controllers/Api/V1/Portal/PortalDashboardController.php
-
-		-
-			message: '#^Parameter \#2 \$code of method App\\Http\\Controllers\\Api\\V1\\BaseController\:\:error\(\) expects int, null given\.$#'
-			identifier: argument.type
-			count: 1
 			path: app/Http/Controllers/Api/V1/Portal/PortalDashboardController.php
 
 		-
@@ -995,12 +965,6 @@ parameters:
 			identifier: nullsafe.neverNull
 			count: 2
 			path: app/Http/Controllers/Api/V1/Portal/PortalDataSubjectRequestController.php
-
-		-
-			message: '#^Parameter \#2 \$code of method App\\Http\\Controllers\\Api\\V1\\BaseController\:\:error\(\) expects int, null given\.$#'
-			identifier: argument.type
-			count: 4
-			path: app/Http/Controllers/Api/V1/Portal/PortalLeaveController.php
 
 		-
 			message: '#^Relation ''approver'' is not found in App\\Models\\LeaveRequest model\.$#'
@@ -1025,12 +989,6 @@ parameters:
 			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Http/Controllers/Api/V1/Portal/PortalLeaveController.php
-
-		-
-			message: '#^Parameter \#2 \$code of method App\\Http\\Controllers\\Api\\V1\\BaseController\:\:error\(\) expects int, null given\.$#'
-			identifier: argument.type
-			count: 8
-			path: app/Http/Controllers/Api/V1/Portal/PortalPerformanceController.php
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
@@ -1060,18 +1018,6 @@ parameters:
 			message: '#^Offset ''notifications'' on array\{\}\|string on left side of \?\? does not exist\.$#'
 			identifier: nullCoalesce.offset
 			count: 1
-			path: app/Http/Controllers/Api/V1/Portal/PortalProfileController.php
-
-		-
-			message: '#^Parameter \#2 \$code of method App\\Http\\Controllers\\Api\\V1\\BaseController\:\:error\(\) expects int, array\<string, array\<int, string\>\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Http/Controllers/Api/V1/Portal/PortalProfileController.php
-
-		-
-			message: '#^Parameter \#2 \$code of method App\\Http\\Controllers\\Api\\V1\\BaseController\:\:error\(\) expects int, null given\.$#'
-			identifier: argument.type
-			count: 2
 			path: app/Http/Controllers/Api/V1/Portal/PortalProfileController.php
 
 		-
@@ -1216,12 +1162,6 @@ parameters:
 			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\TrainingParticipant\>\:\:map\(\) contains unresolvable type\.$#'
 			identifier: argument.unresolvableType
 			count: 1
-			path: app/Http/Controllers/Api/V1/Portal/PortalTrainingController.php
-
-		-
-			message: '#^Parameter \#2 \$code of method App\\Http\\Controllers\\Api\\V1\\BaseController\:\:error\(\) expects int, null given\.$#'
-			identifier: argument.type
-			count: 2
 			path: app/Http/Controllers/Api/V1/Portal/PortalTrainingController.php
 
 		-

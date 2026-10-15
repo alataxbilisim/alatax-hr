@@ -74,7 +74,7 @@ class PortalAnnouncementController extends BaseController
         $employee = Employee::where('user_id', $user->id)->first();
 
         if (! $employee) {
-            return $this->error('Personel kaydı bulunamadı', null, 404);
+            return $this->error('Personel kaydı bulunamadı', 404);
         }
 
         $announcement = Announcement::where('company_id', $user->home_company_id)
@@ -83,12 +83,12 @@ class PortalAnnouncementController extends BaseController
             ->first();
 
         if (! $announcement) {
-            return $this->error('Duyuru bulunamadı', null, 404);
+            return $this->error('Duyuru bulunamadı', 404);
         }
 
         // Personel bu duyuruyu görebilir mi?
         if (! $announcement->canBeViewedBy($employee)) {
-            return $this->error('Bu duyuruya erişim izniniz yok', null, 403);
+            return $this->error('Bu duyuruya erişim izniniz yok', 403);
         }
 
         // Okundu olarak işaretle
@@ -126,7 +126,7 @@ class PortalAnnouncementController extends BaseController
         $employee = Employee::where('user_id', $user->id)->first();
 
         if (! $employee) {
-            return $this->error('Personel kaydı bulunamadı', null, 404);
+            return $this->error('Personel kaydı bulunamadı', 404);
         }
 
         $announcement = Announcement::where('company_id', $user->home_company_id)
@@ -135,11 +135,11 @@ class PortalAnnouncementController extends BaseController
             ->first();
 
         if (! $announcement) {
-            return $this->error('Duyuru bulunamadı', null, 404);
+            return $this->error('Duyuru bulunamadı', 404);
         }
 
         if (! $announcement->requires_acknowledgment) {
-            return $this->error('Bu duyuru onay gerektirmiyor', null, 422);
+            return $this->error('Bu duyuru onay gerektirmiyor', 422);
         }
 
         $read = $announcement->reads()
@@ -153,7 +153,7 @@ class PortalAnnouncementController extends BaseController
         }
 
         if ($read->acknowledged) {
-            return $this->error('Bu duyuru zaten onaylanmış', null, 422);
+            return $this->error('Bu duyuru zaten onaylanmış', 422);
         }
 
         $read->acknowledge();

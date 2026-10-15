@@ -27,7 +27,7 @@ class PortalPerformanceController extends BaseController
         $employee = Employee::where('user_id', $user->id)->first();
 
         if (! $employee) {
-            return $this->error('Personel kaydı bulunamadı', null, 404);
+            return $this->error('Personel kaydı bulunamadı', 404);
         }
 
         $query = PerformanceReview::where('company_id', $user->home_company_id)
@@ -69,7 +69,7 @@ class PortalPerformanceController extends BaseController
         $employee = Employee::where('user_id', $user->id)->first();
 
         if (! $employee) {
-            return $this->error('Personel kaydı bulunamadı', null, 404);
+            return $this->error('Personel kaydı bulunamadı', 404);
         }
 
         $review = PerformanceReview::where('company_id', $user->home_company_id)
@@ -84,7 +84,7 @@ class PortalPerformanceController extends BaseController
             ->first();
 
         if (! $review) {
-            return $this->error('Performans değerlendirmesi bulunamadı', null, 404);
+            return $this->error('Performans değerlendirmesi bulunamadı', 404);
         }
 
         return $this->success($review);
@@ -99,7 +99,7 @@ class PortalPerformanceController extends BaseController
         $employee = Employee::where('user_id', $user->id)->first();
 
         if (! $employee) {
-            return $this->error('Personel kaydı bulunamadı', null, 404);
+            return $this->error('Personel kaydı bulunamadı', 404);
         }
 
         $review = PerformanceReview::where('company_id', $user->home_company_id)
@@ -109,7 +109,7 @@ class PortalPerformanceController extends BaseController
             ->first();
 
         if (! $review) {
-            return $this->error('Performans değerlendirmesi bulunamadı veya yorum eklenemez', null, 404);
+            return $this->error('Performans değerlendirmesi bulunamadı veya yorum eklenemez', 404);
         }
 
         $validated = $request->validate([
@@ -129,8 +129,8 @@ class PortalPerformanceController extends BaseController
         $user = $request->user();
 
         $query = Objective::where('company_id', $user->home_company_id)
-            ->where('user_id', $user->id)
-            ->with(['keyResults:id,objective_id,title,current_value,target_value,unit,status']);
+            ->where('owner_id', $user->id)
+            ->with(['keyResults:id,objective_id,title,current_value,target_value,metric_type,status']);
 
         // Durum filtresi
         if ($request->has('status')) {
@@ -156,13 +156,13 @@ class PortalPerformanceController extends BaseController
         $user = $request->user();
 
         $objective = Objective::where('company_id', $user->home_company_id)
-            ->where('user_id', $user->id)
+            ->where('owner_id', $user->id)
             ->where('id', $id)
             ->with(['keyResults'])
             ->first();
 
         if (! $objective) {
-            return $this->error('Hedef bulunamadı', null, 404);
+            return $this->error('Hedef bulunamadı', 404);
         }
 
         return $this->success($objective);
@@ -178,12 +178,12 @@ class PortalPerformanceController extends BaseController
         $keyResult = KeyResult::where('id', $id)
             ->whereHas('objective', function ($q) use ($user) {
                 $q->where('company_id', $user->home_company_id)
-                    ->where('user_id', $user->id);
+                    ->where('owner_id', $user->id);
             })
             ->first();
 
         if (! $keyResult) {
-            return $this->error('Anahtar sonuç bulunamadı', null, 404);
+            return $this->error('Anahtar sonuç bulunamadı', 404);
         }
 
         $validated = $request->validate([
@@ -191,25 +191,17 @@ class PortalPerformanceController extends BaseController
             'note' => 'nullable|string|max:500',
         ]);
 
-        $keyResult->update([
-            'current_value' => $validated['current_value'],
-        ]);
-
-        // İlerleme kaydı ekle
-        \App\Models\KeyResultUpdate::create([
-            'key_result_id' => $keyResult->id,
-            'previous_value' => $keyResult->getOriginal('current_value'),
-            'new_value' => $validated['current_value'],
-            'note' => $validated['note'] ?? null,
-            'updated_by' => $user->id,
-        ]);
+        // Değer + ilerleme kaydı (KeyResultUpdate) + hedef ilerlemesi
+        $keyResult->updateValue((float) $validated['current_value'], $validated['note'] ?? null);
 
         // Status'u güncelle (0-25: not_started, 26-75: in_progress, 76-100: completed)
-        $progress = ($validated['current_value'] / $keyResult->target_value) * 100;
+        $progress = $keyResult->target_value > 0
+            ? ($validated['current_value'] / $keyResult->target_value) * 100
+            : 0;
         if ($progress >= 100) {
-            $keyResult->update(['status' => 'completed']);
+            $keyResult->update(['status' => KeyResult::STATUS_COMPLETED]);
         } elseif ($progress > 0) {
-            $keyResult->update(['status' => 'in_progress']);
+            $keyResult->update(['status' => KeyResult::STATUS_ON_TRACK]);
         }
 
         return $this->success($keyResult->fresh(), 'İlerleme güncellendi');
@@ -283,7 +275,7 @@ class PortalPerformanceController extends BaseController
             ->first();
 
         if (! $targetEmployee) {
-            return $this->error('Geçersiz kullanıcı', null, 422);
+            return $this->error('Geçersiz kullanıcı', 422);
         }
 
         $feedback = ContinuousFeedback::create([

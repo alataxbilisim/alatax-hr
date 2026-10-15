@@ -109,7 +109,7 @@ class PortalTrainingController extends BaseController
             ->first();
 
         if (! $participant || ! $participant->session->training) {
-            return $this->error('Eğitim bulunamadı', null, 404);
+            return $this->error('Eğitim bulunamadı', 404);
         }
 
         $training = $participant->session->training;
@@ -227,7 +227,7 @@ class PortalTrainingController extends BaseController
             ->first();
 
         if (! $certificate) {
-            return $this->error('Sertifika bulunamadı', null, 404);
+            return $this->error('Sertifika bulunamadı', 404);
         }
 
         return $this->success([

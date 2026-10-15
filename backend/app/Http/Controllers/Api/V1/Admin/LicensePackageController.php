@@ -222,7 +222,7 @@ class LicensePackageController extends BaseController
     {
         // Aktif firma varsa silme
         if ($package->companies()->where('status', 'active')->exists()) {
-            return $this->error('Bu pakete bağlı aktif firmalar var. Önce firmaları başka pakete taşıyın.', null, 422);
+            return $this->error('Bu pakete bağlı aktif firmalar var. Önce firmaları başka pakete taşıyın.', 422);
         }
 
         $packageName = $package->name;

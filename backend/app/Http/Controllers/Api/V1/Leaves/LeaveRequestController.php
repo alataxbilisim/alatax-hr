@@ -113,7 +113,7 @@ class LeaveRequestController extends BaseController
         );
 
         if (! $balance->canRequest($totalDays)) {
-            return $this->error('Yetersiz izin bakiyesi', null, 422);
+            return $this->error('Yetersiz izin bakiyesi', 422);
         }
 
         // Handle document upload
@@ -207,7 +207,7 @@ class LeaveRequestController extends BaseController
         $this->authorize('approve', $leaveRequest);
 
         if ($leaveRequest->status !== LeaveRequestStatus::Pending) {
-            return $this->error('Bu talep zaten işlenmiş', null, 422);
+            return $this->error('Bu talep zaten işlenmiş', 422);
         }
 
         $validated = $request->validate([
@@ -227,7 +227,7 @@ class LeaveRequestController extends BaseController
             );
 
             if (! $ok) {
-                return $this->error('Onay adımı işlenemedi', null, 422);
+                return $this->error('Onay adımı işlenemedi', 422);
             }
         } else {
             Log::warning('leave.request.legacy_approve_without_workflow_record', [
@@ -254,7 +254,7 @@ class LeaveRequestController extends BaseController
         $this->authorize('approve', $leaveRequest);
 
         if ($leaveRequest->status !== LeaveRequestStatus::Pending) {
-            return $this->error('Bu talep zaten işlenmiş', null, 422);
+            return $this->error('Bu talep zaten işlenmiş', 422);
         }
 
         $validated = $request->validate([
@@ -274,7 +274,7 @@ class LeaveRequestController extends BaseController
             );
 
             if (! $ok) {
-                return $this->error('Red adımı işlenemedi', null, 422);
+                return $this->error('Red adımı işlenemedi', 422);
             }
         } else {
             Log::warning('leave.request.legacy_reject_without_workflow_record', [
@@ -301,11 +301,11 @@ class LeaveRequestController extends BaseController
         $this->authorize('update', $leaveRequest);
 
         if ((int) $leaveRequest->user_id !== (int) auth()->id()) {
-            return $this->error('Bu talebi yalnızca sahibi yeniden gönderebilir', null, 403);
+            return $this->error('Bu talebi yalnızca sahibi yeniden gönderebilir', 403);
         }
 
         if ($leaveRequest->status !== LeaveRequestStatus::Rejected) {
-            return $this->error('Yalnızca reddedilmiş talepler yeniden gönderilebilir', null, 422);
+            return $this->error('Yalnızca reddedilmiş talepler yeniden gönderilebilir', 422);
         }
 
         LeaveRequest::withoutAuditing(fn () => $leaveRequest->prepareForResubmit());

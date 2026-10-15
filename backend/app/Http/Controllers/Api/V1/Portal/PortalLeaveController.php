@@ -110,7 +110,7 @@ class PortalLeaveController extends BaseController
             ->first();
 
         if (! $leaveRequest) {
-            return $this->error('İzin talebi bulunamadı', null, 404);
+            return $this->error('İzin talebi bulunamadı', 404);
         }
 
         return $this->success($leaveRequest);
@@ -164,12 +164,12 @@ class PortalLeaveController extends BaseController
             ->first();
 
         if (! $leaveType) {
-            return $this->error('Geçersiz izin türü', null, 422);
+            return $this->error('Geçersiz izin türü', 422);
         }
 
         // Belge zorunlu mu?
         if ($leaveType->requires_document && ! $request->hasFile('document')) {
-            return $this->error('Bu izin türü için belge zorunludur', null, 422);
+            return $this->error('Bu izin türü için belge zorunludur', 422);
         }
 
         // Gün sayısını hesapla
@@ -242,7 +242,7 @@ class PortalLeaveController extends BaseController
             ->first();
 
         if (! $leaveRequest) {
-            return $this->error('İzin talebi bulunamadı veya düzenlenemez', null, 404);
+            return $this->error('İzin talebi bulunamadı veya düzenlenemez', 404);
         }
 
         $validated = $request->validate([

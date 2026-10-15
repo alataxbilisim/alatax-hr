@@ -1419,7 +1419,8 @@ Route::prefix('v1')->group(function () {
         Route::get('/ledger/summary', [\App\Http\Controllers\Api\V1\Admin\CompanyLedgerController::class, 'summary']);
 
         // License Packages (Lisans Paketleri)
-        Route::apiResource('license-packages', \App\Http\Controllers\Api\V1\Admin\LicensePackageController::class);
+        Route::apiResource('license-packages', \App\Http\Controllers\Api\V1\Admin\LicensePackageController::class)
+            ->parameters(['license-packages' => 'package']);
         Route::post('/license-packages/{package}/modules', [\App\Http\Controllers\Api\V1\Admin\LicensePackageController::class, 'syncModules']);
         Route::post('/license-packages/{package}/duplicate', [\App\Http\Controllers\Api\V1\Admin\LicensePackageController::class, 'duplicate']);
         Route::get('/available-modules', [\App\Http\Controllers\Api\V1\Admin\LicensePackageController::class, 'availableModules']);
