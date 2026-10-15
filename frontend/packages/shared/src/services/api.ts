@@ -2,6 +2,7 @@ import axios from 'axios';
 import type { AxiosError, AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import toast from 'react-hot-toast';
 import type { ApiResponse } from '../types/api';
+import { browserNavigation } from './browserNavigation';
 
 // API Base URL
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
@@ -65,7 +66,7 @@ api.interceptors.response.use(
               path.includes('/reset-password') ||
               path.includes('/invite');
             if (!isPublicAuth) {
-              window.location.href = '/login';
+              browserNavigation.assign('/login');
               toast.error('Oturumunuz sona erdi. Lütfen tekrar giriş yapın.');
             }
           }
