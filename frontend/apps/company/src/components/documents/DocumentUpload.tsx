@@ -128,7 +128,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
     setLoading(true);
     try {
       const data = new FormData();
-      data.append('title', formData.title);
+      data.append('name', formData.title);
       if (formData.category_id) data.append('category_id', formData.category_id);
       if (formData.description) data.append('description', formData.description);
       files.forEach((file) => {
