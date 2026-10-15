@@ -29,6 +29,8 @@ function shouldSkip(rel, full) {
   const norm = rel.replace(/\\/g, '/').toLowerCase();
   if (norm.includes('docs/arsiv/2026-10-eski-ad-donemi/qa/')) return true;
   if (norm.endsWith('docs/arsiv/2026-10-eski-ad-donemi/qa_rapor.md')) return true;
+  // Arşiv: mojibake taramasını tarif eden prompt, örnek bozuk diziyi kasıtlı içerir.
+  if (norm.endsWith('docs/arsiv/2026-10-eski-ad-donemi/cursor_gorsel_kontrol_prompt.md')) return true;
   if (norm.includes('pnpm-lock.yaml')) return true;
   return false;
 }

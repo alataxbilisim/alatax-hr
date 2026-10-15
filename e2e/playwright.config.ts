@@ -22,9 +22,10 @@ export default defineConfig({
   outputDir: './test-results',
   globalSetup: './global-setup.ts',
   // Senaryolar aynı E2E veritabanını paylaşır (izin bakiyesi, modül aç/kapa) — sıralı koşar.
+  // Tekrar deneme yok: ilk deneme veriyi değiştirdiği için tekrar deneme farklı durumdan başlar.
   fullyParallel: false,
   workers: 1,
-  retries: isCI ? 1 : 0,
+  retries: 0,
   timeout: 90_000,
   expect: { timeout: 15_000 },
   forbidOnly: isCI,

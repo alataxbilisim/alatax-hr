@@ -2,18 +2,30 @@ name: CI
 
 on:
   push:
-    branches: [main, 'faz*']
+    branches: [main, 'faz*', altyapi]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
+# Kapsam mandalı tabanları — yalnız elle ve ayrı commit'te yükseltilir; docs/operasyon/TEST.md
+# içindeki coverage-floor işaretleriyle aynı olmalı (`node scripts/check-coverage.mjs sync`).
+env:
+  BACKEND_COVERAGE_FLOOR: "58.32"
+  FRONTEND_COVERAGE_FLOOR: "39.00"
+  PHP_EXTENSIONS: pdo, pdo_pgsql, pgsql, mbstring, bcmath, intl, redis, gd, zip, exif, pcntl
+
 jobs:
-  backend:
-    name: Backend (PHP)
+  backend-quality:
+    name: Backend kalite (pint, PHPStan, mimari, audit)
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     defaults:
       run:
         working-directory: backend
@@ -36,13 +48,117 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup PHP 8.2
         uses: shivammathur/setup-php@v2
         with:
           php-version: "8.2"
-          extensions: pdo, pdo_pgsql, pgsql, mbstring, bcmath, intl, redis, gd, zip, exif, pcntl
+          extensions: ${{ env.PHP_EXTENSIONS }}
           coverage: none
+          tools: composer:v2
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: backend/vendor
+          key: composer-${{ runner.os }}-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: |
+            composer-${{ runner.os }}-
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Prepare .env for CI
+        run: |
+          cp .env.example .env
+          php artisan key:generate --force
+          {
+            echo "DB_CONNECTION=pgsql"
+            echo "DB_HOST=127.0.0.1"
+            echo "DB_PORT=5432"
+            echo "DB_DATABASE=dobedan_hr_testing"
+            echo "DB_USERNAME=dobedan"
+            echo "DB_PASSWORD=secret"
+            echo "CACHE_STORE=array"
+            echo "QUEUE_CONNECTION=sync"
+            echo "SESSION_DRIVER=array"
+            echo "MAIL_MAILER=array"
+            echo "TELESCOPE_ENABLED=false"
+          } >> .env
+
+      - name: Install PostgreSQL client (schema dump load)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends postgresql-client
+
+      # Larastan şema anlık görüntüsü (composer analyse) bağlı veritabanını okur
+      - name: Migrate (PostgreSQL)
+        run: php artisan migrate --force
+
+      - name: Pint (style check)
+        run: ./vendor/bin/pint --test
+
+      - name: PHPStan (seviye 5)
+        run: composer analyse
+
+      - name: PHPStan baseline büyümedi
+        working-directory: .
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            ref="origin/$BASE_REF"
+          elif [ -n "$BEFORE_SHA" ] && [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ] && git cat-file -e "$BEFORE_SHA^{commit}" 2>/dev/null; then
+            ref="$BEFORE_SHA"
+          else
+            ref="HEAD~1"
+          fi
+          node scripts/check-phpstan-baseline.mjs "$ref"
+
+      - name: Mimari testler
+        run: composer test:arch
+
+      - name: Composer audit (yalnız rapor)
+        continue-on-error: true
+        run: composer audit --no-interaction
+
+  backend-tests:
+    name: Backend testler (PHPUnit paralel + kapsam)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Servis konteyneri komut argümanı almaz; paralel migrate:fresh için kilit tablosu büyütülür
+      - name: Start PostgreSQL 16
+        working-directory: .
+        run: |
+          docker run -d --name pg16 -p 5432:5432 \
+            -e POSTGRES_DB=dobedan_hr_testing -e POSTGRES_USER=dobedan -e POSTGRES_PASSWORD=secret \
+            postgres:16 -c max_locks_per_transaction=256
+          for _ in $(seq 1 60); do
+            docker exec pg16 pg_isready -U dobedan -d dobedan_hr_testing && exit 0
+            sleep 2
+          done
+          docker logs pg16
+          exit 1
+
+      - name: Setup PHP 8.2 (pcov)
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: ${{ env.PHP_EXTENSIONS }}
+          coverage: pcov
+          ini-values: pcov.directory=${{ github.workspace }}/backend/app
           tools: composer:v2
 
       - name: Cache Composer
@@ -81,40 +197,32 @@ jobs:
 
       - name: Migrate (PostgreSQL)
         run: php artisan migrate --force
-        env:
-          DB_CONNECTION: pgsql
-          DB_HOST: 127.0.0.1
-          DB_PORT: 5432
-          DB_DATABASE: dobedan_hr_testing
-          DB_USERNAME: dobedan
-          DB_PASSWORD: secret
 
       - name: Migrate again on existing schema (idempotent)
         run: php artisan migrate --force
-        env:
-          DB_CONNECTION: pgsql
-          DB_HOST: 127.0.0.1
-          DB_PORT: 5432
-          DB_DATABASE: dobedan_hr_testing
-          DB_USERNAME: dobedan
-          DB_PASSWORD: secret
 
-      - name: Pint (style check)
-        run: ./vendor/bin/pint --test
+      - name: PHPUnit (paralel + Clover)
+        run: |
+          php artisan config:clear
+          php artisan test --parallel --coverage-clover=storage/coverage/clover.xml
 
-      - name: PHPUnit
-        run: php artisan test
-        env:
-          DB_CONNECTION: pgsql
-          DB_HOST: 127.0.0.1
-          DB_PORT: 5432
-          DB_DATABASE: dobedan_hr_testing
-          DB_USERNAME: dobedan
-          DB_PASSWORD: secret
+      - name: Upload Clover
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage-clover
+          path: backend/storage/coverage/clover.xml
+          if-no-files-found: ignore
+          retention-days: 14
 
-  frontend:
-    name: Frontend (lint + tsc + build)
+      - name: Kapsam mandalı (backend)
+        working-directory: .
+        run: node scripts/check-coverage.mjs backend backend/storage/coverage/clover.xml
+
+  frontend-quality:
+    name: Frontend kalite (lint, tsc, marka, sözleşme)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: frontend
@@ -143,6 +251,10 @@ jobs:
       - name: Brand scan (Dobedan HR)
         run: pnpm check:brand
 
+      - name: Kapsam tabanları eşit (ci.yml = TEST.md)
+        working-directory: .
+        run: node scripts/check-coverage.mjs sync
+
       - name: Portal route smoke (page modules + App.tsx)
         working-directory: .
         run: node scripts/portal-route-smoke.mjs
@@ -154,5 +266,211 @@ jobs:
       - name: Lint (3 SPA)
         run: pnpm lint
 
-      - name: Typecheck + build (3 SPA)
+      # Her uygulamanın tsconfig'i packages/shared/src'yi de içerir; shared üç bağlamda denetlenir
+      - name: Typecheck (3 SPA + shared)
+        run: pnpm typecheck
+
+      - name: Setup PHP 8.2 (route listesi)
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: ${{ env.PHP_EXTENSIONS }}
+          coverage: none
+          tools: composer:v2
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: backend/vendor
+          key: composer-${{ runner.os }}-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: |
+            composer-${{ runner.os }}-
+
+      - name: Backend route listesi (veritabanı gerekmez)
+        working-directory: backend
+        run: |
+          composer install --no-interaction --prefer-dist --optimize-autoloader
+          cp .env.example .env
+          php artisan key:generate --force
+          {
+            echo "CACHE_STORE=array"
+            echo "QUEUE_CONNECTION=sync"
+            echo "SESSION_DRIVER=array"
+            echo "TELESCOPE_ENABLED=false"
+          } >> .env
+          php artisan route:list --json --path=api/v1 > "$RUNNER_TEMP/api-routes.json"
+
+      - name: API sözleşme kontrolü (frontend çağrıları = backend route'ları)
+        working-directory: .
+        run: node scripts/check-api-contract.mjs "$RUNNER_TEMP/api-routes.json"
+
+  frontend-tests:
+    name: Frontend testler (Vitest + kapsam)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend/package.json
+
+      - name: Setup Node (.nvmrc)
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Vitest (kapsamlı)
+        run: pnpm test:coverage
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Kapsam mandalı (frontend)
+        working-directory: .
+        run: node scripts/check-coverage.mjs frontend frontend/coverage/coverage-summary.json
+
+  frontend-build:
+    name: Frontend build (3 SPA + bundle boyutu)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend/package.json
+
+      - name: Setup Node (.nvmrc)
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build (3 SPA)
         run: pnpm build
+
+      - name: Bundle boyutu özeti
+        working-directory: .
+        run: node scripts/bundle-size-summary.mjs
+
+  e2e:
+    name: E2E (Playwright, dobedan_hr_e2e)
+    # Pahalı iş: yalnız main'e açılan PR'larda ve elle tetiklemede
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.base_ref == 'main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Geçici CI anahtarı; kalıcı ortamların APP_KEY'iyle ilgisi yok
+      - name: Compose .env (CI)
+        run: |
+          cp .env.docker.example .env
+          sed -i "s|^APP_KEY=.*|APP_KEY=base64:$(openssl rand -base64 32)|" .env
+
+      - name: Setup PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: ${{ env.PHP_EXTENSIONS }}
+          coverage: none
+          tools: composer:v2
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: backend/vendor
+          key: composer-${{ runner.os }}-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: |
+            composer-${{ runner.os }}-
+
+      - name: Install Composer dependencies
+        working-directory: backend
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      # Boş volume'de init betiği <POSTGRES_DB>_testing ve <POSTGRES_DB>_e2e veritabanlarını açar
+      - name: Start PostgreSQL (compose)
+        run: docker compose up -d --wait postgres
+
+      - name: Build app-e2e image
+        run: docker compose --profile e2e build app-e2e
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend/package.json
+
+      - name: Setup Node (.nvmrc)
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          cache-dependency-path: |
+            frontend/pnpm-lock.yaml
+            e2e/pnpm-lock.yaml
+
+      - name: Install dependencies (frontend + e2e)
+        run: |
+          pnpm --dir frontend install --frozen-lockfile
+          pnpm --dir e2e install --frozen-lockfile
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('e2e/pnpm-lock.yaml') }}
+
+      - name: Install Playwright Chromium
+        working-directory: e2e
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Typecheck (e2e)
+        run: pnpm --dir e2e typecheck
+
+      - name: Playwright
+        run: pnpm --dir frontend e2e
+
+      - name: app-e2e logları
+        if: failure()
+        run: docker compose --profile e2e logs --no-color app-e2e | tail -n 300
+
+      - name: Upload Playwright trace/rapor
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-results
+          path: |
+            e2e/test-results
+            e2e/playwright-report
+          if-no-files-found: ignore
+          retention-days: 14

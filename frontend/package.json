@@ -18,6 +18,7 @@
     "build:company": "pnpm --filter @dobedan/company build",
     "build:portal": "pnpm --filter @dobedan/portal build",
     "lint": "pnpm -r --filter \"./apps/**\" lint",
+    "typecheck": "pnpm -r --filter \"./apps/**\" exec tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
