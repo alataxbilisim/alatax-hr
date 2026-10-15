@@ -63,7 +63,7 @@ class AssetController extends BaseController
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'category_id' => 'required|exists:asset_categories,id',
+            'category_id' => 'required|company_exists:asset_categories',
             'name' => 'required|string|max:255',
             'asset_code' => 'nullable|string|max:50',
             'serial_number' => 'nullable|string|max:100',
@@ -136,7 +136,7 @@ class AssetController extends BaseController
         $asset = Asset::where('company_id', $this->getCompanyId())->findOrFail($id);
 
         $validated = $request->validate([
-            'category_id' => 'sometimes|exists:asset_categories,id',
+            'category_id' => 'sometimes|company_exists:asset_categories',
             'name' => 'sometimes|required|string|max:255',
             'asset_code' => 'nullable|string|max:50',
             'serial_number' => 'nullable|string|max:100',
@@ -205,7 +205,7 @@ class AssetController extends BaseController
         }
 
         $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
+            'user_id' => 'required|company_member',
             'notes' => 'nullable|string',
         ]);
 

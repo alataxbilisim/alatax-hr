@@ -77,11 +77,11 @@ class OkrController extends BaseController
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'performance_period_id' => 'nullable|exists:performance_periods,id',
-            'parent_id' => 'nullable|exists:objectives,id',
+            'performance_period_id' => 'nullable|company_exists:performance_periods',
+            'parent_id' => 'nullable|company_exists:objectives',
             'level' => 'required|in:company,department,team,individual',
-            'department_id' => 'nullable|exists:departments,id',
-            'owner_id' => 'required|exists:users,id',
+            'department_id' => 'nullable|company_exists:departments',
+            'owner_id' => 'required|company_member',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'start_date' => 'required|date',
@@ -224,7 +224,7 @@ class OkrController extends BaseController
             'target_value' => 'required|numeric',
             'weight' => 'nullable|numeric|min:0|max:100',
             'due_date' => 'nullable|date',
-            'owner_id' => 'nullable|exists:users,id',
+            'owner_id' => 'nullable|company_member',
         ]);
 
         $keyResult = KeyResult::create([

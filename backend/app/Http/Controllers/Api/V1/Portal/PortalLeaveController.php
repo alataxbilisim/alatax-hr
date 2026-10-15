@@ -143,7 +143,7 @@ class PortalLeaveController extends BaseController
         $user = $request->user();
 
         $validated = $request->validate([
-            'leave_type_id' => 'required|exists:leave_types,id',
+            'leave_type_id' => 'required|company_exists:leave_types',
             'start_date' => 'required|date|after_or_equal:today',
             'end_date' => 'required|date|after_or_equal:start_date',
             'reason' => 'nullable|string|max:500',

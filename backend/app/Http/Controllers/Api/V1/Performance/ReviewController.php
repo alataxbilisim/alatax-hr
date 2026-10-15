@@ -62,9 +62,9 @@ class ReviewController extends BaseController
         $this->authorize('create', PerformanceReview::class);
 
         $validated = $request->validate([
-            'period_id' => 'required|exists:performance_periods,id',
-            'employee_id' => 'required|exists:users,id',
-            'reviewer_id' => 'required|exists:users,id',
+            'period_id' => 'required|company_exists:performance_periods',
+            'employee_id' => 'required|company_member',
+            'reviewer_id' => 'required|company_member',
         ]);
 
         // Aynı dönemde aynı personel için değerlendirme var mı?
@@ -122,7 +122,7 @@ class ReviewController extends BaseController
             'reviewer_comments' => 'nullable|string',
             'employee_comments' => 'nullable|string',
             'scores' => 'nullable|array',
-            'scores.*.criteria_id' => 'required_with:scores|exists:performance_criteria,id',
+            'scores.*.criteria_id' => 'required_with:scores|company_exists:performance_criteria',
             'scores.*.score' => 'required_with:scores|integer|min:0',
             'scores.*.comment' => 'nullable|string',
         ]);

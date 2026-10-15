@@ -106,7 +106,7 @@ class SalaryBandController extends BaseController
     private function validateBand(Request $request, bool $creating = true): array
     {
         $rules = [
-            'position_id' => ($creating ? 'required' : 'sometimes').'|integer|exists:positions,id',
+            'position_id' => ($creating ? 'required' : 'sometimes').'|integer|company_exists:positions',
             'min_amount' => ($creating ? 'required' : 'sometimes').'|numeric|min:0',
             'mid_amount' => ($creating ? 'required' : 'sometimes').'|numeric|min:0',
             'max_amount' => ($creating ? 'required' : 'sometimes').'|numeric|min:0',

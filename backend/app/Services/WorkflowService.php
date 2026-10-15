@@ -298,10 +298,12 @@ class WorkflowService
 
     public function getPendingApprovalsForUser(int $userId, int $companyId): \Illuminate\Database\Eloquent\Collection
     {
-        $delegatorIds = ApprovalDelegation::where('company_id', $companyId)
-            ->where('delegate_id', $userId)
-            ->active()
-            ->pluck('delegator_id');
+        $delegatorIds = app(CompanyContextService::class)->isMember($userId, $companyId, true)
+            ? ApprovalDelegation::where('company_id', $companyId)
+                ->where('delegate_id', $userId)
+                ->active()
+                ->pluck('delegator_id')
+            : collect();
 
         return ApprovalRecord::where('company_id', $companyId)
             ->pending()

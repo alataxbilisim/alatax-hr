@@ -89,7 +89,7 @@ class PortalExpenseController extends BaseController
             'currency' => 'nullable|string|max:10',
             'custom_fields' => 'nullable',
             'items' => 'required|array|min:1',
-            'items.*.expense_category_id' => 'required|exists:expense_categories,id',
+            'items.*.expense_category_id' => 'required|company_exists:expense_categories',
             'items.*.description' => 'required|string|max:255',
             'items.*.item_date' => 'required|date',
             'items.*.amount' => 'required|numeric|min:0.01',

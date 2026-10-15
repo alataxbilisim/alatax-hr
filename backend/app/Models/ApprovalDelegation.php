@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\CompanyContextService;
 use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -67,7 +68,7 @@ class ApprovalDelegation extends Model
     }
 
     /**
-     * Aktif vekili bul
+     * Aktif vekili bul — vekil o şirkette aktif üye değilse (taşınmış / pasif) vekalet yok sayılır.
      */
     public static function findActiveDelegate(int $delegatorId, int $companyId, ?string $entityType = null): ?User
     {
@@ -82,8 +83,15 @@ class ApprovalDelegation extends Model
             });
         }
 
-        $delegation = $query->first();
+        $memberships = app(CompanyContextService::class);
 
-        return $delegation?->delegate;
+        foreach ($query->orderBy('id')->get() as $delegation) {
+            $delegate = $delegation->delegate;
+            if ($delegate instanceof User && $memberships->isMember((int) $delegate->id, $companyId, true)) {
+                return $delegate;
+            }
+        }
+
+        return null;
     }
 }

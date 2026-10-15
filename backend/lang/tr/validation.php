@@ -23,6 +23,8 @@ return [
     ],
     'boolean' => ':attribute doğru veya yanlış olmalıdır.',
     'can' => ':attribute yetkisiz bir değer içeriyor.',
+    'company_exists' => 'Seçilen :attribute geçersiz.',
+    'company_member' => 'Seçilen :attribute bu şirkette aktif bir kullanıcı değil.',
     'confirmed' => ':attribute doğrulaması eşleşmiyor.',
     'contains' => ':attribute zorunlu bir değeri eksik.',
     'current_password' => 'Parola hatalı.',

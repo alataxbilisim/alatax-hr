@@ -141,7 +141,7 @@ class PortalRequestController extends BaseController
         }
 
         $validated = $request->validate([
-            'request_type_id' => 'required|exists:request_types,id',
+            'request_type_id' => 'required|company_exists:request_types',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string|max:2000',
             'form_data' => 'nullable|array',

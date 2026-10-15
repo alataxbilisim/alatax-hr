@@ -17,11 +17,12 @@ class BulkUpdateLeaveBalanceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => ['required', 'integer', 'exists:users,id'],
+            'user_id' => ['required', 'integer', 'company_member'],
             'year' => ['required', 'integer', 'min:2000', 'max:2100'],
             'reason' => ['required', 'string', 'min:3', 'max:500'],
             'balances' => ['required', 'array', 'min:1'],
-            'balances.*.leave_type_id' => ['required', 'integer', 'exists:leave_types,id'],
+            // Şirket kontrolü satır bazında controller'da: yabancı tür tüm isteği değil yalnız o satırı reddeder.
+            'balances.*.leave_type_id' => ['required', 'integer'],
             'balances.*.total_days' => ['required', 'numeric', 'min:0'],
         ];
     }

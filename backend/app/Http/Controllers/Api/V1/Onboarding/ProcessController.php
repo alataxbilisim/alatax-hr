@@ -68,13 +68,13 @@ class ProcessController extends BaseController
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'template_id' => 'nullable|exists:onboarding_templates,id',
+            'user_id' => 'required|company_member',
+            'template_id' => 'nullable|company_exists:onboarding_templates',
             'title' => 'required|string|max:255',
             'start_date' => 'required|date',
             'target_end_date' => 'nullable|date|after_or_equal:start_date',
             'notes' => 'nullable|string',
-            'assigned_to' => 'nullable|exists:users,id',
+            'assigned_to' => 'nullable|company_member',
         ]);
 
         $process = $this->processService->startProcess([
@@ -107,7 +107,7 @@ class ProcessController extends BaseController
             'start_date' => 'sometimes|required|date',
             'target_end_date' => 'sometimes|nullable|date|after_or_equal:start_date',
             'notes' => 'sometimes|nullable|string',
-            'assigned_to' => 'sometimes|nullable|exists:users,id',
+            'assigned_to' => 'sometimes|nullable|company_member',
             'status' => 'sometimes|string|max:100',
         ]);
 
@@ -151,7 +151,7 @@ class ProcessController extends BaseController
             'type' => 'required|in:document_upload,document_fill,training,meeting,system_setup,quiz,custom',
             'is_required' => 'boolean',
             'due_date' => 'nullable|date',
-            'assigned_to' => 'nullable|exists:users,id',
+            'assigned_to' => 'nullable|company_member',
         ]);
 
         $maxOrder = $process->tasks()->max('order') ?? -1;

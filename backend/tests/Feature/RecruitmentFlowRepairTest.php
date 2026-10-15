@@ -224,7 +224,7 @@ class RecruitmentFlowRepairTest extends TestCase
             'last_name' => 'Tenant',
             'email' => 'cross@example.com',
             'consent_kvkk' => true,
-        ])->assertForbidden();
+        ])->assertStatus(422)->assertJsonValidationErrors('job_position_id');
     }
 
     public function test_convert_hired_to_employee_prefill_and_idempotent(): void

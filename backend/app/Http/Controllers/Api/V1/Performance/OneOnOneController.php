@@ -74,7 +74,7 @@ class OneOnOneController extends BaseController
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'employee_id' => 'required|exists:users,id',
+            'employee_id' => 'required|company_member',
             'scheduled_at' => 'required|date|after:now',
             'duration_minutes' => 'nullable|integer|min:15|max:180',
             'location' => 'nullable|string|max:255',

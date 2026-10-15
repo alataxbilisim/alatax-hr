@@ -85,6 +85,20 @@ class CompanyContextService
     }
 
     /**
+     * Kullanıcı id'si ile üyelik (silinmemiş hesap; SuperAdmin'in üyeliği olmaz); activeOnly ise hesap da aktif olmalı.
+     * Vekalet / kullanıcı seçimi doğrulamasının tek kaynağı.
+     */
+    public function isMember(int $userId, int $companyId, bool $activeOnly = false): bool
+    {
+        $user = User::query()
+            ->whereKey($userId)
+            ->when($activeOnly, fn ($q) => $q->where('is_active', true))
+            ->first();
+
+        return $user !== null && $this->hasMembership($user, $companyId);
+    }
+
+    /**
      * Header / fallback sırası ile bağlam çöz; membership yoksa 403.
      */
     public function resolveFromRequest(Request $request, User $user): CompanyContext

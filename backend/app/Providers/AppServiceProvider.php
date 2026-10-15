@@ -5,6 +5,8 @@ namespace App\Providers;
 use App\Enums\UserType;
 use App\Models\User;
 use App\Notifications\Channels\TenantDatabaseChannel;
+use App\Rules\CompanyMember;
+use App\Rules\ExistsInCompany;
 use App\Services\Settings\SettingsRegistry;
 use App\Services\Settings\SettingsResolver;
 use App\Support\HierarchicalPermission;
@@ -13,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Notifications\Channels\DatabaseChannel;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -47,6 +50,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureRateLimiting();
         $this->configureAuthorizationGates();
+        $this->configureTenantValidationRules();
 
         // Test ortamında .env/config:cache log mailer'ı ezmesin (queued Mailable)
         if ($this->app->environment('testing')) {
@@ -86,6 +90,24 @@ class AppServiceProvider extends ServiceProvider
             }
 
             return null;
+        });
+    }
+
+    /**
+     * Tenant tablolarına `exists:` yerine (TenantExistsRuleGuardTest zorunlu kılar):
+     * `company_exists:tablo[,kolon][,global]` ve kullanıcılar için `company_member[:active]`.
+     */
+    protected function configureTenantValidationRules(): void
+    {
+        Validator::extend('company_exists', function (string $attribute, mixed $value, array $parameters): bool {
+            $table = $parameters[0] ?? '';
+            $column = isset($parameters[1]) && $parameters[1] !== 'global' ? $parameters[1] : 'id';
+
+            return $table !== '' && ExistsInCompany::passes($table, $value, $column, in_array('global', $parameters, true));
+        });
+
+        Validator::extend('company_member', function (string $attribute, mixed $value, array $parameters): bool {
+            return CompanyMember::passes($value, in_array('active', $parameters, true));
         });
     }
 

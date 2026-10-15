@@ -91,7 +91,7 @@ class DataSubjectRequestController extends BaseController
             'request_types.*' => 'string',
             'description' => 'nullable|string|max:5000',
             'channel' => 'required|in:portal,public_form,email,written,kep',
-            'assigned_to' => 'nullable|integer|exists:users,id',
+            'assigned_to' => 'nullable|integer|company_member',
             'identity_verified' => 'sometimes|boolean',
             'verification_method' => 'nullable|string|max:64',
         ]);

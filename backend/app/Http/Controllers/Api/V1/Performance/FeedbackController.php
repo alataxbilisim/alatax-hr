@@ -28,7 +28,7 @@ class FeedbackController extends BaseController
 
         $validated = $request->validate([
             'providers' => 'required|array|min:1',
-            'providers.*.user_id' => 'required|exists:users,id',
+            'providers.*.user_id' => 'required|company_member',
             'providers.*.relationship' => 'required|in:self,manager,peer,direct_report,external',
             'providers.*.is_anonymous' => 'boolean',
             'deadline' => 'nullable|date|after:today',
@@ -111,7 +111,7 @@ class FeedbackController extends BaseController
 
         $validated = $request->validate([
             'responses' => 'required|array|min:1',
-            'responses.*.criteria_id' => 'required|exists:performance_criteria,id',
+            'responses.*.criteria_id' => 'required|company_exists:performance_criteria',
             'responses.*.score' => 'required|integer|min:1|max:5',
             'responses.*.comment' => 'nullable|string',
         ]);
@@ -330,7 +330,7 @@ class FeedbackController extends BaseController
     public function sendContinuousFeedback(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'to_user_id' => 'required|exists:users,id',
+            'to_user_id' => 'required|company_member',
             'type' => 'required|string|max:100',
             'content' => 'required|string|max:2000',
             'tags' => 'nullable|array',

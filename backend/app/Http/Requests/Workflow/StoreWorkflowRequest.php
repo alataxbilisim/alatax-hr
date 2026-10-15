@@ -44,7 +44,7 @@ class StoreWorkflowRequest extends FormRequest
             'steps.*.id' => ['nullable', 'integer'],
             'steps.*.name' => ['required', 'string', 'max:255'],
             'steps.*.approver_type' => ['required', 'string', Rule::in($approverTypes)],
-            'steps.*.specific_user_id' => ['nullable', 'integer', 'exists:users,id'],
+            'steps.*.specific_user_id' => ['nullable', 'integer', 'company_member'],
             'steps.*.specific_role' => ['nullable', 'string', 'max:100'],
             'steps.*.is_required' => ['sometimes', 'boolean'],
             'steps.*.can_skip' => ['sometimes', 'boolean'],

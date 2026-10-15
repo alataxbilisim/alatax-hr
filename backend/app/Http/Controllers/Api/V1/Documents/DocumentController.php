@@ -149,7 +149,7 @@ class DocumentController extends BaseController
             'file' => 'required|file|max:10240', // 10MB max
             'name' => 'nullable|string|max:255',
             'description' => 'nullable|string',
-            'category_id' => 'nullable|exists:document_categories,id',
+            'category_id' => 'nullable|company_exists:document_categories',
         ]);
 
         $file = $request->file('file');
@@ -413,7 +413,7 @@ class DocumentController extends BaseController
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
-            'category_id' => 'nullable|exists:document_categories,id',
+            'category_id' => 'nullable|company_exists:document_categories',
             'approval_status' => 'sometimes|nullable|string|max:100',
         ]);
 

@@ -264,8 +264,8 @@ class EmployeeController extends BaseController
                 })->whereNull('deleted_at'),
             ],
             'name' => 'required|string|max:255',
-            'department_id' => 'nullable|exists:departments,id',
-            'branch_id' => 'nullable|exists:branches,id',
+            'department_id' => 'nullable|company_exists:departments',
+            'branch_id' => 'nullable|company_exists:branches',
             'title' => 'nullable|string|max:100',
             'position_id' => [
                 'nullable',
@@ -274,7 +274,7 @@ class EmployeeController extends BaseController
                     return $query->where('company_id', $this->getCompanyId())->whereNull('deleted_at');
                 }),
             ],
-            'manager_id' => 'nullable|exists:employees,id',
+            'manager_id' => 'nullable|company_exists:employees',
 
             // Kişisel bilgiler
             'birth_date' => 'nullable|date',
@@ -459,8 +459,8 @@ class EmployeeController extends BaseController
                 })->whereNull('deleted_at')->ignore($employee->id),
             ],
             'name' => 'sometimes|string|max:255',
-            'department_id' => 'nullable|exists:departments,id',
-            'branch_id' => 'nullable|exists:branches,id',
+            'department_id' => 'nullable|company_exists:departments',
+            'branch_id' => 'nullable|company_exists:branches',
             'title' => 'nullable|string|max:100',
             'position_id' => [
                 'nullable',
@@ -469,7 +469,7 @@ class EmployeeController extends BaseController
                     return $query->where('company_id', $this->getCompanyId())->whereNull('deleted_at');
                 }),
             ],
-            'manager_id' => 'nullable|exists:employees,id',
+            'manager_id' => 'nullable|company_exists:employees',
             'birth_date' => 'nullable|date',
             'national_id' => 'nullable|string|max:20',
             'gender' => 'nullable|string|max:100',
@@ -881,10 +881,10 @@ class EmployeeController extends BaseController
     {
         $validated = $request->validate([
             'ids' => 'required|array|min:1',
-            'ids.*' => 'integer|exists:employees,id',
+            'ids.*' => 'integer|company_exists:employees',
             'data' => 'required|array',
             'data.status' => 'nullable|string|max:100',
-            'data.department_id' => 'nullable|exists:departments,id',
+            'data.department_id' => 'nullable|company_exists:departments',
         ]);
 
         $this->lookups->assertValid(
@@ -931,7 +931,7 @@ class EmployeeController extends BaseController
     {
         $validated = $request->validate([
             'ids' => 'required|array|min:1',
-            'ids.*' => 'integer|exists:employees,id',
+            'ids.*' => 'integer|company_exists:employees',
         ]);
 
         $employees = Employee::where('company_id', $this->getCompanyId())

@@ -122,7 +122,7 @@ class InterviewController extends BaseController
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'job_application_id' => 'required|exists:job_applications,id',
+            'job_application_id' => 'required|company_exists:job_applications',
             'title' => 'required|string|max:255',
             'type' => 'required|string|max:100',
             'scheduled_at' => 'required|date|after:now',
@@ -130,7 +130,7 @@ class InterviewController extends BaseController
             'location' => 'nullable|string|max:255',
             'meeting_link' => 'nullable|url',
             'notes' => 'nullable|string',
-            'interviewer_id' => 'required|exists:users,id',
+            'interviewer_id' => 'required|company_member',
         ]);
 
         $companyId = $this->getCompanyId();
@@ -186,7 +186,7 @@ class InterviewController extends BaseController
             'location' => 'nullable|string|max:255',
             'meeting_link' => 'nullable|url',
             'notes' => 'nullable|string',
-            'interviewer_id' => 'sometimes|exists:users,id',
+            'interviewer_id' => 'sometimes|company_member',
         ]);
 
         if (array_key_exists('type', $validated)) {

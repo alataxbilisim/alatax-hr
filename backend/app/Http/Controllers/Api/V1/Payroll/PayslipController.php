@@ -70,7 +70,7 @@ class PayslipController extends BaseController
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'employee_id' => 'required|integer|exists:employees,id',
+            'employee_id' => 'required|integer|company_exists:employees',
             'period' => ['required', 'string', 'regex:/^\d{4}-\d{2}$/'],
             'gross_salary' => 'nullable|numeric|min:0',
             'net_salary' => 'nullable|numeric|min:0',

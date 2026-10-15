@@ -33,6 +33,8 @@ return [
         'string' => 'The :attribute field must be between :min and :max characters.',
     ],
     'boolean' => 'The :attribute field must be true or false.',
+    'company_exists' => 'The selected :attribute is invalid.',
+    'company_member' => 'The selected :attribute is not an active user of this company.',
     'can' => 'The :attribute field contains an unauthorized value.',
     'confirmed' => 'The :attribute field confirmation does not match.',
     'contains' => 'The :attribute field is missing a required value.',

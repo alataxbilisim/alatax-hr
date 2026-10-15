@@ -181,7 +181,7 @@ class CustomFieldController extends BaseController
     {
         $validated = $request->validate([
             'fields' => 'required|array',
-            'fields.*.id' => 'required|exists:custom_field_definitions,id',
+            'fields.*.id' => 'required|company_exists:custom_field_definitions,id,global',
             'fields.*.sort_order' => 'required|integer|min:0',
         ]);
 

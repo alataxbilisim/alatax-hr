@@ -51,7 +51,7 @@ class SessionController extends BaseController
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'training_id' => 'required|exists:trainings,id',
+            'training_id' => 'required|company_exists:trainings',
             'start_date' => 'required|date|after:now',
             'end_date' => 'required|date|after:start_date',
             'location' => 'nullable|string|max:255',
@@ -151,7 +151,7 @@ class SessionController extends BaseController
         })->findOrFail($id);
 
         $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
+            'user_id' => 'required|company_member',
         ]);
 
         // Zaten kayıtlı mı?
@@ -205,7 +205,7 @@ class SessionController extends BaseController
 
         $validated = $request->validate([
             'attendances' => 'required|array',
-            'attendances.*.user_id' => 'required|exists:users,id',
+            'attendances.*.user_id' => 'required|company_member',
             'attendances.*.status' => 'required|in:registered,attended,absent,excused',
             'attendances.*.score' => 'nullable|integer|min:0|max:100',
             'attendances.*.passed' => 'nullable|boolean',

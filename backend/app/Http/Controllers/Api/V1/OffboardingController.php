@@ -25,8 +25,8 @@ class OffboardingController extends BaseController
             'termination_reason_code' => 'required|string|max:10',
             'termination_date' => 'required|date',
             'exit_notes' => 'nullable|string|max:5000',
-            'template_id' => 'nullable|integer|exists:onboarding_templates,id',
-            'assigned_to' => 'nullable|integer|exists:users,id',
+            'template_id' => 'nullable|integer|company_exists:onboarding_templates',
+            'assigned_to' => 'nullable|integer|company_member',
         ]);
 
         try {

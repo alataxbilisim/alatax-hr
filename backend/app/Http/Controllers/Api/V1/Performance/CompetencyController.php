@@ -162,7 +162,7 @@ class CompetencyController extends BaseController
     public function setUserCompetency(Request $request, int $userId): JsonResponse
     {
         $validated = $request->validate([
-            'competency_id' => 'required|exists:competencies,id',
+            'competency_id' => 'required|company_exists:competencies',
             'current_level' => 'required|integer|min:1',
             'target_level' => 'nullable|integer|min:1',
             'notes' => 'nullable|string',
@@ -265,7 +265,7 @@ class CompetencyController extends BaseController
     {
         $validated = $request->validate([
             'position_name' => 'required|string|max:255',
-            'competency_id' => 'required|exists:competencies,id',
+            'competency_id' => 'required|company_exists:competencies',
             'expected_level' => 'required|integer|min:1',
             'weight' => 'nullable|numeric|min:0|max:100',
             'is_required' => 'boolean',
@@ -296,7 +296,7 @@ class CompetencyController extends BaseController
     {
         $validated = $request->validate([
             'position_name' => 'required|string',
-            'competency_id' => 'required|exists:competencies,id',
+            'competency_id' => 'required|company_exists:competencies',
         ]);
 
         PositionCompetency::where('company_id', $this->getCompanyId())

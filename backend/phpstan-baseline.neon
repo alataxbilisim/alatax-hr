@@ -1945,12 +1945,6 @@ parameters:
 			path: app/Models/Announcement.php
 
 		-
-			message: '#^Method App\\Models\\ApprovalDelegation\:\:findActiveDelegate\(\) should return App\\Models\\User\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Models/ApprovalDelegation.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
 			identifier: property.notFound
 			count: 1

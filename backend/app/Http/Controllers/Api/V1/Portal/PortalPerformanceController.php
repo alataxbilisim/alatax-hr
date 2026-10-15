@@ -264,7 +264,7 @@ class PortalPerformanceController extends BaseController
         $user = $request->user();
 
         $validated = $request->validate([
-            'employee_id' => 'required|exists:users,id',
+            'employee_id' => 'required|company_member',
             'type' => 'required|string|max:100',
             'content' => 'required|string|max:1000',
             'is_anonymous' => 'boolean',

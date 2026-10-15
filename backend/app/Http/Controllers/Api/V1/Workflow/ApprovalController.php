@@ -174,7 +174,7 @@ class ApprovalController extends BaseController
     public function createDelegation(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'delegate_id' => 'required|exists:users,id',
+            'delegate_id' => 'required|company_member:active',
             'start_date' => 'required|date|after_or_equal:today',
             'end_date' => 'required|date|after:start_date',
             'entity_type' => 'nullable|string',

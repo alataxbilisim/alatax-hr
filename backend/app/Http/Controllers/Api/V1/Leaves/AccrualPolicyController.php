@@ -58,7 +58,7 @@ class AccrualPolicyController extends BaseController
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'leave_type_id' => 'required|exists:leave_types,id',
+            'leave_type_id' => 'required|company_exists:leave_types',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'accrual_type' => 'required|string|in:annual,monthly,per_pay_period,hourly,custom',

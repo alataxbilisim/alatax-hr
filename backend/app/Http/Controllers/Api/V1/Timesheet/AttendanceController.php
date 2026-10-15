@@ -77,7 +77,7 @@ class AttendanceController extends BaseController
         $this->authorize('create', AttendanceRecord::class);
 
         $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
+            'user_id' => 'required|company_member',
             'date' => 'required|date',
             'clock_in' => 'nullable|date_format:H:i',
             'clock_out' => 'nullable|date_format:H:i',
@@ -188,7 +188,7 @@ class AttendanceController extends BaseController
     {
         $validated = $request->validate([
             'ids' => 'required|array|min:1',
-            'ids.*' => 'integer|exists:attendance_records,id',
+            'ids.*' => 'integer|company_exists:attendance_records',
         ]);
 
         $records = AttendanceRecord::query()

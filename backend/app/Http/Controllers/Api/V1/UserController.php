@@ -711,7 +711,7 @@ class UserController extends BaseController
     {
         $validated = $request->validate([
             'user_ids' => 'required|array|min:1',
-            'user_ids.*' => 'exists:users,id',
+            'user_ids.*' => 'company_member',
             'action' => 'required|in:activate,deactivate,delete,assign_role,remove_role',
             'role_id' => 'required_if:action,assign_role,remove_role|exists:roles,id',
         ]);

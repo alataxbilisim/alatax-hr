@@ -48,7 +48,7 @@ class MaintenanceController extends BaseController
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'asset_id' => 'required|exists:assets,id',
+            'asset_id' => 'required|company_exists:assets',
             'type' => 'required|in:preventive,corrective,upgrade',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',

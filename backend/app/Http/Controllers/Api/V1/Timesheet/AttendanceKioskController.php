@@ -20,7 +20,7 @@ class AttendanceKioskController extends BaseController
     public function issueToken(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'branch_id' => 'nullable|integer|exists:branches,id',
+            'branch_id' => 'nullable|integer|company_exists:branches',
         ]);
 
         $companyId = $this->getCompanyId();

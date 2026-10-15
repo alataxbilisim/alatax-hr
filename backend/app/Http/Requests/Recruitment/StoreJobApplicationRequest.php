@@ -17,7 +17,7 @@ class StoreJobApplicationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'job_position_id' => ['required', 'integer', 'exists:job_positions,id'],
+            'job_position_id' => ['required', 'integer', 'company_exists:job_positions'],
             'first_name' => ['required', 'string', 'max:100'],
             'last_name' => ['required', 'string', 'max:100'],
             'email' => ['required', 'email', 'max:255'],

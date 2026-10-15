@@ -51,8 +51,8 @@ class EmployeeShiftController extends BaseController
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'user_id' => 'required|integer|exists:users,id',
-            'shift_id' => 'required|integer|exists:shifts,id',
+            'user_id' => 'required|integer|company_member',
+            'shift_id' => 'required|integer|company_exists:shifts',
             'date' => 'required|date',
             'notes' => 'nullable|string|max:500',
         ]);
@@ -89,12 +89,12 @@ class EmployeeShiftController extends BaseController
     public function bulkAssign(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'shift_id' => 'required|integer|exists:shifts,id',
+            'shift_id' => 'required|integer|company_exists:shifts',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'user_ids' => 'nullable|array',
-            'user_ids.*' => 'integer|exists:users,id',
-            'department_id' => 'nullable|integer|exists:departments,id',
+            'user_ids.*' => 'integer|company_member',
+            'department_id' => 'nullable|integer|company_exists:departments',
             'notes' => 'nullable|string|max:500',
         ]);
 

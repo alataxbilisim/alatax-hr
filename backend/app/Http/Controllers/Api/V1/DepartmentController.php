@@ -82,8 +82,8 @@ class DepartmentController extends BaseController
                 }),
             ],
             'description' => 'nullable|string|max:500',
-            'parent_id' => 'nullable|exists:departments,id',
-            'manager_id' => 'nullable|exists:users,id',
+            'parent_id' => 'nullable|company_exists:departments',
+            'manager_id' => 'nullable|company_member',
             'is_active' => 'boolean',
             'sort_order' => 'nullable|integer|min:0',
         ]);
@@ -128,8 +128,8 @@ class DepartmentController extends BaseController
                 })->ignore($department->id),
             ],
             'description' => 'nullable|string|max:500',
-            'parent_id' => 'nullable|exists:departments,id',
-            'manager_id' => 'nullable|exists:users,id',
+            'parent_id' => 'nullable|company_exists:departments',
+            'manager_id' => 'nullable|company_member',
             'is_active' => 'boolean',
             'sort_order' => 'nullable|integer|min:0',
         ]);
