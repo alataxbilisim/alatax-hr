@@ -427,7 +427,7 @@ const EmployeeReportsPage: React.FC = () => {
       />
 
       <WidgetSettingsPanel
-        key={editingWidget?.id ?? 'closed'}
+        key={`widget-${editingWidget?.id ?? 'closed'}`}
         widget={editingWidget}
         isOpen={!!editingWidget}
         onClose={() => setEditingWidget(null)}
@@ -436,7 +436,7 @@ const EmployeeReportsPage: React.FC = () => {
       />
 
       <SaveDashboardModal
-        key={dashboard.id ?? (showSaveModal ? 'new' : 'closed')}
+        key={`dashboard-${dashboard.id ?? (showSaveModal ? 'new' : 'closed')}`}
         isOpen={showSaveModal}
         onClose={() => setShowSaveModal(false)}
         onSave={handleSaveDashboard}
