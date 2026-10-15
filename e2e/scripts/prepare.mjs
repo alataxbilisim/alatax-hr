@@ -41,6 +41,22 @@ export function prepareE2eEnvironment() {
   console.log('[e2e] app-e2e servisi başlatılıyor');
   compose(['--profile', 'e2e', 'up', '-d', '--wait', 'app-e2e']);
 
+  // Önbelleksiz her istek config ve ~700 route'u bind mount'tan yeniden yükler; eşzamanlı
+  // sayfa yüklemelerinde istekler 15 sn'yi aşıp senaryoları rastgele düşürüyordu. Önbellek
+  // yolları compose'da container içine (/tmp) yönlendirildi; her koşuda güncel koddan yeniden üretilir.
+  console.log('[e2e] config/route/event önbelleği (app-e2e içinde)');
+  compose([
+    'exec',
+    '-T',
+    'app-e2e',
+    'sh',
+    '-c',
+    // Yollar tanımsızsa önbellek paylaşılan bootstrap/cache'e düşer ve geliştirme uygulaması e2e config'iyle açılır.
+    'case "$APP_CONFIG_CACHE$APP_ROUTES_CACHE$APP_EVENTS_CACHE" in */tmp/*/tmp/*/tmp/*) ;; ' +
+      '*) echo "APP_*_CACHE yollari /tmp altinda degil; docker-compose.yml app-e2e ortamini kontrol edin" >&2; exit 1 ;; esac; ' +
+      'php artisan config:cache && php artisan route:cache && php artisan event:cache',
+  ]);
+
   console.log('[e2e] e2e:reset (migrate:fresh --seed --seeder=E2eSeeder)');
   compose(['exec', '-T', 'app-e2e', 'php', 'artisan', 'e2e:reset']);
 }

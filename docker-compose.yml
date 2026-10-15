@@ -240,6 +240,10 @@ services:
       TELESCOPE_ENABLED: "false"
       LOG_CHANNEL: stderr
       PRIVATE_DISK_ROOT: /var/www/html/storage/app/e2e/private
+      # Önbellekler paylaşılan bootstrap/cache'e değil container içine: geliştirme `app`i etkilenmez.
+      APP_CONFIG_CACHE: /tmp/e2e-config.php
+      APP_ROUTES_CACHE: /tmp/e2e-routes.php
+      APP_EVENTS_CACHE: /tmp/e2e-events.php
       CORS_ALLOWED_ORIGINS: http://localhost:4101,http://localhost:4102,http://localhost:4103
       FRONTEND_URL_SUPERADMIN: http://localhost:4101
       FRONTEND_URL_COMPANY: http://localhost:4102

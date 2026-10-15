@@ -242,7 +242,7 @@ Eşleşmeyen veya yolu çözülemeyen (dinamik) çağrı → exit 1. Adım 03B: 
 **İzolasyon:** E2E canlı geliştirme veritabanına (`dobedan_hr`) asla dokunmaz.
 
 - Veritabanı `<POSTGRES_DB>_e2e` (`dobedan_hr_e2e`); yeni volume'de `docker/postgres/init/01-test-db.sh` açar, `e2e/scripts/prepare.mjs` yoksa oluşturur.
-- Backend `app-e2e` servisi (`docker compose --profile e2e`, port **8100**): aynı imaj, `APP_ENV=e2e`, dizi önbellek/oturum, senkron kuyruk, ayrı özel disk kökü (`storage/app/e2e/private`).
+- Backend `app-e2e` servisi (`docker compose --profile e2e`, port **8100**): aynı imaj, `APP_ENV=e2e`, dizi önbellek/oturum, senkron kuyruk, ayrı özel disk kökü (`storage/app/e2e/private`). Config/route/event önbelleği container içinde (`APP_*_CACHE=/tmp/...`) tutulur ve her hazırlıkta yeniden üretilir; önbelleksiz koşuda eşzamanlı istekler 15 sn'yi aşıp senaryoları rastgele düşürüyordu. Paylaşılan `bootstrap/cache`'e yazılmaz, geliştirme `app`i etkilenmez.
 - Sıfırlama `php artisan e2e:reset` = `migrate:fresh --seed --seeder=E2eSeeder`. `E2eDatabaseGuard` bağlı DB adı `_e2e` ile bitmiyorsa (veya production'da) reddeder; aynı koruma `migrate:fresh/refresh` ve `db:seed` E2eSeeder'ı hedeflediğinde komut başlamadan çalışır (`E2eDatabaseGuardTest`).
 - `E2eSeeder` deterministiktir: E2E Şirket A (yönetici, personel, 2FA'lı yönetici; personelin yöneticisi = yönetici; 14 gün yıllık izin), E2E Şirket B (yönetici, A'nın görmemesi gereken personel), süper admin; modüller açık, varsayılan izin onay akışı. Şifre ve TOTP anahtarı yalnız bu veritabanına özgüdür; sabitler `e2e/fixtures/data.ts` ile birebir aynı tutulur.
 
@@ -250,7 +250,7 @@ Eşleşmeyen veya yolu çözülemeyen (dinamik) çağrı → exit 1. Adım 03B: 
 
 | Komut | Ne yapar |
 |---|---|
-| `pnpm e2e` (`frontend/` içinde) veya `pnpm --dir e2e e2e` | Hazırlık (DB + `app-e2e` + `e2e:reset`) → 3 SPA'yı vite ile 4101/4102/4103'te açar (API :8100) → senaryolar. Tam koşu ~5 dk. |
+| `pnpm e2e` (`frontend/` içinde) veya `pnpm --dir e2e e2e` | Hazırlık (DB + `app-e2e` + önbellek + `e2e:reset`) → 3 SPA'yı vite ile 4101/4102/4103'te açar (API :8100) → senaryolar. Tam koşu ~5 dk. |
 | `pnpm e2e:ui` | Playwright UI modu. |
 | `E2E_SKIP_PREPARE=1 pnpm --dir e2e exec playwright test tests/x.spec.ts` | Sıfırlamadan tek dosya (veri önceki koşudan kalır). |
 | `pnpm --dir e2e typecheck` | Senaryoların tip kontrolü. |
