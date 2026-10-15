@@ -1,6 +1,7 @@
 import axios from 'axios';
 import type { AxiosError, AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import toast from 'react-hot-toast';
+import i18n from '../i18n';
 import type { ApiResponse } from '../types/api';
 import { browserNavigation } from './browserNavigation';
 
@@ -68,6 +69,9 @@ api.interceptors.response.use(
             if (!isPublicAuth) {
               browserNavigation.assign('/login');
               toast.error('Oturumunuz sona erdi. Lütfen tekrar giriş yapın.');
+            } else if (error.config?.url === '/auth/login') {
+              // Giriş sayfaları auth.error'u göstermiyor; hatalı şifre geri bildirimi buradan.
+              toast.error(response.data?.message || i18n.t('auth:login.failed'));
             }
           }
           break;

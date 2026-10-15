@@ -98,15 +98,27 @@ describe('api istemcisi — hata eşlemesi', () => {
     expect(toastError).toHaveBeenCalledTimes(1);
   });
 
-  it('401: giriş sayfasındayken yönlendirme yapmaz', async () => {
+  it('401: giriş sayfasındayken yönlendirme yapmaz, hatalı giriş mesajını gösterir', async () => {
     localStorage.setItem('token', 'yanlis');
     window.history.pushState({}, '', '/login');
+    const toastError = vi.spyOn(toast, 'error');
     server.use(apiError('post', '/auth/login', 401, 'Hatalı giriş.'));
 
     await expect(api.post('/auth/login', {})).rejects.toBeTruthy();
 
     expect(browserNavigation.assign).not.toHaveBeenCalled();
     expect(localStorage.getItem('token')).toBeNull();
+    expect(toastError).toHaveBeenCalledWith('Hatalı giriş.');
+  });
+
+  it('401: giriş sayfasındaki diğer uçlarda (2FA) toast göstermez', async () => {
+    window.history.pushState({}, '', '/login');
+    const toastError = vi.spyOn(toast, 'error');
+    server.use(apiError('post', '/auth/2fa/verify', 401, 'Geçersiz doğrulama kodu'));
+
+    await expect(api.post('/auth/2fa/verify', {})).rejects.toBeTruthy();
+
+    expect(toastError).not.toHaveBeenCalled();
   });
 
   it('403: sunucu mesajını toast olarak gösterir', async () => {
