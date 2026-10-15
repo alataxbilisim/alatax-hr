@@ -65,8 +65,8 @@ Sayılar (Adım 03B sonu): **1003 test, 4419 assertion**, deprecation 0 (paralel
 
 **Kapsam mandalı (Adım 03B):** CI `backend-tests` işi Clover çıktısını ölçer; satır kapsamı tabanın altındaysa iş kırılır (`node scripts/check-coverage.mjs backend backend/storage/coverage/clover.xml`). Taban **yalnız yukarı** ve **elle, ayrı commit'te** çekilir: hem aşağıdaki işaret hem `.github/workflows/ci.yml` → `BACKEND_COVERAGE_FLOOR` aynı değere güncellenir; `node scripts/check-coverage.mjs sync` ikisinin eşit olduğunu doğrular (CI'da da koşar). Ölçüm tabanı 0,5 puan aşarsa betik yükseltme notu basar.
 
-<!-- coverage-floor:backend=58.32 -->
-Backend satır kapsamı tabanı: **%58,32**.
+<!-- coverage-floor:backend=59.80 -->
+Backend satır kapsamı tabanı: **%59,80** (Adım 03B sonu ölçümü: 17.553 / 29.350, 1003 test; ilk taban Adım 03A %58,32).
 
 En düşük modüller: Performance %7,1, Admin %11,1, Console %15,6, Assets %16,3, Training %20,3 (modül tablosu: `docs/cursor-gorevleri/raporlar/ADIM_03A_RAPOR.md`).
 

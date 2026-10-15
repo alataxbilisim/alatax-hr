@@ -120,7 +120,7 @@ Numaralar Adım 03A görev dosyasındaki K1–K8'dir. Her biri ayrı commit ve r
 |---|---|
 | Backend testleri | **1003 test, 4419 assertion**; deprecation 0 (Adım 03A: 968) |
 | Süre | paralel (8 süreç) **7:09** |
-| Backend kapsam tabanı (`app/`) | satır **%58,32** — CI mandalı (Adım 03A ölçümü: metot %38,44, sınıf %14,25) |
+| Backend kapsam tabanı (`app/`) | satır **%59,80** — CI mandalı (Adım 03B ölçümü 17.553 / 29.350; ilk taban Adım 03A %58,32) |
 | Frontend testleri | **17 dosya, 291 test** (Vitest + RTL + MSW); Adım 03B öncesi 0 |
 | Frontend kapsam tabanı | satır **%39,00** — CI mandalı (ölçüm %39,14–39,19) |
 | Route duman testi | company 124 route, portal 24, superadmin 11 — `App.tsx`'ten otomatik; menü–route tutarlılığı 3 uygulamada |
