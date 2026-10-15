@@ -78,6 +78,14 @@ Bir backend işi aşağıdakilerin hepsi sağlanmadan **BİTMİŞ SAYILMAZ** (ay
 - `composer test:parallel` yeşil, deprecation 0; `composer test:arch` yeşil.
 - `vendor/bin/pint --test` exit 0.
 - `composer analyse` (PHPStan seviye 5) exit 0 ve **`phpstan-baseline.neon` büyümez**; yeni koddaki hata baseline'a eklenmez, düzeltilir.
+- Backend/frontend satır kapsamı CI tabanının altına düşmez (kapsam mandalı; taban yalnız elle ve ayrı commit'te yükseltilir).
+
+Frontend ve uçtan uca işler için ayrıca:
+
+- **Yeni sayfa:** route duman testi onu otomatik kapsar (`routes.smoke.test.tsx` yeşil; boş ama geçerli yanıt şekli gerekiyorsa uygulamanın `smokeHandlers`'ına eklenir) **ve** sayfanın davranışı için en az bir test yazılır. Menü bağlantısı route'suz olamaz (`menuRoutes.test.ts`).
+- **Yeni API çağrısı:** `scripts/check-api-contract.mjs` sözleşme kontrolünden geçer (backend route'u olmadan frontend çağrısı yazılmaz).
+- **Kritik iş akışı** (giriş, onay zinciri, bakiye/para hesabı, tenant sınırı, dosya yükle/indir gibi): `e2e/tests/` altında senaryo; izole `dobedan_hr_e2e` veritabanı ve `E2eSeeder` kullanılır.
+- `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, `pnpm check:brand` exit 0.
 
 ## Yapılandırılabilirlik sınırı
 

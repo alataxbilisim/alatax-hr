@@ -1,6 +1,6 @@
 # Dobedan HR — Güncel Durum (tek kaynak)
 
-**Son güncelleme:** 2026-10-14 (Adım 03A) · **Çalışma dalı:** `altyapi` · **Geri dönüş noktası:** tag `alatax-son`
+**Son güncelleme:** 2026-10-15 (Adım 03B) · **Çalışma dalı:** `altyapi` · **Geri dönüş noktası:** tag `alatax-son`
 
 Bu dosya projenin **tek durum belgesidir**. Eski durum/yol haritası belgeleri (`GUNCEL_DURUM_RAPORU`, `ROADMAP`, `BURADAN_BASLA`, faz raporları) `arsiv/2026-10-eski-ad-donemi/` altındadır ve yalnızca tarihçe içindir. Kaynaklar: eski `GUNCEL_DURUM_RAPORU.md` + `ROADMAP.md` ve iki bağımsız denetim (`denetim/2026-10-13/`).
 
@@ -48,7 +48,7 @@ Durum ölçeği: **Tam** (spec kapsamı + test eksiksiz) · **Kısmi** (çalış
 |---|---|---|---|---|---|
 | B1 | Organizasyon | Kısmi | Kısmi | Kısmi | Şube/departman/pozisyon/organizasyon şeması; holding (organizations) çekirdeği. |
 | B2 | Personel / Özlük | Kısmi | Kısmi | Kısmi | CRUD, özel alan, Form Engine. Belgeler sekmesi `private` disk sorunu Adım 03A'da giderildi. İstatistik/rapor SQL'i Adım 01'de PostgreSQL'e çevrildi; pano KPI (`age`/`tenure`) ve filtre beyaz listesi Adım 03A'da düzeltildi. |
-| B3 | İzin | Kısmi | Kısmi | Kısmi | Talep/tür/bakiye/onay. Onaylı izin → puantaj bağlantısı yok; iade (`returned`) akışı yok. |
+| B3 | İzin | Kısmi | Kısmi | Kısmi | Talep/tür/bakiye/onay. Portal talebinin bakiyeyi düşürmemesi (bekleyen gün işlenmiyordu) Adım 03B'de E2E ile bulundu ve kapandı. Portalda bakiye yeterlilik kontrolü yok (§6 borç 35). Onaylı izin → puantaj bağlantısı yok; iade (`returned`) akışı yok. |
 | B4 | PDKS | Kısmi | Kısmi | Kısmi | Kayıt + QR/kiosk. Puantaj kartı, onay zinciri, vardiya/rotasyon, yasal kontroller büyük ölçüde yok. |
 | B5 | Ücret & Ödemeler | Kısmi | Kısmi | Kısmi | Ücret bandı/dönem, masraf. Bordro yükle/indir `private` disk sorunu Adım 03A'da giderildi. |
 | B6 | İşe Alım | Kısmi | Kısmi | İskelet | `reports/trends` SQL'i Adım 01'de düzeltildi. |
@@ -58,7 +58,7 @@ Durum ölçeği: **Tam** (spec kapsamı + test eksiksiz) · **Kısmi** (çalış
 | B10 | İSG | Yok | Yok | Yok | |
 | B11 | Varlık / Zimmet | Kısmi | Kısmi | Yok | |
 | B12 | Anket & eNPS | İskelet | Kısmi | İskelet | |
-| B13 | Doküman+ | Kısmi | Kısmi | İskelet | Rapor SQL'i Adım 01'de düzeltildi. Doküman dosyaları hâlâ `public` diskte (§6 borç 10). |
+| B13 | Doküman+ | Kısmi | Kısmi | İskelet | Rapor SQL'i Adım 01'de düzeltildi. Dosyalar Adım 03B'de `private` diske taşındı (S1). Yüklemede girilen başlığın kaybolması Adım 03B'de E2E ile bulundu ve kapandı; çoklu dosya seçimi tek dosya yüklüyor (§6 borç 37). |
 | B14 | Analitik | Kısmi | Kısmi | Kısmi | Rapor motoru (11 dataset) + pano. Eski modül rapor controller'ları ayrı ve kural dışı ham SQL içeriyor. |
 
 ---
@@ -114,16 +114,26 @@ Numaralar Adım 03A görev dosyasındaki K1–K8'dir. Her biri ayrı commit ve r
 
 Önceki listeden: MySQL'e özgü SQL Adım 01'de, test DB otomasyonu Adım 03A'da (B1) kapandı. **Açık:** bağımlılık açıkları — composer 46 advisory / 15 paket (14 high), pnpm 137 (2 critical `jspdf`) → Adım 04.
 
-### 5a. Test ve kalite durumu (Adım 03A sonu)
+### 5a. Test ve kalite durumu (Adım 03B sonu)
 
 | Ölçüt | Değer |
 |---|---|
-| Backend testleri | **968 test, 4143 assertion**; deprecation 0 (Adım 02: 785) |
-| Süre | paralel (8 süreç) **6:27**; seri 23:33 (adım başında 837 test seri 21:44) |
-| Kapsam taban çizgisi (`app/`) | satır **%58,32**, metot %38,44, sınıf %14,25 |
+| Backend testleri | **1003 test, 4419 assertion**; deprecation 0 (Adım 03A: 968) |
+| Süre | paralel (8 süreç) **7:09** |
+| Backend kapsam tabanı (`app/`) | satır **%58,32** — CI mandalı (Adım 03A ölçümü: metot %38,44, sınıf %14,25) |
+| Frontend testleri | **17 dosya, 291 test** (Vitest + RTL + MSW); Adım 03B öncesi 0 |
+| Frontend kapsam tabanı | satır **%39,00** — CI mandalı (ölçüm %39,14–39,19) |
+| Route duman testi | company 124 route, portal 24, superadmin 11 — `App.tsx`'ten otomatik; menü–route tutarlılığı 3 uygulamada |
+| API sözleşmesi | 674 backend route, 587 frontend çağrısı, **0 eşleşmeyen** |
+| E2E (Playwright) | **13 test**, izole `dobedan_hr_e2e`; senaryolar aşağıda |
 | Factory | 116/116 model (istisna yok) |
-| PHPStan (Larastan seviye 5) | baseline **891 hata** (617 kayıt, 180 dosya); büyümez |
+| PHPStan (Larastan seviye 5) | baseline **856 hata** (Adım 03A: 891); CI büyümeyi kırar |
 | Pint | `pint --test` temiz |
+| CI | 7 paralel iş: backend-quality, backend-tests, frontend-quality, frontend-tests, frontend-build, e2e (main PR + elle) — `actionlint` temiz; ilk koşu push sonrası |
+
+**E2E senaryoları:** üç uygulamada giriş/çıkış ve yanlış şifre · 2FA'lı giriş (doğru/yanlış kod) · personel oluştur → listede gör → düzenle · portal izin talebi → company onayı → bakiye düşer → portalda "Onaylandı" · tenant izolasyonu (A yöneticisi B personeli URL'si) · süper admin firma listesi + modül kapat/aç → company menüsü · evrak yükle/indir (içerik karşılaştırmalı).
+
+E2E ilk koşuda üç gerçek hata buldu (hepsi Adım 03B'de düzeltildi, regresyon testli): yanlış şifrede üç uygulamada da geri bildirim yoktu; portal izin talebi onaylanınca bakiye düşmüyordu (bekleyen gün işlenmiyordu; canlıda etkilenen satır yok); evrak yüklemede girilen başlık kayboluyordu.
 
 Komutlar ve kurallar: `operasyon/TEST.md`.
 
@@ -135,14 +145,14 @@ Komutlar ve kurallar: `operasyon/TEST.md`.
 |---|---|---|
 | 1 | ~~Ürün adının Dobedan'a çevrilmesi (kod, paket adları, UI, Docker, DB)~~ | **Adım 02'de tamamlandı** |
 | 2 | ~~Kritik hatalar K1–K8~~ (bağımlılık açıkları hariç → Adım 04) | **Adım 03A'da tamamlandı** |
-| 3 | ~~Test altyapısı: test DB otomasyonu, paralel suite, kapsam, factory, mimari testler~~ | **Adım 03A'da tamamlandı**; CI'a paralel/kapsam/PHPStan eklenmesi Adım 03B |
+| 3 | ~~Test altyapısı: test DB otomasyonu, paralel suite, kapsam, factory, mimari testler~~ | **Adım 03A'da tamamlandı**; CI'a paralel/kapsam/PHPStan **Adım 03B'de eklendi** |
 | 4 | Telescope varsayılan açık + prune yok; Sanctum token süresiz | Atanmadı |
 | 5 | Herkese açık `auth/register` (self-signup) — ürün kararı gerekli | Atanmadı (karar) |
 | 6 | Stored XSS riski: `TextNoteWidget` HTML basıyor | Atanmadı |
 | 7 | localStorage'da kişisel veri (user/employee nesnesi) | Atanmadı |
 | 8 | Admin şifre sıfırlamada düz şifre e-postası | Atanmadı |
 | 9 | Hata yanıtlarında istisna mesajı istemciye dönüyor (22 controller) | Atanmadı |
-| 10 | Hassas yüklemeler `public` diskte (CV, doküman, izin belgesi, masraf fişi, talep eki). Adım 03A'da `storage:link` kurulduğundan bu dosyalar artık web'den doğrudan erişilebilir — **KVKK riski, öncelikli** | Atanmadı (öneri: Adım 04) |
+| 10 | ~~Hassas yüklemeler `public` diskte (CV, doküman, izin belgesi, masraf fişi, talep eki)~~ | **Adım 03B'de tamamlandı (S1)** — `private` disk + yetkili indirme uçları, `storage:move-sensitive-to-private`, `public` yazma izin listesi mimari testte |
 | 11 | FormRequest: 242 inline validate / 16 FormRequest; API Resource 1 | Atanmadı |
 | 12 | Kural dışı ham SQL (~73 yer, rapor motoru dışı) | Atanmadı |
 | 13 | Frontend: React Query 0, react-hook-form 0; hardcode renk/inline style; hardcoded `localhost` URL'leri | Atanmadı |
@@ -160,12 +170,18 @@ Komutlar ve kurallar: `operasyon/TEST.md`.
 | 25 | ~~`EmployeeDashboardController::getKPIData` `age`/`tenure` AVG~~ | **Adım 03A'da tamamlandı (K4)** |
 | 26 | ~~`EmployeeDashboardController::getWidgetData` filtre kolon adları whitelist'siz~~ | **Adım 03A'da tamamlandı (K3)** |
 | 27 | PHPStan (Larastan seviye 5) baseline: **891 hata** (617 kayıt, 180 dosya). Baseline büyümez; düzeltildikçe küçültülür | Sürekli |
-| 28 | 33 yerde `$this->error('...', null, NNN)` çağrısı: imza `error(string, int, $errors)` olduğundan TypeError → kullanıcıya 400/403/404 yerine **500** (Portal Duyuru/İzin/Performans/Profil/Eğitim/Pano, `LeaveRequestController`, `CompanyLedgerController`, `LicensePackageController`) | Atanmadı (öneri: Adım 04) |
-| 29 | `POST approvals/delegations`: `delegate_id` yalnız `exists:users,id`; vekilin aynı şirkette olduğu doğrulanmıyor (tenant) | Atanmadı |
+| 28 | ~~33 yerde `$this->error('...', null, NNN)` çağrısı → 400/403/404 yerine 500~~ | **Adım 03B'de tamamlandı (S3)** — 34 çağrı düzeltildi; `ApiResponse::error` tipli, PHPStan yanlış kullanımı yakalar |
+| 29 | ~~`POST approvals/delegations`: vekilin aynı şirkette olduğu doğrulanmıyor~~ | **Adım 03B'de tamamlandı (S2)** — `company_member` / `company_exists` kuralları (80 kural), onayda üyelik yeniden doğrulanır, mimari test |
 | 30 | `EmployeeDashboardController` yanıtları `ApiResponse` yerine `response()->json` | Atanmadı |
 | 31 | App container yeniden oluşturulunca nginx eski upstream IP'sini tutup 502 dönüyor (`docker compose restart nginx` gerekiyor) | Atanmadı |
 | 32 | Testler `storage/app/private` altında KVKK export/yanıt dosyası bırakıyor (341 dosya birikmiş) | Atanmadı |
-| 33 | Demo verisinde kullanıcısız 6 eski personelin (DEM-035…040) `full_name`'i boş; listede personel kodu görünüyor. `DemoDataSeeder` düzeltildi, canlı veriye yeniden seed kararı bekliyor | Karar |
-| 34 | CI yalnız `pint --test` + seri suite koşuyor; paralel, kapsam ve `composer analyse` yok | Adım 03B |
+| 33 | ~~Demo verisinde 6 eski personelin `full_name`'i boş~~ | **Adım 03B'de tamamlandı (S4)** — `demo:fill-employee-names` ile canlıda dolduruldu |
+| 34 | ~~CI yalnız `pint --test` + seri suite koşuyor~~ | **Adım 03B'de tamamlandı** — 7 paralel iş, kapsam mandalı, PHPStan baseline koruması, E2E |
+| 35 | Portal izin talebinde bakiye yeterlilik kontrolü yok (company akışı "Yetersiz izin bakiyesi" 422 verir; portal vermez). Portal süreyi "2.00 gün" ondalıklı gösteriyor | Atanmadı |
+| 36 | Süper admin panelinde firma bazlı modül aç/kapa ekranı yok (uç `POST admin/companies/{id}/modules` var, kullanan ekran yok). Global modül pasifleştirme (`modules.is_active`) firmaların erişimini etkilemiyor | Atanmadı (ürün kararı) |
+| 37 | Evrak yükleme formu çoklu dosya seçtiriyor, backend tek `file` alıyor (yalnız biri yüklenir) | Atanmadı |
+| 38 | Portalda izin belgesi / talep eki / masraf fişi indirme arayüzü yok (yetkili uçlar Adım 03B'de hazır); KVKK collector'ları bu dosyaları silmiyor | Atanmadı |
+| 39 | Erişilebilirlik ve liste: `CustomFieldRenderer` radio/checkbox etiketlerinde `htmlFor` yok; `DataTable`'da sıralama özelliği yok | Atanmadı |
+| 40 | Giriş sayfaları `auth.error`'u göstermiyor; hatalı giriş geri bildirimi `api.ts` toast'ına bağlı (Adım 03B asgari düzeltme). Company giriş sayfası süper admin yönlendirmesinde sabit `http://localhost:3001` (borç 13 ile ilişkili) | Atanmadı |
 
 `GEÇİCİ` işaretli çözümler bu listeye eklenir.
