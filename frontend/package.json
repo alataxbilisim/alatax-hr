@@ -22,6 +22,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "check:brand": "node ../scripts/check-brand.mjs",
+    "e2e": "pnpm --dir ../e2e e2e",
+    "e2e:ui": "pnpm --dir ../e2e e2e:ui",
     "gorsel-kontrol": "pnpm --dir ../scripts/gorsel-kontrol start"
   },
   "devDependencies": {

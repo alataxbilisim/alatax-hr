@@ -1,0 +1,24 @@
+{
+  "name": "@dobedan/e2e",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Dobedan HR uçtan uca testleri (Playwright) — ayrı dobedan_hr_e2e veritabanı",
+  "type": "module",
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=22.22.2 <23",
+    "pnpm": "9.15.9"
+  },
+  "scripts": {
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui",
+    "e2e:prepare": "node scripts/prepare.mjs",
+    "e2e:report": "playwright show-report",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "@types/node": "^22.19.1",
+    "typescript": "~5.9.3"
+  }
+}
