@@ -56,6 +56,10 @@ frontend/**/build/
 frontend/**/.vite/
 frontend/**/*.local
 *.tsbuildinfo
+# pnpm reposu: npm kilidi ve tsc -b derleme çıktıları izlenmez
+package-lock.json
+frontend/**/vite.config.js
+frontend/**/vite.config.d.ts
 
 # --- Logs ---
 *.log

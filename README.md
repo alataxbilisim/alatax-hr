@@ -20,7 +20,7 @@ Backend’i çalıştırmanın desteklenen tek yolu Docker’dır; `php artisan`
 ### Gereksinimler
 
 - Docker Desktop (Compose v2)
-- Host’ta frontend için: Node 20+, pnpm
+- Host’ta frontend için: Node 22 LTS + pnpm 9.15.9 (kök `.nvmrc`, `frontend/package.json` → `packageManager`)
 
 > **Veritabanı:** yalnız PostgreSQL 16 (`DB_HOST=postgres`, host port `5432`). MySQL/MariaDB/SQLite desteklenmez. Host portları `5432`, `6379` ve `8000` başka bir süreç tarafından kullanılmamalıdır.
 

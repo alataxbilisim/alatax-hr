@@ -13,7 +13,7 @@ Hedef: temiz bir Ubuntu sunucu/VM’de API + PostgreSQL + Redis’i Docker ile a
 - Ubuntu 22.04+ (önerilir); **26.04 LTS** ile de çalıştığı doğrulandı (aşağıya bakın)
 - Docker Engine + Compose v2 (`docker compose`)
 - Git
-- Frontend için: **Node.js 20** ve **pnpm 9.x** (aşağıdaki pin — `pnpm@latest` kullanmayın)
+- Frontend için: **Node.js 22 LTS** ve **pnpm 9.15.9** (tek kaynak: kök `.nvmrc` + `frontend/package.json` → `packageManager`/`engines`; `pnpm@latest` kullanmayın)
 
 Portların boş olduğundan emin olun:
 
@@ -44,13 +44,13 @@ docker compose version
 
 `newgrp` / relogin yapılmazsa `permission denied` (docker.sock) alırsınız.
 
-### Node 20 + pnpm 9 pin
+### Node 22 + pnpm 9.15.9 pin
 
-**Node 20’de `pnpm@latest` (11.x) kırılır** (`ERR_UNKNOWN_BUILTIN_MODULE` — Node 22’nin yerleşik modülünü ister). Deploy turunda kanıtlandı — **pnpm@9.15.9** pinleyin:
+Sürüm tek yerde sabitlidir: kök `.nvmrc` / `.node-version` (`22`) ve `frontend/package.json` (`packageManager: pnpm@9.15.9`, `engines`). `frontend/.npmrc` `engine-strict=true` olduğundan farklı Node major'ünde `pnpm install` durur. CI aynı dosyaları okur. **pnpm@9.15.9** pinleyin (`pnpm@latest` farklı major'dür):
 
 ```bash
-# Node 20 (ör. NodeSource veya nvm)
-node -v   # v20.x olmalı
+# Node 22 (ör. NodeSource veya nvm: `nvm install` kökteki .nvmrc'yi okur)
+node -v   # v22.x olmalı
 
 # Tercih A — npm global (deploy turunda kullanılan yol)
 sudo corepack disable   # corepack pnpm@latest’e zorluyorsa
@@ -63,7 +63,7 @@ corepack prepare pnpm@9.15.9 --activate
 pnpm -v
 ```
 
-> Alternatif: Node 22 + pnpm 11 — bu belgenin varsayılanı **Node 20 + pnpm 9**’dur.
+> pnpm major yükseltmesi (10+) ayrı bir bağımlılık işidir; `packageManager`, `engines`, lockfile ve CI birlikte değişir.
 
 ---
 
@@ -273,7 +273,7 @@ Company admin ile:
 |---------|------------|
 | Port çakışması (`8000`/`5432`) | `.env` / compose host port mapping’ini değiştirin veya çakışan süreci kapatın |
 | `docker.sock` permission denied | `usermod -aG docker` + `newgrp docker` / relogin |
-| `pnpm` / `ERR_UNKNOWN_BUILTIN_MODULE` hatası | pnpm 11 + Node 20 — `pnpm@9.15.9` pinleyin |
+| `pnpm` / `ERR_UNKNOWN_BUILTIN_MODULE` ya da `ERR_PNPM_UNSUPPORTED_ENGINE` | Node 22 + `pnpm@9.15.9` kullanın (`.nvmrc`, `packageManager`) |
 | Eski config cache | `docker compose exec app php artisan config:clear && php artisan cache:clear` |
 | Migration hatası | `docker compose logs app` / `postgres`; DB credentials |
 | Lookup boş dropdown | `php artisan db:seed --class=LookupSeeder` |
@@ -293,7 +293,7 @@ docker compose logs -f nginx app
 
 ## Bilinen tuzaklar
 
-1. **pnpm@latest (11) + Node 20** → kurulum/çalışma kırılır; **9.15.9** kullanın.
+1. **pnpm@latest** farklı major'dür → **Node 22 + pnpm 9.15.9** kullanın (`engine-strict` uyumsuz sürümde kurulumu durdurur).
 2. **Docker grubu** unutulursa her komutta `sudo` veya sock hatası.
 3. **`VITE_API_URL=localhost`** + uzak tarayıcı → yanlış makinenin API’si → 401.
 4. **CORS satırı nano’da kırılır** → origin listesi eksik kalır.
@@ -371,7 +371,7 @@ Deploy turunda **Ubuntu 26.04 LTS** (resolute) kullanıldı:
 
 - Docker Engine 29.x + Compose v5.x sorunsuz ayağa kalktı.
 - `sudo -E` “ignored” uyarıları görülebilir; kritik değil.
-- Paket adları / apt kaynakları 22.04 ile büyük ölçüde aynı; Node 20’yi ayrı kurun (distro Node sürümü farklı olabilir).
+- Paket adları / apt kaynakları 22.04 ile büyük ölçüde aynı; Node 22’yi ayrı kurun (distro Node sürümü farklı olabilir).
 - `usermod -aG docker` sonrası mutlaka `newgrp` veya yeni login.
 
 ---
